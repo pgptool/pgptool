@@ -32,7 +32,8 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private JPanel panelRoot;
 
 	private JMenuBar menuBar;
-	private JMenuItem miPgpImportCertificate;
+	private JMenuItem miPgpImportKey;
+	private JMenuItem miShowKeyList;
 	private JMenuItem miAbout;
 	private JMenuItem miConfigExit;
 
@@ -57,7 +58,8 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		menuBar = new JMenuBar();
 
 		JMenu menuFile = new JMenu(Messages.get("term.appTitle"));
-		menuFile.add(miPgpImportCertificate = new JMenuItem());
+		menuFile.add(miPgpImportKey = new JMenuItem());
+		menuFile.add(miShowKeyList = new JMenuItem());
 		menuFile.addSeparator();
 		menuFile.add(miAbout = new JMenuItem());
 		menuFile.add(miConfigExit = new JMenuItem());
@@ -75,7 +77,8 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private void bindToActions() {
 		miConfigExit.setAction(pm.getActionConfigExit());
 		miAbout.setAction(pm.getActionAbout());
-		miPgpImportCertificate.setAction(pm.getActionImportCertificate());
+		miPgpImportKey.setAction(pm.getActionImportKey());
+		miShowKeyList.setAction(pm.getActionShowKeysList());
 	}
 
 	private void updateWindowTitle() {
@@ -93,7 +96,8 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	}
 
 	private void unbindFromActions() {
-		miPgpImportCertificate.setAction(null);
+		miPgpImportKey.setAction(null);
+		miShowKeyList.setAction(null);
 		miAbout.setAction(null);
 		miConfigExit.setAction(null);
 	}

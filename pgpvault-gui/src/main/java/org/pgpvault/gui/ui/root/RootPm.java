@@ -13,9 +13,12 @@ import org.pgpvault.gui.tools.ConsoleExceptionUtils;
 import org.pgpvault.gui.ui.about.AboutHost;
 import org.pgpvault.gui.ui.about.AboutPm;
 import org.pgpvault.gui.ui.about.AboutView;
-import org.pgpvault.gui.ui.importcertificate.KeyImporterHost;
-import org.pgpvault.gui.ui.importcertificate.KeyImporterPm;
-import org.pgpvault.gui.ui.importcertificate.KeyImporterView;
+import org.pgpvault.gui.ui.importkey.KeyImporterHost;
+import org.pgpvault.gui.ui.importkey.KeyImporterPm;
+import org.pgpvault.gui.ui.importkey.KeyImporterView;
+import org.pgpvault.gui.ui.keyslist.KeysListHost;
+import org.pgpvault.gui.ui.keyslist.KeysListPm;
+import org.pgpvault.gui.ui.keyslist.KeysListView;
 import org.pgpvault.gui.ui.mainframe.MainFrameHost;
 import org.pgpvault.gui.ui.mainframe.MainFramePm;
 import org.pgpvault.gui.ui.mainframe.MainFrameView;
@@ -53,6 +56,9 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 	private KeyImporterPm keyImporterPm;
 	private KeyImporterView keyImporterView;
 
+	private KeysListPm keysListPm;
+	private KeysListView keysListView;
+
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
@@ -84,14 +90,14 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 	}
 
 	@SuppressWarnings("serial")
-	private final Action actionImportCertificate = new LocalizedAction("action.importPgpCertificate") {
+	private final Action actionImportKey = new LocalizedAction("action.importKey") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			openPgpCertificateImportWindow();
+			openKeyImportWindow();
 		}
 	};
 
-	private void openPgpCertificateImportWindow() {
+	private void openKeyImportWindow() {
 		keyImporterPm = applicationContext.getBean(KeyImporterPm.class);
 		if (!keyImporterPm.init(keyImporterHost)) {
 			// This happens if user clicked cancel during first render of
@@ -114,6 +120,39 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 			keyImporterView.unrender();
 			keyImporterPm.detach();
 			keyImporterPm = null;
+		}
+	};
+
+	@SuppressWarnings("serial")
+	private final Action actionShowKeysList = new LocalizedAction("action.showKeysList") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			openKeysListWindow();
+		}
+	};
+
+	private void openKeysListWindow() {
+		keysListPm = applicationContext.getBean(KeysListPm.class);
+		keysListPm.init(keysListHost);
+
+		if (keysListView == null) {
+			keysListView = applicationContext.getBean(KeysListView.class);
+		}
+		keysListView.setPm(keysListPm);
+		keysListView.renderTo(null);
+	}
+
+	private KeysListHost keysListHost = new KeysListHost() {
+		@Override
+		public void handleClose() {
+			keysListView.unrender();
+			keysListPm.detach();
+			keysListPm = null;
+		}
+
+		@Override
+		public Action getActionImportKey() {
+			return actionImportKey;
 		}
 	};
 
@@ -158,8 +197,13 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		}
 
 		@Override
-		public Action getActionImportCertificate() {
-			return actionImportCertificate;
+		public Action getActionImportKey() {
+			return actionImportKey;
+		}
+
+		@Override
+		public Action getActionShowKeysList() {
+			return actionShowKeysList;
 		}
 	};
 

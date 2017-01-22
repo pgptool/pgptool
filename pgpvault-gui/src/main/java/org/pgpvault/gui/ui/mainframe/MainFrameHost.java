@@ -7,5 +7,7 @@ public interface MainFrameHost {
 
 	Action getActionShowAboutInfo();
 	
-	Action getActionImportCertificate();
+	Action getActionImportKey();
+	
+	Action getActionShowKeysList();
 }

@@ -1,4 +1,4 @@
-package org.pgpvault.gui.ui.importcertificate;
+package org.pgpvault.gui.ui.importkey;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -121,7 +121,7 @@ public class KeyImporterPm extends PresentationModelBase {
 		ofd.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		ofd.setAcceptAllFileFilterUsed(true);
 		ofd.setMultiSelectionEnabled(false);
-		ofd.setDialogTitle(Messages.get("action.importPgpCertificate"));
+		ofd.setDialogTitle(Messages.get("action.importKey"));
 		ofd.setApproveButtonText(Messages.get("action.choose"));
 		suggestInitialDirectory(ofd);
 		return ofd;
@@ -169,12 +169,16 @@ public class KeyImporterPm extends PresentationModelBase {
 			try {
 				Preconditions.checkState(key != null, "Key is not loaded");
 				keyRingService.addKey(key);
-				EntryPoint.showMessageBox(null, Messages.get("phrase.keyImportedSuccessfully"),
-						Messages.get("term.confirmation"), JOptionPane.INFORMATION_MESSAGE);
+				// NOTE: Decided to turn confirmation off. Feels like it just
+				// requires redundant action from user
+				// EntryPoint.showMessageBox(null,
+				// Messages.get("phrase.keyImportedSuccessfully"),
+				// Messages.get("term.confirmation"),
+				// JOptionPane.INFORMATION_MESSAGE);
 				host.handleImporterFinished();
 			} catch (Throwable t) {
 				log.error("Failed to import", t);
-				EntryPoint.reportExceptionToUser("exception.failedToImportPgpCertificate", t);
+				EntryPoint.reportExceptionToUser("exception.failedToImportPgpKey", t);
 				return;
 			}
 		}

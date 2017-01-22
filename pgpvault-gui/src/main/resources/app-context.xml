@@ -57,6 +57,9 @@
 	<bean class="org.pgpvault.gui.ui.about.AboutView" lazy-init="true" scope="singleton" />
 	<bean class="org.pgpvault.gui.ui.about.AboutPm" scope="prototype" />
 	
-	<bean class="org.pgpvault.gui.ui.importcertificate.KeyImporterView" lazy-init="true" scope="singleton" />
-	<bean class="org.pgpvault.gui.ui.importcertificate.KeyImporterPm" scope="prototype" />
+	<bean class="org.pgpvault.gui.ui.importkey.KeyImporterView" lazy-init="true" scope="singleton" />
+	<bean class="org.pgpvault.gui.ui.importkey.KeyImporterPm" scope="prototype" />
+	
+	<bean class="org.pgpvault.gui.ui.keyslist.KeysListView" lazy-init="true" scope="singleton" />
+	<bean class="org.pgpvault.gui.ui.keyslist.KeysListPm" scope="prototype" />
 </beans>

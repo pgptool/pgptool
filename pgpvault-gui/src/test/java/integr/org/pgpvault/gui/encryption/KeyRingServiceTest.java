@@ -21,6 +21,8 @@ import org.springframework.test.annotation.SystemProfileValueSource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.google.common.eventbus.EventBus;
+
 import integr.org.pgpvault.gui.TestTools;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -34,9 +36,11 @@ public class KeyRingServiceTest {
 
 	@Autowired
 	private ConfigRepository configRepository;
+	@Autowired
+	private EventBus eventBus;
 
 	@Test
-	public void testKeyRingServiceExpectCanFindCertificateAfterSerialization() throws Exception {
+	public void testKeyRingServiceExpectCanFindKeyAfterSerialization() throws Exception {
 		Key<KeyData> key = keyFilesOperations.readKeyFromFile(TestTools.getFileNameForResource("Alice.asc"));
 
 		KeyRingService<KeyData> keyRingService1 = buildAnotherKeyRingService();
@@ -56,6 +60,7 @@ public class KeyRingServiceTest {
 	private KeyRingService<KeyData> buildAnotherKeyRingService() {
 		KeyRingServicePgpImpl keyRingService1 = new KeyRingServicePgpImpl();
 		keyRingService1.setConfigRepository(configRepository);
+		keyRingService1.setEventBus(eventBus);
 		return (KeyRingService) keyRingService1;
 	}
 

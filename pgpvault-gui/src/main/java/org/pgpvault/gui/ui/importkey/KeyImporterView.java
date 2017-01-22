@@ -1,4 +1,4 @@
-package org.pgpvault.gui.ui.importcertificate;
+package org.pgpvault.gui.ui.importkey;
 
 import java.awt.BorderLayout;
 import java.awt.Dialog.ModalityType;
@@ -127,7 +127,7 @@ public class KeyImporterView extends DialogViewBaseCustom<KeyImporterPm> {
 		ret.setLayout(new BorderLayout());
 		ret.setResizable(false);
 		ret.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		ret.setTitle(Messages.get("action.importPgpCertificate"));
+		ret.setTitle(Messages.get("action.importKey"));
 		ret.add(pnl, BorderLayout.CENTER);
 		ret.pack();
 		UiUtils.centerWindow(ret);

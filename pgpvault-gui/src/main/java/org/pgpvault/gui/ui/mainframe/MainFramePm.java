@@ -4,7 +4,6 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.Action;
 
-import org.apache.log4j.Logger;
 import org.pgpvault.gui.config.api.ConfigRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -14,7 +13,7 @@ import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 
 public class MainFramePm extends PresentationModelBase {
-	private static Logger log = Logger.getLogger(MainFramePm.class);
+	// private static Logger log = Logger.getLogger(MainFramePm.class);
 
 	private ConfigRepository configRepository;
 
@@ -43,8 +42,12 @@ public class MainFramePm extends PresentationModelBase {
 		return host.getActionShowAboutInfo();
 	}
 
-	protected Action getActionImportCertificate() {
-		return host.getActionImportCertificate();
+	protected Action getActionImportKey() {
+		return host.getActionImportKey();
+	}
+
+	protected Action getActionShowKeysList() {
+		return host.getActionShowKeysList();
 	}
 
 	public ConfigRepository getConfigRepository() {

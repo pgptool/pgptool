@@ -6,4 +6,6 @@ public interface MainFrameHost {
 	void handleExitApp();
 
 	Action getActionShowAboutInfo();
+	
+	Action getActionImportCertificate();
 }

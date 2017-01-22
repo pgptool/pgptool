@@ -35,12 +35,11 @@
 
 	<context:annotation-config />
 
-	<bean class="org.pgpvault.gui.app.EntryPoint" />
 	<bean class="org.pgpvault.gui.app.Messages" />
 	<bean class="com.google.common.eventbus.EventBus" />
 
 	<bean id="configsBasePathResolver" class="org.pgpvault.gui.config.impl.ConfigsBasePathResolverUserHomeImpl">
-		<property name="configFolderName" value="${configuration.configFolderName}" />
+		<property name="configFolderName" value="#{T(integr.org.pgpvault.gui.TestTools).buildNewTempDir()}" />
 	</bean>
 	<bean id="configRepository" class="org.pgpvault.gui.config.impl.ConfigRepositoryImpl" />
 	<bean class="org.pgpvault.gui.configpairs.impl.ConfigPairsImpl" />
@@ -48,15 +47,4 @@
 	<bean id="keyFilesOperations" class="org.pgpvault.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
 	<bean id="keyRingService" class="org.pgpvault.gui.encryption.implpgp.KeyRingServicePgpImpl" />
 
-	<!-- Views -->
-	<bean class="org.pgpvault.gui.ui.root.RootPm" scope="singleton" />
-
-	<bean class="org.pgpvault.gui.ui.mainframe.MainFramePm" scope="prototype" />
-	<bean class="org.pgpvault.gui.ui.mainframe.MainFrameView" scope="prototype" />
-
-	<bean class="org.pgpvault.gui.ui.about.AboutView" lazy-init="true" scope="singleton" />
-	<bean class="org.pgpvault.gui.ui.about.AboutPm" scope="prototype" />
-	
-	<bean class="org.pgpvault.gui.ui.importcertificate.KeyImporterView" lazy-init="true" scope="singleton" />
-	<bean class="org.pgpvault.gui.ui.importcertificate.KeyImporterPm" scope="prototype" />
 </beans>

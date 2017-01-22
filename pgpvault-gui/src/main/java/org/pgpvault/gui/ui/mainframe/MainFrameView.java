@@ -32,8 +32,9 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private JPanel panelRoot;
 
 	private JMenuBar menuBar;
-	private JMenuItem miConfigExit;
+	private JMenuItem miPgpImportCertificate;
 	private JMenuItem miAbout;
+	private JMenuItem miConfigExit;
 
 	@Override
 	protected void internalInitComponents() {
@@ -56,6 +57,8 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		menuBar = new JMenuBar();
 
 		JMenu menuFile = new JMenu(Messages.get("term.appTitle"));
+		menuFile.add(miPgpImportCertificate = new JMenuItem());
+		menuFile.addSeparator();
 		menuFile.add(miAbout = new JMenuItem());
 		menuFile.add(miConfigExit = new JMenuItem());
 		menuBar.add(menuFile);
@@ -72,6 +75,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private void bindToActions() {
 		miConfigExit.setAction(pm.getActionConfigExit());
 		miAbout.setAction(pm.getActionAbout());
+		miPgpImportCertificate.setAction(pm.getActionImportCertificate());
 	}
 
 	private void updateWindowTitle() {
@@ -89,8 +93,9 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	}
 
 	private void unbindFromActions() {
-		miConfigExit.setAction(null);
+		miPgpImportCertificate.setAction(null);
 		miAbout.setAction(null);
+		miConfigExit.setAction(null);
 	}
 
 	@Override

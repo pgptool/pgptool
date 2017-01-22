@@ -43,6 +43,10 @@ public class MainFramePm extends PresentationModelBase {
 		return host.getActionShowAboutInfo();
 	}
 
+	protected Action getActionImportCertificate() {
+		return host.getActionImportCertificate();
+	}
+
 	public ConfigRepository getConfigRepository() {
 		return configRepository;
 	}

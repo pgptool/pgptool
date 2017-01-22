@@ -13,6 +13,9 @@ import org.pgpvault.gui.tools.ConsoleExceptionUtils;
 import org.pgpvault.gui.ui.about.AboutHost;
 import org.pgpvault.gui.ui.about.AboutPm;
 import org.pgpvault.gui.ui.about.AboutView;
+import org.pgpvault.gui.ui.importcertificate.KeyImporterHost;
+import org.pgpvault.gui.ui.importcertificate.KeyImporterPm;
+import org.pgpvault.gui.ui.importcertificate.KeyImporterView;
 import org.pgpvault.gui.ui.mainframe.MainFrameHost;
 import org.pgpvault.gui.ui.mainframe.MainFramePm;
 import org.pgpvault.gui.ui.mainframe.MainFrameView;
@@ -47,6 +50,9 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 	private AboutView aboutView;
 	private AboutPm aboutPm;
 
+	private KeyImporterPm keyImporterPm;
+	private KeyImporterView keyImporterView;
+
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
@@ -77,6 +83,48 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		System.exit(statusCode);
 	}
 
+	@SuppressWarnings("serial")
+	private final Action actionImportCertificate = new LocalizedAction("action.importPgpCertificate") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			openPgpCertificateImportWindow();
+		}
+	};
+
+	private void openPgpCertificateImportWindow() {
+		keyImporterPm = applicationContext.getBean(KeyImporterPm.class);
+		if (!keyImporterPm.init(keyImporterHost)) {
+			// This happens if user clicked cancel during first render of
+			// "Browse dialog"
+			keyImporterPm.detach();
+			keyImporterPm = null;
+			return;
+		}
+
+		if (keyImporterView == null) {
+			keyImporterView = applicationContext.getBean(KeyImporterView.class);
+		}
+		keyImporterView.setPm(keyImporterPm);
+		keyImporterView.renderTo(null);
+	}
+
+	private KeyImporterHost keyImporterHost = new KeyImporterHost() {
+		@Override
+		public void handleImporterFinished() {
+			keyImporterView.unrender();
+			keyImporterPm.detach();
+			keyImporterPm = null;
+		}
+	};
+
+	@SuppressWarnings("serial")
+	private final Action actionShowAboutInfo = new LocalizedAction("term.aboutApp") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			openAboutWindow();
+		}
+	};
+
 	public void openAboutWindow() {
 		aboutPm = applicationContext.getBean(AboutPm.class);
 		aboutPm.init(aboutHost);
@@ -87,14 +135,6 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		aboutView.setPm(aboutPm);
 		aboutView.renderTo(null);
 	}
-
-	@SuppressWarnings("serial")
-	private final Action actionShowAboutInfo = new LocalizedAction("term.aboutApp") {
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			openAboutWindow();
-		}
-	};
 
 	private AboutHost aboutHost = new AboutHost() {
 		@Override
@@ -115,6 +155,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		@Override
 		public Action getActionShowAboutInfo() {
 			return actionShowAboutInfo;
+		}
+
+		@Override
+		public Action getActionImportCertificate() {
+			return actionImportCertificate;
 		}
 	};
 

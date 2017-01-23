@@ -48,8 +48,8 @@ public class UiUtils {
 		return ret;
 	}
 
-	public static boolean confirm(String userPromptMessageCode, Window parent) {
-		int response = JOptionPane.showConfirmDialog(parent, Messages.get(userPromptMessageCode),
+	public static boolean confirm(String userPromptMessageCode, Object[] messageArgs, Window parent) {
+		int response = JOptionPane.showConfirmDialog(parent, Messages.get(userPromptMessageCode, messageArgs),
 				Messages.get("term.confirmation"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 
 		return response == JOptionPane.OK_OPTION;

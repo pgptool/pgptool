@@ -42,12 +42,15 @@ public class EntryPoint implements InitializingBean {
 			// Init spring context
 			try {
 				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+				log.info("L&F set");
 
 				// Startup application context
 				String[] contextPaths = new String[] { "app-context.xml" };
 				currentApplicationContext = new ClassPathXmlApplicationContext(contextPaths);
+				log.info("App context loaded");
 				LocaleContextHolder.setLocale(new Locale(System.getProperty("user.language")));
 				currentApplicationContext.registerShutdownHook();
+				log.info("Shutdown hook registered");
 
 				// Now startup application logic
 				EntryPoint entryPoint = currentApplicationContext.getBean(EntryPoint.class);

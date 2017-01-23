@@ -47,6 +47,7 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 
 	private JMenuBar menuBar;
 	private JMenuItem miImport;
+	private JMenuItem miDelete;
 	private JMenuItem miClose;
 
 	private JPanel panelTablePlaceholder;
@@ -109,7 +110,7 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 				if (pm == null) {
 					return;
 				}
-				pm.getActionForDeleteButton().actionPerformed(e);
+				pm.getActionDelete().actionPerformed(e);
 			}
 		});
 	}
@@ -210,6 +211,9 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 		menuBar = new JMenuBar();
 		JMenu menuTs = new JMenu(Messages.get("term.actions"));
 		menuTs.add(miImport = new JMenuItem());
+		menuTs.addSeparator();
+		menuTs.add(miDelete = new JMenuItem());
+		menuTs.addSeparator();
 		menuTs.add(miClose = new JMenuItem());
 		menuBar.add(menuTs);
 	}
@@ -223,8 +227,22 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 		bindingContext.registerOnChangeHandler(pm.getHasData(), hasDataChangeHandler);
 		bindingContext.registerOnChangeHandler(pm.getSelectedRow(), rowPmSelectionListener);
 
+		bindToActions();
+	}
+
+	private void bindToActions() {
 		bindingContext.setupBinding(pm.getActionImport(), miImport);
+		bindingContext.setupBinding(pm.getActionDelete(), miDelete);
 		bindingContext.setupBinding(pm.getActionClose(), miClose);
+		if (pm.getContextMenuActions() != null) {
+			for (Action action : pm.getContextMenuActions()) {
+				if (action == null) {
+					ctxMenu.addSeparator();
+				} else {
+					ctxMenu.add(action);
+				}
+			}
+		}
 	}
 
 	private TypedPropertyChangeListener<Boolean> hasDataChangeHandler = new TypedPropertyChangeListener<Boolean>() {
@@ -253,6 +271,7 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 	protected void internalUnbindFromPm() {
 		super.internalUnbindFromPm();
 		table.setModel(new DefaultTableModel());
+		ctxMenu.removeAll();
 	}
 
 	private void adjustColumn(DefaultTableCellRenderer leftRenderer, int columnIdx, int columnSize,

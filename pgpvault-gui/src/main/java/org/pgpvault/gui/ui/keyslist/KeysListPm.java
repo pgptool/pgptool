@@ -1,6 +1,8 @@
 package org.pgpvault.gui.ui.keyslist;
 
 import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -9,6 +11,7 @@ import javax.swing.Action;
 import org.pgpvault.gui.encryption.api.KeyRingService;
 import org.pgpvault.gui.encryption.api.dto.Key;
 import org.pgpvault.gui.encryption.api.dto.KeyData;
+import org.pgpvault.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 
@@ -42,9 +45,18 @@ public class KeysListPm extends PresentationModelBase {
 		List<Key<KeyData>> initialKeys = keyRingService.readKeys();
 		tableModelProp = new ModelTableProperty<>(this, initialKeys, "keys", new KeysTableModel());
 		hasData = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(!initialKeys.isEmpty()), "hasData");
+		tableModelProp.getModelPropertyAccessor().addPropertyChangeListener(onSelectionChangedHandler);
+		onSelectionChangedHandler.propertyChange(null);
 
 		eventBus.register(this);
 	}
+
+	private PropertyChangeListener onSelectionChangedHandler = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			actionDeleteKey.setEnabled(tableModelProp.hasValue());
+		}
+	};
 
 	@Subscribe
 	public void onRowChangedEvent(EntityChangedEvent<?> event) {
@@ -76,22 +88,33 @@ public class KeysListPm extends PresentationModelBase {
 	};
 
 	@SuppressWarnings("serial")
-	private Action actionDelete = new LocalizedAction("action.delete") {
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			// TODO: Impl
-			throw new RuntimeException("NIY");
-		}
-	};
-
-	@SuppressWarnings("serial")
 	private Action actionActivate = new LocalizedAction("action.activate") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			// TODO: Impl
-			throw new RuntimeException("NIY");
 		}
 	};
+
+	@SuppressWarnings("serial")
+	private Action actionDeleteKey = new LocalizedAction("action.deleteKey") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (!tableModelProp.hasValue()) {
+				// silently exit -- not going to complain
+				return;
+			}
+
+			Key<KeyData> key = tableModelProp.getValue();
+			if (!UiUtils.confirm("phrase.areYouSureToDeleteKey", new Object[] { key.getKeyInfo().getUser() },
+					findRegisteredWindowIfAny())) {
+				return;
+			}
+
+			keyRingService.removeKey(key);
+		}
+	};
+
+	private Action[] contextMenuActions = new Action[] { actionDeleteKey };
 
 	protected Action getActionClose() {
 		return actionClose;
@@ -99,10 +122,6 @@ public class KeysListPm extends PresentationModelBase {
 
 	protected Action getActionImport() {
 		return host.getActionImportKey();
-	}
-
-	public Action getActionForDeleteButton() {
-		return actionDelete;
 	}
 
 	public Action getActionForRowDoubleClick() {
@@ -121,4 +140,11 @@ public class KeysListPm extends PresentationModelBase {
 		return hasData.getModelPropertyAccessor();
 	}
 
+	public Action getActionDelete() {
+		return actionDeleteKey;
+	}
+
+	public Action[] getContextMenuActions() {
+		return contextMenuActions;
+	}
 }

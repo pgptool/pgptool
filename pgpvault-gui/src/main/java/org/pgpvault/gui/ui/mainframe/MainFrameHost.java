@@ -10,4 +10,6 @@ public interface MainFrameHost {
 	Action getActionImportKey();
 	
 	Action getActionShowKeysList();
+
+	Action getActionForEncrypt();
 }

@@ -10,5 +10,7 @@ import java.io.Serializable;
  */
 @SuppressWarnings("serial")
 public abstract class KeyData implements Serializable {
+	abstract public boolean isCanBeUsedForDecryption();
 
+	abstract public boolean isCanBeUsedForEncryption();
 }

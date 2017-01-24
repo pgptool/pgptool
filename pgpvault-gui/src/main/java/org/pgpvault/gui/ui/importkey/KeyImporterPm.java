@@ -1,15 +1,11 @@
 package org.pgpvault.gui.ui.importkey;
 
 import java.awt.event.ActionEvent;
-import java.io.File;
 
 import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.pgpvault.gui.app.EntryPoint;
 import org.pgpvault.gui.app.Messages;
@@ -19,9 +15,8 @@ import org.pgpvault.gui.encryption.api.KeyRingService;
 import org.pgpvault.gui.encryption.api.dto.Key;
 import org.pgpvault.gui.encryption.api.dto.KeyData;
 import org.pgpvault.gui.encryption.api.dto.KeyInfo;
-import org.pgpvault.gui.tools.PathUtils;
+import org.pgpvault.gui.ui.tools.ExistingFileChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.StringUtils;
 
 import com.google.common.base.Preconditions;
 
@@ -48,6 +43,7 @@ public class KeyImporterPm extends PresentationModelBase {
 	private KeyImporterHost host;
 
 	private Key<KeyData> key;
+	private ExistingFileChooserDialog sourceFileChooser;
 
 	private ModelProperty<String> user;
 	private ModelProperty<String> keyId;
@@ -65,7 +61,7 @@ public class KeyImporterPm extends PresentationModelBase {
 		initModelProperties();
 
 		String fileToLoad = null;
-		if ((fileToLoad = askUserForFile()) == null) {
+		if ((fileToLoad = getSourceFileChooser().askUserForFile()) == null) {
 			return false;
 		}
 		if (!loadKey(fileToLoad)) {
@@ -97,45 +93,17 @@ public class KeyImporterPm extends PresentationModelBase {
 		Preconditions.checkState(host != null);
 	}
 
-	private String askUserForFile() {
-		JFileChooser ofd = buildFileChooserDialog();
-
-		int result = ofd.showOpenDialog(findRegisteredWindowIfAny());
-		if (result != JFileChooser.APPROVE_OPTION) {
-			return null;
+	public ExistingFileChooserDialog getSourceFileChooser() {
+		if (sourceFileChooser == null) {
+			sourceFileChooser = new ExistingFileChooserDialog(findRegisteredWindowIfAny(), configPairs, BROWSE_FOLDER) {
+				@Override
+				protected void doFileChooserPostConstruct(JFileChooser ofd) {
+					super.doFileChooserPostConstruct(ofd);
+					ofd.setDialogTitle(Messages.get("action.importKey"));
+				}
+			};
 		}
-		File retFile = ofd.getSelectedFile();
-		if (retFile == null) {
-			return null;
-		}
-
-		String ret = retFile.getAbsolutePath();
-		configPairs.put(BROWSE_FOLDER, PathUtils.extractBasePath(ret));
-		return ret;
-	}
-
-	private JFileChooser buildFileChooserDialog() {
-		JFileChooser ofd = new JFileChooser();
-		ofd.setFileFilter(new FileNameExtensionFilter("ASC Files", "asc"));
-		ofd.addChoosableFileFilter(ofd.getAcceptAllFileFilter());
-		ofd.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		ofd.setAcceptAllFileFilterUsed(true);
-		ofd.setMultiSelectionEnabled(false);
-		ofd.setDialogTitle(Messages.get("action.importKey"));
-		ofd.setApproveButtonText(Messages.get("action.choose"));
-		suggestInitialDirectory(ofd);
-		return ofd;
-	}
-
-	private void suggestInitialDirectory(JFileChooser ofd) {
-		try {
-			String lastChosenDestination = configPairs.find(BROWSE_FOLDER, null);
-			String pathname = StringUtils.hasText(lastChosenDestination) ? lastChosenDestination
-					: SystemUtils.getUserHome().getAbsolutePath();
-			ofd.setCurrentDirectory(new File(pathname));
-		} catch (Throwable t) {
-			log.warn("Failed to set suggested location", t);
-		}
+		return sourceFileChooser;
 	}
 
 	private boolean loadKey(String fileToLoad) {
@@ -197,7 +165,7 @@ public class KeyImporterPm extends PresentationModelBase {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			String fileToLoad = null;
-			if ((fileToLoad = askUserForFile()) == null) {
+			if ((fileToLoad = getSourceFileChooser().askUserForFile()) == null) {
 				return;
 			}
 			loadKey(fileToLoad);

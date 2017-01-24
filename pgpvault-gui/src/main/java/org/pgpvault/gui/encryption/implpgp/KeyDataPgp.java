@@ -5,8 +5,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Iterator;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpvault.gui.encryption.api.dto.KeyData;
@@ -23,6 +25,36 @@ public class KeyDataPgp extends KeyData {
 
 	private transient PGPSecretKeyRing secretKeyRing;
 	private transient PGPPublicKeyRing publicKeyRing;
+
+	@Override
+	public boolean isCanBeUsedForDecryption() {
+		return secretKeyRing != null;
+	}
+
+	@Override
+	public boolean isCanBeUsedForEncryption() {
+		return findKeyForEncryption() != null;
+	}
+
+	public PGPPublicKey findKeyForEncryption() {
+		if (getPublicKeyRing() != null) {
+			return findKeyForEncryption(getPublicKeyRing().getPublicKeys());
+		} else if (getSecretKeyRing() != null) {
+			return findKeyForEncryption(getSecretKeyRing().getPublicKeys());
+		} else {
+			return null;
+		}
+	}
+
+	private static PGPPublicKey findKeyForEncryption(Iterator<PGPPublicKey> publicKeys) {
+		for (Iterator<PGPPublicKey> iter = publicKeys; iter.hasNext();) {
+			PGPPublicKey pk = iter.next();
+			if (pk.isEncryptionKey()) {
+				return pk;
+			}
+		}
+		return null;
+	}
 
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		oos.defaultWriteObject();
@@ -80,4 +112,5 @@ public class KeyDataPgp extends KeyData {
 	public void setPublicKeyRing(PGPPublicKeyRing publicKeyRing) {
 		this.publicKeyRing = publicKeyRing;
 	}
+
 }

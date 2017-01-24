@@ -1,14 +1,12 @@
 package org.pgpvault.gui.ui.mainframe;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Window;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -36,6 +34,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private JMenuItem miShowKeyList;
 	private JMenuItem miAbout;
 	private JMenuItem miConfigExit;
+	private JMenuItem miEncrypt;
 
 	@Override
 	protected void internalInitComponents() {
@@ -43,10 +42,6 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 		initMenuBar();
 		initFormComponents();
-	}
-
-	private void highlight(JComponent subject) {
-		subject.setBackground(Color.blue);
 	}
 
 	private void initFormComponents() {
@@ -63,7 +58,12 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		menuFile.addSeparator();
 		menuFile.add(miAbout = new JMenuItem());
 		menuFile.add(miConfigExit = new JMenuItem());
+
+		JMenu menuActions = new JMenu(Messages.get("term.actions"));
+		menuActions.add(miEncrypt = new JMenuItem());
+
 		menuBar.add(menuFile);
+		menuBar.add(menuActions);
 	}
 
 	@Override
@@ -75,10 +75,11 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	}
 
 	private void bindToActions() {
-		miConfigExit.setAction(pm.getActionConfigExit());
-		miAbout.setAction(pm.getActionAbout());
-		miPgpImportKey.setAction(pm.getActionImportKey());
-		miShowKeyList.setAction(pm.getActionShowKeysList());
+		bindingContext.setupBinding(pm.getActionConfigExit(), miConfigExit);
+		bindingContext.setupBinding(pm.getActionAbout(), miAbout);
+		bindingContext.setupBinding(pm.getActionImportKey(), miPgpImportKey);
+		bindingContext.setupBinding(pm.getActionShowKeysList(), miShowKeyList);
+		bindingContext.setupBinding(pm.getActionEncrypt(), miEncrypt);
 	}
 
 	private void updateWindowTitle() {
@@ -92,14 +93,6 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		super.internalUnbindFromPm();
 
 		updateWindowTitle();
-		unbindFromActions();
-	}
-
-	private void unbindFromActions() {
-		miPgpImportKey.setAction(null);
-		miShowKeyList.setAction(null);
-		miAbout.setAction(null);
-		miConfigExit.setAction(null);
 	}
 
 	@Override
@@ -116,10 +109,10 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 		if (frame == null) {
 			frame = new JFrame();
-			frame.setSize(new Dimension(UiUtils.getFontRelativeSize(70), UiUtils.getFontRelativeSize(40)));
+			frame.setSize(new Dimension(UiUtils.getFontRelativeSize(70), UiUtils.getFontRelativeSize(30)));
 			frame.setLayout(new BorderLayout());
 			frame.setResizable(true);
-			frame.setMinimumSize(new Dimension(UiUtils.getFontRelativeSize(60), UiUtils.getFontRelativeSize(30)));
+			frame.setMinimumSize(new Dimension(UiUtils.getFontRelativeSize(60), UiUtils.getFontRelativeSize(25)));
 			frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 			updateWindowTitle();
 			frame.add(panelRoot, BorderLayout.CENTER);

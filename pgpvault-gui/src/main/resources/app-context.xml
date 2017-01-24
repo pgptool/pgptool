@@ -47,6 +47,7 @@
 
 	<bean id="keyFilesOperations" class="org.pgpvault.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
 	<bean id="keyRingService" class="org.pgpvault.gui.encryption.implpgp.KeyRingServicePgpImpl" />
+	<bean id="encryptionService" class="org.pgpvault.gui.encryption.implpgp.EncryptionServicePgpImpl" />
 
 	<!-- Views -->
 	<bean class="org.pgpvault.gui.ui.root.RootPm" scope="singleton" />
@@ -62,4 +63,7 @@
 	
 	<bean class="org.pgpvault.gui.ui.keyslist.KeysListView" lazy-init="true" scope="singleton" />
 	<bean class="org.pgpvault.gui.ui.keyslist.KeysListPm" scope="prototype" />
+	
+	<bean class="org.pgpvault.gui.ui.encryptone.EncryptOnePm" lazy-init="true" scope="singleton" />
+	<bean class="org.pgpvault.gui.ui.encryptone.EncryptOneView" scope="prototype" />
 </beans>

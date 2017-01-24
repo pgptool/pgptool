@@ -23,6 +23,7 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import ru.skarpushin.swingpm.tools.SwingPmSettings;
+import ru.skarpushin.swingpm.tools.edt.Edt;
 
 public class EntryPoint implements InitializingBean {
 	private static Logger log = Logger.getLogger(EntryPoint.class);
@@ -41,8 +42,7 @@ public class EntryPoint implements InitializingBean {
 
 			// Init spring context
 			try {
-				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-				log.info("L&F set");
+				setLookAndFeel();
 
 				// Startup application context
 				String[] contextPaths = new String[] { "app-context.xml" };
@@ -54,7 +54,7 @@ public class EntryPoint implements InitializingBean {
 
 				// Now startup application logic
 				EntryPoint entryPoint = currentApplicationContext.getBean(EntryPoint.class);
-				entryPoint.startUp();
+				entryPoint.startUp(args);
 			} catch (Throwable t) {
 				log.error("Failed to startup application", t);
 				reportAppInitFailureMessageToUser(t);
@@ -63,6 +63,20 @@ public class EntryPoint implements InitializingBean {
 		} finally {
 			splashScreenView.close();
 		}
+	}
+
+	private static void setLookAndFeel() {
+		Edt.invokeOnEdtAndWait(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+				} catch (Throwable t) {
+					log.error("Failed to set L&F", t);
+				}
+			}
+		});
+		log.info("L&F set");
 	}
 
 	private static void reportAppInitFailureMessageToUser(Throwable t) {
@@ -79,8 +93,8 @@ public class EntryPoint implements InitializingBean {
 
 	}
 
-	private void startUp() {
-		rootPm.present();
+	private void startUp(String[] args) {
+		rootPm.present(args);
 		log.debug("entryPoint.startUp() finished");
 	}
 

@@ -50,6 +50,10 @@ public class MainFramePm extends PresentationModelBase {
 		return host.getActionShowKeysList();
 	}
 
+	public Action getActionEncrypt() {
+		return host.getActionForEncrypt();
+	}
+
 	public ConfigRepository getConfigRepository() {
 		return configRepository;
 	}

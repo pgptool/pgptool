@@ -32,6 +32,15 @@ public class Key<TKeyData extends KeyData> implements Serializable {
 		this.keyData = keyData;
 	}
 
+	@Override
+	public String toString() {
+		if (keyInfo == null || keyInfo.getUser() == null) {
+			return super.toString();
+		}
+
+		return keyInfo.getUser();
+	}
+
 	@SuppressWarnings("rawtypes")
 	public static boolean isSameKeyId(Key o1, Key o2) {
 		if (o1 == null || o2 == null) {

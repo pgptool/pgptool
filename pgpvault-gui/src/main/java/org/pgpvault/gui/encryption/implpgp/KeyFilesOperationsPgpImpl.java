@@ -13,7 +13,6 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
@@ -57,7 +56,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 		PGPPublicKey key = publicKeyRing.getPublicKey();
 		ret.setUser(buildUser(key.getUserIDs()));
 
-		ret.setKeyId(buildKeyIdStr(key.getKeyID()));
+		ret.setKeyId(KeyDataPgp.buildKeyIdStr(key.getKeyID()));
 		fillDates(ret, key);
 		fillAlgorithmName(ret, key);
 		return ret;
@@ -92,17 +91,14 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 	private KeyInfo buildKeyInfoFromSecret(PGPSecretKeyRing secretKeyRing) throws PGPException {
 		KeyInfo ret = new KeyInfo();
 		ret.setKeyType(KeyTypeEnum.Private);
-		PGPSecretKey key = secretKeyRing.getSecretKey();
+		// PGPSecretKey key = secretKeyRing.getSecretKey();
+		PGPPublicKey key = secretKeyRing.getPublicKey();
 		ret.setUser(buildUser(key.getUserIDs()));
 
-		ret.setKeyId(buildKeyIdStr(key.getKeyID()));
-		fillDates(ret, key.getPublicKey());
-		fillAlgorithmName(ret, key.getPublicKey());
+		ret.setKeyId(KeyDataPgp.buildKeyIdStr(key.getKeyID()));
+		fillDates(ret, key);
+		fillAlgorithmName(ret, key);
 		return ret;
-	}
-
-	private String buildKeyIdStr(long keyID) {
-		return Long.toHexString(keyID).toUpperCase();
 	}
 
 	@SuppressWarnings("rawtypes")

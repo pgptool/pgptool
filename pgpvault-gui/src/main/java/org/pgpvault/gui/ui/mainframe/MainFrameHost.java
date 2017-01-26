@@ -12,4 +12,6 @@ public interface MainFrameHost {
 	Action getActionShowKeysList();
 
 	Action getActionForEncrypt();
+
+	Action getActionForDecrypt();
 }

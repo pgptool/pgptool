@@ -12,5 +12,7 @@ import java.io.Serializable;
 public abstract class KeyData implements Serializable {
 	abstract public boolean isCanBeUsedForDecryption();
 
+	abstract public boolean isHasAlternativeId(String alternativeId);
+
 	abstract public boolean isCanBeUsedForEncryption();
 }

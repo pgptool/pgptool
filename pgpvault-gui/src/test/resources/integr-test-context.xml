@@ -37,14 +37,19 @@
 
 	<bean class="org.pgpvault.gui.app.Messages" />
 	<bean class="com.google.common.eventbus.EventBus" />
-
+	
+	<bean id="tempDirPath" class="java.lang.String">
+		<constructor-arg value="#{T(integr.org.pgpvault.gui.TestTools).buildNewTempDir()}" />
+	</bean>
+	
 	<bean id="configsBasePathResolver" class="org.pgpvault.gui.config.impl.ConfigsBasePathResolverUserHomeImpl">
-		<property name="configFolderName" value="#{T(integr.org.pgpvault.gui.TestTools).buildNewTempDir()}" />
+		<property name="configFolderName" ref="tempDirPath" />
 	</bean>
 	<bean id="configRepository" class="org.pgpvault.gui.config.impl.ConfigRepositoryImpl" />
 	<bean class="org.pgpvault.gui.configpairs.impl.ConfigPairsImpl" />
 
 	<bean id="keyFilesOperations" class="org.pgpvault.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
 	<bean id="keyRingService" class="org.pgpvault.gui.encryption.implpgp.KeyRingServicePgpImpl" />
+	<bean id="encryptionService" class="org.pgpvault.gui.encryption.implpgp.EncryptionServicePgpImpl" />
 
 </beans>

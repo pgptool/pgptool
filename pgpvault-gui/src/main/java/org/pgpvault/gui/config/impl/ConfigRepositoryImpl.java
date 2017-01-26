@@ -78,6 +78,7 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	private <T> T readObject(String sourceFile) {
 		ObjectInputStream ois = null;
 		try {

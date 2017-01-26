@@ -28,7 +28,7 @@ import integr.org.pgpvault.gui.TestTools;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:integr-test-context.xml")
 @ProfileValueSourceConfiguration(SystemProfileValueSource.class)
-@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class KeyRingServiceTest {
 	@Autowired
@@ -41,7 +41,7 @@ public class KeyRingServiceTest {
 
 	@Test
 	public void testKeyRingServiceExpectCanFindKeyAfterSerialization() throws Exception {
-		Key<KeyData> key = keyFilesOperations.readKeyFromFile(TestTools.getFileNameForResource("Alice.asc"));
+		Key<KeyData> key = keyFilesOperations.readKeyFromFile(TestTools.getFileNameForResource("keys/Alice.asc"));
 
 		KeyRingService<KeyData> keyRingService1 = buildAnotherKeyRingService();
 		keyRingService1.addKey(key);

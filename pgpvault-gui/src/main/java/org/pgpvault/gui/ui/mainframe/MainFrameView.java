@@ -35,6 +35,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private JMenuItem miAbout;
 	private JMenuItem miConfigExit;
 	private JMenuItem miEncrypt;
+	private JMenuItem miDecrypt;
 
 	@Override
 	protected void internalInitComponents() {
@@ -61,6 +62,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 		JMenu menuActions = new JMenu(Messages.get("term.actions"));
 		menuActions.add(miEncrypt = new JMenuItem());
+		menuActions.add(miDecrypt = new JMenuItem());
 
 		menuBar.add(menuFile);
 		menuBar.add(menuActions);
@@ -80,6 +82,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		bindingContext.setupBinding(pm.getActionImportKey(), miPgpImportKey);
 		bindingContext.setupBinding(pm.getActionShowKeysList(), miShowKeyList);
 		bindingContext.setupBinding(pm.getActionEncrypt(), miEncrypt);
+		bindingContext.setupBinding(pm.getActionDecrypt(), miDecrypt);
 	}
 
 	private void updateWindowTitle() {

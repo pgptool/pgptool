@@ -22,6 +22,10 @@
 		<!-- </filter> -->
 	</appender>
 
+	<category name="org.pgpvault.gui">
+		<priority value="DEBUG" />
+	</category>   
+
 	<root>
 		<level value="INFO" />
 		<appender-ref ref="FILE" />

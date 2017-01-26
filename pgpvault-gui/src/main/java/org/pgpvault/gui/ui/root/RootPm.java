@@ -13,6 +13,9 @@ import org.pgpvault.gui.tools.ConsoleExceptionUtils;
 import org.pgpvault.gui.ui.about.AboutHost;
 import org.pgpvault.gui.ui.about.AboutPm;
 import org.pgpvault.gui.ui.about.AboutView;
+import org.pgpvault.gui.ui.decryptone.DecryptOneHost;
+import org.pgpvault.gui.ui.decryptone.DecryptOnePm;
+import org.pgpvault.gui.ui.decryptone.DecryptOneView;
 import org.pgpvault.gui.ui.encryptone.EncryptOneHost;
 import org.pgpvault.gui.ui.encryptone.EncryptOnePm;
 import org.pgpvault.gui.ui.encryptone.EncryptOneView;
@@ -117,6 +120,21 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 				}
 				return true;
 			}
+			
+			if ("decrypt".equalsIgnoreCase(commandLineArgs[0])) {
+				for (int i = 1; i < commandLineArgs.length; i++) {
+					final String sourceFile = commandLineArgs[i];
+					Edt.invokeOnEdtAndWait(new Runnable() {
+						@Override
+						public void run() {
+							// NOTE: Assuming it is blocking operation!
+							// Remember: View is singleton here
+							new DecryptionWindowOpener(sourceFile).actionToOpenWindow.actionPerformed(null);
+						}
+					});
+				}
+				return true;
+			}
 		} catch (Throwable t) {
 			EntryPoint.reportExceptionToUser("error.failedToProcessCommandLine", t);
 		}
@@ -153,6 +171,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		@Override
 		public Action getActionForEncrypt() {
 			return encryptionWindowHost.actionToOpenWindow;
+		}
+
+		@Override
+		public Action getActionForDecrypt() {
+			return decryptionWindowHost.actionToOpenWindow;
 		}
 	};
 
@@ -220,6 +243,36 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		}
 
 		EncryptOneHost host = new EncryptOneHost() {
+			@Override
+			public void handleClose() {
+				view.unrender();
+				pm.detach();
+				pm = null;
+			}
+
+			@Override
+			public Action getActionToOpenCertificatesList() {
+				return keysListWindowHost.actionToOpenWindow;
+			}
+		};
+
+		@Override
+		protected boolean postConstructPm() {
+			return pm.init(host, sourceFile);
+		};
+	};
+
+	private DialogOpener<DecryptOnePm, DecryptOneView> decryptionWindowHost = new DecryptionWindowOpener(null);
+
+	private class DecryptionWindowOpener extends DialogOpener<DecryptOnePm, DecryptOneView> {
+		private String sourceFile;
+
+		public DecryptionWindowOpener(String sourceFile) {
+			super(DecryptOnePm.class, DecryptOneView.class, "action.decrypt");
+			this.sourceFile = sourceFile;
+		}
+
+		DecryptOneHost host = new DecryptOneHost() {
 			@Override
 			public void handleClose() {
 				view.unrender();

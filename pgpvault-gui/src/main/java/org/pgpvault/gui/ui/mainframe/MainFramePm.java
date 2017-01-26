@@ -53,6 +53,10 @@ public class MainFramePm extends PresentationModelBase {
 	public Action getActionEncrypt() {
 		return host.getActionForEncrypt();
 	}
+	
+	public Action getActionDecrypt() {
+		return host.getActionForDecrypt();
+	}
 
 	public ConfigRepository getConfigRepository() {
 		return configRepository;

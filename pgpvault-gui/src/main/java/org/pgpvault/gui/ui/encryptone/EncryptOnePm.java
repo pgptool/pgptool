@@ -48,7 +48,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 public class EncryptOnePm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(EncryptOnePm.class);
 
-	private static final String ENCRYPTED_FILE_EXTENSION = "gpg";
+	private static final String ENCRYPTED_FILE_EXTENSION = "pgp";
 	private static final String SOURCE_FOLDER = "EncryptOnePm.SOURCE_FOLDER";
 	private static final String CONFIG_PAIR_BASE = "Encrypt:";
 
@@ -114,7 +114,7 @@ public class EncryptOnePm extends PresentationModelBase {
 		suggestTargetFileForFileChooser(ofd);
 
 		ofd.setAcceptAllFileFilterUsed(false);
-		ofd.addChoosableFileFilter(new FileNameExtensionFilter("GPG Files (.gpg)", "gpg"));
+		ofd.addChoosableFileFilter(new FileNameExtensionFilter("GPG Files (.pgp)", "pgp"));
 		// NOTE: Should we support other extensions?....
 		ofd.addChoosableFileFilter(ofd.getAcceptAllFileFilter());
 		ofd.setFileFilter(ofd.getChoosableFileFilters()[0]);
@@ -215,6 +215,8 @@ public class EncryptOnePm extends PresentationModelBase {
 	private PropertyChangeListener onSourceFileModified = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
+			log.debug("Source changed to : " + sourceFile.getValue());
+
 			refreshPrimaryOperationAvailability();
 
 			if (!StringUtils.hasText(sourceFile.getValue())) {
@@ -324,7 +326,7 @@ public class EncryptOnePm extends PresentationModelBase {
 		}
 
 		private String getEffectiveTargetFileName() {
-			if (!StringUtils.hasText(targetFile.getValue())) {
+			if (!StringUtils.hasText(targetFile.getValue()) || isUseSameFolder.getValue()) {
 				isUseSameFolder.setValueByOwner(true);
 				return madeUpTargetFileName(sourceFile.getValue(), PathUtils.extractBasePath(sourceFile.getValue()));
 			}

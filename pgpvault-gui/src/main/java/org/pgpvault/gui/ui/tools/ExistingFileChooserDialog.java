@@ -31,16 +31,28 @@ public class ExistingFileChooserDialog {
 
 		int result = ofd.showOpenDialog(optionalParent);
 		if (result != JFileChooser.APPROVE_OPTION) {
-			return null;
+			return handleFileWasChosen(null);
 		}
 		File retFile = ofd.getSelectedFile();
 		if (retFile == null) {
-			return null;
+			return handleFileWasChosen(null);
 		}
 
 		String ret = retFile.getAbsolutePath();
+		ret = handleFileWasChosen(ret);
 		configPairs.put(configPairNameToRemember, PathUtils.extractBasePath(ret));
 		return ret;
+	}
+
+	/**
+	 * Subclass can do post-processing if needed
+	 * 
+	 * @param filePathName
+	 *            user choice, might be null
+	 * @return value that will be returned to initial invoker
+	 */
+	protected String handleFileWasChosen(String filePathName) {
+		return filePathName;
 	}
 
 	private JFileChooser buildSourceFileChooserDialog() {

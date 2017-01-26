@@ -17,7 +17,7 @@ public class KeyFilesOperationsPgpImplTest {
 	@Test
 	public void testReadKeyFromFileExpectCanReadPrivateKey() throws Exception {
 		KeyFilesOperationsPgpImpl fixture = buildFixture();
-		Key<KeyDataPgp> key = fixture.readKeyFromFile(TestTools.getFileNameForResource("Alice.asc"));
+		Key<KeyDataPgp> key = fixture.readKeyFromFile(TestTools.getFileNameForResource("keys/Alice.asc"));
 		assertNotNull(key);
 		assertNotNull(key.getKeyInfo());
 		assertEquals("Alice <alice@email.com>", key.getKeyInfo().getUser());
@@ -26,7 +26,7 @@ public class KeyFilesOperationsPgpImplTest {
 	@Test
 	public void testReadKeyFromFileExpectCanReadPublicKey() throws Exception {
 		KeyFilesOperationsPgpImpl fixture = buildFixture();
-		Key<KeyDataPgp> key = fixture.readKeyFromFile(TestTools.getFileNameForResource("Paul.asc"));
+		Key<KeyDataPgp> key = fixture.readKeyFromFile(TestTools.getFileNameForResource("keys/Paul.asc"));
 		assertNotNull(key);
 		assertNotNull(key.getKeyInfo());
 		assertEquals("Paul <paul@email.com>", key.getKeyInfo().getUser());

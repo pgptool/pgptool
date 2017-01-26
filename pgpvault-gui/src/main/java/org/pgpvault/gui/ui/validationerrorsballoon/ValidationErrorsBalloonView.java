@@ -5,6 +5,7 @@ import java.awt.Container;
 import java.awt.Insets;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.HashMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -41,6 +42,7 @@ public class ValidationErrorsBalloonView
 	private JPanel panelMessages;
 
 	private ListEx<ValidationError> pm;
+	private HashMap<ValidationError, JComponent> veToComp = new HashMap<>();
 
 	private boolean contentsInitedAfterErrorsUpdate;
 
@@ -175,15 +177,16 @@ public class ValidationErrorsBalloonView
 	}
 
 	@Override
-	public void onItemAdded(ValidationError item, int atIndex) {
+	public void onItemAdded(ValidationError ve, int atIndex) {
 		contentsInitedAfterErrorsUpdate = false;
 
 		if (component != null) {
 			component.setBorder(errorBorder);
 		}
 
-		String msg = getValidationErrorMessage(item);
+		String msg = getValidationErrorMessage(ve);
 		JComponent msgPresentation = buildMessagePresentation(msg);
+		veToComp.put(ve, msgPresentation);
 		panelMessages.add(msgPresentation);
 	}
 
@@ -194,12 +197,21 @@ public class ValidationErrorsBalloonView
 
 	@Override
 	public void onItemRemoved(ValidationError item, int wasAtIndex) {
-		Preconditions.checkState(false, "This event is not expected on ValidationErrors list");
+		JComponent comp = veToComp.remove(item);
+		if (comp == null) {
+			return;
+		}
+
+		panelMessages.remove(comp);
+		if (pm.size() == 0) {
+			onAllItemsRemoved(1);
+		}
 	}
 
 	@Override
 	public void onAllItemsRemoved(int sizeWas) {
 		contentsInitedAfterErrorsUpdate = false;
+		veToComp.clear();
 
 		if (component != null) {
 			component.setBorder(originalBorder);

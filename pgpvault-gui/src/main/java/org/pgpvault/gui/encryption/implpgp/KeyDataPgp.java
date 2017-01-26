@@ -5,11 +5,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.math.BigInteger;
 import java.util.Iterator;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpvault.gui.encryption.api.dto.KeyData;
 
@@ -111,6 +113,34 @@ public class KeyDataPgp extends KeyData {
 
 	public void setPublicKeyRing(PGPPublicKeyRing publicKeyRing) {
 		this.publicKeyRing = publicKeyRing;
+	}
+
+	public static String buildKeyIdStr(long keyID) {
+		return Long.toHexString(keyID).toUpperCase();
+	}
+
+	public static long parseIdString(String hexId) {
+		return new BigInteger(hexId, 16).longValue();
+	}
+
+	@Override
+	public boolean isHasAlternativeId(String alternativeId) {
+		long id = parseIdString(alternativeId);
+
+		if (secretKeyRing != null) {
+			return secretKeyRing.getSecretKey(id) != null;
+		} else if (publicKeyRing != null) {
+			return publicKeyRing.getPublicKey(id) != null;
+		}
+		return false;
+	}
+
+	public PGPSecretKey findSecretKeyById(String alternativeId) {
+		long id = parseIdString(alternativeId);
+		if (secretKeyRing != null) {
+			return secretKeyRing.getSecretKey(id);
+		}
+		return null;
 	}
 
 }

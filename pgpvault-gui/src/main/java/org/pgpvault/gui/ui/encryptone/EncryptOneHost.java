@@ -4,6 +4,6 @@ import javax.swing.Action;
 
 public interface EncryptOneHost {
 	void handleClose();
-	
+
 	Action getActionToOpenCertificatesList();
 }

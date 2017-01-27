@@ -42,7 +42,8 @@ public class ConfigPairsImpl implements ConfigPairs {
 	@Override
 	public synchronized <T> T find(String key, T defaultValue) {
 		ensureLoadded();
-		return (T) configPairsEnvelop.get(key);
+		T ret = (T) configPairsEnvelop.get(key);
+		return ret != null ? ret : defaultValue;
 	}
 
 }

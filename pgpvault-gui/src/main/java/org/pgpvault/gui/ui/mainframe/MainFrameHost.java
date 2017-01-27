@@ -6,12 +6,14 @@ public interface MainFrameHost {
 	void handleExitApp();
 
 	Action getActionShowAboutInfo();
-	
+
 	Action getActionImportKey();
-	
+
 	Action getActionShowKeysList();
 
 	Action getActionForEncrypt();
 
 	Action getActionForDecrypt();
+
+	Action getActionChangeFolderForDecrypted();
 }

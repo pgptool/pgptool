@@ -28,6 +28,7 @@ import org.pgpvault.gui.ui.keyslist.KeysListView;
 import org.pgpvault.gui.ui.mainframe.MainFrameHost;
 import org.pgpvault.gui.ui.mainframe.MainFramePm;
 import org.pgpvault.gui.ui.mainframe.MainFrameView;
+import org.pgpvault.gui.ui.tempfolderfordecrypted.TempFolderChooserPm;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +59,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 
 	private MainFramePm mainFramePm;
 	private MainFrameView mainFrameView;
+
+	private TempFolderChooserPm tempFolderChooserPm;
 
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -120,7 +123,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 				}
 				return true;
 			}
-			
+
 			if ("decrypt".equalsIgnoreCase(commandLineArgs[0])) {
 				for (int i = 1; i < commandLineArgs.length; i++) {
 					final String sourceFile = commandLineArgs[i];
@@ -177,6 +180,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		public Action getActionForDecrypt() {
 			return decryptionWindowHost.actionToOpenWindow;
 		}
+
+		@Override
+		public Action getActionChangeFolderForDecrypted() {
+			return actionShowTempFolderChooser;
+		}
 	};
 
 	private void openMainFrameWindow() {
@@ -186,6 +194,16 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		view.setPm(mainFramePm);
 		view.renderTo(null);
 	}
+
+	@SuppressWarnings("serial")
+	protected Action actionShowTempFolderChooser = new LocalizedAction("term.changeTempFolderForDecrypted") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			tempFolderChooserPm = applicationContext.getBean(TempFolderChooserPm.class);
+			tempFolderChooserPm.present(mainFrameView == null ? null : mainFrameView.getWindow());
+			tempFolderChooserPm = null;
+		}
+	};
 
 	protected void tearDownConfigContext() {
 		try {

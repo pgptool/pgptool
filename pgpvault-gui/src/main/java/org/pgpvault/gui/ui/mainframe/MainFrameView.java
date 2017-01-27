@@ -32,6 +32,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private JMenuBar menuBar;
 	private JMenuItem miPgpImportKey;
 	private JMenuItem miShowKeyList;
+	private JMenuItem miChangeTempFolderForDecrypted;
 	private JMenuItem miAbout;
 	private JMenuItem miConfigExit;
 	private JMenuItem miEncrypt;
@@ -57,6 +58,8 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		menuFile.add(miPgpImportKey = new JMenuItem());
 		menuFile.add(miShowKeyList = new JMenuItem());
 		menuFile.addSeparator();
+		menuFile.add(miChangeTempFolderForDecrypted = new JMenuItem());
+		menuFile.addSeparator();
 		menuFile.add(miAbout = new JMenuItem());
 		menuFile.add(miConfigExit = new JMenuItem());
 
@@ -81,6 +84,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		bindingContext.setupBinding(pm.getActionAbout(), miAbout);
 		bindingContext.setupBinding(pm.getActionImportKey(), miPgpImportKey);
 		bindingContext.setupBinding(pm.getActionShowKeysList(), miShowKeyList);
+		bindingContext.setupBinding(pm.getActionChangeFolderForDecrypted(), miChangeTempFolderForDecrypted);
 		bindingContext.setupBinding(pm.getActionEncrypt(), miEncrypt);
 		bindingContext.setupBinding(pm.getActionDecrypt(), miDecrypt);
 	}

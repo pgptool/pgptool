@@ -10,6 +10,7 @@ import java.awt.FlowLayout;
 import java.awt.Window;
 
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -18,6 +19,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
 import org.pgpvault.gui.app.Messages;
@@ -37,7 +39,10 @@ public class DecryptOneView extends DialogViewBaseCustom<DecryptOnePm> {
 	private JTextField edSourceFile;
 	private JButton btnBrowseSource;
 
-	private JCheckBox chkUseSameFolder;
+	private ButtonGroup btnGroupTargetFolder = new ButtonGroup();
+	private JRadioButton chkUseSameFolder;
+	private JRadioButton chkUseTempFolder;
+	private JRadioButton chkUseBrowseFolder;
 	private JTextField edTargetFile;
 	private JButton btnBrowseTarget;
 
@@ -89,7 +94,16 @@ public class DecryptOneView extends DialogViewBaseCustom<DecryptOnePm> {
 		// target file
 		row++;
 		ret.add(new JLabel(text("term.targetFile")), sgl.cs(0, row));
-		ret.add(chkUseSameFolder = new JCheckBox(), sgl.cs(1, row));
+		JPanel targetRadios = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		targetRadios.add(chkUseTempFolder = new JRadioButton());
+		targetRadios.add(new JLabel("   "));
+		targetRadios.add(chkUseSameFolder = new JRadioButton());
+		targetRadios.add(new JLabel("   "));
+		targetRadios.add(chkUseBrowseFolder = new JRadioButton());
+		btnGroupTargetFolder.add(chkUseTempFolder);
+		btnGroupTargetFolder.add(chkUseSameFolder);
+		btnGroupTargetFolder.add(chkUseBrowseFolder);
+		ret.add(targetRadios, sgl.cs(1, row));
 		row++;
 		JPanel pnlTargetFile = new JPanel(new BorderLayout());
 		pnlTargetFile.add(edTargetFile = new JTextField(), BorderLayout.CENTER);
@@ -149,6 +163,9 @@ public class DecryptOneView extends DialogViewBaseCustom<DecryptOnePm> {
 		bindingContext.setupBinding(pm.actionBrowseSource, btnBrowseSource);
 
 		bindingContext.setupBinding(pm.getIsUseSameFolder(), chkUseSameFolder);
+		bindingContext.setupBinding(pm.getIsUseTempFolder(), chkUseTempFolder);
+		bindingContext.setupBinding(pm.getIsUseBrowseFolder(), chkUseBrowseFolder);
+
 		bindingContext.setupBinding(pm.getTargetFile(), edTargetFile);
 		bindingContext.registerPropertyValuePropagation(pm.getTargetFileEnabled(), edTargetFile, "enabled");
 		bindingContext.setupBinding(pm.actionBrowseTarget, btnBrowseTarget);
@@ -170,7 +187,7 @@ public class DecryptOneView extends DialogViewBaseCustom<DecryptOnePm> {
 		dialog.getRootPane().setDefaultButton(btnPerformOperation);
 		edPassword.requestFocusInWindow();
 	}
-	
+
 	@Override
 	protected JDialog initDialog(Window owner, Object constraints) {
 		JDialog ret = new JDialog(owner, ModalityType.APPLICATION_MODAL);

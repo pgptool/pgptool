@@ -27,6 +27,7 @@ import org.pgpvault.gui.encryption.api.EncryptionService;
 import org.pgpvault.gui.encryption.api.KeyRingService;
 import org.pgpvault.gui.encryption.api.dto.Key;
 import org.pgpvault.gui.encryption.api.dto.KeyData;
+import org.pgpvault.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgpvault.gui.tools.PathUtils;
 import org.pgpvault.gui.ui.tools.ExistingFileChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,16 +54,19 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 public class DecryptOnePm extends PresentationModelBase {
 	private static final String FN_PASSWORD = "password";
 	private static final String FN_SOURCE_FILE = "sourceFile";
+	private static final String FN_TARGET_FILE = "targetFile";
 
 	private static Logger log = Logger.getLogger(DecryptOnePm.class);
 
 	private static final String SOURCE_FOLDER = "DecryptOnePm.SOURCE_FOLDER";
 	private static final String CONFIG_PAIR_BASE = "Decrypt:";
+
 	private static final Map<String, String> CACHE_KEYID_TO_PASSWORD = new HashMap<>();
 
 	@Autowired
 	private ConfigPairs configPairs;
-
+	@Autowired
+	private DecryptedTempFolder decryptedTempFolder;
 	@Autowired
 	@Resource(name = "keyRingService")
 	private KeyRingService<KeyData> keyRingService;
@@ -74,6 +78,8 @@ public class DecryptOnePm extends PresentationModelBase {
 
 	private ModelProperty<String> sourceFile;
 	private ModelProperty<Boolean> isUseSameFolder;
+	private ModelProperty<Boolean> isUseTempFolder;
+	private ModelProperty<Boolean> isUseBrowseFolder;
 	private ModelProperty<String> targetFile;
 	private ModelProperty<Boolean> targetFileEnabled;
 	private ModelSelInComboBoxProperty<Key<KeyData>> selectedKey;
@@ -111,11 +117,14 @@ public class DecryptOnePm extends PresentationModelBase {
 		sourceFile = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), FN_SOURCE_FILE, validationErrors);
 		sourceFile.getModelPropertyAccessor().addPropertyChangeListener(onSourceFileModified);
 
-		isUseSameFolder = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(true), "saveToSameFolder");
-		isUseSameFolder.getModelPropertyAccessor().addPropertyChangeListener(onUseSameFolderChanged);
-		targetFile = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "targetFile");
-		targetFileEnabled = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "targetFile");
-		onUseSameFolderChanged.propertyChange(null);
+		isUseTempFolder = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(true), "saveToTempFolder");
+		isUseSameFolder = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "saveToSameFolder");
+		isUseBrowseFolder = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "saveToBrowseFolder");
+		targetFile = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), FN_TARGET_FILE, validationErrors);
+		targetFile.getModelPropertyAccessor().addPropertyChangeListener(onTargetFileModified);
+		targetFileEnabled = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "targetFileEnabled");
+		isUseBrowseFolder.getModelPropertyAccessor().addPropertyChangeListener(onUseBrowseFolderChanged);
+		onUseBrowseFolderChanged.propertyChange(null);
 
 		decryptionKeys = new ModelListProperty<Key<KeyData>>(this,
 				new ValueAdapterReadonlyImpl<List<Key<KeyData>>>(keyRingService.readKeys()), "decryptionKeys");
@@ -134,11 +143,11 @@ public class DecryptOnePm extends PresentationModelBase {
 	private PropertyChangeListener onSelectedKeyChanged = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			trySuggestPasswordbasedOnKey();
+			trySuggestPasswordBasedOnKey();
 			updatePrimaryOperationAvailability();
 		}
 
-		private void trySuggestPasswordbasedOnKey() {
+		private void trySuggestPasswordBasedOnKey() {
 			if (selectedKey.hasValue()) {
 				String passwordUsedBefore = CACHE_KEYID_TO_PASSWORD.get(selectedKey.getValue().getKeyInfo().getKeyId());
 				if (passwordUsedBefore != null) {
@@ -170,27 +179,31 @@ public class DecryptOnePm extends PresentationModelBase {
 	};
 
 	private String askUserForTargetFile() {
-		JFileChooser ofd = new JFileChooser();
-		ofd.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		ofd.setMultiSelectionEnabled(false);
-		ofd.setDialogTitle(text("action.chooseTargetFile"));
-		ofd.setApproveButtonText(text("action.choose"));
-		suggestTargetFileForFileChooser(ofd);
-		ofd.setAcceptAllFileFilterUsed(true);
+		try {
+			JFileChooser ofd = new JFileChooser();
+			ofd.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			ofd.setMultiSelectionEnabled(false);
+			ofd.setDialogTitle(text("action.chooseTargetFile"));
+			ofd.setApproveButtonText(text("action.choose"));
+			suggestTargetFileForFileChooser(ofd);
+			ofd.setAcceptAllFileFilterUsed(true);
 
-		int result = ofd.showSaveDialog(findRegisteredWindowIfAny());
-		if (result != JFileChooser.APPROVE_OPTION) {
-			return null;
+			int result = ofd.showSaveDialog(findRegisteredWindowIfAny());
+			if (result != JFileChooser.APPROVE_OPTION) {
+				return null;
+			}
+			File retFile = ofd.getSelectedFile();
+			if (retFile == null) {
+				return null;
+			}
+
+			String ret = retFile.getAbsolutePath();
+
+			targetFile.setValueByOwner(ret);
+			return ret;
+		} finally {
+			validateTargetFile();
 		}
-		File retFile = ofd.getSelectedFile();
-		if (retFile == null) {
-			return null;
-		}
-
-		String ret = retFile.getAbsolutePath();
-
-		targetFile.setValueByOwner(ret);
-		return ret;
 	}
 
 	private void suggestTargetFileForFileChooser(JFileChooser ofd) {
@@ -246,6 +259,29 @@ public class DecryptOnePm extends PresentationModelBase {
 			};
 		}
 		return sourceFileChooser;
+	}
+
+	private PropertyChangeListener onTargetFileModified = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			clearValidationErrorsFromTargetFile();
+			validateTargetFile();
+		}
+	};
+
+	private boolean validateTargetFile() {
+		if (!isUseBrowseFolder.getValue()) {
+			return true;
+		}
+		if (!StringUtils.hasText(targetFile.getValue())) {
+			validationErrors.add(new FieldRequiredValidationError(FN_TARGET_FILE));
+			return false;
+		}
+		return true;
+	}
+
+	private void clearValidationErrorsFromTargetFile() {
+		validationErrors.removeAll(ValidationErrorsUtils.findErrorsForField(FN_TARGET_FILE, validationErrors));
 	}
 
 	private PropertyChangeListener onSourceFileModified = new PropertyChangeListener() {
@@ -317,10 +353,11 @@ public class DecryptOnePm extends PresentationModelBase {
 		}
 	};
 
-	private PropertyChangeListener onUseSameFolderChanged = new PropertyChangeListener() {
+	private PropertyChangeListener onUseBrowseFolderChanged = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			boolean result = !isUseSameFolder.getValue();
+			boolean result = isUseBrowseFolder.getValue();
+			log.debug("isBrowse = " + result);
 			actionBrowseTarget.setEnabled(result);
 			targetFileEnabled.setValueByOwner(result);
 			// NOTE: MAGIC: This event might be triggered when using suggested
@@ -328,6 +365,10 @@ public class DecryptOnePm extends PresentationModelBase {
 			// we'll not show file chooser
 			if (result && !StringUtils.hasText(targetFile.getValue())) {
 				askUserForTargetFile();
+			}
+
+			if (!result) {
+				clearValidationErrorsFromTargetFile();
 			}
 		}
 	};
@@ -354,6 +395,10 @@ public class DecryptOnePm extends PresentationModelBase {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			String targetFileName = getEffectiveTargetFileName();
+			if (targetFileName == null) {
+				return;
+			}
+
 			Key<KeyData> key = selectedKey.getValue();
 			String sourceFileStr = sourceFile.getValue();
 
@@ -396,7 +441,8 @@ public class DecryptOnePm extends PresentationModelBase {
 			}
 
 			if (confirmationMessageRequired) {
-				EntryPoint.showMessageBox(text("phrase.decryptionSuccess"), text("term.success"), MessageSeverity.INFO);
+				EntryPoint.showMessageBox(text("phrase.decryptionSuccess", targetFileName), text("term.success"),
+						MessageSeverity.INFO);
 			}
 
 			// close window
@@ -420,12 +466,18 @@ public class DecryptOnePm extends PresentationModelBase {
 		}
 
 		private String getEffectiveTargetFileName() {
-			if (!StringUtils.hasText(targetFile.getValue()) || isUseSameFolder.getValue()) {
-				isUseSameFolder.setValueByOwner(true);
+			if (isUseSameFolder.getValue()) {
 				return madeUpTargetFileName(sourceFile.getValue(), PathUtils.extractBasePath(sourceFile.getValue()));
+			} else if (isUseTempFolder.getValue()) {
+				return madeUpTargetFileName(sourceFile.getValue(), decryptedTempFolder.getTempFolderBasePath());
 			}
 
+			// Validation for target folder!! ---
 			String targetFileName = targetFile.getValue();
+			if (!validateTargetFile()) {
+				return null;
+			}
+
 			File parentFolder = new File(targetFileName).getParentFile();
 			Preconditions.checkState(parentFolder.exists() || parentFolder.mkdirs(),
 					"Failed to ensure all parents directories created");
@@ -444,6 +496,7 @@ public class DecryptOnePm extends PresentationModelBase {
 		DecryptionDialogParameters ret = new DecryptionDialogParameters();
 		ret.setSourceFile(sourceFile.getValue());
 		ret.setUseSameFolder(isUseSameFolder.getValue());
+		ret.setUseTempFolder(isUseTempFolder.getValue());
 		ret.setTargetFile(targetFile.getValue());
 		ret.setDecryptionKeyId(selectedKey.getValue().getKeyInfo().getKeyId());
 		ret.setDeleteSourceFile(isDeleteSourceAfter.getValue());
@@ -453,22 +506,28 @@ public class DecryptOnePm extends PresentationModelBase {
 	}
 
 	private void useSugestedParameters(DecryptionDialogParameters params) {
-		if (!params.isUseSameFolder()) {
+		if (params.isUseSameFolder() || params.isUseTempFolder()) {
+			targetFile.setValueByOwner("");
+		} else {
 			if (params.getSourceFile().equals(sourceFile.getValue())) {
+				// if suggested parameters are exactly for this file
 				targetFile.setValueByOwner(params.getTargetFile());
 			} else {
-				// NOTE: Assuming that params fully valid and target file is
-				// provided
+				// case when suggested parameters are provided for neighbor
 				targetFile.setValueByOwner(
 						madeUpTargetFileName(sourceFile.getValue(), PathUtils.extractBasePath(params.getTargetFile())));
 			}
-		} else {
-			targetFile.setValueByOwner("");
 		}
 		// NOTE: MAGIC: We need to set it AFTER we set targetFolder. Because
 		// then isUseSameFolder onChange handler will not pen folder selection
 		// dialog
-		isUseSameFolder.setValueByOwner(params.isUseSameFolder());
+		if (params.isUseSameFolder()) {
+			isUseSameFolder.setValueByOwner(true);
+		} else if (params.isUseTempFolder()) {
+			isUseTempFolder.setValueByOwner(true);
+		} else {
+			isUseBrowseFolder.setValueByOwner(true);
+		}
 
 		isDeleteSourceAfter.setValueByOwner(params.isDeleteSourceFile());
 		isOpenTargetFolderAfter.setValueByOwner(params.isOpenTargetFolder());
@@ -519,6 +578,14 @@ public class DecryptOnePm extends PresentationModelBase {
 
 	public ModelPropertyAccessor<Boolean> getIsUseSameFolder() {
 		return isUseSameFolder.getModelPropertyAccessor();
+	}
+
+	public ModelPropertyAccessor<Boolean> getIsUseTempFolder() {
+		return isUseTempFolder.getModelPropertyAccessor();
+	}
+
+	public ModelPropertyAccessor<Boolean> getIsUseBrowseFolder() {
+		return isUseBrowseFolder.getModelPropertyAccessor();
 	}
 
 	public ModelSelInComboBoxPropertyAccessor<Key<KeyData>> getSelectedKey() {

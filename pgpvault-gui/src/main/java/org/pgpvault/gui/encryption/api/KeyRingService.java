@@ -23,5 +23,5 @@ public interface KeyRingService<TKeyData extends KeyData> {
 	 *            list of ids needs to be found.
 	 * @return list of keys or empty array if none found
 	 */
-	List<Key<TKeyData>> findMatchingDecryptionKeys(Set<String> keysIds);
+	List<Key<TKeyData>> findMatchingKeysByAlternativeIds(Set<String> keysIds);
 }

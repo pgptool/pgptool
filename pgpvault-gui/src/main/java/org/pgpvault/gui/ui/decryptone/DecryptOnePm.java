@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,8 @@ import org.pgpvault.gui.encryption.api.dto.Key;
 import org.pgpvault.gui.encryption.api.dto.KeyData;
 import org.pgpvault.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgpvault.gui.tools.PathUtils;
+import org.pgpvault.gui.ui.encryptone.EncryptOnePm;
+import org.pgpvault.gui.ui.encryptone.EncryptionDialogParameters;
 import org.pgpvault.gui.ui.tools.ExistingFileChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -91,6 +94,7 @@ public class DecryptOnePm extends PresentationModelBase {
 	private ListEx<ValidationError> validationErrors = new ListExImpl<ValidationError>();
 
 	private ExistingFileChooserDialog sourceFileChooser;
+	private Set<String> sourceFileRecipientsKeysIds;
 
 	public boolean init(DecryptOneHost host, String optionalSource) {
 		Preconditions.checkArgument(host != null);
@@ -320,8 +324,8 @@ public class DecryptOnePm extends PresentationModelBase {
 					return false;
 				}
 
-				Set<String> keysIds = encryptionService.findKeyIdsForDecryption(sourceFileStr);
-				List<Key<KeyData>> keys = keyRingService.findMatchingDecryptionKeys(keysIds);
+				sourceFileRecipientsKeysIds = encryptionService.findKeyIdsForDecryption(sourceFileStr);
+				List<Key<KeyData>> keys = keyRingService.findMatchingKeysByAlternativeIds(sourceFileRecipientsKeysIds);
 				decryptionKeys.getList().addAll(keys);
 
 				if (decryptionKeys.getList().size() > 0) {
@@ -351,13 +355,56 @@ public class DecryptOnePm extends PresentationModelBase {
 				selectedKey.setValueByOwner(decryptionKeys.getList().get(0));
 			}
 		}
+
+		protected DecryptionDialogParameters findParamsBasedOnSourceFile(String sourceFile) {
+			DecryptionDialogParameters params = configPairs.find(CONFIG_PAIR_BASE + sourceFile, null);
+			if (params == null) {
+				params = configPairs.find(CONFIG_PAIR_BASE + PathUtils.extractBasePath(sourceFile), null);
+			}
+			return params;
+		}
+
+		private void useSugestedParameters(DecryptionDialogParameters params) {
+			if (params.isUseSameFolder() || params.isUseTempFolder()) {
+				targetFile.setValueByOwner("");
+			} else {
+				if (params.getSourceFile().equals(sourceFile.getValue())) {
+					// if suggested parameters are exactly for this file
+					targetFile.setValueByOwner(params.getTargetFile());
+				} else {
+					// case when suggested parameters are provided for neighbor
+					targetFile.setValueByOwner(madeUpTargetFileName(sourceFile.getValue(),
+							PathUtils.extractBasePath(params.getTargetFile())));
+				}
+			}
+			// NOTE: MAGIC: We need to set it AFTER we set targetFolder. Because
+			// then isUseSameFolder onChange handler will not pen folder
+			// selection
+			// dialog
+			if (params.isUseSameFolder()) {
+				isUseSameFolder.setValueByOwner(true);
+			} else if (params.isUseTempFolder()) {
+				isUseTempFolder.setValueByOwner(true);
+			} else {
+				isUseBrowseFolder.setValueByOwner(true);
+			}
+
+			isDeleteSourceAfter.setValueByOwner(params.isDeleteSourceFile());
+			isOpenTargetFolderAfter.setValueByOwner(params.isOpenTargetFolder());
+			isOpenAssociatedApplication.setValueByOwner(params.isOpenAssociatedApplication());
+
+			Optional<Key<KeyData>> key = decryptionKeys.getList().stream()
+					.filter(x -> params.getDecryptionKeyId().equals(x.getKeyInfo().getKeyId())).findFirst();
+			if (key.isPresent()) {
+				selectedKey.setValueByOwner(key.get());
+			}
+		}
 	};
 
 	private PropertyChangeListener onUseBrowseFolderChanged = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			boolean result = isUseBrowseFolder.getValue();
-			log.debug("isBrowse = " + result);
 			actionBrowseTarget.setEnabled(result);
 			targetFileEnabled.setValueByOwner(result);
 			// NOTE: MAGIC: This event might be triggered when using suggested
@@ -379,14 +426,6 @@ public class DecryptOnePm extends PresentationModelBase {
 		result &= selectedKey.hasValue();
 		result &= StringUtils.hasText(password.getValue());
 		actionDoOperation.setEnabled(result);
-	}
-
-	protected DecryptionDialogParameters findParamsBasedOnSourceFile(String sourceFile) {
-		DecryptionDialogParameters params = configPairs.find(CONFIG_PAIR_BASE + sourceFile, null);
-		if (params == null) {
-			params = configPairs.find(CONFIG_PAIR_BASE + PathUtils.extractBasePath(sourceFile), null);
-		}
-		return params;
 	}
 
 	@SuppressWarnings("serial")
@@ -416,7 +455,8 @@ public class DecryptOnePm extends PresentationModelBase {
 			// Cache password
 			CACHE_KEYID_TO_PASSWORD.put(key.getKeyInfo().getKeyId(), password.getValue());
 			// Remember parameters
-			persistDialogParametersForCurrentInputs();
+			persistDecryptionDialogParametersForCurrentInputs();
+			persistEncryptionDialogParameters(targetFileName);
 
 			// Delete source if asked
 			if (isDeleteSourceAfter.getValue()) {
@@ -483,62 +523,54 @@ public class DecryptOnePm extends PresentationModelBase {
 					"Failed to ensure all parents directories created");
 			return targetFileName;
 		}
+
+		private void persistDecryptionDialogParametersForCurrentInputs() {
+			DecryptionDialogParameters dialogParameters = buildDecryptionDialogParameters();
+			configPairs.put(CONFIG_PAIR_BASE + dialogParameters.getSourceFile(), dialogParameters);
+			configPairs.put(CONFIG_PAIR_BASE + PathUtils.extractBasePath(dialogParameters.getSourceFile()),
+					dialogParameters);
+		}
+
+		/**
+		 * We use this method to store parameters that program will suggest to
+		 * use when user will desire to encrypt back file that was just
+		 * decrypted
+		 * 
+		 * NOTE: Slight SRP concern here. We're interfering with responsibility
+		 * area of {@link EncryptOnePm}
+		 * 
+		 * @param decryptedFile
+		 *            decrypted file path name
+		 */
+		protected void persistEncryptionDialogParameters(String decryptedFile) {
+			EncryptionDialogParameters dialogParameters = buildEncryptionDialogParameters(decryptedFile);
+			configPairs.put(EncryptOnePm.CONFIG_PAIR_BASE + decryptedFile, dialogParameters);
+		}
+
+		private EncryptionDialogParameters buildEncryptionDialogParameters(String decryptedFile) {
+			EncryptionDialogParameters ret = new EncryptionDialogParameters();
+			ret.setPropagatedFromDecrypt(true);
+			ret.setSourceFile(decryptedFile);
+			ret.setUseSameFolder(false);
+			ret.setTargetFile(sourceFile.getValue());
+			ret.setDeleteSourceFile(true); // questionable
+			ret.setRecipientsKeysIds(new ArrayList<>(sourceFileRecipientsKeysIds));
+			return ret;
+		}
+
+		private DecryptionDialogParameters buildDecryptionDialogParameters() {
+			DecryptionDialogParameters ret = new DecryptionDialogParameters();
+			ret.setSourceFile(sourceFile.getValue());
+			ret.setUseSameFolder(isUseSameFolder.getValue());
+			ret.setUseTempFolder(isUseTempFolder.getValue());
+			ret.setTargetFile(targetFile.getValue());
+			ret.setDecryptionKeyId(selectedKey.getValue().getKeyInfo().getKeyId());
+			ret.setDeleteSourceFile(isDeleteSourceAfter.getValue());
+			ret.setOpenTargetFolder(isOpenTargetFolderAfter.getValue());
+			ret.setOpenAssociatedApplication(isOpenAssociatedApplication.getValue());
+			return ret;
+		}
 	};
-
-	private void persistDialogParametersForCurrentInputs() {
-		DecryptionDialogParameters dialogParameters = buildDecryptionDialogParameters();
-		configPairs.put(CONFIG_PAIR_BASE + dialogParameters.getSourceFile(), dialogParameters);
-		configPairs.put(CONFIG_PAIR_BASE + PathUtils.extractBasePath(dialogParameters.getSourceFile()),
-				dialogParameters);
-	}
-
-	private DecryptionDialogParameters buildDecryptionDialogParameters() {
-		DecryptionDialogParameters ret = new DecryptionDialogParameters();
-		ret.setSourceFile(sourceFile.getValue());
-		ret.setUseSameFolder(isUseSameFolder.getValue());
-		ret.setUseTempFolder(isUseTempFolder.getValue());
-		ret.setTargetFile(targetFile.getValue());
-		ret.setDecryptionKeyId(selectedKey.getValue().getKeyInfo().getKeyId());
-		ret.setDeleteSourceFile(isDeleteSourceAfter.getValue());
-		ret.setOpenTargetFolder(isOpenTargetFolderAfter.getValue());
-		ret.setOpenAssociatedApplication(isOpenAssociatedApplication.getValue());
-		return ret;
-	}
-
-	private void useSugestedParameters(DecryptionDialogParameters params) {
-		if (params.isUseSameFolder() || params.isUseTempFolder()) {
-			targetFile.setValueByOwner("");
-		} else {
-			if (params.getSourceFile().equals(sourceFile.getValue())) {
-				// if suggested parameters are exactly for this file
-				targetFile.setValueByOwner(params.getTargetFile());
-			} else {
-				// case when suggested parameters are provided for neighbor
-				targetFile.setValueByOwner(
-						madeUpTargetFileName(sourceFile.getValue(), PathUtils.extractBasePath(params.getTargetFile())));
-			}
-		}
-		// NOTE: MAGIC: We need to set it AFTER we set targetFolder. Because
-		// then isUseSameFolder onChange handler will not pen folder selection
-		// dialog
-		if (params.isUseSameFolder()) {
-			isUseSameFolder.setValueByOwner(true);
-		} else if (params.isUseTempFolder()) {
-			isUseTempFolder.setValueByOwner(true);
-		} else {
-			isUseBrowseFolder.setValueByOwner(true);
-		}
-
-		isDeleteSourceAfter.setValueByOwner(params.isDeleteSourceFile());
-		isOpenTargetFolderAfter.setValueByOwner(params.isOpenTargetFolder());
-		isOpenAssociatedApplication.setValueByOwner(params.isOpenAssociatedApplication());
-
-		Optional<Key<KeyData>> key = decryptionKeys.getList().stream()
-				.filter(x -> params.getDecryptionKeyId().equals(x.getKeyInfo().getKeyId())).findFirst();
-		if (key.isPresent()) {
-			selectedKey.setValueByOwner(key.get());
-		}
-	}
 
 	private String madeUpTargetFileName(String sourceFileName, String targetBasedPath) {
 		return targetBasedPath + File.separator + FilenameUtils.getBaseName(sourceFileName);

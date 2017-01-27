@@ -8,12 +8,14 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -31,6 +33,7 @@ import org.pgpvault.gui.tools.PathUtils;
 import org.pgpvault.gui.ui.tools.ExistingFileChooserDialog;
 import org.pgpvault.gui.ui.tools.ListChangeListenerAnyEventImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.google.common.base.Preconditions;
@@ -50,7 +53,7 @@ public class EncryptOnePm extends PresentationModelBase {
 
 	private static final String ENCRYPTED_FILE_EXTENSION = "pgp";
 	private static final String SOURCE_FOLDER = "EncryptOnePm.SOURCE_FOLDER";
-	private static final String CONFIG_PAIR_BASE = "Encrypt:";
+	public static final String CONFIG_PAIR_BASE = "Encrypt:";
 
 	@Autowired
 	private ConfigPairs configPairs;
@@ -230,6 +233,79 @@ public class EncryptOnePm extends PresentationModelBase {
 				selectSelfAsRecipient();
 			}
 		}
+
+		protected EncryptionDialogParameters findParamsBasedOnSourceFile(String sourceFile) {
+			EncryptionDialogParameters params = configPairs.find(CONFIG_PAIR_BASE + sourceFile, null);
+			if (params == null) {
+				params = configPairs.find(CONFIG_PAIR_BASE + PathUtils.extractBasePath(sourceFile), null);
+			}
+			return params;
+		}
+
+		private void selectSelfAsRecipient() {
+			selectedRecipients.getList().clear();
+			for (Key<KeyData> key : availabileRecipients.getList()) {
+				if (!key.getKeyData().isCanBeUsedForDecryption()) {
+					continue;
+				}
+				selectedRecipients.getList().add(key);
+			}
+		}
+
+		private void useSugestedParameters(EncryptionDialogParameters params) {
+			useSuggestedTargetFile(params);
+
+			// NOTE: MAGIC: We need to set it AFTER we set targetFolder. Because
+			// then isUseSameFolder onChange handler will not open folder
+			// selection
+			// dialog
+			isUseSameFolder.setValueByOwner(params.isUseSameFolder());
+			isDeleteSourceAfter.setValueByOwner(params.isDeleteSourceFile());
+			isOpenTargetFolderAfter.setValueByOwner(params.isOpenTargetFolder());
+
+			List<String> missedKeys = preselectRecipients(params.getRecipientsKeysIds());
+			notifyUserOfMissingKeysIfAny(missedKeys);
+		}
+
+		private void useSuggestedTargetFile(EncryptionDialogParameters params) {
+			if (!params.isUseSameFolder()) {
+				if (params.getSourceFile().equals(sourceFile.getValue())) {
+					targetFile.setValueByOwner(params.getTargetFile());
+				} else {
+					// NOTE: Assuming that params fully valid and target file is
+					// provided
+					targetFile.setValueByOwner(madeUpTargetFileName(sourceFile.getValue(),
+							PathUtils.extractBasePath(params.getTargetFile())));
+				}
+			} else {
+				targetFile.setValueByOwner("");
+			}
+		}
+
+		private List<String> preselectRecipients(ArrayList<String> recipientsKeysIds) {
+			selectedRecipients.getList().clear();
+			List<String> missedKeys = new ArrayList<>();
+			for (String keyId : recipientsKeysIds) {
+				Optional<Key<KeyData>> key = availabileRecipients.getList().stream()
+						.filter(x -> x.getKeyData().isHasAlternativeId(keyId)).findFirst();
+				if (key.isPresent()) {
+					selectedRecipients.getList().add(key.get());
+				} else {
+					missedKeys.add(keyId);
+				}
+			}
+			return missedKeys;
+		}
+
+		private void notifyUserOfMissingKeysIfAny(List<String> missedKeys) {
+			if (CollectionUtils.isEmpty(missedKeys)) {
+				return;
+			}
+
+			EntryPoint.showMessageBox(findRegisteredWindowIfAny(),
+					text("error.notAllRecipientsAvailable", Arrays.asList(missedKeys)), text("term.attention"),
+					JOptionPane.WARNING_MESSAGE);
+		}
 	};
 
 	private PropertyChangeListener onUseSameFolderChanged = new PropertyChangeListener() {
@@ -247,29 +323,11 @@ public class EncryptOnePm extends PresentationModelBase {
 		}
 	};
 
-	private void selectSelfAsRecipient() {
-		selectedRecipients.getList().clear();
-		for (Key<KeyData> key : availabileRecipients.getList()) {
-			if (!key.getKeyData().isCanBeUsedForDecryption()) {
-				continue;
-			}
-			selectedRecipients.getList().add(key);
-		}
-	}
-
 	protected void refreshPrimaryOperationAvailability() {
 		boolean result = true;
 		result &= !selectedRecipients.getList().isEmpty();
 		result &= StringUtils.hasText(sourceFile.getValue()) && new File(sourceFile.getValue()).exists();
 		actionDoOperation.setEnabled(result);
-	}
-
-	protected EncryptionDialogParameters findParamsBasedOnSourceFile(String sourceFile) {
-		EncryptionDialogParameters params = configPairs.find(CONFIG_PAIR_BASE + sourceFile, null);
-		if (params == null) {
-			params = configPairs.find(CONFIG_PAIR_BASE + PathUtils.extractBasePath(sourceFile), null);
-		}
-		return params;
 	}
 
 	private ListChangeListenerAnyEventImpl<Key<KeyData>> onRecipientsSelectionChanged = new ListChangeListenerAnyEventImpl<Key<KeyData>>() {
@@ -337,58 +395,28 @@ public class EncryptOnePm extends PresentationModelBase {
 					"Failed to ensure all parents directories created");
 			return targetFileName;
 		}
+
+		private void persistDialogParametersForCurrentInputs() {
+			EncryptionDialogParameters dialogParameters = buildEncryptionDialogParameters();
+			configPairs.put(CONFIG_PAIR_BASE + dialogParameters.getSourceFile(), dialogParameters);
+			configPairs.put(CONFIG_PAIR_BASE + PathUtils.extractBasePath(dialogParameters.getSourceFile()),
+					dialogParameters);
+		}
+
+		private EncryptionDialogParameters buildEncryptionDialogParameters() {
+			EncryptionDialogParameters ret = new EncryptionDialogParameters();
+			ret.setSourceFile(sourceFile.getValue());
+			ret.setUseSameFolder(isUseSameFolder.getValue());
+			ret.setTargetFile(targetFile.getValue());
+			ret.setDeleteSourceFile(isDeleteSourceAfter.getValue());
+			ret.setOpenTargetFolder(isOpenTargetFolderAfter.getValue());
+			ret.setRecipientsKeysIds(new ArrayList<>(selectedRecipients.getList().size()));
+			for (Key<KeyData> key : selectedRecipients.getList()) {
+				ret.getRecipientsKeysIds().add(key.getKeyInfo().getKeyId());
+			}
+			return ret;
+		}
 	};
-
-	private void persistDialogParametersForCurrentInputs() {
-		EncryptionDialogParameters dialogParameters = buildEncryptionDialogParameters();
-		configPairs.put(CONFIG_PAIR_BASE + dialogParameters.getSourceFile(), dialogParameters);
-		configPairs.put(CONFIG_PAIR_BASE + PathUtils.extractBasePath(dialogParameters.getSourceFile()),
-				dialogParameters);
-	}
-
-	private EncryptionDialogParameters buildEncryptionDialogParameters() {
-		EncryptionDialogParameters ret = new EncryptionDialogParameters();
-		ret.setSourceFile(sourceFile.getValue());
-		ret.setUseSameFolder(isUseSameFolder.getValue());
-		ret.setTargetFile(targetFile.getValue());
-		ret.setDeleteSourceFile(isDeleteSourceAfter.getValue());
-		ret.setOpenTargetFolder(isOpenTargetFolderAfter.getValue());
-		ret.setRecipientsKeysIds(new ArrayList<>(selectedRecipients.getList().size()));
-		for (Key<KeyData> key : selectedRecipients.getList()) {
-			ret.getRecipientsKeysIds().add(key.getKeyInfo().getKeyId());
-		}
-		return ret;
-	}
-
-	private void useSugestedParameters(EncryptionDialogParameters params) {
-		if (!params.isUseSameFolder()) {
-			if (params.getSourceFile().equals(sourceFile.getValue())) {
-				targetFile.setValueByOwner(params.getTargetFile());
-			} else {
-				// NOTE: Assuming that params fully valid and target file is
-				// provided
-				targetFile.setValueByOwner(
-						madeUpTargetFileName(sourceFile.getValue(), PathUtils.extractBasePath(params.getTargetFile())));
-			}
-		} else {
-			targetFile.setValueByOwner("");
-		}
-		// NOTE: MAGIC: We need to set it AFTER we set targetFolder. Because
-		// then isUseSameFolder onChange handler will not pen folder sleection
-		// dialog
-		isUseSameFolder.setValueByOwner(params.isUseSameFolder());
-
-		isDeleteSourceAfter.setValueByOwner(params.isDeleteSourceFile());
-		isOpenTargetFolderAfter.setValueByOwner(params.isOpenTargetFolder());
-		selectedRecipients.getList().clear();
-		for (String keyId : params.getRecipientsKeysIds()) {
-			Optional<Key<KeyData>> key = availabileRecipients.getList().stream()
-					.filter(x -> keyId.equals(x.getKeyInfo().getKeyId())).findFirst();
-			if (key.isPresent()) {
-				selectedRecipients.getList().add(key.get());
-			}
-		}
-	}
 
 	private String madeUpTargetFileName(String sourceFileName, String targetBasedPath) {
 		File fileSource = new File(sourceFileName);

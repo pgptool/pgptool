@@ -113,7 +113,7 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 		Preconditions.checkArgument(StringUtils.hasText(filePathName) && new File(filePathName).exists(),
 				"filePathName has to point to existing file");
 
-		log.debug("Looking for decruption keys for file " + filePathName);
+		log.debug("Looking for decryption keys for file " + filePathName);
 
 		try (FileInputStream stream = new FileInputStream(new File(filePathName))) {
 			PGPObjectFactory factory = new PGPObjectFactory(PGPUtil.getDecoderStream(stream),

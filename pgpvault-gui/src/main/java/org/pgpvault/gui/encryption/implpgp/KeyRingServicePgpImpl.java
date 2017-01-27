@@ -164,7 +164,7 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 	}
 
 	@Override
-	public List<Key<KeyDataPgp>> findMatchingDecryptionKeys(Set<String> keysIds) {
+	public List<Key<KeyDataPgp>> findMatchingKeysByAlternativeIds(Set<String> keysIds) {
 		Preconditions.checkArgument(!CollectionUtils.isEmpty(keysIds));
 
 		List<Key<KeyDataPgp>> ret = new ArrayList<>(keysIds.size());

@@ -165,7 +165,7 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 
 	@Override
 	protected JDialog initDialog(Window owner, Object constraints) {
-		JDialog ret = new JDialog(owner, ModalityType.APPLICATION_MODAL);
+		JDialog ret = new JDialog(owner, ModalityType.MODELESS);
 		ret.setLayout(new BorderLayout());
 		ret.setResizable(true);
 		ret.setSize(new Dimension(UiUtils.getFontRelativeSize(60), UiUtils.getFontRelativeSize(50)));

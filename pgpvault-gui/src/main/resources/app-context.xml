@@ -65,11 +65,11 @@
 	<bean class="org.pgpvault.gui.ui.keyslist.KeysListView" lazy-init="true" scope="singleton" />
 	<bean class="org.pgpvault.gui.ui.keyslist.KeysListPm" scope="prototype" />
 	
-	<bean class="org.pgpvault.gui.ui.encryptone.EncryptOnePm" lazy-init="true" scope="singleton" />
-	<bean class="org.pgpvault.gui.ui.encryptone.EncryptOneView" scope="prototype" />
+	<bean class="org.pgpvault.gui.ui.encryptone.EncryptOnePm" lazy-init="true" scope="prototype" />
+	<bean class="org.pgpvault.gui.ui.encryptone.EncryptOneView" lazy-init="true" scope="prototype" />
 	
-	<bean class="org.pgpvault.gui.ui.decryptone.DecryptOnePm" lazy-init="true" scope="singleton" />
-	<bean class="org.pgpvault.gui.ui.decryptone.DecryptOneView" scope="prototype" />
+	<bean class="org.pgpvault.gui.ui.decryptone.DecryptOnePm" lazy-init="true" scope="prototype" />
+	<bean class="org.pgpvault.gui.ui.decryptone.DecryptOneView" lazy-init="true" scope="prototype" />
 	
 	<bean class="org.pgpvault.gui.ui.tempfolderfordecrypted.TempFolderChooserPm" lazy-init="true" scope="singleton" />
 </beans>

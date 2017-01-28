@@ -79,7 +79,7 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> T readObject(String sourceFile) {
+	public static <T> T readObject(String sourceFile) {
 		ObjectInputStream ois = null;
 		try {
 			File file = new File(sourceFile);
@@ -100,7 +100,7 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 		}
 	}
 
-	private void safeClose(ObjectInputStream fis) {
+	public static void safeClose(ObjectInputStream fis) {
 		if (fis != null) {
 			try {
 				fis.close();
@@ -110,7 +110,7 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 		}
 	}
 
-	private void writeObject(Object o, String destinationFile) {
+	public static void writeObject(Object o, String destinationFile) {
 		ObjectOutputStream oos = null;
 		try {
 			log.trace(String.format("Persisting %s to %s", o, destinationFile));
@@ -131,7 +131,7 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 		}
 	}
 
-	private void safeClose(ObjectOutputStream fis) {
+	public static void safeClose(ObjectOutputStream fis) {
 		if (fis != null) {
 			try {
 				fis.close();

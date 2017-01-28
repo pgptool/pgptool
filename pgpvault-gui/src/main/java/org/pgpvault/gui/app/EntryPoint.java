@@ -3,6 +3,7 @@ package org.pgpvault.gui.app;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
+import java.util.Arrays;
 import java.util.Locale;
 
 import javax.swing.JOptionPane;
@@ -13,6 +14,9 @@ import javax.swing.UIManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.pgpvault.gui.tools.ConsoleExceptionUtils;
+import org.pgpvault.gui.tools.singleinstance.PrimaryInstanceListener;
+import org.pgpvault.gui.tools.singleinstance.SingleInstance;
+import org.pgpvault.gui.tools.singleinstance.SingleInstanceFileBasedImpl;
 import org.pgpvault.gui.ui.root.RootPm;
 import org.pgpvault.gui.ui.tools.BindingContextFactoryImpl;
 import org.springframework.beans.factory.InitializingBean;
@@ -31,14 +35,24 @@ public class EntryPoint implements InitializingBean {
 
 	private static AbstractApplicationContext currentApplicationContext;
 	private RootPm rootPm;
+	private static SingleInstance singleInstance;
+	private static RootPm rootPmStatic;
 
 	public static void main(String[] args) {
+		DOMConfigurator.configure(EntryPoint.class.getClassLoader().getResource("pgpvault-gui-log4j.xml"));
+		log.info("EntryPoint first scream");
+
+		if (!isPrimaryInstance(args)) {
+			log.info(
+					"Since this is a secondary instance args were forwarded to primary instance. This instance will now exit");
+			System.exit(0);
+			return;
+		}
+
 		SplashScreenView splashScreenView = new SplashScreenView();
 		SwingPmSettings.setBindingContextFactory(new BindingContextFactoryImpl());
 
 		try {
-			DOMConfigurator.configure(EntryPoint.class.getClassLoader().getResource("pgpvault-gui-log4j.xml"));
-			log.info("EntryPoint first scream");
 
 			// Init spring context
 			try {
@@ -54,16 +68,42 @@ public class EntryPoint implements InitializingBean {
 
 				// Now startup application logic
 				EntryPoint entryPoint = currentApplicationContext.getBean(EntryPoint.class);
+				splashScreenView.close();
+				splashScreenView = null;
 				entryPoint.startUp(args);
+				rootPmStatic = entryPoint.getRootPm();
 			} catch (Throwable t) {
 				log.error("Failed to startup application", t);
 				reportAppInitFailureMessageToUser(t);
 				throw new RuntimeException("Application failed to start", t);
 			}
 		} finally {
-			splashScreenView.close();
+			if (splashScreenView != null) {
+				splashScreenView.close();
+				splashScreenView = null;
+			}
 		}
 	}
+
+	private static boolean isPrimaryInstance(String[] args) {
+		singleInstance = new SingleInstanceFileBasedImpl("pgpvault-si");
+		if (!singleInstance.tryClaimPrimaryInstanceRole(primaryInstanceListener)) {
+			singleInstance.sendArgumentsToOtherInstance(args);
+			return false;
+		}
+		return true;
+	}
+
+	private static PrimaryInstanceListener primaryInstanceListener = new PrimaryInstanceListener() {
+		@Override
+		public void handleArgsFromOtherInstance(String[] args) {
+			log.debug("Processing arguments from secondary instance: " + Arrays.toString(args));
+
+			if (rootPmStatic != null) {
+				rootPmStatic.processCommandLine(args);
+			}
+		}
+	};
 
 	private static void setLookAndFeel() {
 		Edt.invokeOnEdtAndWait(new Runnable() {

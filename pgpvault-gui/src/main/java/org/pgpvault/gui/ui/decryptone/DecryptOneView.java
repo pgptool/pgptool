@@ -190,7 +190,7 @@ public class DecryptOneView extends DialogViewBaseCustom<DecryptOnePm> {
 
 	@Override
 	protected JDialog initDialog(Window owner, Object constraints) {
-		JDialog ret = new JDialog(owner, ModalityType.APPLICATION_MODAL);
+		JDialog ret = new JDialog(owner, ModalityType.MODELESS);
 		ret.setLayout(new BorderLayout());
 		ret.setResizable(false);
 		ret.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);

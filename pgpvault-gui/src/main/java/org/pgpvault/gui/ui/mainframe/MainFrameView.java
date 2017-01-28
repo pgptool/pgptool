@@ -153,4 +153,9 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		return frame;
 	}
 
+	public void bringToFront() {
+		frame.setVisible(true);
+		frame.setState(JFrame.NORMAL);
+		frame.toFront();
+	}
 }

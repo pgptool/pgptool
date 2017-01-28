@@ -1,5 +1,6 @@
 package org.pgpvault.gui.ui.root;
 
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 
 import javax.swing.Action;
@@ -37,6 +38,7 @@ import org.springframework.context.ApplicationContextAware;
 
 import com.google.common.eventbus.EventBus;
 
+import ru.skarpushin.swingpm.base.HasWindow;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
@@ -97,7 +99,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 	 * @return true if command line command processed and ther is no need to
 	 *         continue application run sequence
 	 */
-	private boolean processCommandLine(String[] commandLineArgs) {
+	public boolean processCommandLine(String[] commandLineArgs) {
 		// NOTE: Pretty dumb way to implement it. It's a POC. Need to be
 		// improved to be cleaner approach
 		// TODO: It's actually should be handled in EntryPoint even
@@ -106,6 +108,9 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		// handling it locally.
 		try {
 			if (commandLineArgs == null || commandLineArgs.length < 2) {
+				if (mainFrameView != null) {
+					mainFrameView.bringToFront();
+				}
 				return false;
 			}
 
@@ -381,6 +386,12 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		}
 
 		protected void openWindow() {
+			if (pm != null && view != null && view instanceof HasWindow) {
+				Window window = ((HasWindow) view).getWindow();
+				window.setVisible(true);
+				return;
+			}
+
 			pm = applicationContext.getBean(pmClass);
 			if (!postConstructPm()) {
 				return;

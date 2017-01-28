@@ -1,4 +1,4 @@
-package org.pgpvault.gui.tools.singleinstance;
+package org.pgpvault.gui.tools.dirwatcher;
 
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;

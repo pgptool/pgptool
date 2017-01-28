@@ -10,6 +10,8 @@ import java.nio.file.WatchEvent;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.pgpvault.gui.config.impl.ConfigRepositoryImpl;
+import org.pgpvault.gui.tools.dirwatcher.DirWatcherHandler;
+import org.pgpvault.gui.tools.dirwatcher.SingleDirWatcher;
 
 import com.google.common.base.Preconditions;
 
@@ -30,7 +32,7 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
 	private PrimaryInstanceListener primaryInstanceListener;
 
 	private LockInfo lockInfo;
-	private DirWatcher dirWatcher;
+	private SingleDirWatcher singleDirWatcher;
 	private String basePathForCommands;
 
 	/**
@@ -55,7 +57,7 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
 				return false;
 			}
 
-			dirWatcher = new DirWatcher(basePathForCommands, dirWatcherHandler);
+			singleDirWatcher = new SingleDirWatcher(basePathForCommands, dirWatcherHandler);
 			this.primaryInstanceListener = primaryInstanceListener;
 			return true;
 		} catch (Throwable t) {
@@ -123,9 +125,9 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
 		@Override
 		public void run() {
 			releaseLock(lockInfo);
-			if (dirWatcher != null) {
-				dirWatcher.stopWatcher();
-				dirWatcher = null;
+			if (singleDirWatcher != null) {
+				singleDirWatcher.stopWatcher();
+				singleDirWatcher = null;
 			}
 		}
 	};

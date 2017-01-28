@@ -24,6 +24,8 @@ import org.apache.log4j.Logger;
 import org.pgpvault.gui.app.EntryPoint;
 import org.pgpvault.gui.app.MessageSeverity;
 import org.pgpvault.gui.configpairs.api.ConfigPairs;
+import org.pgpvault.gui.decryptedlist.api.DecryptedFile;
+import org.pgpvault.gui.decryptedlist.api.DecryptedHistoryService;
 import org.pgpvault.gui.encryption.api.EncryptionService;
 import org.pgpvault.gui.encryption.api.KeyRingService;
 import org.pgpvault.gui.encryption.api.dto.Key;
@@ -76,6 +78,8 @@ public class DecryptOnePm extends PresentationModelBase {
 	@Autowired
 	@Resource(name = "encryptionService")
 	private EncryptionService<KeyData> encryptionService;
+	@Autowired
+	private DecryptedHistoryService decryptedHistoryService;
 
 	private DecryptOneHost host;
 
@@ -457,6 +461,7 @@ public class DecryptOnePm extends PresentationModelBase {
 			// Remember parameters
 			persistDecryptionDialogParametersForCurrentInputs();
 			persistEncryptionDialogParameters(targetFileName);
+			decryptedHistoryService.add(new DecryptedFile(sourceFileStr, targetFileName));
 
 			// Delete source if asked
 			if (isDeleteSourceAfter.getValue()) {

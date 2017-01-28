@@ -308,7 +308,7 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 		ret.setLayout(new BorderLayout());
 		ret.setResizable(true);
 		ret.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		ret.setTitle(Messages.get("action.showKeysList"));
+		ret.setTitle(Messages.get("term.keysList"));
 		ret.add(panelRoot, BorderLayout.CENTER);
 		ret.setJMenuBar(menuBar);
 		UiUtils.centerWindow(ret);

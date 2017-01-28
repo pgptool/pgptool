@@ -16,4 +16,6 @@ public interface MainFrameHost {
 	Action getActionForDecrypt();
 
 	Action getActionChangeFolderForDecrypted();
+
+	void openEncryptDialogFor(String decryptedFile);
 }

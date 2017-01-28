@@ -52,31 +52,28 @@ public class EntryPoint implements InitializingBean {
 		SplashScreenView splashScreenView = new SplashScreenView();
 		SwingPmSettings.setBindingContextFactory(new BindingContextFactoryImpl());
 
+		// Init spring context
 		try {
+			setLookAndFeel();
 
-			// Init spring context
-			try {
-				setLookAndFeel();
+			// Startup application context
+			String[] contextPaths = new String[] { "app-context.xml" };
+			currentApplicationContext = new ClassPathXmlApplicationContext(contextPaths);
+			log.info("App context loaded");
+			LocaleContextHolder.setLocale(new Locale(System.getProperty("user.language")));
+			currentApplicationContext.registerShutdownHook();
+			log.info("Shutdown hook registered");
 
-				// Startup application context
-				String[] contextPaths = new String[] { "app-context.xml" };
-				currentApplicationContext = new ClassPathXmlApplicationContext(contextPaths);
-				log.info("App context loaded");
-				LocaleContextHolder.setLocale(new Locale(System.getProperty("user.language")));
-				currentApplicationContext.registerShutdownHook();
-				log.info("Shutdown hook registered");
-
-				// Now startup application logic
-				EntryPoint entryPoint = currentApplicationContext.getBean(EntryPoint.class);
-				splashScreenView.close();
-				splashScreenView = null;
-				entryPoint.startUp(args);
-				rootPmStatic = entryPoint.getRootPm();
-			} catch (Throwable t) {
-				log.error("Failed to startup application", t);
-				reportAppInitFailureMessageToUser(t);
-				throw new RuntimeException("Application failed to start", t);
-			}
+			// Now startup application logic
+			EntryPoint entryPoint = currentApplicationContext.getBean(EntryPoint.class);
+			splashScreenView.close();
+			splashScreenView = null;
+			entryPoint.startUp(args);
+			rootPmStatic = entryPoint.getRootPm();
+		} catch (Throwable t) {
+			log.error("Failed to startup application", t);
+			reportAppInitFailureMessageToUser(t);
+			throw new RuntimeException("Application failed to start", t);
 		} finally {
 			if (splashScreenView != null) {
 				splashScreenView.close();

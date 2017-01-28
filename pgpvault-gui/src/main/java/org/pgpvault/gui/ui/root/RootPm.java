@@ -76,11 +76,10 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 
 	public void present(String[] commandLineArgs) {
 		try {
-			if (processCommandLine(commandLineArgs)) {
-				exitApplication(0);
-			} else {
-				openMainFrameWindow();
-			}
+			openMainFrameWindow();
+			processCommandLine(commandLineArgs);
+			// THINK: Perhaps we'd better not open main frame if we were invoked
+			// just in order to encrypt/decrypt something
 		} catch (Throwable t) {
 			try {
 				log.error("Failed to start application", t);
@@ -189,6 +188,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		@Override
 		public Action getActionChangeFolderForDecrypted() {
 			return actionShowTempFolderChooser;
+		}
+
+		@Override
+		public void openEncryptDialogFor(String decryptedFile) {
+			new EncryptionWindowOpener(decryptedFile).actionToOpenWindow.actionPerformed(null);
 		}
 	};
 
@@ -387,6 +391,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 
 		protected void openWindow() {
 			if (pm != null && view != null && view instanceof HasWindow) {
+				log.debug("Window is already opened -- just bring it to top " + view);
 				Window window = ((HasWindow) view).getWindow();
 				window.setVisible(true);
 				return;
@@ -394,6 +399,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 
 			pm = applicationContext.getBean(pmClass);
 			if (!postConstructPm()) {
+				pm = null;
 				return;
 			}
 

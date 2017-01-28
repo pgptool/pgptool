@@ -11,11 +11,23 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.mapdb</groupId>
+			<artifactId>mapdb</artifactId>
+			<version>3.0.3</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.google.guava</groupId>
+					<artifactId>guava</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
 			<groupId>ru.skarpushin</groupId>
 			<artifactId>swingpm</artifactId>
 			<version>1.0.3</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.summerb</groupId>
 			<artifactId>summerb</artifactId>

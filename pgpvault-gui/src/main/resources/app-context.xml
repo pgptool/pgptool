@@ -42,13 +42,15 @@
 	<bean id="configsBasePathResolver" class="org.pgpvault.gui.config.impl.ConfigsBasePathResolverUserHomeImpl">
 		<property name="configFolderName" value="${configuration.configFolderName}" />
 	</bean>
-	<bean id="configRepository" class="org.pgpvault.gui.config.impl.ConfigRepositoryImpl" />
-	<bean class="org.pgpvault.gui.configpairs.impl.ConfigPairsImpl" />
+	<bean id="configRepository" class="org.pgpvault.gui.config.impl.ConfigRepositoryPairsBasedImpl" />
+	<bean class="org.pgpvault.gui.configpairs.impl.ConfigPairsMapDbImpl" />
 	<bean class="org.pgpvault.gui.tempfolderfordecrypted.impl.DecryptedTempFolderImpl" />
 
 	<bean id="keyFilesOperations" class="org.pgpvault.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
 	<bean id="keyRingService" class="org.pgpvault.gui.encryption.implpgp.KeyRingServicePgpImpl" />
 	<bean id="encryptionService" class="org.pgpvault.gui.encryption.implpgp.EncryptionServicePgpImpl" />
+
+	<bean class="org.pgpvault.gui.decryptedlist.impl.DecryptedHistoryServiceImpl" />
 
 	<!-- Views -->
 	<bean class="org.pgpvault.gui.ui.root.RootPm" scope="singleton" />
@@ -58,18 +60,18 @@
 
 	<bean class="org.pgpvault.gui.ui.about.AboutView" lazy-init="true" scope="singleton" />
 	<bean class="org.pgpvault.gui.ui.about.AboutPm" scope="prototype" />
-	
+
 	<bean class="org.pgpvault.gui.ui.importkey.KeyImporterView" lazy-init="true" scope="singleton" />
 	<bean class="org.pgpvault.gui.ui.importkey.KeyImporterPm" scope="prototype" />
-	
+
 	<bean class="org.pgpvault.gui.ui.keyslist.KeysListView" lazy-init="true" scope="singleton" />
 	<bean class="org.pgpvault.gui.ui.keyslist.KeysListPm" scope="prototype" />
-	
+
 	<bean class="org.pgpvault.gui.ui.encryptone.EncryptOnePm" lazy-init="true" scope="prototype" />
 	<bean class="org.pgpvault.gui.ui.encryptone.EncryptOneView" lazy-init="true" scope="prototype" />
-	
+
 	<bean class="org.pgpvault.gui.ui.decryptone.DecryptOnePm" lazy-init="true" scope="prototype" />
 	<bean class="org.pgpvault.gui.ui.decryptone.DecryptOneView" lazy-init="true" scope="prototype" />
-	
+
 	<bean class="org.pgpvault.gui.ui.tempfolderfordecrypted.TempFolderChooserPm" lazy-init="true" scope="singleton" />
 </beans>

@@ -1,5 +1,9 @@
 package org.pgpvault.gui.configpairs.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
+
 import org.pgpvault.gui.config.api.ConfigRepository;
 import org.pgpvault.gui.configpairs.api.ConfigPairs;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +48,19 @@ public class ConfigPairsImpl implements ConfigPairs {
 		ensureLoadded();
 		T ret = (T) configPairsEnvelop.get(key);
 		return ret != null ? ret : defaultValue;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> List<T> findAllWithPrefixedKey(String keyPrefix) {
+		ensureLoadded();
+		List<T> ret = new ArrayList<>();
+		for (Entry<String, Object> entry : configPairsEnvelop.entrySet()) {
+			if (entry.getKey().startsWith(keyPrefix)) {
+				ret.add((T) entry.getValue());
+			}
+		}
+		return ret;
 	}
 
 }

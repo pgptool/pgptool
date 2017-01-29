@@ -1,5 +1,7 @@
 package org.pgpvault.gui.ui.root;
 
+import static org.pgpvault.gui.app.Messages.text;
+
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 
@@ -99,53 +101,58 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 	 *         continue application run sequence
 	 */
 	public boolean processCommandLine(String[] commandLineArgs) {
-		// NOTE: Pretty dumb way to implement it. It's a POC. Need to be
-		// improved to be cleaner approach
-		// TODO: It's actually should be handled in EntryPoint even
-		// before spring context started. If this is not 1st
-		// instance command should be transmitted to it instead of
-		// handling it locally.
 		try {
-			if (commandLineArgs == null || commandLineArgs.length < 2) {
+			if (commandLineArgs == null || commandLineArgs.length == 0) {
 				if (mainFrameView != null) {
 					mainFrameView.bringToFront();
 				}
 				return false;
 			}
 
-			if ("encrypt".equalsIgnoreCase(commandLineArgs[0])) {
-				for (int i = 1; i < commandLineArgs.length; i++) {
-					final String sourceFile = commandLineArgs[i];
-					Edt.invokeOnEdtAndWait(new Runnable() {
-						@Override
-						public void run() {
-							// NOTE: Assuming it is blocking operation!
-							// Remember: View is singleton here
-							new EncryptionWindowOpener(sourceFile).actionToOpenWindow.actionPerformed(null);
-						}
-					});
-				}
-				return true;
+			if (commandLineArgs.length > 1) {
+				log.warn("As of now application is not designed to handle more than 1 input file.");
 			}
 
-			if ("decrypt".equalsIgnoreCase(commandLineArgs[0])) {
-				for (int i = 1; i < commandLineArgs.length; i++) {
-					final String sourceFile = commandLineArgs[i];
-					Edt.invokeOnEdtAndWait(new Runnable() {
-						@Override
-						public void run() {
-							// NOTE: Assuming it is blocking operation!
-							// Remember: View is singleton here
-							new DecryptionWindowOpener(sourceFile).actionToOpenWindow.actionPerformed(null);
-						}
-					});
+			// NOTE: We'll need to learn how to handle more than 1 input file
+			// AND MAKE SURE UX will not suffer.
+			// https://github.com/skarpushin/pgpvault/issues/9
+			for (int i = 0; i < 1 /* commandLineArgs.length */; i++) {
+				String file = commandLineArgs[i];
+				if (DecryptOnePm.isItLooksLikeYourSourceFile(file)) {
+					openNewDecryptionWindow(file);
+				} else if (EncryptOnePm.isItLooksLikeYourSourceFile(file)) {
+					openNewEncryptionWindow(file);
+				} else {
+					EntryPoint.showMessageBox("Program argument cannot be handled: " + file, text("term.attention"),
+							MessageSeverity.WARNING);
 				}
-				return true;
 			}
 		} catch (Throwable t) {
 			EntryPoint.reportExceptionToUser("error.failedToProcessCommandLine", t);
 		}
 		return false;
+	}
+
+	private void openNewDecryptionWindow(final String sourceFile) {
+		Edt.invokeOnEdtAndWait(new Runnable() {
+			@Override
+			public void run() {
+				// NOTE: Assuming it is blocking operation!
+				// Remember: View is singleton here
+				new DecryptionWindowOpener(sourceFile).actionToOpenWindow.actionPerformed(null);
+			}
+		});
+	}
+
+	private void openNewEncryptionWindow(final String sourceFile) {
+		Edt.invokeOnEdtAndWait(new Runnable() {
+			@Override
+			public void run() {
+				// NOTE: Assuming it is blocking operation!
+				// Remember: View is singleton here
+				new EncryptionWindowOpener(sourceFile).actionToOpenWindow.actionPerformed(null);
+			}
+		});
 	}
 
 	private void exitApplication(int statusCode) {

@@ -19,7 +19,7 @@ import com.google.common.eventbus.EventBus;
 public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean {
 	private static Logger log = Logger.getLogger(ConfigRepositoryImpl.class);
 	private ConfigsBasePathResolver configsBasePathResolver;
-	private String configsBasepath = "/configs";
+	private String configsBasepath = File.separator + "configs";
 	private EventBus eventBus;
 
 	@Override
@@ -47,7 +47,7 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 	}
 
 	private String buildFilenameForClass(Class<?> clazz) {
-		return configsBasePathResolver.getConfigsBasePath() + configsBasepath + "/" + clazz.getSimpleName();
+		return configsBasePathResolver.getConfigsBasePath() + configsBasepath + File.separator + clazz.getSimpleName();
 	}
 
 	@Override

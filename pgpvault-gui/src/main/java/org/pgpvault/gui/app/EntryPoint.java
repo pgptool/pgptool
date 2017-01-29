@@ -17,13 +17,13 @@ import javax.swing.UIManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.pgpvault.gui.tools.ConsoleExceptionUtils;
+import org.pgpvault.gui.tools.osnative.OsNativeApiResolver;
 import org.pgpvault.gui.tools.singleinstance.PrimaryInstanceListener;
 import org.pgpvault.gui.tools.singleinstance.SingleInstance;
 import org.pgpvault.gui.tools.singleinstance.SingleInstanceFileBasedImpl;
 import org.pgpvault.gui.ui.mainframe.MainFrameView;
 import org.pgpvault.gui.ui.root.RootPm;
 import org.pgpvault.gui.ui.tools.BindingContextFactoryImpl;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -33,7 +33,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import ru.skarpushin.swingpm.tools.SwingPmSettings;
 import ru.skarpushin.swingpm.tools.edt.Edt;
 
-public class EntryPoint implements InitializingBean {
+public class EntryPoint {
 	private static Logger log = Logger.getLogger(EntryPoint.class);
 	public static EntryPoint INSTANCE;
 
@@ -46,18 +46,18 @@ public class EntryPoint implements InitializingBean {
 		DOMConfigurator.configure(EntryPoint.class.getClassLoader().getResource("pgpvault-gui-log4j.xml"));
 		log.info("EntryPoint first scream");
 
-		if (!isPrimaryInstance(args)) {
-			log.info(
-					"Since this is a secondary instance args were forwarded to primary instance. This instance will now exit");
-			System.exit(0);
-			return;
-		}
-
-		SplashScreenView splashScreenView = new SplashScreenView();
-		SwingPmSettings.setBindingContextFactory(new BindingContextFactoryImpl());
-
-		// Init spring context
+		SplashScreenView splashScreenView = null;
 		try {
+			args = OsNativeApiResolver.resolve().getCommandLineArguments(args);
+			if (!isPrimaryInstance(args)) {
+				log.info(
+						"Since this is a secondary instance args were forwarded to primary instance. This instance will now exit");
+				System.exit(0);
+				return;
+			}
+
+			splashScreenView = new SplashScreenView();
+			SwingPmSettings.setBindingContextFactory(new BindingContextFactoryImpl());
 			setLookAndFeel();
 
 			// Startup application context
@@ -107,6 +107,8 @@ public class EntryPoint implements InitializingBean {
 	};
 
 	private static void setLookAndFeel() {
+		// NOTE: We doing it this way to prevent dead=locks that is sometimes
+		// happens if do it in main thread
 		Edt.invokeOnEdtAndWait(new Runnable() {
 			@Override
 			public void run() {
@@ -127,11 +129,6 @@ public class EntryPoint implements InitializingBean {
 
 	public EntryPoint() {
 		INSTANCE = this;
-	}
-
-	@Override
-	public void afterPropertiesSet() throws Exception {
-
 	}
 
 	private void startUp(String[] args) {

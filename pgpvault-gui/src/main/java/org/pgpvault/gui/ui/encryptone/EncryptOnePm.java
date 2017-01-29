@@ -30,6 +30,7 @@ import org.pgpvault.gui.encryption.api.KeyRingService;
 import org.pgpvault.gui.encryption.api.dto.Key;
 import org.pgpvault.gui.encryption.api.dto.KeyData;
 import org.pgpvault.gui.tools.PathUtils;
+import org.pgpvault.gui.ui.decryptone.DecryptOnePm;
 import org.pgpvault.gui.ui.tools.ExistingFileChooserDialog;
 import org.pgpvault.gui.ui.tools.ListChangeListenerAnyEventImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -209,7 +210,24 @@ public class EncryptOnePm extends PresentationModelBase {
 				protected void doFileChooserPostConstruct(JFileChooser ofd) {
 					super.doFileChooserPostConstruct(ofd);
 					ofd.setDialogTitle(Messages.get("phrase.selectFileToEncrypt"));
+
+					ofd.setAcceptAllFileFilterUsed(false);
+					ofd.addChoosableFileFilter(notEncryptedFiles);
+					ofd.addChoosableFileFilter(ofd.getAcceptAllFileFilter());
+					ofd.setFileFilter(ofd.getChoosableFileFilters()[0]);
 				}
+
+				private FileFilter notEncryptedFiles = new FileFilter() {
+					@Override
+					public boolean accept(File f) {
+						return !DecryptOnePm.isItLooksLikeYourSourceFile(f.getAbsolutePath());
+					}
+
+					@Override
+					public String getDescription() {
+						return text("phrase.allExceptEncrypted");
+					}
+				};
 			};
 		}
 		return sourceFileChooser;
@@ -474,6 +492,13 @@ public class EncryptOnePm extends PresentationModelBase {
 
 	public ModelPropertyAccessor<Boolean> getTargetFileEnabled() {
 		return targetFileEnabled.getModelPropertyAccessor();
+	}
+
+	public static boolean isItLooksLikeYourSourceFile(String file) {
+		// NOTE: As of know it's fairly simple -- like if it's not for
+		// decryption than it's opposite. Later on we might want to revisit this
+		// logic.
+		return new File(file).exists() && !DecryptOnePm.isItLooksLikeYourSourceFile(file);
 	}
 
 }

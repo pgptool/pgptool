@@ -68,6 +68,8 @@ public class DecryptOnePm extends PresentationModelBase {
 
 	private static final Map<String, String> CACHE_KEYID_TO_PASSWORD = new HashMap<>();
 
+	private static final String[] extensions = new String[] { "gpg", "pgp", "asc" };
+
 	@Autowired
 	private ConfigPairs configPairs;
 	@Autowired
@@ -249,7 +251,7 @@ public class DecryptOnePm extends PresentationModelBase {
 
 					ofd.setAcceptAllFileFilterUsed(false);
 					ofd.addChoosableFileFilter(
-							new FileNameExtensionFilter("Encrypted files (.gpg, .pgp, .asc)", "gpg", "pgp", "asc"));
+							new FileNameExtensionFilter("Encrypted files (.gpg, .pgp, .asc)", extensions));
 					ofd.addChoosableFileFilter(ofd.getAcceptAllFileFilter());
 					ofd.setFileFilter(ofd.getChoosableFileFilters()[0]);
 
@@ -647,6 +649,20 @@ public class DecryptOnePm extends PresentationModelBase {
 
 	public ModelPropertyAccessor<String> getPassword() {
 		return password.getModelPropertyAccessor();
+	}
+
+	public static boolean isItLooksLikeYourSourceFile(String file) {
+		return new File(file).exists()
+				&& containsIgnoreCase(extensions, FilenameUtils.getExtension(file).toLowerCase());
+	}
+
+	private static boolean containsIgnoreCase(String[] arr, String subject) {
+		for (String s : arr) {
+			if (s.equalsIgnoreCase(subject)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

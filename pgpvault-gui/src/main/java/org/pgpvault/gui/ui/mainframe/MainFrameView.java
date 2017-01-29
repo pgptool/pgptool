@@ -1,8 +1,11 @@
 package org.pgpvault.gui.ui.mainframe;
 
+import static org.pgpvault.gui.app.Messages.text;
+
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -16,7 +19,9 @@ import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListSelectionModel;
+import javax.swing.Icon;
 import javax.swing.InputMap;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -33,6 +38,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
+import org.pgpvault.gui.app.EntryPoint;
 import org.pgpvault.gui.app.Messages;
 import org.pgpvault.gui.decryptedlist.api.DecryptedFile;
 import org.pgpvault.gui.ui.tools.UiUtils;
@@ -43,6 +49,9 @@ import com.google.common.base.Preconditions;
 import ru.skarpushin.swingpm.base.HasWindow;
 import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
+import ru.skarpushin.swingpm.tools.SwingPmSettings;
+import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
+import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
 public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private static final String DELETE = "Delete";
@@ -69,8 +78,6 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 	@Override
 	protected void internalInitComponents() {
-		panelRoot = new JPanel(new BorderLayout());
-
 		initMenuBar();
 		initFormComponents();
 
@@ -78,20 +85,74 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	}
 
 	private void initFormComponents() {
-		panelTablePlaceholder = new JPanel(new BorderLayout());
-		panelRoot.add(panelTablePlaceholder, BorderLayout.CENTER);
-		panelTablePlaceholder.add(initTableComponent(), BorderLayout.CENTER);
-
 		lblNoDataToDisplay = new JLabel(Messages.get("phrase.noDecryptedFilesAreMonitoredAtTheMoment"));
 		lblNoDataToDisplay.setHorizontalAlignment(JLabel.CENTER);
+
+		SgLayout sgl = new SgLayout(1, 4, 0, 0);
+		sgl.setColSize(0, 100, SgLayout.SIZE_TYPE_WEIGHTED);
+		sgl.setRowSize(3, 100, SgLayout.SIZE_TYPE_WEIGHTED);
+		panelRoot = new JPanel(sgl);
+		panelRoot.setBorder(BorderFactory.createEmptyBorder(7, 7, 7, 7));
+
+		int row = 0;
+		panelRoot.add(new JLabel(UiUtils.plainToBoldHtmlString(text("phrase.primaryOperations"))), sgl.cs(0, row));
+
+		row++;
+		JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		pnlButtons.add(new JButton(actionEncrypt));
+		pnlButtons.add(new JLabel("   "));
+		pnlButtons.add(new JButton(actionDecrypt));
+		pnlButtons.add(new JLabel("   "));
+		pnlButtons.add(new JButton(actionKeyring));
+		panelRoot.add(pnlButtons, sgl.cs(0, row));
+
+		row++;
+		JLabel lblPrevDecryptedFiles = new JLabel(
+				UiUtils.plainToBoldHtmlString(text("phrase.previouslyDecrpytedFiles")));
+		panelRoot.add(lblPrevDecryptedFiles, sgl.cs(0, row));
+		lblPrevDecryptedFiles.setBorder(BorderFactory.createEmptyBorder(14, 0, 0, 0));
+
+		row++;
+		panelTablePlaceholder = new JPanel(new BorderLayout());
+		panelTablePlaceholder.add(initTableComponent(), BorderLayout.CENTER);
+		panelRoot.add(panelTablePlaceholder, sgl.cs(0, row));
 	}
+
+	@SuppressWarnings("serial")
+	private Action actionEncrypt = new ToolbarAction("action.encrypt", "/icons/encrypt.png") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (pm != null) {
+				pm.getActionEncrypt().actionPerformed(e);
+			}
+		}
+	};
+
+	@SuppressWarnings("serial")
+	private Action actionDecrypt = new ToolbarAction("action.decrypt", "/icons/decrypt.png") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (pm != null) {
+				pm.getActionDecrypt().actionPerformed(e);
+			}
+		}
+	};
+
+	@SuppressWarnings("serial")
+	private Action actionKeyring = new ToolbarAction("term.keyring", "/icons/keyring.png") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (pm != null) {
+				pm.getActionShowKeysList().actionPerformed(e);
+			}
+		}
+	};
 
 	private JScrollPane initTableComponent() {
 		table = new JTable();
 
 		// Adjust some visual appearence
 		table.setRowHeight(22);
-		table.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
 
 		// Add listeners
 		selectionModel = new DefaultListSelectionModel();
@@ -105,7 +166,6 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		scrollPane = new JScrollPane();
 		scrollPane.addMouseListener(listMouseListener);
 		scrollPane.setViewportView(table);
-		scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		return scrollPane;
 	}
 
@@ -222,19 +282,21 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		menuBar = new JMenuBar();
 
 		JMenu menuFile = new JMenu(Messages.get("term.appTitle"));
-		menuFile.add(miPgpImportKey = new JMenuItem());
-		menuFile.add(miShowKeyList = new JMenuItem());
-		menuFile.addSeparator();
 		menuFile.add(miChangeTempFolderForDecrypted = new JMenuItem());
 		menuFile.addSeparator();
 		menuFile.add(miAbout = new JMenuItem());
 		menuFile.add(miConfigExit = new JMenuItem());
+
+		JMenu menuKeyring = new JMenu(Messages.get("term.keyring"));
+		menuKeyring.add(miShowKeyList = new JMenuItem());
+		menuKeyring.add(miPgpImportKey = new JMenuItem());
 
 		JMenu menuActions = new JMenu(Messages.get("term.actions"));
 		menuActions.add(miEncrypt = new JMenuItem());
 		menuActions.add(miDecrypt = new JMenuItem());
 
 		menuBar.add(menuFile);
+		menuBar.add(menuKeyring);
 		menuBar.add(menuActions);
 	}
 
@@ -343,7 +405,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 		if (frame == null) {
 			frame = new JFrame();
-			frame.setSize(new Dimension(UiUtils.getFontRelativeSize(90), UiUtils.getFontRelativeSize(30)));
+			frame.setSize(new Dimension(UiUtils.getFontRelativeSize(90), UiUtils.getFontRelativeSize(50)));
 			frame.setLayout(new BorderLayout());
 			frame.setResizable(true);
 			frame.setMinimumSize(new Dimension(UiUtils.getFontRelativeSize(60), UiUtils.getFontRelativeSize(25)));
@@ -385,4 +447,35 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		frame.setState(JFrame.NORMAL);
 		frame.toFront();
 	}
+
+	private abstract class ToolbarAction extends AbstractAction {
+		private static final long serialVersionUID = 5177364704498790332L;
+		private final String actionNameMessageCode;
+		private final String iconFilepathname;
+		private Icon icon;
+
+		public ToolbarAction(String actionNameMessageCode, String iconFilepathname) {
+			this.actionNameMessageCode = actionNameMessageCode;
+			this.iconFilepathname = iconFilepathname;
+		}
+
+		@Override
+		public Object getValue(String key) {
+			if (Action.NAME.equals(key)) {
+				return SwingPmSettings.getMessages().get(actionNameMessageCode) + "   ";
+			}
+			if (Action.SMALL_ICON.equals(key)) {
+				return getIcon();
+			}
+			return super.getValue(key);
+		};
+
+		public Icon getIcon() {
+			if (icon == null) {
+				icon = EntryPoint.loadImage(iconFilepathname);
+			}
+			return icon;
+		}
+	}
+
 }

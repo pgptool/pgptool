@@ -39,7 +39,7 @@ public class AboutView extends DialogViewBaseCustom<AboutPm> {
 		pnl = new JPanel(sgl);
 		pnl.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-		ImageIcon imageIcon = new ImageIcon(WindowIcon.loadImage("/icon-64.png"));
+		ImageIcon imageIcon = new ImageIcon(WindowIcon.loadImage("/icons/icon-64.png"));
 		JLabel lblIcon = new JLabel(imageIcon);
 		pnl.add(lblIcon, sgl.cs(0, 0, 1, 4));
 

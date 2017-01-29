@@ -2,7 +2,6 @@ package org.pgpvault.gui.decryptedlist.impl;
 
 import java.io.File;
 import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
 import java.nio.file.WatchEvent.Kind;
 import java.util.List;
 

@@ -3,9 +3,12 @@ package org.pgpvault.gui.app;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Locale;
 
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -17,6 +20,7 @@ import org.pgpvault.gui.tools.ConsoleExceptionUtils;
 import org.pgpvault.gui.tools.singleinstance.PrimaryInstanceListener;
 import org.pgpvault.gui.tools.singleinstance.SingleInstance;
 import org.pgpvault.gui.tools.singleinstance.SingleInstanceFileBasedImpl;
+import org.pgpvault.gui.ui.mainframe.MainFrameView;
 import org.pgpvault.gui.ui.root.RootPm;
 import org.pgpvault.gui.ui.tools.BindingContextFactoryImpl;
 import org.springframework.beans.factory.InitializingBean;
@@ -190,6 +194,15 @@ public class EntryPoint implements InitializingBean {
 
 	public ApplicationContext getApplicationContext() {
 		return currentApplicationContext;
+	}
+
+	public static Icon loadImage(String fileName) {
+		URL resource = MainFrameView.class.getResource(fileName);
+		if (resource == null) {
+			log.error("Image not found: " + fileName);
+			return null;
+		}
+		return new ImageIcon(resource);
 	}
 
 }

@@ -3,7 +3,6 @@ package org.pgpvault.gui.configpairs.impl;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 import org.mapdb.DB;

@@ -28,7 +28,7 @@ import com.google.common.eventbus.EventBus;
 public class ConfigRepositoryMapDbImpl implements ConfigRepository, InitializingBean {
 	private static Logger log = Logger.getLogger(ConfigRepositoryMapDbImpl.class);
 	private ConfigsBasePathResolver configsBasePathResolver;
-	private String configsBasepath = "/configs";
+	private String configsBasepath = File.separator + "configs";
 	private EventBus eventBus;
 	private DB db;
 	private HTreeMap<String, Object> map;

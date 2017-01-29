@@ -3,8 +3,9 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.pgpvault</groupId>
   <artifactId>gui</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.1.0.0</version>
   <build>
+    <finalName>pgpvaultgui-${project.version}</finalName>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -28,9 +29,19 @@
               <goal>shade</goal>
             </goals>
             <configuration>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
               <transformers>
                 <transformer>
-                  <mainClass>ru.auriga.eftracker.EntryPoint</mainClass>
+                  <mainClass>org.pgpvault.gui.app.EntryPoint</mainClass>
                 </transformer>
                 <transformer>
                   <resource>META-INF/spring.handlers</resource>
@@ -42,6 +53,30 @@
                   <resource>META-INF/spring.tooling</resource>
                 </transformer>
               </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.akathist.maven.plugins.launch4j</groupId>
+        <artifactId>launch4j-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>l4j-clui</id>
+            <phase>package</phase>
+            <goals>
+              <goal>launch4j</goal>
+            </goals>
+            <configuration>
+              <infile>${project.basedir}/launch4j.xml</infile>
+              <jar>pgpvaultgui-${project.version}.jar</jar>
+              <outfile>${project.basedir}/target/pgpvault.exe</outfile>
+              <versionInfo>
+                <fileVersion>${project.version}</fileVersion>
+                <txtFileVersion>${project.version}</txtFileVersion>
+                <productVersion>${project.version}</productVersion>
+                <txtProductVersion>${project.version}</txtProductVersion>
+              </versionInfo>
             </configuration>
           </execution>
         </executions>

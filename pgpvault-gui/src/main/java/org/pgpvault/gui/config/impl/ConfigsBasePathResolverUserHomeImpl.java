@@ -45,7 +45,7 @@ public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResol
 			return false;
 		}
 
-		if (path.endsWith(File.pathSeparator)) {
+		if (path.endsWith(File.separator)) {
 			path = path.substring(0, path.length() - 2);
 		}
 
@@ -53,8 +53,7 @@ public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResol
 			return false;
 		}
 
-		// path += "/" + configFolderName + "/" + tsClientVersion.toString();
-		path += "/" + configFolderName;
+		path += File.separator + configFolderName;
 
 		try {
 			File tsDir = new File(path);
@@ -62,7 +61,7 @@ public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResol
 				if (!tsDir.mkdirs()) {
 					throw new RuntimeException("Failed to create configs dir " + tsDir + ", path is not reliable");
 				}
-				File testFile = new File(path + "/test.test");
+				File testFile = new File(path + File.separator + "test.test");
 				TextFile.write(testFile.getAbsolutePath(), "test");
 				if (!testFile.delete()) {
 					throw new RuntimeException("Failed to delete test file " + testFile

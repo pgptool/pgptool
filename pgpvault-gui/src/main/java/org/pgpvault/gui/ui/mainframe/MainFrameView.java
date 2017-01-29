@@ -50,7 +50,6 @@ import ru.skarpushin.swingpm.base.HasWindow;
 import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.SwingPmSettings;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
 public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {

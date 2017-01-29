@@ -37,7 +37,7 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		tempFolderBasePath = configPairs.find(CONFIG_DECRYPTED_TEMP_FOLDER,
-				configsBasePathResolver.getConfigsBasePath() + "/decrypted");
+				configsBasePathResolver.getConfigsBasePath() + File.separator + "decrypted");
 		ensureDirIsCreated(tempFolderBasePath);
 	}
 

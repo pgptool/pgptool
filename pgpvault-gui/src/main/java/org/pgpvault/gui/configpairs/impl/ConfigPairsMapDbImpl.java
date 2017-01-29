@@ -20,7 +20,7 @@ public class ConfigPairsMapDbImpl implements ConfigPairs, InitializingBean {
 	@Autowired
 	private ConfigsBasePathResolver configsBasePathResolver;
 
-	private String configsBasepath = "/configs";
+	private String configsBasepath = File.separator + "configs";
 	private DB db;
 	private HTreeMap<String, Object> map;
 

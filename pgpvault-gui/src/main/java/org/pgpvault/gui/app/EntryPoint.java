@@ -12,7 +12,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.UIManager;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
@@ -24,6 +23,7 @@ import org.pgpvault.gui.tools.singleinstance.SingleInstanceFileBasedImpl;
 import org.pgpvault.gui.ui.mainframe.MainFrameView;
 import org.pgpvault.gui.ui.root.RootPm;
 import org.pgpvault.gui.ui.tools.BindingContextFactoryImpl;
+import org.pgpvault.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -31,10 +31,9 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import ru.skarpushin.swingpm.tools.SwingPmSettings;
-import ru.skarpushin.swingpm.tools.edt.Edt;
 
 public class EntryPoint {
-	private static Logger log = Logger.getLogger(EntryPoint.class);
+	public static Logger log = Logger.getLogger(EntryPoint.class);
 	public static EntryPoint INSTANCE;
 
 	private static AbstractApplicationContext currentApplicationContext;
@@ -56,9 +55,9 @@ public class EntryPoint {
 				return;
 			}
 
+			UiUtils.setLookAndFeel();
 			splashScreenView = new SplashScreenView();
 			SwingPmSettings.setBindingContextFactory(new BindingContextFactoryImpl());
-			setLookAndFeel();
 
 			// Startup application context
 			String[] contextPaths = new String[] { "app-context.xml" };
@@ -105,22 +104,6 @@ public class EntryPoint {
 			}
 		}
 	};
-
-	private static void setLookAndFeel() {
-		// NOTE: We doing it this way to prevent dead=locks that is sometimes
-		// happens if do it in main thread
-		Edt.invokeOnEdtAndWait(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-				} catch (Throwable t) {
-					log.error("Failed to set L&F", t);
-				}
-			}
-		});
-		log.info("L&F set");
-	}
 
 	private static void reportAppInitFailureMessageToUser(Throwable t) {
 		String msg = ConsoleExceptionUtils.getAllMessages(t);

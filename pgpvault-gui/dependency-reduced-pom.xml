@@ -68,7 +68,7 @@
               <goal>launch4j</goal>
             </goals>
             <configuration>
-              <infile>${project.basedir}/launch4j.xml</infile>
+              <infile>${project.basedir}/installer/launch4j.xml</infile>
               <jar>pgpvaultgui-${project.version}.jar</jar>
               <outfile>${project.basedir}/target/pgpvault.exe</outfile>
               <versionInfo>

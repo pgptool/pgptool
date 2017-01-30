@@ -170,14 +170,19 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 		List<Key<KeyDataPgp>> ret = new ArrayList<>(keysIds.size());
 		List<Key<KeyDataPgp>> existingKeys = readKeys();
 		for (String neededKeyId : keysIds) {
-			for (Key<KeyDataPgp> existingKey : existingKeys) {
+			log.debug("Trying to find decryption key by id: " + neededKeyId);
+			for (Iterator<Key<KeyDataPgp>> iter = existingKeys.iterator(); iter.hasNext(); ) {
+				Key<KeyDataPgp> existingKey = iter.next();
+				String user = existingKey.getKeyInfo().getUser();
+				log.debug("Considering key: " + user);
 				if (!existingKey.getKeyData().isCanBeUsedForDecryption()) {
-					existingKeys.remove(existingKey);
-					break;
+					log.debug("Key cannot be used for decryption: " + user + ", not considering it anymore");
+					iter.remove();
+					continue;
 				}
 				if (existingKey.getKeyData().isHasAlternativeId(neededKeyId)) {
+					log.debug("Found matching key: " + user);
 					ret.add(existingKey);
-					existingKeys.remove(existingKey);
 					break;
 				}
 			}

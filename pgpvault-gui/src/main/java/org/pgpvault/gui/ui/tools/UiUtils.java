@@ -126,4 +126,24 @@ public class UiUtils {
 		log.info("L&F set");
 	}
 
+	/**
+	 * Hack to make sure window is visible. On windows it's sometimes created
+	 * but on a background. User can see "flashing" icon in a task bar but
+	 * window stays on a background.
+	 * 
+	 * PRESUMING: setVisible(true) was already called
+	 * 
+	 * More ion tihs jere:
+	 * http://stackoverflow.com/questions/309023/how-to-bring-a-window-to-the-front
+	 */
+	public static void makeSureWindowBroughtToFront(Window window) {
+		// int state = dialog.getExtendedState();
+		// state &= ~JFrame.ICONIFIED;
+		// dialog.setExtendedState(state);
+		window.setAlwaysOnTop(true);
+		window.toFront();
+		window.requestFocus();
+		window.setAlwaysOnTop(false);
+	}
+
 }

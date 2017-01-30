@@ -444,7 +444,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	public void bringToFront() {
 		frame.setVisible(true);
 		frame.setState(JFrame.NORMAL);
-		frame.toFront();
+		UiUtils.makeSureWindowBroughtToFront(frame);
 	}
 
 	private abstract class ToolbarAction extends AbstractAction {

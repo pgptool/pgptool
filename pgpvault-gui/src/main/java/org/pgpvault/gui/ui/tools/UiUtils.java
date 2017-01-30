@@ -1,19 +1,27 @@
 package org.pgpvault.gui.ui.tools;
 
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
+import javax.swing.UIManager;
 import javax.swing.text.JTextComponent;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.log4j.Logger;
 import org.pgpvault.gui.app.Messages;
 
+import ru.skarpushin.swingpm.tools.edt.Edt;
+
 public class UiUtils {
+	public static Logger log = Logger.getLogger(UiUtils.class);
+
 	public static void centerWindow(Window frm) {
 		Dimension scrDim = Toolkit.getDefaultToolkit().getScreenSize();
 		int x = (scrDim.width - frm.getSize().width) / 2;
@@ -75,6 +83,47 @@ public class UiUtils {
 		}
 		JLabel lbl = new JLabel(sb.toString());
 		return (int) lbl.getPreferredSize().getWidth();
+	}
+
+	public static void setLookAndFeel() {
+		// NOTE: We doing it this way to prevent dead=locks that is sometimes
+		// happens if do it in main thread
+		Edt.invokeOnEdtAndWait(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+					fixFontSize();
+				} catch (Throwable t) {
+					log.error("Failed to set L&F", t);
+				}
+			}
+
+			private void fixFontSize() {
+				Toolkit toolkit = Toolkit.getDefaultToolkit();
+				int dpi = toolkit.getScreenResolution();
+				Dimension size = toolkit.getScreenSize();
+				int targetFontSize = 12 * dpi / 96;
+				log.debug("Screen dpi = " + dpi + ", size = " + size + ", decided font size is " + targetFontSize);
+				setDefaultSize(targetFontSize);
+			}
+
+			public void setDefaultSize(int size) {
+				Set<Object> keySet = UIManager.getLookAndFeelDefaults().keySet();
+				Object[] keys = keySet.toArray(new Object[keySet.size()]);
+				for (Object key : keys) {
+					if (key != null && key.toString().toLowerCase().contains("font")) {
+						Font font = UIManager.getDefaults().getFont(key);
+						if (font != null) {
+							font = font.deriveFont((float) size);
+							UIManager.put(key, font);
+							log.debug("Font size changed for " + key);
+						}
+					}
+				}
+			}
+		});
+		log.info("L&F set");
 	}
 
 }

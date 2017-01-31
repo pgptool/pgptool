@@ -16,6 +16,9 @@ import org.pgpvault.gui.tools.ConsoleExceptionUtils;
 import org.pgpvault.gui.ui.about.AboutHost;
 import org.pgpvault.gui.ui.about.AboutPm;
 import org.pgpvault.gui.ui.about.AboutView;
+import org.pgpvault.gui.ui.createkey.CreateKeyHost;
+import org.pgpvault.gui.ui.createkey.CreateKeyPm;
+import org.pgpvault.gui.ui.createkey.CreateKeyView;
 import org.pgpvault.gui.ui.decryptone.DecryptOneHost;
 import org.pgpvault.gui.ui.decryptone.DecryptOnePm;
 import org.pgpvault.gui.ui.decryptone.DecryptOneView;
@@ -201,6 +204,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		public void openEncryptDialogFor(String decryptedFile) {
 			new EncryptionWindowOpener(decryptedFile).actionToOpenWindow.actionPerformed(null);
 		}
+
+		@Override
+		public Action getActionCreateKey() {
+			return createKeyWindowHost.actionToOpenWindow;
+		}
 	};
 
 	private void openMainFrameWindow() {
@@ -326,6 +334,22 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		};
 	};
 
+	private DialogOpener<CreateKeyPm, CreateKeyView> createKeyWindowHost = new DialogOpener<CreateKeyPm, CreateKeyView>(
+			CreateKeyPm.class, CreateKeyView.class, "action.createPgpKey") {
+		@Override
+		protected boolean postConstructPm() {
+			pm.init(new CreateKeyHost() {
+				@Override
+				public void handleClose() {
+					view.unrender();
+					pm.detach();
+					pm = null;
+				}
+			});
+			return true;
+		};
+	};
+
 	private DialogOpener<KeysListPm, KeysListView> keysListWindowHost = new DialogOpener<KeysListPm, KeysListView>(
 			KeysListPm.class, KeysListView.class, "action.showKeysList") {
 		@Override
@@ -341,6 +365,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 				@Override
 				public Action getActionImportKey() {
 					return importKeyWindowHost.actionToOpenWindow;
+				}
+
+				@Override
+				public Action getActionCreateKey() {
+					return createKeyWindowHost.actionToOpenWindow;
 				}
 			});
 			return true;

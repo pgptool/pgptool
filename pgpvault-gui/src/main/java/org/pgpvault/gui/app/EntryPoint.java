@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.Insets;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 import javax.swing.Icon;
@@ -15,6 +16,7 @@ import javax.swing.JTextArea;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
+import org.pgpvault.gui.encryption.api.KeyRingService;
 import org.pgpvault.gui.tools.ConsoleExceptionUtils;
 import org.pgpvault.gui.tools.osnative.OsNativeApiResolver;
 import org.pgpvault.gui.tools.singleinstance.PrimaryInstanceListener;
@@ -69,6 +71,7 @@ public class EntryPoint {
 
 			// Now startup application logic
 			EntryPoint entryPoint = currentApplicationContext.getBean(EntryPoint.class);
+			prefetchKeys();
 			splashScreenView.close();
 			splashScreenView = null;
 			entryPoint.startUp(args);
@@ -83,6 +86,23 @@ public class EntryPoint {
 				splashScreenView = null;
 			}
 		}
+	}
+
+	private static void prefetchKeys() {
+		new Thread("Prefetching keys") {
+			@SuppressWarnings("rawtypes")
+			@Override
+			public void run() {
+				try {
+					KeyRingService keyRingService = (KeyRingService) currentApplicationContext
+							.getBean("keyRingService");
+					List keys = keyRingService.readKeys();
+					log.error("Keys prefetched. Count " + keys.size());
+				} catch (Throwable t) {
+					log.error("Failed to prefetch keys", t);
+				}
+			};
+		}.start();
 	}
 
 	private static boolean isPrimaryInstance(String[] args) {

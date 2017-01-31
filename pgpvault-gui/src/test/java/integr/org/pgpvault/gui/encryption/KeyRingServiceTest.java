@@ -7,9 +7,12 @@ import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.pgpvault.gui.config.api.ConfigRepository;
 import org.pgpvault.gui.encryption.api.KeyFilesOperations;
+import org.pgpvault.gui.encryption.api.KeyGeneratorService;
 import org.pgpvault.gui.encryption.api.KeyRingService;
+import org.pgpvault.gui.encryption.api.dto.CreateKeyParams;
 import org.pgpvault.gui.encryption.api.dto.Key;
 import org.pgpvault.gui.encryption.api.dto.KeyData;
 import org.pgpvault.gui.encryption.implpgp.KeyRingServicePgpImpl;
@@ -33,6 +36,8 @@ import integr.org.pgpvault.gui.TestTools;
 public class KeyRingServiceTest {
 	@Autowired
 	private KeyFilesOperations keyFilesOperations;
+	@Autowired
+	private KeyGeneratorService keyGeneratorService;
 
 	@Autowired
 	private ConfigRepository configRepository;
@@ -61,7 +66,23 @@ public class KeyRingServiceTest {
 		KeyRingServicePgpImpl keyRingService1 = new KeyRingServicePgpImpl();
 		keyRingService1.setConfigRepository(configRepository);
 		keyRingService1.setEventBus(eventBus);
+		keyRingService1.setKeyGeneratorService(Mockito.mock(KeyGeneratorService.class));
 		return (KeyRingService) keyRingService1;
+	}
+
+	@Test
+	public void testKeyCreation() throws Exception {
+		Key key = keyGeneratorService.createNewKey(buildTestKey());
+		assertNotNull(key);
+	}
+
+	static CreateKeyParams buildTestKey() {
+		CreateKeyParams params = new CreateKeyParams();
+		params.setFullName("Alpha Dog");
+		params.setEmail("alpha.dog@email.com");
+		params.setPassphrase("pass");
+		params.setPassphraseAgain("pass");
+		return params;
 	}
 
 	// Should we do rather something like this to reset context?

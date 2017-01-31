@@ -181,6 +181,10 @@ public class MainFramePm extends PresentationModelBase {
 	protected Action getActionImportKey() {
 		return host.getActionImportKey();
 	}
+	
+	protected Action getActionCreateKey() {
+		return host.getActionCreateKey();
+	}
 
 	protected Action getActionShowKeysList() {
 		return host.getActionShowKeysList();

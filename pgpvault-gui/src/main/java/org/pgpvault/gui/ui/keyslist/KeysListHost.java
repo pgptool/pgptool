@@ -6,4 +6,6 @@ public interface KeysListHost {
 	void handleClose();
 
 	Action getActionImportKey();
+
+	Action getActionCreateKey();
 }

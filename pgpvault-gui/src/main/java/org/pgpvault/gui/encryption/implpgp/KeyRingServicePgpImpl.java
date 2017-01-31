@@ -13,6 +13,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpvault.gui.config.api.ConfigRepository;
+import org.pgpvault.gui.encryption.api.KeyGeneratorService;
 import org.pgpvault.gui.encryption.api.KeyRingService;
 import org.pgpvault.gui.encryption.api.dto.Key;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +28,16 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 
 	private ConfigRepository configRepository;
 	private EventBus eventBus;
+	private KeyGeneratorService<KeyDataPgp> keyGeneratorService;
 
 	private PgpKeysRing pgpKeysRing;
 
 	static {
 		Security.addProvider(new BouncyCastleProvider());
+	}
+
+	public static synchronized void touch() {
+
 	}
 
 	public KeyRingServicePgpImpl() {
@@ -45,9 +51,19 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 	}
 
 	private void ensureRead() {
-		if (pgpKeysRing == null) {
+		if (pgpKeysRing != null) {
+			return;
+		}
+
+		synchronized (this) {
+			if (pgpKeysRing != null) {
+				return;
+			}
 			pgpKeysRing = configRepository.readOrConstruct(PgpKeysRing.class);
 			dumpKeys();
+			if (pgpKeysRing.size() == 0) {
+				keyGeneratorService.expectNewKeyCreation();
+			}
 		}
 	}
 
@@ -171,7 +187,7 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 		List<Key<KeyDataPgp>> existingKeys = readKeys();
 		for (String neededKeyId : keysIds) {
 			log.debug("Trying to find decryption key by id: " + neededKeyId);
-			for (Iterator<Key<KeyDataPgp>> iter = existingKeys.iterator(); iter.hasNext(); ) {
+			for (Iterator<Key<KeyDataPgp>> iter = existingKeys.iterator(); iter.hasNext();) {
 				Key<KeyDataPgp> existingKey = iter.next();
 				String user = existingKey.getKeyInfo().getUser();
 				log.debug("Considering key: " + user);
@@ -188,6 +204,15 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 			}
 		}
 		return ret;
+	}
+
+	public KeyGeneratorService<KeyDataPgp> getKeyGeneratorService() {
+		return keyGeneratorService;
+	}
+
+	@Autowired
+	public void setKeyGeneratorService(KeyGeneratorService<KeyDataPgp> keyGeneratorService) {
+		this.keyGeneratorService = keyGeneratorService;
 	}
 
 }

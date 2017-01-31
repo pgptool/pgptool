@@ -211,6 +211,10 @@ public class KeysListPm extends PresentationModelBase {
 	protected Action getActionImport() {
 		return host.getActionImportKey();
 	}
+	
+	protected Action getActionCreate() {
+		return host.getActionCreateKey();
+	}
 
 	public Action getActionForRowDoubleClick() {
 		return actionActivate;

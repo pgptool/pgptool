@@ -49,6 +49,7 @@
 	<bean id="keyFilesOperations" class="org.pgpvault.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
 	<bean id="keyRingService" class="org.pgpvault.gui.encryption.implpgp.KeyRingServicePgpImpl" />
 	<bean id="encryptionService" class="org.pgpvault.gui.encryption.implpgp.EncryptionServicePgpImpl" />
+	<bean id="keyGeneratorService" class="org.pgpvault.gui.encryption.implpgp.KeyGeneratorServicePgpImpl" />
 
 	<bean class="org.pgpvault.gui.decryptedlist.impl.DecryptedHistoryServiceImpl" />
 
@@ -74,4 +75,8 @@
 	<bean class="org.pgpvault.gui.ui.decryptone.DecryptOneView" lazy-init="true" scope="prototype" />
 
 	<bean class="org.pgpvault.gui.ui.tempfolderfordecrypted.TempFolderChooserPm" lazy-init="true" scope="singleton" />
+
+	<bean class="org.pgpvault.gui.ui.createkey.CreateKeyView" lazy-init="true" scope="singleton" />
+	<bean class="org.pgpvault.gui.ui.createkey.CreateKeyPm" scope="prototype" />
+
 </beans>

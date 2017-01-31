@@ -51,5 +51,6 @@
 	<bean id="keyFilesOperations" class="org.pgpvault.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
 	<bean id="keyRingService" class="org.pgpvault.gui.encryption.implpgp.KeyRingServicePgpImpl" />
 	<bean id="encryptionService" class="org.pgpvault.gui.encryption.implpgp.EncryptionServicePgpImpl" />
+	<bean id="keyGeneratorService" class="org.pgpvault.gui.encryption.implpgp.KeyGeneratorServicePgpImpl" />
 
 </beans>

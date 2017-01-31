@@ -70,7 +70,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 		return ret;
 	}
 
-	private void fillDates(KeyInfo ret, PGPPublicKey key) {
+	private static void fillDates(KeyInfo ret, PGPPublicKey key) {
 		ret.setCreatedOn(new Date(key.getCreationTime().getTime()));
 		if (key.getValidSeconds() != 0) {
 			java.util.Date expiresAt = DateUtils.addSeconds(key.getCreationTime(), (int) key.getValidSeconds());
@@ -78,7 +78,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 		}
 	}
 
-	private void fillAlgorithmName(KeyInfo ret, PGPPublicKey key) throws PGPException {
+	private static void fillAlgorithmName(KeyInfo ret, PGPPublicKey key) throws PGPException {
 		String alg = resolveAlgorithm(key);
 		if (alg == null) {
 			ret.setKeyAlgorithm("unresolved");
@@ -88,7 +88,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 	}
 
 	@SuppressWarnings("rawtypes")
-	private String resolveAlgorithm(PGPPublicKey key) throws PGPException {
+	private static String resolveAlgorithm(PGPPublicKey key) throws PGPException {
 		for (Iterator iter = key.getSignatures(); iter.hasNext();) {
 			PGPSignature sig = (PGPSignature) iter.next();
 			return PGPUtil.getSignatureName(sig.getKeyAlgorithm(), sig.getHashAlgorithm());
@@ -96,10 +96,9 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 		return null;
 	}
 
-	private KeyInfo buildKeyInfoFromSecret(PGPSecretKeyRing secretKeyRing) throws PGPException {
+	protected static KeyInfo buildKeyInfoFromSecret(PGPSecretKeyRing secretKeyRing) throws PGPException {
 		KeyInfo ret = new KeyInfo();
 		ret.setKeyType(KeyTypeEnum.Private);
-		// PGPSecretKey key = secretKeyRing.getSecretKey();
 		PGPPublicKey key = secretKeyRing.getPublicKey();
 		ret.setUser(buildUser(key.getUserIDs()));
 
@@ -110,7 +109,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 	}
 
 	@SuppressWarnings("rawtypes")
-	private String buildUser(Iterator userIDs) {
+	private static String buildUser(Iterator userIDs) {
 		StringBuilder sb = new StringBuilder();
 		for (; userIDs.hasNext();) {
 			if (sb.length() > 0) {
@@ -190,4 +189,5 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 			IoStreamUtils.safeClose(outputStream);
 		}
 	}
+
 }

@@ -5,7 +5,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.ValidationException;
@@ -18,6 +20,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.pgpvault.gui.encryption.api.EncryptionService;
 import org.pgpvault.gui.encryption.api.KeyFilesOperations;
+import org.pgpvault.gui.encryption.api.KeyGeneratorService;
 import org.pgpvault.gui.encryption.api.KeyRingService;
 import org.pgpvault.gui.encryption.api.dto.Key;
 import org.pgpvault.gui.tools.TextFile;
@@ -44,6 +47,8 @@ public class EncryptionDecryptionTests {
 	private KeyRingService keyRingService;
 	@Autowired
 	private EncryptionService encryptionService;
+	@Autowired
+	private KeyGeneratorService keyGeneratorService;
 	@Autowired
 	private String tempDirPath;
 
@@ -79,6 +84,18 @@ public class EncryptionDecryptionTests {
 		String targetFilename = tempDirPath + File.separator + FilenameUtils.getBaseName(testSubjectFilename) + ".pgp";
 		encryptionService.encrypt(testSubjectFilename, targetFilename, keys.values());
 		encryptionService.decrypt(targetFilename, targetFilename + ".test", keys.get("Alice.asc"), "pass");
+		String result = TextFile.read(targetFilename + ".test");
+		assertEquals(testSubjectContents, result);
+	}
+
+	@Test
+	public void testWeCanDecryptTheProductOfEncryptionUsingCreatedKey() throws Exception {
+		Key key = keyGeneratorService.createNewKey(KeyRingServiceTest.buildTestKey());
+		List keys = Arrays.asList(key);
+
+		String targetFilename = tempDirPath + File.separator + FilenameUtils.getBaseName(testSubjectFilename) + ".pgp";
+		encryptionService.encrypt(testSubjectFilename, targetFilename, keys);
+		encryptionService.decrypt(targetFilename, targetFilename + ".test", key, "pass");
 		String result = TextFile.read(targetFilename + ".test");
 		assertEquals(testSubjectContents, result);
 	}

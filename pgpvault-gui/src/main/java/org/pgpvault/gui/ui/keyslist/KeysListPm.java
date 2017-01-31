@@ -7,10 +7,15 @@ import java.util.List;
 
 import javax.annotation.Resource;
 import javax.swing.Action;
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.pgpvault.gui.configpairs.api.ConfigPairs;
+import org.pgpvault.gui.encryption.api.KeyFilesOperations;
 import org.pgpvault.gui.encryption.api.KeyRingService;
 import org.pgpvault.gui.encryption.api.dto.Key;
 import org.pgpvault.gui.encryption.api.dto.KeyData;
+import org.pgpvault.gui.ui.tools.SaveFileChooserDialog;
 import org.pgpvault.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
@@ -33,10 +38,19 @@ public class KeysListPm extends PresentationModelBase {
 	@Autowired
 	@Resource(name = "keyRingService")
 	private KeyRingService<KeyData> keyRingService;
+	@Autowired
+	private ConfigPairs configPairs;
+	@Autowired
+	@Resource(name = "keyFilesOperations")
+	private KeyFilesOperations<KeyData> keyFilesOperations;
+
 	private KeysListHost host;
 
 	private ModelTableProperty<Key<KeyData>> tableModelProp;
 	private ModelProperty<Boolean> hasData;
+
+	private SaveFileChooserDialog privateKeyTargetChooser;
+	private SaveFileChooserDialog publicKeyTargetChooser;
 
 	public void init(KeysListHost host) {
 		Preconditions.checkArgument(host != null);
@@ -54,7 +68,16 @@ public class KeysListPm extends PresentationModelBase {
 	private PropertyChangeListener onSelectionChangedHandler = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			actionDeleteKey.setEnabled(tableModelProp.hasValue());
+			Key<KeyData> key = tableModelProp.getValue();
+			boolean hasSelection = key != null;
+			for (int i = 0; i < contextMenuActions.length; i++) {
+				Action action = contextMenuActions[i];
+				if (action == null) {
+					continue;
+				}
+				((Action) action).setEnabled(hasSelection);
+			}
+			actionExportPrivateKey.setEnabled(key != null && key.getKeyData().isCanBeUsedForDecryption());
 		}
 	};
 
@@ -114,7 +137,72 @@ public class KeysListPm extends PresentationModelBase {
 		}
 	};
 
-	private Action[] contextMenuActions = new Action[] { actionDeleteKey };
+	public SaveFileChooserDialog getPrivateKeyTargetChooser() {
+		if (privateKeyTargetChooser == null) {
+			privateKeyTargetChooser = new SaveFileChooserDialog(findRegisteredWindowIfAny(), "action.exportPrivateKey",
+					"action.export", configPairs, "ExportKeyDialog") {
+				@Override
+				protected void onFileChooserPostConstrct(JFileChooser ofd) {
+					ofd.setAcceptAllFileFilterUsed(false);
+					ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file armored (.asc)", "asc"));
+					ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file (.bpg)", "bpg"));
+					ofd.addChoosableFileFilter(ofd.getAcceptAllFileFilter());
+					ofd.setFileFilter(ofd.getChoosableFileFilters()[0]);
+				}
+			};
+		}
+		return privateKeyTargetChooser;
+	}
+
+	public SaveFileChooserDialog getPublicKeyTargetChooser() {
+		if (publicKeyTargetChooser == null) {
+			publicKeyTargetChooser = new SaveFileChooserDialog(findRegisteredWindowIfAny(), "action.exportPublicKey",
+					"action.export", configPairs, "ExportKeyDialog") {
+				@Override
+				protected void onFileChooserPostConstrct(JFileChooser ofd) {
+					ofd.setAcceptAllFileFilterUsed(false);
+					ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file armored (.asc)", "asc"));
+					ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file (.bpg)", "bpg"));
+					ofd.addChoosableFileFilter(ofd.getAcceptAllFileFilter());
+					ofd.setFileFilter(ofd.getChoosableFileFilters()[0]);
+				}
+			};
+		}
+		return publicKeyTargetChooser;
+	}
+
+	@SuppressWarnings("serial")
+	private Action actionExportPublicKey = new LocalizedAction("action.exportPublicKey") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (!tableModelProp.hasValue()) {
+				return;
+			}
+			Key<KeyData> key = tableModelProp.getValue();
+			String targetFile = getPublicKeyTargetChooser().askUserForFile();
+			if (targetFile != null) {
+				keyFilesOperations.exportPublicKey(key, targetFile);
+			}
+		}
+	};
+
+	@SuppressWarnings("serial")
+	private Action actionExportPrivateKey = new LocalizedAction("action.exportPrivateKey") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (!tableModelProp.hasValue()) {
+				return;
+			}
+			Key<KeyData> key = tableModelProp.getValue();
+			String targetFile = getPrivateKeyTargetChooser().askUserForFile();
+			if (targetFile != null) {
+				keyFilesOperations.exportPrivateKey(key, targetFile);
+			}
+		}
+	};
+
+	private Action[] contextMenuActions = new Action[] { actionExportPublicKey, actionExportPrivateKey, null,
+			actionDeleteKey };
 
 	protected Action getActionClose() {
 		return actionClose;

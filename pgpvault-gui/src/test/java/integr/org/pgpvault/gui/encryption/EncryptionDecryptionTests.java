@@ -10,7 +10,9 @@ import java.util.Map;
 
 import javax.xml.bind.ValidationException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,6 +60,11 @@ public class EncryptionDecryptionTests {
 		importKeyFromResources("Bob.asc");
 		importKeyFromResources("John.asc");
 		importKeyFromResources("Paul.asc");
+	}
+
+	@After
+	public void cleanUpTempDir() throws Exception {
+		FileUtils.deleteDirectory(new File(tempDirPath));
 	}
 
 	private Key importKeyFromResources(String keyFileName) throws ValidationException, URISyntaxException {

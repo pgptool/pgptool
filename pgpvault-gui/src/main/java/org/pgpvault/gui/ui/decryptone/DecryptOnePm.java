@@ -35,6 +35,7 @@ import org.pgpvault.gui.tools.PathUtils;
 import org.pgpvault.gui.ui.encryptone.EncryptOnePm;
 import org.pgpvault.gui.ui.encryptone.EncryptionDialogParameters;
 import org.pgpvault.gui.ui.tools.ExistingFileChooserDialog;
+import org.pgpvault.gui.ui.tools.SaveFileChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.summerb.approaches.security.api.exceptions.InvalidPasswordException;
@@ -100,6 +101,7 @@ public class DecryptOnePm extends PresentationModelBase {
 	private ListEx<ValidationError> validationErrors = new ListExImpl<ValidationError>();
 
 	private ExistingFileChooserDialog sourceFileChooser;
+	private SaveFileChooserDialog targetFileChooser;
 	private Set<String> sourceFileRecipientsKeysIds;
 
 	public boolean init(DecryptOneHost host, String optionalSource) {
@@ -188,46 +190,37 @@ public class DecryptOnePm extends PresentationModelBase {
 		}
 	};
 
-	private String askUserForTargetFile() {
-		try {
-			JFileChooser ofd = new JFileChooser();
-			ofd.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			ofd.setMultiSelectionEnabled(false);
-			ofd.setDialogTitle(text("action.chooseTargetFile"));
-			ofd.setApproveButtonText(text("action.choose"));
-			suggestTargetFileForFileChooser(ofd);
-			ofd.setAcceptAllFileFilterUsed(true);
+	public SaveFileChooserDialog getTargetFileChooser() {
+		if (targetFileChooser == null) {
+			targetFileChooser = new SaveFileChooserDialog(findRegisteredWindowIfAny(), "action.chooseTargetFile",
+					"action.choose", configPairs, "DecryptionTargetChooser") {
+				@Override
+				protected String onDialogClosed(String filePathName, JFileChooser ofd) {
+					String ret = super.onDialogClosed(filePathName, ofd);
+					if (ret != null) {
+						targetFile.setValueByOwner(ret);
+					}
+					return ret;
+				}
 
-			int result = ofd.showSaveDialog(findRegisteredWindowIfAny());
-			if (result != JFileChooser.APPROVE_OPTION) {
-				return null;
-			}
-			File retFile = ofd.getSelectedFile();
-			if (retFile == null) {
-				return null;
-			}
-
-			String ret = retFile.getAbsolutePath();
-
-			targetFile.setValueByOwner(ret);
-			return ret;
-		} finally {
-			validateTargetFile();
+				@Override
+				protected void suggestTarget(JFileChooser ofd) {
+					String sourceFileStr = sourceFile.getValue();
+					if (StringUtils.hasText(targetFile.getValue())) {
+						ofd.setCurrentDirectory(new File(PathUtils.extractBasePath(targetFile.getValue())));
+						ofd.setSelectedFile(new File(targetFile.getValue()));
+					} else if (StringUtils.hasText(sourceFileStr) && new File(sourceFileStr).exists()) {
+						String basePath = PathUtils.extractBasePath(sourceFileStr);
+						ofd.setCurrentDirectory(new File(basePath));
+						ofd.setSelectedFile(new File(madeUpTargetFileName(sourceFileStr, basePath)));
+					} else {
+						// NOTE: Can't think of a right way to react on this
+						// case
+					}
+				}
+			};
 		}
-	}
-
-	private void suggestTargetFileForFileChooser(JFileChooser ofd) {
-		String sourceFileStr = sourceFile.getValue();
-		if (StringUtils.hasText(targetFile.getValue())) {
-			ofd.setCurrentDirectory(new File(PathUtils.extractBasePath(targetFile.getValue())));
-			ofd.setSelectedFile(new File(targetFile.getValue()));
-		} else if (StringUtils.hasText(sourceFileStr) && new File(sourceFileStr).exists()) {
-			String basePath = PathUtils.extractBasePath(sourceFileStr);
-			ofd.setCurrentDirectory(new File(basePath));
-			ofd.setSelectedFile(new File(madeUpTargetFileName(sourceFileStr, basePath)));
-		} else {
-			// NOTE: Can't think of a right way to react on this case
-		}
+		return targetFileChooser;
 	}
 
 	private boolean doWeHaveKeysToDecryptWith() {
@@ -417,7 +410,7 @@ public class DecryptOnePm extends PresentationModelBase {
 			// parameters. So if value is already provided for target file then
 			// we'll not show file chooser
 			if (result && !StringUtils.hasText(targetFile.getValue())) {
-				askUserForTargetFile();
+				getTargetFileChooser().askUserForFile();
 			}
 
 			if (!result) {
@@ -603,7 +596,7 @@ public class DecryptOnePm extends PresentationModelBase {
 	protected final Action actionBrowseTarget = new LocalizedAction("action.browse") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			askUserForTargetFile();
+			getTargetFileChooser().askUserForFile();
 		}
 	};
 

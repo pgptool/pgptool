@@ -102,9 +102,18 @@ public class UiUtils {
 			private void fixFontSize() {
 				Toolkit toolkit = Toolkit.getDefaultToolkit();
 				int dpi = toolkit.getScreenResolution();
-				Dimension size = toolkit.getScreenSize();
+				if (dpi == 96) {
+					if (log.isDebugEnabled()) {
+						Font font = UIManager.getDefaults().getFont("TextField.font");
+						String current = font != null ? Integer.toString(font.getSize()) : "unknown";
+						log.debug(
+								"Screen dpi seem to be 96. Not going to change font size. Btw current size seem to be "
+										+ current);
+					}
+					return;
+				}
 				int targetFontSize = 12 * dpi / 96;
-				log.debug("Screen dpi = " + dpi + ", size = " + size + ", decided font size is " + targetFontSize);
+				log.debug("Screen dpi = " + dpi + ", decided to change font size to " + targetFontSize);
 				setDefaultSize(targetFontSize);
 			}
 
@@ -115,9 +124,11 @@ public class UiUtils {
 					if (key != null && key.toString().toLowerCase().contains("font")) {
 						Font font = UIManager.getDefaults().getFont(key);
 						if (font != null) {
-							font = font.deriveFont((float) size);
-							UIManager.put(key, font);
-							log.debug("Font size changed for " + key);
+							Font changedFont = font.deriveFont((float) size);
+							UIManager.put(key, changedFont);
+							Font doubleCheck = UIManager.getDefaults().getFont(key);
+							log.debug("Font size changed for " + key + ". From " + font.getSize() + " to "
+									+ doubleCheck.getSize());
 						}
 					}
 				}

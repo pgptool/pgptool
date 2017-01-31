@@ -27,7 +27,7 @@ public class ExistingFileChooserDialog {
 	}
 
 	public String askUserForFile() {
-		JFileChooser ofd = buildSourceFileChooserDialog();
+		JFileChooser ofd = buildFileChooserDialog();
 
 		int result = ofd.showOpenDialog(optionalParent);
 		if (result != JFileChooser.APPROVE_OPTION) {
@@ -55,14 +55,14 @@ public class ExistingFileChooserDialog {
 		return filePathName;
 	}
 
-	private JFileChooser buildSourceFileChooserDialog() {
+	private JFileChooser buildFileChooserDialog() {
 		JFileChooser ofd = new JFileChooser();
 		ofd.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		ofd.setAcceptAllFileFilterUsed(true);
 		ofd.setMultiSelectionEnabled(false);
 		ofd.setDialogTitle(Messages.get("action.chooseExistingFile"));
 		ofd.setApproveButtonText(Messages.get("action.choose"));
-		suggestInitialDirectoryForSource(ofd);
+		suggestInitialDirectory(ofd);
 		doFileChooserPostConstruct(ofd);
 		return ofd;
 	}
@@ -72,7 +72,7 @@ public class ExistingFileChooserDialog {
 		// if needed
 	}
 
-	protected void suggestInitialDirectoryForSource(JFileChooser ofd) {
+	protected void suggestInitialDirectory(JFileChooser ofd) {
 		try {
 			String lastChosenDestination = configPairs.find(configPairNameToRemember, null);
 			String pathname = StringUtils.hasText(lastChosenDestination) ? lastChosenDestination

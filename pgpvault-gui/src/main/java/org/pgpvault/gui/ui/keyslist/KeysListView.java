@@ -47,7 +47,6 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 
 	private JMenuBar menuBar;
 	private JMenuItem miImport;
-	private JMenuItem miDelete;
 	private JMenuItem miClose;
 
 	private JPanel panelTablePlaceholder;
@@ -212,8 +211,6 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 		JMenu menuTs = new JMenu(Messages.get("term.actions"));
 		menuTs.add(miImport = new JMenuItem());
 		menuTs.addSeparator();
-		menuTs.add(miDelete = new JMenuItem());
-		menuTs.addSeparator();
 		menuTs.add(miClose = new JMenuItem());
 		menuBar.add(menuTs);
 	}
@@ -232,7 +229,6 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 
 	private void bindToActions() {
 		bindingContext.setupBinding(pm.getActionImport(), miImport);
-		bindingContext.setupBinding(pm.getActionDelete(), miDelete);
 		bindingContext.setupBinding(pm.getActionClose(), miClose);
 		if (pm.getContextMenuActions() != null) {
 			for (Action action : pm.getContextMenuActions()) {

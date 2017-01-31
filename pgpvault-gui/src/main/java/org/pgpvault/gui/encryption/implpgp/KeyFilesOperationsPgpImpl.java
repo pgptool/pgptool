@@ -2,13 +2,17 @@ package org.pgpvault.gui.encryption.implpgp;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.sql.Date;
 import java.util.Iterator;
 
 import javax.xml.bind.ValidationException;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.log4j.Logger;
+import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -21,6 +25,10 @@ import org.pgpvault.gui.encryption.api.KeyFilesOperations;
 import org.pgpvault.gui.encryption.api.dto.Key;
 import org.pgpvault.gui.encryption.api.dto.KeyInfo;
 import org.pgpvault.gui.encryption.api.dto.KeyTypeEnum;
+import org.pgpvault.gui.tools.IoStreamUtils;
+import org.springframework.util.StringUtils;
+
+import com.google.common.base.Preconditions;
 
 public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp> {
 	private static Logger log = Logger.getLogger(KeyFilesOperationsPgpImpl.class);
@@ -140,5 +148,46 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 		}
 
 		return data;
+	}
+
+	@Override
+	public void exportPublicKey(Key<KeyDataPgp> key, String targetFilePathname) {
+		Preconditions.checkArgument(key != null && key.getKeyData() != null && key.getKeyInfo() != null,
+				"Key must be providedand fully described");
+		Preconditions.checkArgument(StringUtils.hasText(targetFilePathname), "targetFilePathname must be provided");
+		OutputStream outputStream = null;
+		try {
+			outputStream = new FileOutputStream(targetFilePathname);
+			if ("asc".equalsIgnoreCase(FilenameUtils.getExtension(targetFilePathname))) {
+				outputStream = new ArmoredOutputStream(outputStream);
+			}
+			key.getKeyData().getPublicKeyRing().encode(outputStream);
+		} catch (Throwable t) {
+			throw new RuntimeException(
+					"Failed to export private key " + key.getKeyInfo().getUser() + " to " + targetFilePathname, t);
+		} finally {
+			IoStreamUtils.safeClose(outputStream);
+		}
+	}
+
+	@Override
+	public void exportPrivateKey(Key<KeyDataPgp> key, String targetFilePathname) {
+		Preconditions.checkArgument(key != null && key.getKeyData() != null && key.getKeyInfo() != null,
+				"Key must be providedand fully described");
+		Preconditions.checkArgument(key.getKeyData().getSecretKeyRing() != null, "Private key wasn't provided");
+		Preconditions.checkArgument(StringUtils.hasText(targetFilePathname), "targetFilePathname must be provided");
+		OutputStream outputStream = null;
+		try {
+			outputStream = new FileOutputStream(targetFilePathname);
+			if ("asc".equalsIgnoreCase(FilenameUtils.getExtension(targetFilePathname))) {
+				outputStream = new ArmoredOutputStream(outputStream);
+			}
+			key.getKeyData().getSecretKeyRing().encode(outputStream);
+		} catch (Throwable t) {
+			throw new RuntimeException(
+					"Failed to export private key " + key.getKeyInfo().getUser() + " to " + targetFilePathname, t);
+		} finally {
+			IoStreamUtils.safeClose(outputStream);
+		}
 	}
 }

@@ -19,7 +19,6 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.pgpvault.gui.app.EntryPoint;
 import org.pgpvault.gui.app.MessageSeverity;
@@ -33,6 +32,7 @@ import org.pgpvault.gui.tools.PathUtils;
 import org.pgpvault.gui.ui.decryptone.DecryptOnePm;
 import org.pgpvault.gui.ui.tools.ExistingFileChooserDialog;
 import org.pgpvault.gui.ui.tools.ListChangeListenerAnyEventImpl;
+import org.pgpvault.gui.ui.tools.SaveFileChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -78,6 +78,7 @@ public class EncryptOnePm extends PresentationModelBase {
 	private ModelProperty<Boolean> isOpenTargetFolderAfter;
 
 	private ExistingFileChooserDialog sourceFileChooser;
+	private SaveFileChooserDialog targetFileChooser;
 
 	public boolean init(EncryptOneHost host, String optionalSource) {
 		Preconditions.checkArgument(host != null);
@@ -109,64 +110,46 @@ public class EncryptOnePm extends PresentationModelBase {
 		return selectedSourceFile;
 	}
 
-	private String askUserForTargetFile() {
-		JFileChooser ofd = new JFileChooser();
-		ofd.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		ofd.setMultiSelectionEnabled(false);
-		ofd.setDialogTitle(Messages.get("action.chooseTargetFile"));
-		ofd.setApproveButtonText(Messages.get("action.choose"));
-		suggestTargetFileForFileChooser(ofd);
+	public SaveFileChooserDialog getTargetFileChooser() {
+		if (targetFileChooser == null) {
+			targetFileChooser = new SaveFileChooserDialog(findRegisteredWindowIfAny(), "action.chooseTargetFile",
+					"action.choose", configPairs, "EncryptionTargetChooser") {
+				@Override
+				protected String onDialogClosed(String filePathName, JFileChooser ofd) {
+					String ret = super.onDialogClosed(filePathName, ofd);
+					if (ret != null) {
+						targetFile.setValueByOwner(ret);
+					}
+					return ret;
+				}
 
-		ofd.setAcceptAllFileFilterUsed(false);
-		ofd.addChoosableFileFilter(new FileNameExtensionFilter("GPG Files (.pgp)", "pgp"));
-		// NOTE: Should we support other extensions?....
-		ofd.addChoosableFileFilter(ofd.getAcceptAllFileFilter());
-		ofd.setFileFilter(ofd.getChoosableFileFilters()[0]);
+				@Override
+				protected void onFileChooserPostConstrct(JFileChooser ofd) {
+					ofd.setAcceptAllFileFilterUsed(false);
+					ofd.addChoosableFileFilter(new FileNameExtensionFilter("GPG Files (.pgp)", "pgp"));
+					// NOTE: Should we support other extensions?....
+					ofd.addChoosableFileFilter(ofd.getAcceptAllFileFilter());
+					ofd.setFileFilter(ofd.getChoosableFileFilters()[0]);
+				}
 
-		int result = ofd.showSaveDialog(findRegisteredWindowIfAny());
-		if (result != JFileChooser.APPROVE_OPTION) {
-			return null;
+				@Override
+				protected void suggestTarget(JFileChooser ofd) {
+					String sourceFileStr = sourceFile.getValue();
+					if (StringUtils.hasText(targetFile.getValue())) {
+						ofd.setCurrentDirectory(new File(PathUtils.extractBasePath(targetFile.getValue())));
+						ofd.setSelectedFile(new File(targetFile.getValue()));
+					} else if (StringUtils.hasText(sourceFileStr) && new File(sourceFileStr).exists()) {
+						String basePath = PathUtils.extractBasePath(sourceFileStr);
+						ofd.setCurrentDirectory(new File(basePath));
+						ofd.setSelectedFile(new File(madeUpTargetFileName(sourceFileStr, basePath)));
+					} else {
+						// NOTE: Can't think of a right way to react on this
+						// case
+					}
+				}
+			};
 		}
-		File retFile = ofd.getSelectedFile();
-		if (retFile == null) {
-			return null;
-		}
-
-		String ret = retFile.getAbsolutePath();
-		ret = fixTargetFileExtensionIfNeeded(ofd, ret);
-
-		targetFile.setValueByOwner(ret);
-		return ret;
-	}
-
-	private String fixTargetFileExtensionIfNeeded(JFileChooser ofd, String filePathName) {
-		FileFilter fileExtFilter = ofd.getFileFilter();
-		if (fileExtFilter == ofd.getAcceptAllFileFilter()) {
-			return filePathName;
-		}
-		FileNameExtensionFilter fileNameExtensionFilter = (FileNameExtensionFilter) fileExtFilter;
-		String ext = fileNameExtensionFilter.getExtensions()[0];
-		if (!ext.equalsIgnoreCase(FilenameUtils.getExtension(filePathName))) {
-			filePathName += "." + ext;
-			// filePathName = FilenameUtils.getFullPath(filePathName) +
-			// FilenameUtils.getBaseName(filePathName) + "."
-			// + ext;
-		}
-		return filePathName;
-	}
-
-	private void suggestTargetFileForFileChooser(JFileChooser ofd) {
-		String sourceFileStr = sourceFile.getValue();
-		if (StringUtils.hasText(targetFile.getValue())) {
-			ofd.setCurrentDirectory(new File(PathUtils.extractBasePath(targetFile.getValue())));
-			ofd.setSelectedFile(new File(targetFile.getValue()));
-		} else if (StringUtils.hasText(sourceFileStr) && new File(sourceFileStr).exists()) {
-			String basePath = PathUtils.extractBasePath(sourceFileStr);
-			ofd.setCurrentDirectory(new File(basePath));
-			ofd.setSelectedFile(new File(madeUpTargetFileName(sourceFileStr, basePath)));
-		} else {
-			// NOTE: Can't think of a right way to react on this case
-		}
+		return targetFileChooser;
 	}
 
 	private boolean doWeHaveKeysToEncryptWith() {
@@ -336,7 +319,7 @@ public class EncryptOnePm extends PresentationModelBase {
 			// parameters. So if value is already provided for target file then
 			// we'll not show file chooser
 			if (result && !StringUtils.hasText(targetFile.getValue())) {
-				askUserForTargetFile();
+				getTargetFileChooser().askUserForFile();
 			}
 		}
 	};
@@ -462,7 +445,7 @@ public class EncryptOnePm extends PresentationModelBase {
 	protected final Action actionBrowseTarget = new LocalizedAction("action.browse") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			askUserForTargetFile();
+			getTargetFileChooser().askUserForFile();
 		}
 	};
 

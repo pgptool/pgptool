@@ -155,6 +155,7 @@ public class UiUtils {
 		window.toFront();
 		window.requestFocus();
 		window.setAlwaysOnTop(false);
+		window.repaint();
 	}
 
 }

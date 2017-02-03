@@ -1,4 +1,6 @@
 # PGP Vault
+
+[![Join the chat at https://gitter.im/pgpvault/Lobby](https://badges.gitter.im/pgpvault/Lobby.svg)](https://gitter.im/pgpvault/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Desktop GUI application for easy and regular PGP decryption/encryption of specific files on a file system.
 
 I tend to store sensitive information on my computer and sometimes sync this to google drive, drop box, etc.. But I don't want this information to be stored in unsecured state. I want it to be encrypted. 

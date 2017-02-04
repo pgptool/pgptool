@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.pgpvault</groupId>
+  <groupId>org.pgptool</groupId>
   <artifactId>gui</artifactId>
   <version>0.2.0.0</version>
   <build>
-    <finalName>pgpvaultgui-${project.version}</finalName>
+    <finalName>pgptoolgui-${project.version}</finalName>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -41,7 +41,7 @@
               </filters>
               <transformers>
                 <transformer>
-                  <mainClass>org.pgpvault.gui.app.EntryPoint</mainClass>
+                  <mainClass>org.pgptool.gui.app.EntryPoint</mainClass>
                 </transformer>
                 <transformer>
                   <resource>META-INF/spring.handlers</resource>
@@ -69,8 +69,8 @@
             </goals>
             <configuration>
               <infile>${project.basedir}/installer/launch4j.xml</infile>
-              <jar>pgpvaultgui-${project.version}.jar</jar>
-              <outfile>${project.basedir}/target/pgpvault.exe</outfile>
+              <jar>pgptoolgui-${project.version}.jar</jar>
+              <outfile>${project.basedir}/target/pgptool.exe</outfile>
               <versionInfo>
                 <fileVersion>${project.version}</fileVersion>
                 <txtFileVersion>${project.version}</txtFileVersion>

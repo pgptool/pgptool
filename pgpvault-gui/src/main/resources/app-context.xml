@@ -16,7 +16,7 @@
 			<list>
 				<!-- Default configuration values -->
 				<value>classpath:default.properties</value>
-				<value>file:pgpvault-gui-devmode.properties</value>
+				<value>file:pgptool-gui-devmode.properties</value>
 			</list>
 		</property>
 	</bean>
@@ -24,7 +24,7 @@
 	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
 		<property name="basenames">
 			<list>
-				<value>classpath:pgpvault-gui-messages</value>
+				<value>classpath:pgptool-gui-messages</value>
 				<value>classpath:summerb-messages</value>
 			</list>
 		</property>
@@ -35,48 +35,48 @@
 
 	<context:annotation-config />
 
-	<bean class="org.pgpvault.gui.app.EntryPoint" />
-	<bean class="org.pgpvault.gui.app.Messages" />
+	<bean class="org.pgptool.gui.app.EntryPoint" />
+	<bean class="org.pgptool.gui.app.Messages" />
 	<bean class="com.google.common.eventbus.EventBus" />
 
-	<bean id="configsBasePathResolver" class="org.pgpvault.gui.config.impl.ConfigsBasePathResolverUserHomeImpl">
+	<bean id="configsBasePathResolver" class="org.pgptool.gui.config.impl.ConfigsBasePathResolverUserHomeImpl">
 		<property name="configFolderName" value="${configuration.configFolderName}" />
 	</bean>
-	<bean id="configRepository" class="org.pgpvault.gui.config.impl.ConfigRepositoryPairsBasedImpl" />
-	<bean class="org.pgpvault.gui.configpairs.impl.ConfigPairsMapDbImpl" />
-	<bean class="org.pgpvault.gui.tempfolderfordecrypted.impl.DecryptedTempFolderImpl" />
+	<bean id="configRepository" class="org.pgptool.gui.config.impl.ConfigRepositoryPairsBasedImpl" />
+	<bean class="org.pgptool.gui.configpairs.impl.ConfigPairsMapDbImpl" />
+	<bean class="org.pgptool.gui.tempfolderfordecrypted.impl.DecryptedTempFolderImpl" />
 
-	<bean id="keyFilesOperations" class="org.pgpvault.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
-	<bean id="keyRingService" class="org.pgpvault.gui.encryption.implpgp.KeyRingServicePgpImpl" />
-	<bean id="encryptionService" class="org.pgpvault.gui.encryption.implpgp.EncryptionServicePgpImpl" />
-	<bean id="keyGeneratorService" class="org.pgpvault.gui.encryption.implpgp.KeyGeneratorServicePgpImpl" />
+	<bean id="keyFilesOperations" class="org.pgptool.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
+	<bean id="keyRingService" class="org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl" />
+	<bean id="encryptionService" class="org.pgptool.gui.encryption.implpgp.EncryptionServicePgpImpl" />
+	<bean id="keyGeneratorService" class="org.pgptool.gui.encryption.implpgp.KeyGeneratorServicePgpImpl" />
 
-	<bean class="org.pgpvault.gui.decryptedlist.impl.DecryptedHistoryServiceImpl" />
+	<bean class="org.pgptool.gui.decryptedlist.impl.DecryptedHistoryServiceImpl" />
 
 	<!-- Views -->
-	<bean class="org.pgpvault.gui.ui.root.RootPm" scope="singleton" />
+	<bean class="org.pgptool.gui.ui.root.RootPm" scope="singleton" />
 
-	<bean class="org.pgpvault.gui.ui.mainframe.MainFramePm" scope="prototype" />
-	<bean class="org.pgpvault.gui.ui.mainframe.MainFrameView" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.mainframe.MainFramePm" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.mainframe.MainFrameView" scope="prototype" />
 
-	<bean class="org.pgpvault.gui.ui.about.AboutView" lazy-init="true" scope="singleton" />
-	<bean class="org.pgpvault.gui.ui.about.AboutPm" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.about.AboutView" lazy-init="true" scope="singleton" />
+	<bean class="org.pgptool.gui.ui.about.AboutPm" scope="prototype" />
 
-	<bean class="org.pgpvault.gui.ui.importkey.KeyImporterView" lazy-init="true" scope="singleton" />
-	<bean class="org.pgpvault.gui.ui.importkey.KeyImporterPm" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.importkey.KeyImporterView" lazy-init="true" scope="singleton" />
+	<bean class="org.pgptool.gui.ui.importkey.KeyImporterPm" scope="prototype" />
 
-	<bean class="org.pgpvault.gui.ui.keyslist.KeysListView" lazy-init="true" scope="singleton" />
-	<bean class="org.pgpvault.gui.ui.keyslist.KeysListPm" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.keyslist.KeysListView" lazy-init="true" scope="singleton" />
+	<bean class="org.pgptool.gui.ui.keyslist.KeysListPm" scope="prototype" />
 
-	<bean class="org.pgpvault.gui.ui.encryptone.EncryptOnePm" lazy-init="true" scope="prototype" />
-	<bean class="org.pgpvault.gui.ui.encryptone.EncryptOneView" lazy-init="true" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.encryptone.EncryptOnePm" lazy-init="true" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.encryptone.EncryptOneView" lazy-init="true" scope="prototype" />
 
-	<bean class="org.pgpvault.gui.ui.decryptone.DecryptOnePm" lazy-init="true" scope="prototype" />
-	<bean class="org.pgpvault.gui.ui.decryptone.DecryptOneView" lazy-init="true" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.decryptone.DecryptOnePm" lazy-init="true" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.decryptone.DecryptOneView" lazy-init="true" scope="prototype" />
 
-	<bean class="org.pgpvault.gui.ui.tempfolderfordecrypted.TempFolderChooserPm" lazy-init="true" scope="singleton" />
+	<bean class="org.pgptool.gui.ui.tempfolderfordecrypted.TempFolderChooserPm" lazy-init="true" scope="singleton" />
 
-	<bean class="org.pgpvault.gui.ui.createkey.CreateKeyView" lazy-init="true" scope="singleton" />
-	<bean class="org.pgpvault.gui.ui.createkey.CreateKeyPm" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.createkey.CreateKeyView" lazy-init="true" scope="singleton" />
+	<bean class="org.pgptool.gui.ui.createkey.CreateKeyPm" scope="prototype" />
 
 </beans>

@@ -3,7 +3,7 @@
   <dontWrapJar>true</dontWrapJar>
   <headerType>gui</headerType>
   <jar>gui-0.1.0-SNAPSHOT.jar</jar>
-  <outfile>/home/sergeyk/_prj/pgpvault/pgpvault-gui/target/pgpvault.exe</outfile>
+  <outfile>/home/sergeyk/_prj/pgptool/pgptool-gui/target/pgptool.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
@@ -27,14 +27,14 @@
   <versionInfo>
     <fileVersion>0.1.0.0</fileVersion>
     <txtFileVersion>0.1.0-SNAPSHOT</txtFileVersion>
-    <fileDescription>PGP Vault windows executable wrapper</fileDescription>
+    <fileDescription>PGP Tool windows executable wrapper</fileDescription>
     <copyright>Sergey Karpushin &amp; Contributors</copyright>
     <productVersion>0.1.0.0</productVersion>
     <txtProductVersion>0.1.0-SNAPSHOT</txtProductVersion>
-    <productName>PGP Vault desktop application</productName>
-    <companyName>https://github.com/skarpushin/pgpvault</companyName>
-    <internalName>pgpvault</internalName>
-    <originalFilename>pgpvault.exe</originalFilename>
+    <productName>PGP Tool desktop application</productName>
+    <companyName>https://github.com/skarpushin/pgptool</companyName>
+    <internalName>pgptool</internalName>
+    <originalFilename>pgptool.exe</originalFilename>
     <trademarks></trademarks>
     <language>ENGLISH_US</language>
   </versionInfo>

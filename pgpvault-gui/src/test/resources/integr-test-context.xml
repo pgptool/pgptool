@@ -16,7 +16,7 @@
 			<list>
 				<!-- Default configuration values -->
 				<value>classpath:default.properties</value>
-				<value>file:pgpvault-gui-devmode.properties</value>
+				<value>file:pgptool-gui-devmode.properties</value>
 			</list>
 		</property>
 	</bean>
@@ -24,7 +24,7 @@
 	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
 		<property name="basenames">
 			<list>
-				<value>classpath:pgpvault-gui-messages</value>
+				<value>classpath:pgptool-gui-messages</value>
 				<value>classpath:summerb-messages</value>
 			</list>
 		</property>
@@ -35,22 +35,22 @@
 
 	<context:annotation-config />
 
-	<bean class="org.pgpvault.gui.app.Messages" />
+	<bean class="org.pgptool.gui.app.Messages" />
 	<bean class="com.google.common.eventbus.EventBus" />
 	
 	<bean id="tempDirPath" class="java.lang.String">
-		<constructor-arg value="#{T(integr.org.pgpvault.gui.TestTools).buildNewTempDir()}" />
+		<constructor-arg value="#{T(integr.org.pgptool.gui.TestTools).buildNewTempDir()}" />
 	</bean>
 	
-	<bean id="configsBasePathResolver" class="org.pgpvault.gui.config.impl.ConfigsBasePathResolverUserHomeImpl">
+	<bean id="configsBasePathResolver" class="org.pgptool.gui.config.impl.ConfigsBasePathResolverUserHomeImpl">
 		<property name="configFolderName" ref="tempDirPath" />
 	</bean>
-	<bean id="configRepository" class="org.pgpvault.gui.config.impl.ConfigRepositoryImpl" />
-	<bean class="org.pgpvault.gui.configpairs.impl.ConfigPairsImpl" />
+	<bean id="configRepository" class="org.pgptool.gui.config.impl.ConfigRepositoryImpl" />
+	<bean class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl" />
 
-	<bean id="keyFilesOperations" class="org.pgpvault.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
-	<bean id="keyRingService" class="org.pgpvault.gui.encryption.implpgp.KeyRingServicePgpImpl" />
-	<bean id="encryptionService" class="org.pgpvault.gui.encryption.implpgp.EncryptionServicePgpImpl" />
-	<bean id="keyGeneratorService" class="org.pgpvault.gui.encryption.implpgp.KeyGeneratorServicePgpImpl" />
+	<bean id="keyFilesOperations" class="org.pgptool.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
+	<bean id="keyRingService" class="org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl" />
+	<bean id="encryptionService" class="org.pgptool.gui.encryption.implpgp.EncryptionServicePgpImpl" />
+	<bean id="keyGeneratorService" class="org.pgptool.gui.encryption.implpgp.KeyGeneratorServicePgpImpl" />
 
 </beans>

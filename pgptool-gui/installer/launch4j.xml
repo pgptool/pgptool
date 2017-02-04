@@ -2,7 +2,7 @@
 <launch4jConfig>
   <dontWrapJar>true</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>gui-0.1.0-SNAPSHOT.jar</jar>
+  <jar>pgptoolgui.jar</jar>
   <outfile>/home/sergeyk/_prj/pgptool/pgptool-gui/target/pgptool.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
@@ -27,12 +27,12 @@
   <versionInfo>
     <fileVersion>0.1.0.0</fileVersion>
     <txtFileVersion>0.1.0-SNAPSHOT</txtFileVersion>
-    <fileDescription>PGP Tool windows executable wrapper</fileDescription>
-    <copyright>Sergey Karpushin &amp; Contributors</copyright>
+    <fileDescription>PGP Tool</fileDescription>
+    <copyright>Sergey Karpushin</copyright>
     <productVersion>0.1.0.0</productVersion>
     <txtProductVersion>0.1.0-SNAPSHOT</txtProductVersion>
-    <productName>PGP Tool desktop application</productName>
-    <companyName>https://github.com/skarpushin/pgptool</companyName>
+    <productName>PGP Tool Desktop Application</productName>
+    <companyName>https://github.com/pgptool/pgptool</companyName>
     <internalName>pgptool</internalName>
     <originalFilename>pgptool.exe</originalFilename>
     <trademarks></trademarks>

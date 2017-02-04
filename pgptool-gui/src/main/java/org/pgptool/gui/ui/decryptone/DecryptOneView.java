@@ -90,7 +90,7 @@ public class DecryptOneView extends DialogViewBaseCustom<DecryptOnePm> {
 	private Component buildControllsPanel() {
 		SgLayout sgl = new SgLayout(2, 11, spacing(1), 2);
 		sgl.setColSize(0, 1, SgLayout.SIZE_TYPE_ASKCOMPONENT);
-		sgl.setColSize(1, spacing(60), SgLayout.SIZE_TYPE_CONSTANT);
+		sgl.setColSize(1, spacing(40), SgLayout.SIZE_TYPE_CONSTANT);
 
 		JPanel ret = new JPanel(sgl);
 		ret.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));

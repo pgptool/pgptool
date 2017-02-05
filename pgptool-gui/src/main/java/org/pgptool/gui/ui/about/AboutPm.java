@@ -23,9 +23,13 @@ import java.net.URI;
 
 import javax.swing.Action;
 
+import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.StringUtils;
+
+import com.google.common.base.Preconditions;
 
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
@@ -34,6 +38,8 @@ import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
 public class AboutPm extends PresentationModelBase implements InitializingBean {
+	private static Logger log = Logger.getLogger(AboutPm.class);
+
 	private ModelProperty<String> version;
 	private ModelProperty<String> linkToSite;
 
@@ -44,8 +50,20 @@ public class AboutPm extends PresentationModelBase implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		version = new ModelProperty<String>(this, new ValueAdapterReadonlyImpl<String>("TBD"), "version");
+		version = new ModelProperty<String>(this, new ValueAdapterReadonlyImpl<String>(retVersion()), "version");
 		linkToSite = new ModelProperty<String>(this, new ValueAdapterReadonlyImpl<String>(urlToSite), "linkToSite");
+	}
+
+	private static String retVersion() {
+		try {
+			String ret = AboutPm.class.getPackage().getImplementationVersion();
+			Preconditions.checkState(StringUtils.hasText(ret),
+					"ImplementationVersion cannot be resolved. Perhaps we're in the DEV mode");
+			return ret;
+		} catch (Throwable t) {
+			log.warn("Failed to resolve current application version", t);
+			return "unresolved";
+		}
 	}
 
 	public void init(AboutHost host) {

@@ -114,7 +114,7 @@ public class EntryPoint {
 					KeyRingService keyRingService = (KeyRingService) currentApplicationContext
 							.getBean("keyRingService");
 					List keys = keyRingService.readKeys();
-					log.error("Keys prefetched. Count " + keys.size());
+					log.info("Keys prefetched. Count " + keys.size());
 				} catch (Throwable t) {
 					log.error("Failed to prefetch keys", t);
 				}

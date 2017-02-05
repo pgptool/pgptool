@@ -9,11 +9,11 @@
   <chdir>.</chdir>
   <priority>normal</priority>
   <downloadUrl>http://java.com/download</downloadUrl>
-  <supportUrl></supportUrl>
+  <supportUrl>https://pgptool.github.io/</supportUrl>
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
   <manifest></manifest>
-  <icon></icon>
+  <icon>/home/sergeyk/_prj/pgptool/pgptool-gui/src/main/resources/icons/favicon.ico</icon>
   <jre>
     <path></path>
     <bundledJre64Bit>false</bundledJre64Bit>
@@ -32,7 +32,7 @@
     <productVersion>0.1.0.0</productVersion>
     <txtProductVersion>0.1.0-SNAPSHOT</txtProductVersion>
     <productName>PGP Tool Desktop Application</productName>
-    <companyName>https://github.com/pgptool/pgptool</companyName>
+    <companyName>https://pgptool.github.io/</companyName>
     <internalName>pgptool</internalName>
     <originalFilename>pgptool.exe</originalFilename>
     <trademarks></trademarks>

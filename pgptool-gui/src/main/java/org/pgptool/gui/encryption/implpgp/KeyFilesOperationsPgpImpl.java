@@ -115,7 +115,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 
 	protected static KeyInfo buildKeyInfoFromSecret(PGPSecretKeyRing secretKeyRing) throws PGPException {
 		KeyInfo ret = new KeyInfo();
-		ret.setKeyType(KeyTypeEnum.Private);
+		ret.setKeyType(KeyTypeEnum.KeyPair);
 		PGPPublicKey key = secretKeyRing.getPublicKey();
 		ret.setUser(buildUser(key.getUserIDs()));
 
@@ -190,7 +190,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 	public void exportPrivateKey(Key<KeyDataPgp> key, String targetFilePathname) {
 		Preconditions.checkArgument(key != null && key.getKeyData() != null && key.getKeyInfo() != null,
 				"Key must be providedand fully described");
-		Preconditions.checkArgument(key.getKeyData().getSecretKeyRing() != null, "Private key wasn't provided");
+		Preconditions.checkArgument(key.getKeyData().getSecretKeyRing() != null, "KeyPair key wasn't provided");
 		Preconditions.checkArgument(StringUtils.hasText(targetFilePathname), "targetFilePathname must be provided");
 		OutputStream outputStream = null;
 		try {

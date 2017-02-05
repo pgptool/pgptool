@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.mapdb.DB;
+import org.mapdb.DBException.SerializationError;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
@@ -77,9 +78,19 @@ public class ConfigPairsMapDbImpl implements ConfigPairs, InitializingBean {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T find(String key, T defaultValue) {
-		@SuppressWarnings("unchecked")
-		T ret = (T) map.get(key);
+		T ret = null;
+		try {
+			ret = (T) map.get(key);
+		} catch (SerializationError se) {
+			log.warn("Failed to read from config: " + key
+					+ ". Looks like outdated DTO version. Have to clear the whole map.", se);
+			map.clear();
+			db.commit();
+		} catch (Throwable t) {
+			log.warn("Failed to read from config: " + key, t);
+		}
 		if (ret == null) {
 			return defaultValue;
 		}

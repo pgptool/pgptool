@@ -28,8 +28,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.implpgp.KeyDataPgp;
-import org.pgptool.gui.encryption.implpgp.KeyFilesOperationsPgpImpl;
 
 import integr.org.pgptool.gui.TestTools;
 

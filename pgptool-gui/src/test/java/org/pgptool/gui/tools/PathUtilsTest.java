@@ -20,7 +20,6 @@ package org.pgptool.gui.tools;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.pgptool.gui.tools.PathUtils;
 
 public class PathUtilsTest {
 

@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.pgptool</groupId>
   <artifactId>gui</artifactId>
-  <version>0.2.0.0</version>
+  <version>0.2.1.0</version>
   <build>
     <finalName>pgptoolgui-${project.version}</finalName>
     <pluginManagement>
@@ -19,6 +19,17 @@
       </plugins>
     </pluginManagement>
     <plugins>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
         <version>2.4.3</version>

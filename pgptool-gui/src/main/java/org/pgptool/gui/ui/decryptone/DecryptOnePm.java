@@ -526,19 +526,21 @@ public class DecryptOnePm extends PresentationModelBase {
 			if (isUseSameFolder.getValue()) {
 				return madeUpTargetFileName(sourceFile.getValue(), PathUtils.extractBasePath(sourceFile.getValue()));
 			} else if (isUseTempFolder.getValue()) {
-				return madeUpTargetFileName(sourceFile.getValue(), decryptedTempFolder.getTempFolderBasePath());
+				String ret = madeUpTargetFileName(sourceFile.getValue(), decryptedTempFolder.getTempFolderBasePath());
+				ret = ensureFileNameVacant(ret);
+				return ret;
 			}
 
 			// Validation for target folder!! ---
-			String targetFileName = targetFile.getValue();
 			if (!validateTargetFile()) {
 				return null;
 			}
 
-			File parentFolder = new File(targetFileName).getParentFile();
+			String ret = targetFile.getValue();
+			File parentFolder = new File(ret).getParentFile();
 			Preconditions.checkState(parentFolder.exists() || parentFolder.mkdirs(),
 					"Failed to ensure all parents directories created");
-			return targetFileName;
+			return ret;
 		}
 
 		private void persistDecryptionDialogParametersForCurrentInputs() {
@@ -585,6 +587,21 @@ public class DecryptOnePm extends PresentationModelBase {
 			ret.setDeleteSourceFile(isDeleteSourceAfter.getValue());
 			ret.setOpenTargetFolder(isOpenTargetFolderAfter.getValue());
 			ret.setOpenAssociatedApplication(isOpenAssociatedApplication.getValue());
+			return ret;
+		}
+
+		/**
+		 * bruteforce filename adding index to base filename until vacant
+		 * filename found.
+		 */
+		private String ensureFileNameVacant(String filePathName) {
+			String ret = filePathName;
+			int idx = 0;
+			while (new File(ret).exists()) {
+				idx++;
+				ret = FilenameUtils.getFullPath(filePathName) + FilenameUtils.getBaseName(filePathName) + "-" + idx
+						+ "." + FilenameUtils.getExtension(filePathName);
+			}
 			return ret;
 		}
 	};

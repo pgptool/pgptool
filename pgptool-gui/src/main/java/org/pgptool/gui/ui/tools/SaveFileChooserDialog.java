@@ -54,6 +54,34 @@ public class SaveFileChooserDialog {
 	}
 
 	public String askUserForFile() {
+		JFileChooser ofd = prepareFileChooser();
+
+		boolean userWantsToSelectOtherFile = true;
+		File retFile = null;
+		while (userWantsToSelectOtherFile) {
+			int result = ofd.showSaveDialog(parentWindow);
+			if (result != JFileChooser.APPROVE_OPTION) {
+				return onDialogClosed(null, ofd);
+			}
+			retFile = ofd.getSelectedFile();
+			if (retFile == null) {
+				return onDialogClosed(null, ofd);
+			}
+
+			if (userWantsToSelectOtherFile = retFile.exists()) {
+				if (UiUtils.confirm("confirm.overWriteExistingFile", new Object[] { retFile.getAbsolutePath() },
+						parentWindow)) {
+					userWantsToSelectOtherFile = false;
+				}
+			}
+		}
+
+		String ret = retFile.getAbsolutePath();
+		ret = onDialogClosed(ret, ofd);
+		return ret;
+	}
+
+	private JFileChooser prepareFileChooser() {
 		JFileChooser ofd = new JFileChooser();
 		ofd.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		ofd.setMultiSelectionEnabled(false);
@@ -61,19 +89,7 @@ public class SaveFileChooserDialog {
 		ofd.setApproveButtonText(Messages.get(approvalButtonTextCode));
 		onFileChooserPostConstrct(ofd);
 		suggestTarget(ofd);
-
-		int result = ofd.showSaveDialog(parentWindow);
-		if (result != JFileChooser.APPROVE_OPTION) {
-			return onDialogClosed(null, ofd);
-		}
-		File retFile = ofd.getSelectedFile();
-		if (retFile == null) {
-			return onDialogClosed(null, ofd);
-		}
-
-		String ret = retFile.getAbsolutePath();
-		ret = onDialogClosed(ret, ofd);
-		return ret;
+		return ofd;
 	}
 
 	protected void onFileChooserPostConstrct(JFileChooser ofd) {

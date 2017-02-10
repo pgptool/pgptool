@@ -127,14 +127,8 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 
 	@SuppressWarnings("rawtypes")
 	private static String buildUser(Iterator userIDs) {
-		StringBuilder sb = new StringBuilder();
-		for (; userIDs.hasNext();) {
-			if (sb.length() > 0) {
-				sb.append("; ");
-			}
-			sb.append(userIDs.next());
-		}
-		return sb.toString();
+		Object ret = userIDs.next();
+		return (String) ret;
 	}
 
 	@SuppressWarnings("rawtypes")

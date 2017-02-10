@@ -21,6 +21,7 @@ import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -67,11 +68,14 @@ public class KeysListPm extends PresentationModelBase {
 	private ModelTableProperty<Key<KeyData>> tableModelProp;
 	private ModelProperty<Boolean> hasData;
 
+	private Comparator<Key<KeyData>> keySorterByNameAsc = new ComparatorKeyByNameImpl<KeyData>();
+
 	public void init(KeysListHost host) {
 		Preconditions.checkArgument(host != null);
 		this.host = host;
 
 		List<Key<KeyData>> initialKeys = keyRingService.readKeys();
+		initialKeys.sort(keySorterByNameAsc);
 		tableModelProp = new ModelTableProperty<>(this, initialKeys, "keys", new KeysTableModel());
 		hasData = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(!initialKeys.isEmpty()), "hasData");
 		tableModelProp.getModelPropertyAccessor().addPropertyChangeListener(onSelectionChangedHandler);
@@ -103,6 +107,7 @@ public class KeysListPm extends PresentationModelBase {
 		}
 
 		List<Key<KeyData>> newKeysList = keyRingService.readKeys();
+		newKeysList.sort(keySorterByNameAsc);
 		tableModelProp.getList().clear();
 		tableModelProp.getList().addAll(newKeysList);
 		hasData.setValueByOwner(!newKeysList.isEmpty());

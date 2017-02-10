@@ -47,6 +47,7 @@ import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.tools.PathUtils;
 import org.pgptool.gui.ui.decryptone.DecryptOnePm;
+import org.pgptool.gui.ui.keyslist.ComparatorKeyByNameImpl;
 import org.pgptool.gui.ui.tools.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.ListChangeListenerAnyEventImpl;
 import org.pgptool.gui.ui.tools.SaveFileChooserDialog;
@@ -191,8 +192,10 @@ public class EncryptOnePm extends PresentationModelBase {
 		targetFileEnabled = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "targetFile");
 		onUseSameFolderChanged.propertyChange(null);
 
+		List<Key<KeyData>> allKeys = keyRingService.readKeys();
+		allKeys.sort(new ComparatorKeyByNameImpl<>());
 		availabileRecipients = new ModelListProperty<Key<KeyData>>(this,
-				new ValueAdapterReadonlyImpl<List<Key<KeyData>>>(keyRingService.readKeys()), "availabileRecipients");
+				new ValueAdapterReadonlyImpl<List<Key<KeyData>>>(allKeys), "availabileRecipients");
 		selectedRecipients = new ModelMultSelInListProperty<Key<KeyData>>(this,
 				new ValueAdapterHolderImpl<List<Key<KeyData>>>(new ArrayList<Key<KeyData>>()), "projects",
 				availabileRecipients);

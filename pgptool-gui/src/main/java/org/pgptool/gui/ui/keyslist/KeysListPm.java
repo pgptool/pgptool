@@ -20,6 +20,7 @@ package org.pgptool.gui.ui.keyslist;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -65,9 +66,6 @@ public class KeysListPm extends PresentationModelBase {
 
 	private ModelTableProperty<Key<KeyData>> tableModelProp;
 	private ModelProperty<Boolean> hasData;
-
-	private SaveFileChooserDialog privateKeyTargetChooser;
-	private SaveFileChooserDialog publicKeyTargetChooser;
 
 	public void init(KeysListHost host) {
 		Preconditions.checkArgument(host != null);
@@ -154,38 +152,51 @@ public class KeysListPm extends PresentationModelBase {
 		}
 	};
 
-	public SaveFileChooserDialog getPrivateKeyTargetChooser() {
-		if (privateKeyTargetChooser == null) {
-			privateKeyTargetChooser = new SaveFileChooserDialog(findRegisteredWindowIfAny(), "action.exportPrivateKey",
-					"action.export", configPairs, "ExportKeyDialog") {
-				@Override
-				protected void onFileChooserPostConstrct(JFileChooser ofd) {
-					ofd.setAcceptAllFileFilterUsed(false);
-					ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file armored (.asc)", "asc"));
-					ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file (.bpg)", "bpg"));
-					ofd.addChoosableFileFilter(ofd.getAcceptAllFileFilter());
-					ofd.setFileFilter(ofd.getChoosableFileFilters()[0]);
-				}
-			};
-		}
-		return privateKeyTargetChooser;
+	public SaveFileChooserDialog buildPrivateKeyTargetChooser(final Key<KeyData> key) {
+		return new SaveFileChooserDialog(findRegisteredWindowIfAny(), "action.exportPrivateKey", "action.export",
+				configPairs, "ExportKeyDialog") {
+			@Override
+			protected void onFileChooserPostConstrct(JFileChooser ofd) {
+				ofd.setAcceptAllFileFilterUsed(false);
+				ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file armored (.asc)", "asc"));
+				ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file (.bpg)", "bpg"));
+				ofd.addChoosableFileFilter(ofd.getAcceptAllFileFilter());
+				ofd.setFileFilter(ofd.getChoosableFileFilters()[0]);
+			}
+
+			@Override
+			protected void suggestTarget(JFileChooser ofd) {
+				super.suggestTarget(ofd);
+
+				String userName = key.getKeyInfo().buildUserNameOnly();
+				File suggestedFileName = new File(
+						ofd.getCurrentDirectory().getAbsolutePath() + File.separator + userName + ".asc");
+				ofd.setSelectedFile(suggestedFileName);
+			}
+		};
 	}
 
-	public SaveFileChooserDialog getPublicKeyTargetChooser() {
-		if (publicKeyTargetChooser == null) {
-			publicKeyTargetChooser = new SaveFileChooserDialog(findRegisteredWindowIfAny(), "action.exportPublicKey",
-					"action.export", configPairs, "ExportKeyDialog") {
-				@Override
-				protected void onFileChooserPostConstrct(JFileChooser ofd) {
-					ofd.setAcceptAllFileFilterUsed(false);
-					ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file armored (.asc)", "asc"));
-					ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file (.bpg)", "bpg"));
-					ofd.addChoosableFileFilter(ofd.getAcceptAllFileFilter());
-					ofd.setFileFilter(ofd.getChoosableFileFilters()[0]);
-				}
-			};
-		}
-		return publicKeyTargetChooser;
+	public SaveFileChooserDialog buildPublicKeyTargetChooser(Key<KeyData> key) {
+		return new SaveFileChooserDialog(findRegisteredWindowIfAny(), "action.exportPublicKey", "action.export",
+				configPairs, "ExportKeyDialog") {
+			@Override
+			protected void onFileChooserPostConstrct(JFileChooser ofd) {
+				ofd.setAcceptAllFileFilterUsed(false);
+				ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file armored (.asc)", "asc"));
+				ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file (.bpg)", "bpg"));
+				ofd.addChoosableFileFilter(ofd.getAcceptAllFileFilter());
+				ofd.setFileFilter(ofd.getChoosableFileFilters()[0]);
+			}
+
+			@Override
+			protected void suggestTarget(JFileChooser ofd) {
+				super.suggestTarget(ofd);
+				String userName = key.getKeyInfo().buildUserNameOnly();
+				File suggestedFileName = new File(
+						ofd.getCurrentDirectory().getAbsolutePath() + File.separator + userName + ".asc");
+				ofd.setSelectedFile(suggestedFileName);
+			}
+		};
 	}
 
 	@SuppressWarnings("serial")
@@ -196,7 +207,7 @@ public class KeysListPm extends PresentationModelBase {
 				return;
 			}
 			Key<KeyData> key = tableModelProp.getValue();
-			String targetFile = getPublicKeyTargetChooser().askUserForFile();
+			String targetFile = buildPublicKeyTargetChooser(key).askUserForFile();
 			if (targetFile != null) {
 				keyFilesOperations.exportPublicKey(key, targetFile);
 			}
@@ -211,7 +222,7 @@ public class KeysListPm extends PresentationModelBase {
 				return;
 			}
 			Key<KeyData> key = tableModelProp.getValue();
-			String targetFile = getPrivateKeyTargetChooser().askUserForFile();
+			String targetFile = buildPrivateKeyTargetChooser(key).askUserForFile();
 			if (targetFile != null) {
 				keyFilesOperations.exportPrivateKey(key, targetFile);
 			}
@@ -228,7 +239,7 @@ public class KeysListPm extends PresentationModelBase {
 	protected Action getActionImport() {
 		return host.getActionImportKey();
 	}
-	
+
 	protected Action getActionCreate() {
 		return host.getActionCreateKey();
 	}

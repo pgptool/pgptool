@@ -19,6 +19,8 @@ package org.pgptool.gui.encryption.api.dto;
 
 import java.io.Serializable;
 
+import org.springframework.util.StringUtils;
+
 /**
  * This class is mostly used to render key info for the user
  * 
@@ -89,5 +91,37 @@ public class KeyInfo implements Serializable {
 
 	public void setExpiresAt(java.sql.Date expiresAt) {
 		this.expiresAt = expiresAt;
+	}
+
+	/**
+	 * Returns user name without email or any other special symbols
+	 * 
+	 * NOTE: This method doesn't seem to belong to this class because it feels
+	 * like an impl-specific thing
+	 * 
+	 * NOTE 2: Name of this is not started with "get" to avoid serialization
+	 * confusion
+	 * 
+	 * @return user name that can be used as a file name
+	 */
+	public String buildUserNameOnly() {
+		String name = getUser();
+		if (!StringUtils.hasText(name)) {
+			return "";
+		}
+
+		// get id of email
+		int pos = name.indexOf("<");
+		if (pos > 0) {
+			name = name.substring(0, pos);
+		}
+
+		// get rid of special symbols
+		name = name.replaceAll("[.,!@#$%^&*()`'\"\\[\\]\\\\]", " ");
+
+		// remove double spaces
+		name = name.replace("  ", " ");
+
+		return name.trim();
 	}
 }

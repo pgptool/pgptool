@@ -31,6 +31,8 @@ import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.springframework.util.StringUtils;
 
+import com.google.common.base.Preconditions;
+
 public class SaveFileChooserDialog {
 	private static Logger log = Logger.getLogger(SaveFileChooserDialog.class);
 
@@ -76,6 +78,7 @@ public class SaveFileChooserDialog {
 			}
 		}
 
+		Preconditions.checkState(retFile != null, "Useless check but it makes Eclipse NPE checker happier");
 		String ret = retFile.getAbsolutePath();
 		ret = onDialogClosed(ret, ofd);
 		return ret;

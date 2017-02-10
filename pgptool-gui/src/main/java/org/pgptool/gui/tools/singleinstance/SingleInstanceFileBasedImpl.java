@@ -18,17 +18,17 @@
 package org.pgptool.gui.tools.singleinstance;
 
 import java.io.File;
-import java.io.RandomAccessFile;
 import java.lang.management.ManagementFactory;
-import java.nio.channels.FileLock;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.config.impl.ConfigRepositoryImpl;
+import org.pgptool.gui.tools.IoStreamUtils;
 import org.pgptool.gui.tools.dirwatcher.DirWatcherHandler;
 import org.pgptool.gui.tools.dirwatcher.SingleDirWatcher;
+import org.pgptool.gui.ui.tools.FileBasedLock;
 
 import com.google.common.base.Preconditions;
 
@@ -45,10 +45,22 @@ import com.google.common.base.Preconditions;
 public class SingleInstanceFileBasedImpl implements SingleInstance {
 	private static Logger log = Logger.getLogger(SingleInstanceFileBasedImpl.class);
 
+	private static final int LOCK_ARGS_SUBMISSION_TIMEOUT = 3000;
+	private static final String ROLE_LOCK_FILE_EXTENSION = ".role-lock";
+	private static final String DIR_LOCK_FILE_EXTENSION = ".dir-lock";
+	private static final String PARAMS_FILE_EXTENSION = "args";
+
 	private String tagName;
 	private PrimaryInstanceListener primaryInstanceListener;
 
-	private LockInfo lockInfo;
+	private FileBasedLock lockRole;
+
+	/**
+	 * This additional lock will be used by parties to enter critical section
+	 * before writing any changes to this directory. It will help us avoid any
+	 * race conditions
+	 */
+	private FileBasedLock lockNewArgsSubmissons;
 	private SingleDirWatcher singleDirWatcher;
 	private String basePathForCommands;
 
@@ -58,38 +70,54 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
 	 */
 	public SingleInstanceFileBasedImpl(String tagName) {
 		this.tagName = tagName;
+		String baseTempPath = System.getProperty("java.io.tmpdir");
+		basePathForCommands = getDirForSingleInstance(baseTempPath);
+
+		try {
+			lockNewArgsSubmissons = new FileBasedLock(
+					basePathForCommands + File.separator + tagName + DIR_LOCK_FILE_EXTENSION);
+		} catch (Throwable t) {
+			throw new RuntimeException("Failed to init lock file object", t);
+		}
 	}
 
 	@Override
 	public boolean tryClaimPrimaryInstanceRole(PrimaryInstanceListener primaryInstanceListener) {
 		try {
-			String baseTempPath = System.getProperty("java.io.tmpdir");
+			lockNewArgsSubmissons.tryLockWaitMs(LOCK_ARGS_SUBMISSION_TIMEOUT);
 
-			File singleInstFolder = new File(baseTempPath + File.separator + tagName);
-			basePathForCommands = singleInstFolder.getAbsolutePath();
-			Preconditions.checkState(singleInstFolder.exists() || singleInstFolder.mkdirs(),
-					"Cannot ensure sync folder for multiple instances: " + basePathForCommands);
-
-			if (!acquireLock(basePathForCommands + File.separator + tagName + ".lock")) {
+			lockRole = new FileBasedLock(basePathForCommands + File.separator + tagName + ROLE_LOCK_FILE_EXTENSION);
+			if (!lockRole.tryLock()) {
 				return false;
 			}
+			Runtime.getRuntime().addShutdownHook(shutDownHook);
 
-			singleDirWatcher = new SingleDirWatcher(basePathForCommands, dirWatcherHandler);
 			this.primaryInstanceListener = primaryInstanceListener;
+			singleDirWatcher = new SingleDirWatcher(basePathForCommands, dirWatcherHandler);
 			return true;
 		} catch (Throwable t) {
 			// we need to release lock because apparently we cannot watch for
 			// changes
-			releaseLock(lockInfo);
+			IoStreamUtils.safeClose(lockRole);
 			throw new RuntimeException("Failed to setup file watcher", t);
+		} finally {
+			lockNewArgsSubmissons.releaseLock();
 		}
+	}
+
+	private String getDirForSingleInstance(String baseTempPath) {
+		File singleInstFolder = new File(baseTempPath + File.separator + tagName);
+		String ret = singleInstFolder.getAbsolutePath();
+		Preconditions.checkState(singleInstFolder.exists() || singleInstFolder.mkdirs(),
+				"Cannot ensure sync folder for multiple instances: " + ret);
+		return ret;
 	}
 
 	private DirWatcherHandler dirWatcherHandler = new DirWatcherHandler() {
 		@Override
 		public void handleEvent(WatchEvent<?> event, Path node) {
 			String fileName = node.toString();
-			if (!"args".equalsIgnoreCase(FilenameUtils.getExtension(fileName))) {
+			if (!PARAMS_FILE_EXTENSION.equalsIgnoreCase(FilenameUtils.getExtension(fileName))) {
 				return;
 			}
 
@@ -117,53 +145,16 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
 		}
 	};
 
-	private void releaseLock(LockInfo lockInfo) {
-		if (lockInfo == null) {
-			return;
-		}
-		try {
-			lockInfo.fileLock.release();
-			lockInfo.randomAccessFile.close();
-			lockInfo.file.delete();
-		} catch (Exception e) {
-			log.error("Unable to remove lock file: " + lockInfo.file.getAbsolutePath(), e);
-		} finally {
-			lockInfo = null;
-		}
-	}
-
-	private static class LockInfo {
-		File file;
-		RandomAccessFile randomAccessFile;
-		FileLock fileLock;
-	}
-
 	private Thread shutDownHook = new Thread() {
 		@Override
 		public void run() {
-			releaseLock(lockInfo);
+			IoStreamUtils.safeClose(lockRole);
 			if (singleDirWatcher != null) {
 				singleDirWatcher.stopWatcher();
 				singleDirWatcher = null;
 			}
 		}
 	};
-
-	private boolean acquireLock(final String lockFile) {
-		try {
-			lockInfo = new LockInfo();
-			lockInfo.file = new File(lockFile);
-			lockInfo.randomAccessFile = new RandomAccessFile(lockInfo.file, "rw");
-			lockInfo.fileLock = lockInfo.randomAccessFile.getChannel().tryLock();
-			if (lockInfo.fileLock == null) {
-				return false;
-			}
-			Runtime.getRuntime().addShutdownHook(shutDownHook);
-			return true;
-		} catch (Throwable e) {
-			throw new RuntimeException("Failed to acquire lock file", e);
-		}
-	}
 
 	@Override
 	public boolean sendArgumentsToOtherInstance(String[] args) {
@@ -174,18 +165,24 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
 		}
 
 		try {
+			if (!lockNewArgsSubmissons.tryLockWaitMs(LOCK_ARGS_SUBMISSION_TIMEOUT)) {
+				return false;
+			}
 			File targetFile = sendCommand(args);
 			return isCommandReceived(targetFile);
 		} catch (Throwable t) {
 			throw new RuntimeException("Failed to submit args", t);
+		} finally {
+			lockNewArgsSubmissons.releaseLock();
 		}
 	}
 
 	private boolean isCommandReceived(File targetFile) throws InterruptedException {
-		long timeoutAt = System.currentTimeMillis() + 1000;
+		long timeoutAt = System.currentTimeMillis() + LOCK_ARGS_SUBMISSION_TIMEOUT;
 		while (targetFile.exists()) {
 			Thread.sleep(50);
 			if (System.currentTimeMillis() >= timeoutAt) {
+				log.warn("As a secondary instance we can't see confirmation that our args were received " + targetFile);
 				return false;
 			}
 		}

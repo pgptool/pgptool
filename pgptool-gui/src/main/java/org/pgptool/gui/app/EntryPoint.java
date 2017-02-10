@@ -21,9 +21,11 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.net.URL;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Queue;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -59,6 +61,7 @@ public class EntryPoint {
 	private RootPm rootPm;
 	private static SingleInstance singleInstance;
 	private static RootPm rootPmStatic;
+	private static Queue<String[]> postponedArgsFromSecondaryInstances = new ArrayDeque<>();
 
 	public static void main(String[] args) {
 		DOMConfigurator.configure(EntryPoint.class.getClassLoader().getResource("pgptool-gui-log4j.xml"));
@@ -67,9 +70,7 @@ public class EntryPoint {
 		SplashScreenView splashScreenView = null;
 		try {
 			args = OsNativeApiResolver.resolve().getCommandLineArguments(args);
-			if (!isPrimaryInstance(args)) {
-				log.info(
-						"Since this is a secondary instance args were forwarded to primary instance. This instance will now exit");
+			if (!isContinueStartupSequence(args)) {
 				System.exit(0);
 				return;
 			}
@@ -81,18 +82,21 @@ public class EntryPoint {
 			// Startup application context
 			String[] contextPaths = new String[] { "app-context.xml" };
 			currentApplicationContext = new ClassPathXmlApplicationContext(contextPaths);
-			log.info("App context loaded");
+			log.debug("App context loaded");
 			LocaleContextHolder.setLocale(new Locale(System.getProperty("user.language")));
 			currentApplicationContext.registerShutdownHook();
-			log.info("Shutdown hook registered");
+			log.debug("Shutdown hook registered");
 
 			// Now startup application logic
 			EntryPoint entryPoint = currentApplicationContext.getBean(EntryPoint.class);
+			log.debug("EntryPoint bean resolved");
 			prefetchKeys();
 			splashScreenView.close();
 			splashScreenView = null;
 			entryPoint.startUp(args);
 			rootPmStatic = entryPoint.getRootPm();
+			log.debug("RootPM bean resolved");
+			processPendingArgsIfAny(rootPmStatic);
 		} catch (Throwable t) {
 			log.error("Failed to startup application", t);
 			reportAppInitFailureMessageToUser(t);
@@ -102,6 +106,14 @@ public class EntryPoint {
 				splashScreenView.close();
 				splashScreenView = null;
 			}
+		}
+	}
+
+	private static void processPendingArgsIfAny(RootPm rootPm) {
+		while (!postponedArgsFromSecondaryInstances.isEmpty()) {
+			String[] args = postponedArgsFromSecondaryInstances.poll();
+			log.debug("Precessing postponed args from secondary instance: " + Arrays.toString(args));
+			rootPm.processCommandLine(args);
 		}
 	}
 
@@ -122,11 +134,21 @@ public class EntryPoint {
 		}.start();
 	}
 
-	private static boolean isPrimaryInstance(String[] args) {
+	private static boolean isContinueStartupSequence(String[] args) {
 		singleInstance = new SingleInstanceFileBasedImpl("pgptool-si");
 		if (!singleInstance.tryClaimPrimaryInstanceRole(primaryInstanceListener)) {
-			singleInstance.sendArgumentsToOtherInstance(args);
-			return false;
+			boolean result = singleInstance.sendArgumentsToOtherInstance(args);
+			if (result) {
+				log.info(
+						"Since this is a secondary instance args were forwarded to primary instance. This instance will now exit");
+				return false;
+			}
+			log.info("Faield to forward args to primary instance. We'll have to process it ourself");
+			// NOTE: Now we happen to be in indistinctive state. We're not a
+			// primary instance and not secondary :-( But it feels like it's
+			// better that way since our goal is to make sure user request is
+			// fulfilled
+			singleInstance = null;
 		}
 		return true;
 	}
@@ -134,10 +156,12 @@ public class EntryPoint {
 	private static PrimaryInstanceListener primaryInstanceListener = new PrimaryInstanceListener() {
 		@Override
 		public void handleArgsFromOtherInstance(String[] args) {
-			log.debug("Processing arguments from secondary instance: " + Arrays.toString(args));
-
 			if (rootPmStatic != null) {
+				log.debug("Processing arguments from secondary instance: " + Arrays.toString(args));
 				rootPmStatic.processCommandLine(args);
+			} else {
+				log.debug("Posponing args processing from secondary instance: " + Arrays.toString(args));
+				postponedArgsFromSecondaryInstances.offer(args);
 			}
 		}
 	};

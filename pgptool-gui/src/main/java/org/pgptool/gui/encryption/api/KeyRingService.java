@@ -41,4 +41,6 @@ public interface KeyRingService<TKeyData extends KeyData> {
 	 * @return list of keys or empty array if none found
 	 */
 	List<Key<TKeyData>> findMatchingKeysByAlternativeIds(Set<String> keysIds);
+
+	boolean isKeyAlreadyAdded(Key<TKeyData> key);
 }

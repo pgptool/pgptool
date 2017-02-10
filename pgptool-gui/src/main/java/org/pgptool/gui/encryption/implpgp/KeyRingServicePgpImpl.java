@@ -155,9 +155,12 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 		eventBus.post(EntityChangedEvent.added(key));
 	}
 
-	private boolean isKeyAlreadyAdded(Key<KeyDataPgp> newKey) {
-		for (Key<KeyDataPgp> key : pgpKeysRing) {
-			if (key.getKeyInfo().getKeyId().equals(newKey.getKeyInfo().getKeyId())) {
+	@Override
+	public boolean isKeyAlreadyAdded(Key<KeyDataPgp> key) {
+		Preconditions.checkArgument(key != null && key.getKeyInfo() != null, "KeyInfo must be provided");
+
+		for (Key<KeyDataPgp> cur : pgpKeysRing) {
+			if (cur.getKeyInfo().getKeyId().equals(key.getKeyInfo().getKeyId())) {
 				return true;
 			}
 		}

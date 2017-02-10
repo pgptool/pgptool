@@ -18,11 +18,14 @@
 package org.pgptool.gui.ui.importkey;
 
 import java.awt.event.ActionEvent;
+import java.io.File;
 
 import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileFilter;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Messages;
@@ -34,6 +37,7 @@ import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryption.api.dto.KeyInfo;
 import org.pgptool.gui.ui.tools.ExistingFileChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 
 import com.google.common.base.Preconditions;
 
@@ -47,6 +51,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 public class KeyImporterPm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(KeyImporterPm.class);
 	private static final String BROWSE_FOLDER = "KeyImporterPm.BROWSE_FOLDER";
+	private static final String[] EXTENSIONS = new String[] { "asc", "bpg" };
 
 	@Autowired
 	private ConfigPairs configPairs;
@@ -117,7 +122,62 @@ public class KeyImporterPm extends PresentationModelBase {
 				protected void doFileChooserPostConstruct(JFileChooser ofd) {
 					super.doFileChooserPostConstruct(ofd);
 					ofd.setDialogTitle(Messages.get("action.importKey"));
+
+					ofd.setAcceptAllFileFilterUsed(false);
+					ofd.addChoosableFileFilter(keyFilesFilter);
+					ofd.addChoosableFileFilter(ofd.getAcceptAllFileFilter());
+					ofd.setFileFilter(ofd.getChoosableFileFilters()[0]);
 				}
+
+				private FileFilter keyFilesFilter = new FileFilter() {
+					@Override
+					public boolean accept(File f) {
+						if (f.isDirectory() || !f.isFile()) {
+							return true;
+						}
+						if (!isExtension(f.getName(), EXTENSIONS)) {
+							return false;
+						}
+
+						// NOTE: Although it gives best results -- I have a
+						// slight concern that this might be too heavy operation
+						// to perform thorough -- check for each file
+						// contents. My hope is that since we're checking only
+						// key files it shouldn't be a problem. Non-key files
+						// with same xtensions will not take a long time to fail
+						try {
+							Key<KeyData> readKey = keyFilesOperations.readKeyFromFile(f.getAbsolutePath());
+							Preconditions.checkState(readKey != null, "Key wasn't parsed");
+							return !keyRingService.isKeyAlreadyAdded(readKey);
+						} catch (Throwable t) {
+							// in this case it's not an issue. So it's debug
+							// level
+							log.debug("File is not accepte for file chooser becasue was not able to read it as a key",
+									t);
+						}
+
+						return false;
+					}
+
+					private boolean isExtension(String fileName, String[] extensions) {
+						String extension = FilenameUtils.getExtension(fileName);
+						if (!StringUtils.hasText(extension)) {
+							return false;
+						}
+
+						for (String ext : extensions) {
+							if (ext.equalsIgnoreCase(extension)) {
+								return true;
+							}
+						}
+						return false;
+					}
+
+					@Override
+					public String getDescription() {
+						return "Key files (.asc, .bpg)";
+					}
+				};
 			};
 		}
 		return sourceFileChooser;

@@ -237,6 +237,38 @@ public class KeysListPm extends PresentationModelBase {
 	private Action[] contextMenuActions = new Action[] { actionExportPublicKey, actionExportPrivateKey, null,
 			actionDeleteKey };
 
+	private KeysTablePm keysTablePm = new KeysTablePm() {
+		@Override
+		public Action getActionForRowDoubleClick() {
+			return actionActivate;
+		}
+
+		@Override
+		public ModelTablePropertyAccessor<Key<KeyData>> getKeys() {
+			return tableModelProp.getModelTablePropertyAccessor();
+		}
+
+		@Override
+		public ModelPropertyAccessor<Key<KeyData>> getSelectedRow() {
+			return tableModelProp.getModelPropertyAccessor();
+		}
+
+		@Override
+		public ModelPropertyAccessor<Boolean> getHasData() {
+			return hasData.getModelPropertyAccessor();
+		}
+
+		@Override
+		public Action getActionDelete() {
+			return actionDeleteKey;
+		}
+
+		@Override
+		public Action[] getContextMenuActions() {
+			return contextMenuActions;
+		}
+	};
+
 	protected Action getActionClose() {
 		return actionClose;
 	}
@@ -249,27 +281,7 @@ public class KeysListPm extends PresentationModelBase {
 		return host.getActionCreateKey();
 	}
 
-	public Action getActionForRowDoubleClick() {
-		return actionActivate;
-	}
-
-	public ModelTablePropertyAccessor<Key<KeyData>> getTableModelProp() {
-		return tableModelProp.getModelTablePropertyAccessor();
-	}
-
-	public ModelPropertyAccessor<Key<KeyData>> getSelectedRow() {
-		return tableModelProp.getModelPropertyAccessor();
-	}
-
-	public ModelPropertyAccessor<Boolean> getHasData() {
-		return hasData.getModelPropertyAccessor();
-	}
-
-	public Action getActionDelete() {
-		return actionDeleteKey;
-	}
-
-	public Action[] getContextMenuActions() {
-		return contextMenuActions;
+	public KeysTablePm getKeysTablePm() {
+		return keysTablePm;
 	}
 }

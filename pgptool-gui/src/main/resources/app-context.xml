@@ -78,5 +78,7 @@
 
 	<bean class="org.pgptool.gui.ui.createkey.CreateKeyView" lazy-init="true" scope="singleton" />
 	<bean class="org.pgptool.gui.ui.createkey.CreateKeyPm" scope="prototype" />
+	
+	<bean class="org.pgptool.gui.ui.keyslist.KeysTableView" scope="prototype" />
 
 </beans>

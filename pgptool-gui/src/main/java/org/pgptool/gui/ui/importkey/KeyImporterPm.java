@@ -17,12 +17,21 @@
  *******************************************************************************/
 package org.pgptool.gui.ui.importkey;
 
+import static org.pgptool.gui.app.Messages.text;
+
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
 import org.apache.commons.io.FilenameUtils;
@@ -34,8 +43,11 @@ import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
-import org.pgptool.gui.encryption.api.dto.KeyInfo;
-import org.pgptool.gui.ui.tools.ExistingFileChooserDialog;
+import org.pgptool.gui.tools.ConsoleExceptionUtils;
+import org.pgptool.gui.ui.keyslist.ComparatorKeyByNameImpl;
+import org.pgptool.gui.ui.keyslist.KeysTableModel;
+import org.pgptool.gui.ui.keyslist.KeysTablePm;
+import org.pgptool.gui.ui.tools.MultipleFilesChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
@@ -43,10 +55,9 @@ import com.google.common.base.Preconditions;
 
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.base.View;
-import ru.skarpushin.swingpm.modelprops.ModelProperty;
-import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
+import ru.skarpushin.swingpm.modelprops.table.ModelTableProperty;
+import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
 import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
-import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class KeyImporterPm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(KeyImporterPm.class);
@@ -64,17 +75,9 @@ public class KeyImporterPm extends PresentationModelBase {
 	private KeyRingService<KeyData> keyRingService;
 	private KeyImporterHost host;
 
-	private Key<KeyData> key;
-	private ExistingFileChooserDialog sourceFileChooser;
-
-	private ModelProperty<String> user;
-	private ModelProperty<String> keyId;
-	private ModelProperty<String> keyType;
-	private ModelProperty<String> keyAlgorithm;
-	private ModelProperty<String> createdOn;
-	private ModelProperty<String> expiresAt;
-	private ModelProperty<Boolean> isKeyLoaded;
-	private ModelProperty<String> filePathName;
+	private ModelTableProperty<Key<KeyData>> keys;
+	private MultipleFilesChooserDialog sourceFileChooser;
+	private Comparator<Key<KeyData>> keySorterByNameAsc = new ComparatorKeyByNameImpl<KeyData>();
 
 	public boolean init(KeyImporterHost host) {
 		Preconditions.checkArgument(host != null);
@@ -82,11 +85,11 @@ public class KeyImporterPm extends PresentationModelBase {
 
 		initModelProperties();
 
-		String fileToLoad = null;
-		if ((fileToLoad = getSourceFileChooser().askUserForFile()) == null) {
+		File[] filesToLoad = null;
+		if ((filesToLoad = getSourceFileChooser().askUserForMultipleFiles()) == null) {
 			return false;
 		}
-		if (!loadKey(fileToLoad)) {
+		if (!loadKey(filesToLoad)) {
 			return false;
 		}
 
@@ -94,19 +97,8 @@ public class KeyImporterPm extends PresentationModelBase {
 	}
 
 	private void initModelProperties() {
-		filePathName = initStringModelProp("filePathName");
-		isKeyLoaded = new ModelProperty<>(this, new ValueAdapterHolderImpl<Boolean>(false), "isKeyLoaded");
-		user = initStringModelProp("user");
-		keyId = initStringModelProp("keyId");
-		keyType = initStringModelProp("keyType");
-		keyAlgorithm = initStringModelProp("keyAlgorithm");
-		createdOn = initStringModelProp("createdOn");
-		expiresAt = initStringModelProp("expiresAt");
 		actionDoImport.setEnabled(false);
-	}
-
-	private ModelProperty<String> initStringModelProp(String fieldName) {
-		return new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>("TBD"), fieldName);
+		keys = new ModelTableProperty<>(this, new ArrayList<>(), "keys", new KeysTableModel());
 	}
 
 	@Override
@@ -115,9 +107,10 @@ public class KeyImporterPm extends PresentationModelBase {
 		Preconditions.checkState(host != null);
 	}
 
-	public ExistingFileChooserDialog getSourceFileChooser() {
+	public MultipleFilesChooserDialog getSourceFileChooser() {
 		if (sourceFileChooser == null) {
-			sourceFileChooser = new ExistingFileChooserDialog(findRegisteredWindowIfAny(), configPairs, BROWSE_FOLDER) {
+			sourceFileChooser = new MultipleFilesChooserDialog(findRegisteredWindowIfAny(), configPairs,
+					BROWSE_FOLDER) {
 				@Override
 				protected void doFileChooserPostConstruct(JFileChooser ofd) {
 					super.doFileChooserPostConstruct(ofd);
@@ -183,28 +176,55 @@ public class KeyImporterPm extends PresentationModelBase {
 		return sourceFileChooser;
 	}
 
-	private boolean loadKey(String fileToLoad) {
+	private boolean loadKey(File[] filesToLoad) {
 		try {
-			key = keyFilesOperations.readKeyFromFile(fileToLoad);
+			Map<String, Throwable> exceptions = new HashMap<>();
+			List<Key<KeyData>> loadedKeys = loadKeysSafe(filesToLoad, exceptions);
 
-			filePathName.setValueByOwner(fileToLoad);
+			if (exceptions.size() > 0) {
+				String msg = buildSummaryMessage("error.keysLoadedStatistics", loadedKeys.size(), exceptions);
+				EntryPoint.showMessageBox(null, msg, Messages.get("term.attention"), JOptionPane.ERROR_MESSAGE);
+			}
 
-			KeyInfo info = key.getKeyInfo();
-			user.setValueByOwner(info.getUser());
-			keyId.setValueByOwner(info.getKeyId());
-			keyType.setValueByOwner(Messages.get("term." + info.getKeyType().toString()));
-			keyAlgorithm.setValueByOwner(info.getKeyAlgorithm());
-			createdOn.setValueByOwner(info.getCreatedOn().toString());
-			expiresAt.setValueByOwner(info.getExpiresAt() == null ? "" : info.getExpiresAt().toString());
-
-			isKeyLoaded.setValueByOwner(true);
-			actionDoImport.setEnabled(true);
-
-			return true;
+			if (loadedKeys.size() > 0) {
+				loadedKeys.sort(keySorterByNameAsc);
+				keys.getList().addAll(loadedKeys);
+				actionDoImport.setEnabled(true);
+				return true;
+			}
 		} catch (Throwable t) {
 			EntryPoint.reportExceptionToUser("exception.failedToReadKey", t);
-			return false;
 		}
+		return false;
+	}
+
+	private List<Key<KeyData>> loadKeysSafe(File[] filesToLoad, Map<String, Throwable> exceptions) {
+		List<Key<KeyData>> ret = new ArrayList<>(filesToLoad.length);
+		for (File keyFile : filesToLoad) {
+			try {
+				Key<KeyData> key = keyFilesOperations.readKeyFromFile(keyFile.getAbsolutePath());
+				ret.add(key);
+			} catch (Throwable t) {
+				log.warn("Failed to read key file", t);
+				exceptions.put(keyFile.toString(), t);
+			}
+		}
+		return ret;
+	}
+
+	private String buildSummaryMessage(String messageCode, int successCount, Map<String, Throwable> exceptions) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(text(messageCode, successCount, exceptions.size()));
+		sb.append("\n");
+
+		for (Entry<String, Throwable> exc : exceptions.entrySet()) {
+			sb.append("\n");
+			sb.append(exc.getKey());
+			sb.append("\n");
+			sb.append(ConsoleExceptionUtils.getAllMessages(exc.getValue()));
+			sb.append("\n");
+		}
+		return sb.toString();
 	}
 
 	@SuppressWarnings("serial")
@@ -212,20 +232,36 @@ public class KeyImporterPm extends PresentationModelBase {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				Preconditions.checkState(key != null, "Key is not loaded");
-				keyRingService.addKey(key);
-				// NOTE: Decided to turn confirmation off. Feels like it just
-				// requires redundant action from user
-				// EntryPoint.showMessageBox(null,
-				// Messages.get("phrase.keyImportedSuccessfully"),
-				// Messages.get("term.confirmation"),
-				// JOptionPane.INFORMATION_MESSAGE);
+				Preconditions.checkState(keys.getList().size() > 0, "No keys loaded");
+
+				Map<String, Throwable> exceptions = new HashMap<>();
+				int loadedCount = importKeysSafe(exceptions);
+
+				if (exceptions.size() > 0) {
+					String msg = buildSummaryMessage("error.keysImportStatistics", loadedCount, exceptions);
+					EntryPoint.showMessageBox(null, msg, Messages.get("term.attention"), JOptionPane.ERROR_MESSAGE);
+				}
+
 				host.handleImporterFinished();
 			} catch (Throwable t) {
-				log.error("Failed to import", t);
+				log.error("Failed to import keys", t);
 				EntryPoint.reportExceptionToUser("exception.failedToImportPgpKey", t);
 				return;
 			}
+		}
+
+		private int importKeysSafe(Map<String, Throwable> exceptions) {
+			int loadedCount = 0;
+			for (Key<KeyData> key : keys.getList()) {
+				try {
+					keyRingService.addKey(key);
+					loadedCount++;
+				} catch (Throwable t) {
+					log.warn("Failed to import key " + key.getKeyInfo().getUser(), t);
+					exceptions.put(key.getKeyInfo().getUser(), t);
+				}
+			}
+			return loadedCount;
 		}
 	};
 
@@ -237,15 +273,10 @@ public class KeyImporterPm extends PresentationModelBase {
 		}
 	};
 
-	@SuppressWarnings("serial")
-	private Action actionBrowse = new LocalizedAction("action.browse") {
+	private KeysTablePm keysTablePm = new KeysTablePm() {
 		@Override
-		public void actionPerformed(ActionEvent e) {
-			String fileToLoad = null;
-			if ((fileToLoad = getSourceFileChooser().askUserForFile()) == null) {
-				return;
-			}
-			loadKey(fileToLoad);
+		public ModelTablePropertyAccessor<Key<KeyData>> getKeys() {
+			return keys.getModelTablePropertyAccessor();
 		}
 	};
 
@@ -253,44 +284,12 @@ public class KeyImporterPm extends PresentationModelBase {
 		return actionCancel;
 	}
 
-	protected Action getActionBrowse() {
-		return actionBrowse;
-	}
-
 	protected Action getActionDoImport() {
 		return actionDoImport;
 	}
 
-	public ModelPropertyAccessor<String> getUser() {
-		return user.getModelPropertyAccessor();
-	}
-
-	public ModelPropertyAccessor<String> getKeyId() {
-		return keyId.getModelPropertyAccessor();
-	}
-
-	public ModelPropertyAccessor<String> getKeyType() {
-		return keyType.getModelPropertyAccessor();
-	}
-
-	public ModelPropertyAccessor<String> getKeyAlgorithm() {
-		return keyAlgorithm.getModelPropertyAccessor();
-	}
-
-	public ModelPropertyAccessor<String> getCreatedOn() {
-		return createdOn.getModelPropertyAccessor();
-	}
-
-	public ModelPropertyAccessor<String> getExpiresAt() {
-		return expiresAt.getModelPropertyAccessor();
-	}
-
-	public ModelPropertyAccessor<String> getFilePathName() {
-		return filePathName.getModelPropertyAccessor();
-	}
-
-	public ModelPropertyAccessor<Boolean> getIsKeyLoaded() {
-		return isKeyLoaded.getModelPropertyAccessor();
+	public KeysTablePm getKeysTablePm() {
+		return keysTablePm;
 	}
 
 }

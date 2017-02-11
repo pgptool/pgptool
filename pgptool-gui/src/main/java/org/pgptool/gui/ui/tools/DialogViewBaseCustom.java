@@ -24,7 +24,7 @@ import ru.skarpushin.swingpm.base.DialogViewBase;
 import ru.skarpushin.swingpm.base.PresentationModel;
 
 public abstract class DialogViewBaseCustom<TPM extends PresentationModel> extends DialogViewBase<TPM> {
-	protected int spacing(int lettersCount) {
+	public static int spacing(int lettersCount) {
 		return UiUtils.getFontRelativeSize(lettersCount);
 	}
 

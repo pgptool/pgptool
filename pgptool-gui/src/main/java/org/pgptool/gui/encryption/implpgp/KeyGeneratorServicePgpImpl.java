@@ -231,7 +231,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService<KeyDataPg
 			try {
 				return generateDsaKeyPair(dsaKeyPairParams);
 			} finally {
-				log.debug("Invokation completed " + dsaKeyPairParams);
+				log.debug("Invocation completed " + dsaKeyPairParams);
 			}
 		}
 

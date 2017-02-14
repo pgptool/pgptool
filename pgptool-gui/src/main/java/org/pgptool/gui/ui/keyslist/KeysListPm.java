@@ -17,6 +17,9 @@
  *******************************************************************************/
 package org.pgptool.gui.ui.keyslist;
 
+import static org.pgptool.gui.app.Messages.text;
+
+import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -27,8 +30,12 @@ import java.util.List;
 import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.log4j.Logger;
+import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
@@ -52,6 +59,8 @@ import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class KeysListPm extends PresentationModelBase {
+	private static Logger log = Logger.getLogger(KeysListPm.class);
+
 	@Autowired
 	private EventBus eventBus;
 	@Autowired
@@ -215,6 +224,7 @@ public class KeysListPm extends PresentationModelBase {
 			String targetFile = buildPublicKeyTargetChooser(key).askUserForFile();
 			if (targetFile != null) {
 				keyFilesOperations.exportPublicKey(key, targetFile);
+				browseForFolder(FilenameUtils.getFullPath(targetFile));
 			}
 		}
 	};
@@ -230,9 +240,20 @@ public class KeysListPm extends PresentationModelBase {
 			String targetFile = buildPrivateKeyTargetChooser(key).askUserForFile();
 			if (targetFile != null) {
 				keyFilesOperations.exportPrivateKey(key, targetFile);
+				EntryPoint.showMessageBox(findRegisteredWindowIfAny(), text("keys.privateKey.exportWarning"),
+						text("term.attention"), JOptionPane.WARNING_MESSAGE);
+				browseForFolder(FilenameUtils.getFullPath(targetFile));
 			}
 		}
 	};
+
+	private void browseForFolder(String targetFileName) {
+		try {
+			Desktop.getDesktop().browse(new File(targetFileName).toURI());
+		} catch (Throwable t) {
+			log.warn("Failed to open folder for exported key", t);
+		}
+	}
 
 	private Action[] contextMenuActions = new Action[] { actionExportPublicKey, actionExportPrivateKey, null,
 			actionDeleteKey };

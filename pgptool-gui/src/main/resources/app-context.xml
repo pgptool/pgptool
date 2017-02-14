@@ -45,6 +45,7 @@
 	<bean id="configRepository" class="org.pgptool.gui.config.impl.ConfigRepositoryPairsBasedImpl" />
 	<bean class="org.pgptool.gui.configpairs.impl.ConfigPairsMapDbImpl" />
 	<bean class="org.pgptool.gui.tempfolderfordecrypted.impl.DecryptedTempFolderImpl" />
+	<bean class="org.pgptool.gui.encryptionparams.impl.EncryptionParamsStorageImpl" />
 
 	<bean id="keyFilesOperations" class="org.pgptool.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
 	<bean id="keyRingService" class="org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl" />
@@ -78,7 +79,10 @@
 
 	<bean class="org.pgptool.gui.ui.createkey.CreateKeyView" lazy-init="true" scope="singleton" />
 	<bean class="org.pgptool.gui.ui.createkey.CreateKeyPm" scope="prototype" />
-	
+
 	<bean class="org.pgptool.gui.ui.keyslist.KeysTableView" scope="prototype" />
+
+	<bean class="org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleView" lazy-init="true" scope="singleton" />
+	<bean class="org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultiplePm" scope="prototype" />
 
 </beans>

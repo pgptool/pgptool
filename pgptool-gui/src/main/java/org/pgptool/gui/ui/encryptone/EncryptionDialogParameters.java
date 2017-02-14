@@ -20,11 +20,18 @@ package org.pgptool.gui.ui.encryptone;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
+
 /**
  * This class is used to reflect dialog parameters. It's used to help suggest
  * user with processing parameters based on input parameter(s)
  * 
  * @author Sergey Karpushin
+ * 
+ *         TODO: Move this DTO to appropriate package near
+ *         {@link EncryptionParamsStorage} BUT !!!!!!! This must be performed as
+ *         a part of upgrade procedure to avoid screwing up peoples current
+ *         settings!!
  *
  */
 public class EncryptionDialogParameters implements Serializable {

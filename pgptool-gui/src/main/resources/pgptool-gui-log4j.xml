@@ -24,8 +24,8 @@
 
 	<category name="org.pgptool.gui">
 		<priority value="DEBUG" />
-	</category>   
-
+	</category>
+	   
 	<root>
 		<level value="INFO" />
 		<appender-ref ref="FILE" />

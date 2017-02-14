@@ -26,8 +26,10 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.annotation.Resource;
 import javax.swing.Action;
@@ -45,6 +47,7 @@ import org.pgptool.gui.encryption.api.EncryptionService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
+import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
 import org.pgptool.gui.tools.PathUtils;
 import org.pgptool.gui.ui.decryptone.DecryptOnePm;
 import org.pgptool.gui.ui.keyslist.ComparatorKeyByNameImpl;
@@ -72,10 +75,11 @@ public class EncryptOnePm extends PresentationModelBase {
 
 	private static final String ENCRYPTED_FILE_EXTENSION = "pgp";
 	private static final String SOURCE_FOLDER = "EncryptOnePm.SOURCE_FOLDER";
-	public static final String CONFIG_PAIR_BASE = "Encrypt:";
 
 	@Autowired
 	private ConfigPairs configPairs;
+	@Autowired
+	private EncryptionParamsStorage encryptionParamsStorage;
 
 	@Autowired
 	@Resource(name = "keyRingService")
@@ -247,20 +251,13 @@ public class EncryptOnePm extends PresentationModelBase {
 				return;
 			}
 
-			EncryptionDialogParameters params = findParamsBasedOnSourceFile(sourceFile.getValue());
+			EncryptionDialogParameters params = encryptionParamsStorage
+					.findParamsBasedOnSourceFile(sourceFile.getValue(), true);
 			if (params != null) {
 				useSugestedParameters(params);
 			} else {
 				selectSelfAsRecipient();
 			}
-		}
-
-		protected EncryptionDialogParameters findParamsBasedOnSourceFile(String sourceFile) {
-			EncryptionDialogParameters params = configPairs.find(CONFIG_PAIR_BASE + sourceFile, null);
-			if (params == null) {
-				params = configPairs.find(CONFIG_PAIR_BASE + PathUtils.extractBasePath(sourceFile), null);
-			}
-			return params;
 		}
 
 		private void selectSelfAsRecipient() {
@@ -284,7 +281,7 @@ public class EncryptOnePm extends PresentationModelBase {
 			isDeleteSourceAfter.setValueByOwner(params.isDeleteSourceFile());
 			isOpenTargetFolderAfter.setValueByOwner(params.isOpenTargetFolder());
 
-			List<String> missedKeys = preselectRecipients(params.getRecipientsKeysIds());
+			Set<String> missedKeys = preselectRecipients(new HashSet<>(params.getRecipientsKeysIds()));
 			notifyUserOfMissingKeysIfAny(missedKeys);
 		}
 
@@ -303,9 +300,9 @@ public class EncryptOnePm extends PresentationModelBase {
 			}
 		}
 
-		private List<String> preselectRecipients(ArrayList<String> recipientsKeysIds) {
+		private Set<String> preselectRecipients(Set<String> recipientsKeysIds) {
 			selectedRecipients.getList().clear();
-			List<String> missedKeys = new ArrayList<>();
+			Set<String> missedKeys = new HashSet<>();
 			for (String keyId : recipientsKeysIds) {
 				Optional<Key<KeyData>> key = availabileRecipients.getList().stream()
 						.filter(x -> x.getKeyData().isHasAlternativeId(keyId)).findFirst();
@@ -318,7 +315,7 @@ public class EncryptOnePm extends PresentationModelBase {
 			return missedKeys;
 		}
 
-		private void notifyUserOfMissingKeysIfAny(List<String> missedKeys) {
+		private void notifyUserOfMissingKeysIfAny(Set<String> missedKeys) {
 			if (CollectionUtils.isEmpty(missedKeys)) {
 				return;
 			}
@@ -390,7 +387,7 @@ public class EncryptOnePm extends PresentationModelBase {
 			}
 
 			// Remember parameters
-			persistDialogParametersForCurrentInputs();
+			encryptionParamsStorage.persistDialogParametersForCurrentInputs(buildEncryptionDialogParameters(), true);
 
 			// close window
 			host.handleClose();
@@ -415,13 +412,6 @@ public class EncryptOnePm extends PresentationModelBase {
 			Preconditions.checkState(parentFolder.exists() || parentFolder.mkdirs(),
 					"Failed to ensure all parents directories created");
 			return targetFileName;
-		}
-
-		private void persistDialogParametersForCurrentInputs() {
-			EncryptionDialogParameters dialogParameters = buildEncryptionDialogParameters();
-			configPairs.put(CONFIG_PAIR_BASE + dialogParameters.getSourceFile(), dialogParameters);
-			configPairs.put(CONFIG_PAIR_BASE + PathUtils.extractBasePath(dialogParameters.getSourceFile()),
-					dialogParameters);
 		}
 
 		private EncryptionDialogParameters buildEncryptionDialogParameters() {

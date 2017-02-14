@@ -50,6 +50,20 @@ public class ConfigPairsMapDbImpl implements ConfigPairs, InitializingBean {
 		log.debug("Creating mapDB at " + mapDbFilename);
 		db = DBMaker.fileDB(mapDbFilename).transactionEnable().make();
 		map = db.hashMap("config-pairs", Serializer.STRING, Serializer.JAVA).createOrOpen();
+		makeSureWeCanReadAllSettings();
+	}
+
+	private void makeSureWeCanReadAllSettings() {
+		// read all values -- forces DTO version check
+		try {
+			for (Object o : map.values()) {
+				// forces value read
+			}
+		} catch (SerializationError se) {
+			log.warn("Failed to read config pairs. Looks like outdated DTO version. Have to clear the whole map.", se);
+			map.clear();
+			db.commit();
+		}
 	}
 
 	private String getFilesBasePath() {

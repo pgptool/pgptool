@@ -85,6 +85,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private JMenuItem miConfigExit;
 	private JMenuItem miEncrypt;
 	private JMenuItem miDecrypt;
+	private JMenuItem miEncryptBackAll;
 
 	private JPanel panelTablePlaceholder;
 	private JTable table;
@@ -313,6 +314,8 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		JMenu menuActions = new JMenu(Messages.get("term.actions"));
 		menuActions.add(miEncrypt = new JMenuItem());
 		menuActions.add(miDecrypt = new JMenuItem());
+		menuActions.addSeparator();
+		menuActions.add(miEncryptBackAll = new JMenuItem());
 
 		menuBar.add(menuFile);
 		menuBar.add(menuKeyring);
@@ -378,6 +381,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		bindingContext.setupBinding(pm.getActionShowKeysList(), miShowKeyList);
 		bindingContext.setupBinding(pm.getActionChangeFolderForDecrypted(), miChangeTempFolderForDecrypted);
 		bindingContext.setupBinding(pm.getActionEncrypt(), miEncrypt);
+		bindingContext.setupBinding(pm.actionEncryptBackAll, miEncryptBackAll);
 		bindingContext.setupBinding(pm.getActionDecrypt(), miDecrypt);
 	}
 

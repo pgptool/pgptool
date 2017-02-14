@@ -15,37 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *******************************************************************************/
-package org.pgptool.gui.app;
+package org.pgptool.gui.bkgoperation;
 
-import org.summerb.approaches.i18n.HasMessageArgs;
-import org.summerb.approaches.i18n.HasMessageCode;
-
-public class GenericException extends Exception implements HasMessageCode, HasMessageArgs {
-	private static final long serialVersionUID = 5911368838530147923L;
-	private Object[] messageArgs;
-
-	public GenericException(String messageCode) {
-		super(messageCode);
-	}
-
-	public GenericException(String messageCode, Throwable cause, Object... messageArgs) {
-		super(messageCode, cause);
-		this.messageArgs = messageArgs;
-	}
-	
-	public GenericException(String messageCode, Object... messageArgs) {
-		super(messageCode);
-		this.messageArgs = messageArgs;
-	}
-
-	@Override
-	public String getMessageCode() {
-		return getMessage();
-	}
-
-	@Override
-	public Object[] getMessageArgs() {
-		return messageArgs;
-	}
-
+public interface ProgressHandler {
+	void onProgressUpdated(Progress progress);
 }

@@ -22,7 +22,10 @@ import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.swing.Action;
 
@@ -68,7 +71,14 @@ public class MainFramePm extends PresentationModelBase {
 
 		List<DecryptedFile> initialKeys = decryptedHistoryService.getDecryptedFiles();
 		rows = new ModelTableProperty<>(this, initialKeys, "decryptedFiles", new DecryptedFilesModel());
-		hasData = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(!initialKeys.isEmpty()), "hasData");
+		hasData = new ModelProperty<Boolean>(this, new ValueAdapterHolderImpl<>(!initialKeys.isEmpty()), "hasData") {
+			@Override
+			public boolean setValueByOwner(Boolean value) {
+				actionEncryptBackAll.setEnabled(value);
+				return super.setValueByOwner(value);
+			}
+		};
+		actionEncryptBackAll.setEnabled(hasData.getValue());
 		rows.getModelPropertyAccessor().addPropertyChangeListener(onSelectionChangedHandler);
 		onSelectionChangedHandler.propertyChange(null);
 
@@ -187,6 +197,23 @@ public class MainFramePm extends PresentationModelBase {
 		}
 	};
 
+	@SuppressWarnings("serial")
+	protected Action actionEncryptBackAll = new LocalizedAction("encrypBackMany.encryptBackAll") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			ArrayList<DecryptedFile> files = new ArrayList<>(rows.getList());
+			Preconditions.checkState(files.size() > 0,
+					"This action supposed to be available only when ther is at least one decrypted file monitored");
+
+			if (files.size() == 1) {
+				host.openEncryptDialogFor(files.get(0).getDecryptedFile());
+			} else {
+				Set<String> fileNames = files.stream().map(x -> x.getDecryptedFile()).collect(Collectors.toSet());
+				host.openEncryptBackMultipleFor(fileNames);
+			}
+		}
+	};
+
 	protected Action getActionConfigExit() {
 		return actionConfigExit;
 	}
@@ -198,7 +225,7 @@ public class MainFramePm extends PresentationModelBase {
 	protected Action getActionImportKey() {
 		return host.getActionImportKey();
 	}
-	
+
 	protected Action getActionCreateKey() {
 		return host.getActionCreateKey();
 	}

@@ -47,6 +47,7 @@ import org.pgptool.gui.encryption.api.EncryptionService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
+import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.tools.PathUtils;
 import org.pgptool.gui.ui.encryptone.EncryptOnePm;
@@ -90,6 +91,9 @@ public class DecryptOnePm extends PresentationModelBase {
 
 	@Autowired
 	private ConfigPairs configPairs;
+	@Autowired
+	private EncryptionParamsStorage encryptionParamsStorage;
+
 	@Autowired
 	private DecryptedTempFolder decryptedTempFolder;
 	@Autowired
@@ -341,7 +345,7 @@ public class DecryptOnePm extends PresentationModelBase {
 				}
 
 				sourceFileRecipientsKeysIds = encryptionService.findKeyIdsForDecryption(sourceFileStr);
-				List<Key<KeyData>> keys = keyRingService.findMatchingKeysByAlternativeIds(sourceFileRecipientsKeysIds);
+				List<Key<KeyData>> keys = keyRingService.findMatchingDecryptionKeys(sourceFileRecipientsKeysIds);
 				decryptionKeys.getList().addAll(keys);
 
 				if (decryptionKeys.getList().size() > 0) {
@@ -563,7 +567,7 @@ public class DecryptOnePm extends PresentationModelBase {
 		 */
 		protected void persistEncryptionDialogParameters(String decryptedFile) {
 			EncryptionDialogParameters dialogParameters = buildEncryptionDialogParameters(decryptedFile);
-			configPairs.put(EncryptOnePm.CONFIG_PAIR_BASE + decryptedFile, dialogParameters);
+			encryptionParamsStorage.persistDialogParametersForCurrentInputs(dialogParameters, false);
 		}
 
 		private EncryptionDialogParameters buildEncryptionDialogParameters(String decryptedFile) {

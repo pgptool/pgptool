@@ -205,16 +205,20 @@ public class EntryPoint {
 	}
 
 	public static void showMessageBox(Component parent, String msg, String title, int messageType) {
-		JTextArea textArea = new JTextArea(msg);
-		textArea.setLineWrap(true);
-		textArea.setWrapStyleWord(true);
-		textArea.setEditable(false);
-		textArea.setMargin(new Insets(5, 5, 5, 5));
-		textArea.setFont(textArea.getFont().deriveFont(12f));
-		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setPreferredSize(new Dimension(500, 150));
-		scrollPane.getViewport().setView(textArea);
-		JOptionPane.showMessageDialog(parent, scrollPane, title, messageType);
+		if (msg.length() > 70) {
+			JTextArea textArea = new JTextArea(msg);
+			textArea.setLineWrap(true);
+			textArea.setWrapStyleWord(true);
+			textArea.setEditable(false);
+			textArea.setMargin(new Insets(5, 5, 5, 5));
+			// textArea.setFont(textArea.getFont().deriveFont(12f));
+			JScrollPane scrollPane = new JScrollPane();
+			scrollPane.setPreferredSize(new Dimension(700, 150));
+			scrollPane.getViewport().setView(textArea);
+			JOptionPane.showMessageDialog(parent, scrollPane, title, messageType);
+		} else {
+			JOptionPane.showMessageDialog(parent, msg + "   ", title, messageType);
+		}
 	}
 
 	public RootPm getRootPm() {

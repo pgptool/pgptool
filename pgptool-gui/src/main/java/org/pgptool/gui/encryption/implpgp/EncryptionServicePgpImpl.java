@@ -25,15 +25,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
@@ -42,6 +45,7 @@ import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
 import org.bouncycastle.openpgp.PGPEncryptedDataList;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralData;
+import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
 import org.bouncycastle.openpgp.PGPMarker;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPOnePassSignatureList;
@@ -59,6 +63,10 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyKeyEncryptionMethodGenerator;
 import org.bouncycastle.util.io.Streams;
+import org.pgptool.gui.bkgoperation.Progress;
+import org.pgptool.gui.bkgoperation.Progress.Updater;
+import org.pgptool.gui.bkgoperation.ProgressHandler;
+import org.pgptool.gui.bkgoperation.UserReqeustedCancellationException;
 import org.pgptool.gui.encryption.api.EncryptionService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.springframework.util.StringUtils;
@@ -77,29 +85,94 @@ import com.google.common.base.Throwables;
  */
 public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 	private static Logger log = Logger.getLogger(EncryptionServicePgpImpl.class);
+	private static final int BUFFER_SIZE = 1 << 16;
 
 	@Override
-	public void encrypt(String sourceFile, String targetFile, Collection<Key<KeyDataPgp>> recipients) {
+	public void encrypt(String sourceFile, String targetFile, Collection<Key<KeyDataPgp>> recipients)
+			throws UserReqeustedCancellationException {
+		encrypt(sourceFile, targetFile, recipients, null);
+	}
+
+	@Override
+	public void encrypt(String sourceFile, String targetFile, Collection<Key<KeyDataPgp>> recipients,
+			ProgressHandler optionalProgressHandler) throws UserReqeustedCancellationException {
 		try {
+			Updater progress = null;
+			if (optionalProgressHandler != null) {
+				progress = Progress.create("action.encrypt", optionalProgressHandler);
+				progress.updateStepInfo("encryption.progress.preparingKeys", FilenameUtils.getName(sourceFile));
+			}
+
 			PGPEncryptedDataGenerator dataGenerator = buildEncryptedDataGenerator(
 					buildKeysListForEncryption(recipients));
 
 			OutputStream out = new BufferedOutputStream(new FileOutputStream(targetFile, false));
-			doEncryptFile(out, sourceFile, dataGenerator);
+			doEncryptFile(out, sourceFile, dataGenerator, progress);
 			out.close();
 		} catch (Throwable t) {
+			Throwables.propagateIfInstanceOf(t, UserReqeustedCancellationException.class);
 			throw new RuntimeException("Encryption failed", t);
 		}
 	}
 
-	private static void doEncryptFile(OutputStream out, String fileName, PGPEncryptedDataGenerator encDataGen)
-			throws IOException, NoSuchProviderException, PGPException {
-		OutputStream encryptedStream = encDataGen.open(out, new byte[1 << 16]);
+	private static void doEncryptFile(OutputStream out, String sourceFileStr, PGPEncryptedDataGenerator encDataGen,
+			Updater progress)
+			throws IOException, NoSuchProviderException, PGPException, UserReqeustedCancellationException {
+		OutputStream encryptedStream = encDataGen.open(out, new byte[BUFFER_SIZE]);
 		PGPCompressedDataGenerator compressedDataGen = new PGPCompressedDataGenerator(PGPCompressedData.ZIP);
-		PGPUtil.writeFileToLiteralData(compressedDataGen.open(encryptedStream), PGPLiteralData.BINARY,
-				new File(fileName), new byte[1 << 16]);
+		OutputStream compressedStream = compressedDataGen.open(encryptedStream);
+		File sourceFile = new File(sourceFileStr);
+		estimateFullOperationSize(sourceFile, progress);
+		writeFileToLiteralData(sourceFile, compressedStream, PGPLiteralData.BINARY, new byte[BUFFER_SIZE], progress);
 		compressedDataGen.close();
 		encryptedStream.close();
+	}
+
+	private static void estimateFullOperationSize(File sourceFile, Updater progress) {
+		if (progress == null) {
+			return;
+		}
+		progress.updateTotalSteps(BigInteger.valueOf(sourceFile.length()));
+	}
+
+	public static void writeFileToLiteralData(File sourceFile, OutputStream out, char fileType, byte[] buffer,
+			Updater progress) throws IOException, UserReqeustedCancellationException {
+		PGPLiteralDataGenerator lData = new PGPLiteralDataGenerator();
+		OutputStream pOut = lData.open(out, fileType, sourceFile.getName(), new Date(sourceFile.lastModified()),
+				buffer);
+		pipeFileContents(sourceFile, pOut, buffer.length, progress);
+	}
+
+	private static void pipeFileContents(File file, OutputStream pOut, int bufSize, Updater progress)
+			throws IOException, UserReqeustedCancellationException {
+		if (progress != null) {
+			progress.updateStepInfo("encryption.progress.encrypting", FilenameUtils.getName(file.getAbsolutePath()));
+		}
+
+		FileInputStream in = new FileInputStream(file);
+		byte[] buf = new byte[bufSize];
+		long totalRead = 0;
+
+		int len;
+		while ((len = in.read(buf)) > 0) {
+			pOut.write(buf, 0, len);
+			totalRead += len;
+			updateProgress(progress, totalRead);
+		}
+
+		pOut.close();
+		in.close();
+	}
+
+	private static void updateProgress(Updater progress, long totalBytesRead)
+			throws UserReqeustedCancellationException {
+		if (progress == null) {
+			return;
+		}
+		progress.updateStepsTaken(BigInteger.valueOf(totalBytesRead));
+		if (progress.isCancelationRequested()) {
+			throw new UserReqeustedCancellationException();
+		}
 	}
 
 	private Collection<PGPPublicKey> buildKeysListForEncryption(Collection<Key<KeyDataPgp>> recipients) {

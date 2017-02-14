@@ -21,6 +21,7 @@ import static org.pgptool.gui.app.Messages.text;
 
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.util.Set;
 
 import javax.swing.Action;
 
@@ -39,6 +40,9 @@ import org.pgptool.gui.ui.createkey.CreateKeyView;
 import org.pgptool.gui.ui.decryptone.DecryptOneHost;
 import org.pgptool.gui.ui.decryptone.DecryptOnePm;
 import org.pgptool.gui.ui.decryptone.DecryptOneView;
+import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleHost;
+import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultiplePm;
+import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleView;
 import org.pgptool.gui.ui.encryptone.EncryptOneHost;
 import org.pgptool.gui.ui.encryptone.EncryptOnePm;
 import org.pgptool.gui.ui.encryptone.EncryptOneView;
@@ -226,6 +230,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		public Action getActionCreateKey() {
 			return createKeyWindowHost.actionToOpenWindow;
 		}
+
+		@Override
+		public void openEncryptBackMultipleFor(Set<String> decryptedFiles) {
+			new EncryptBackManyWindowOpener(decryptedFiles).actionToOpenWindow.actionPerformed(null);
+		}
 	};
 
 	private void openMainFrameWindow() {
@@ -288,6 +297,34 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 				return false;
 			}
 			return true;
+		};
+	};
+
+	private class EncryptBackManyWindowOpener extends DialogOpener<EncryptBackMultiplePm, EncryptBackMultipleView> {
+		private Set<String> decryptedFiles;
+
+		public EncryptBackManyWindowOpener(Set<String> decryptedFiles) {
+			super(EncryptBackMultiplePm.class, EncryptBackMultipleView.class, "encrypBackMany.action");
+			this.decryptedFiles = decryptedFiles;
+		}
+
+		EncryptBackMultipleHost host = new EncryptBackMultipleHost() {
+			@Override
+			public void handleClose() {
+				view.unrender();
+				pm.detach();
+				pm = null;
+			}
+
+			@Override
+			public Action getActionToOpenCertificatesList() {
+				return keysListWindowHost.actionToOpenWindow;
+			}
+		};
+
+		@Override
+		protected boolean postConstructPm() {
+			return pm.init(host, decryptedFiles);
 		};
 	};
 

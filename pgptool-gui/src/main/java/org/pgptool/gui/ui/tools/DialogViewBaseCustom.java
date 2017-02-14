@@ -17,6 +17,7 @@
  *******************************************************************************/
 package org.pgptool.gui.ui.tools;
 
+import java.awt.Dialog.ModalityType;
 import java.awt.Image;
 import java.util.List;
 
@@ -36,6 +37,8 @@ public abstract class DialogViewBaseCustom<TPM extends PresentationModel> extend
 	@Override
 	protected void showDialog() {
 		super.showDialog();
-		UiUtils.makeSureWindowBroughtToFront(dialog);
+		if (dialog.getModalityType() == ModalityType.MODELESS) {
+			UiUtils.makeSureWindowBroughtToFront(dialog);
+		}
 	}
 }

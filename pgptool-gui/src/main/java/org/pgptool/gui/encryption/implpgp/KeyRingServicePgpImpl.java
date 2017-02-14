@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -199,23 +200,45 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 		this.eventBus = eventBus;
 	}
 
+	/**
+	 * keyIds passed here MIGHT NOT match key id from keyInfo
+	 */
 	@Override
-	public List<Key<KeyDataPgp>> findMatchingKeysByAlternativeIds(Set<String> keysIds) {
+	public List<Key<KeyDataPgp>> findMatchingDecryptionKeys(Set<String> keysIds) {
 		Preconditions.checkArgument(!CollectionUtils.isEmpty(keysIds));
 
 		List<Key<KeyDataPgp>> ret = new ArrayList<>(keysIds.size());
-		List<Key<KeyDataPgp>> existingKeys = readKeys();
+		List<Key<KeyDataPgp>> allKeys = readKeys();
+		List<Key<KeyDataPgp>> decryptionKeys = allKeys.stream().filter(x -> x.getKeyData().isCanBeUsedForDecryption())
+				.collect(Collectors.toList());
+
 		for (String neededKeyId : keysIds) {
 			log.debug("Trying to find decryption key by id: " + neededKeyId);
-			for (Iterator<Key<KeyDataPgp>> iter = existingKeys.iterator(); iter.hasNext();) {
+			for (Iterator<Key<KeyDataPgp>> iter = decryptionKeys.iterator(); iter.hasNext();) {
 				Key<KeyDataPgp> existingKey = iter.next();
 				String user = existingKey.getKeyInfo().getUser();
-				log.debug("Considering key: " + user);
-				if (!existingKey.getKeyData().isCanBeUsedForDecryption()) {
-					log.debug("Key cannot be used for decryption: " + user + ", not considering it anymore");
-					iter.remove();
-					continue;
+				if (existingKey.getKeyData().isHasAlternativeId(neededKeyId)) {
+					log.debug("Found matching key: " + user);
+					ret.add(existingKey);
+					break;
 				}
+			}
+		}
+		return ret;
+	}
+
+	@Override
+	public List<Key<KeyDataPgp>> findMatchingKeys(Set<String> keysIds) {
+		Preconditions.checkArgument(!CollectionUtils.isEmpty(keysIds));
+
+		List<Key<KeyDataPgp>> ret = new ArrayList<>(keysIds.size());
+		List<Key<KeyDataPgp>> allKeys = readKeys();
+
+		for (String neededKeyId : keysIds) {
+			log.debug("Trying to find key by id: " + neededKeyId);
+			for (Iterator<Key<KeyDataPgp>> iter = allKeys.iterator(); iter.hasNext();) {
+				Key<KeyDataPgp> existingKey = iter.next();
+				String user = existingKey.getKeyInfo().getUser();
 				if (existingKey.getKeyData().isHasAlternativeId(neededKeyId)) {
 					log.debug("Found matching key: " + user);
 					ret.add(existingKey);

@@ -17,9 +17,6 @@
  *******************************************************************************/
 package org.pgptool.gui.app;
 
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Insets;
 import java.net.URL;
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -30,8 +27,6 @@ import java.util.Queue;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
@@ -168,7 +163,7 @@ public class EntryPoint {
 
 	private static void reportAppInitFailureMessageToUser(Throwable t) {
 		String msg = ConsoleExceptionUtils.getAllMessages(t);
-		showMessageBox(null, msg, "Failed to init application", JOptionPane.ERROR_MESSAGE);
+		UiUtils.messageBox(null, msg, "Failed to init application", JOptionPane.ERROR_MESSAGE);
 	}
 
 	public EntryPoint() {
@@ -192,35 +187,6 @@ public class EntryPoint {
 		}
 	}
 
-	public static void showMessageBox(String messageText, String messageTitle, MessageSeverity messageSeverity) {
-		int messageType = JOptionPane.INFORMATION_MESSAGE;
-		if (messageSeverity == MessageSeverity.ERROR) {
-			messageType = JOptionPane.ERROR_MESSAGE;
-		} else if (messageSeverity == MessageSeverity.WARNING) {
-			messageType = JOptionPane.WARNING_MESSAGE;
-		} else if (messageSeverity == MessageSeverity.INFO) {
-			messageType = JOptionPane.INFORMATION_MESSAGE;
-		}
-		showMessageBox(null, messageText, messageTitle, messageType);
-	}
-
-	public static void showMessageBox(Component parent, String msg, String title, int messageType) {
-		if (msg.length() > 70) {
-			JTextArea textArea = new JTextArea(msg);
-			textArea.setLineWrap(true);
-			textArea.setWrapStyleWord(true);
-			textArea.setEditable(false);
-			textArea.setMargin(new Insets(5, 5, 5, 5));
-			// textArea.setFont(textArea.getFont().deriveFont(12f));
-			JScrollPane scrollPane = new JScrollPane();
-			scrollPane.setPreferredSize(new Dimension(700, 150));
-			scrollPane.getViewport().setView(textArea);
-			JOptionPane.showMessageDialog(parent, scrollPane, title, messageType);
-		} else {
-			JOptionPane.showMessageDialog(parent, msg + "   ", title, messageType);
-		}
-	}
-
 	public RootPm getRootPm() {
 		return rootPm;
 	}
@@ -234,7 +200,7 @@ public class EntryPoint {
 		GenericException exc = new GenericException(errorMessageCode, cause);
 		String msgs = ConsoleExceptionUtils.getAllMessages(exc);
 		// String msgs = ErrorUtils.getAllMessages(exc);
-		showMessageBox(null, msgs, Messages.get("term.error"), JOptionPane.ERROR_MESSAGE);
+		UiUtils.messageBox(null, msgs, Messages.get("term.error"), JOptionPane.ERROR_MESSAGE);
 	}
 
 	public ApplicationContext getApplicationContext() {

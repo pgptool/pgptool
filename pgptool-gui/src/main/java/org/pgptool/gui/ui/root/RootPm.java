@@ -56,6 +56,7 @@ import org.pgptool.gui.ui.mainframe.MainFrameHost;
 import org.pgptool.gui.ui.mainframe.MainFramePm;
 import org.pgptool.gui.ui.mainframe.MainFrameView;
 import org.pgptool.gui.ui.tempfolderfordecrypted.TempFolderChooserPm;
+import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,7 +110,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		} catch (Throwable t) {
 			try {
 				log.error("Failed to start application", t);
-				EntryPoint.showMessageBox(ConsoleExceptionUtils.getAllMessages(t),
+				UiUtils.messageBox(ConsoleExceptionUtils.getAllMessages(t),
 						Messages.get("exception.unexpected.failedToStartupApplication"), MessageSeverity.ERROR);
 			} finally {
 				// NOTE: We actually mean to exit application
@@ -147,7 +148,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 				} else if (EncryptOnePm.isItLooksLikeYourSourceFile(file)) {
 					openNewEncryptionWindow(file);
 				} else {
-					EntryPoint.showMessageBox("Program argument cannot be handled: " + file, text("term.attention"),
+					UiUtils.messageBox("Program argument cannot be handled: " + file, text("term.attention"),
 							MessageSeverity.WARNING);
 				}
 			}

@@ -81,7 +81,7 @@ public class DecryptedHistoryServiceImpl implements DecryptedHistoryService, Ini
 	};
 
 	@Override
-	public void add(DecryptedFile decryptedFile) {
+	public synchronized void add(DecryptedFile decryptedFile) {
 		try {
 			Preconditions.checkArgument(decryptedFile != null, "decryptedFile is NULL");
 			Preconditions.checkArgument(decryptedFile.getDecryptedFile() != null,
@@ -98,7 +98,7 @@ public class DecryptedHistoryServiceImpl implements DecryptedHistoryService, Ini
 	}
 
 	@Override
-	public void remove(String depcryptedFilePathname) {
+	public synchronized void remove(String depcryptedFilePathname) {
 		try {
 			Preconditions.checkArgument(depcryptedFilePathname != null, "depcryptedFilePathname is NULL");
 
@@ -122,8 +122,27 @@ public class DecryptedHistoryServiceImpl implements DecryptedHistoryService, Ini
 	}
 
 	@Override
-	public List<DecryptedFile> getDecryptedFiles() {
+	public synchronized List<DecryptedFile> getDecryptedFiles() {
 		return configPairs.findAllWithPrefixedKey(PREFIX);
 	}
 
+	@Override
+	public DecryptedFile findByDecryptedFile(String fileName) {
+		for (DecryptedFile df : getDecryptedFiles()) {
+			if (df.getDecryptedFile().equals(fileName)) {
+				return df;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public DecryptedFile findByEncryptedFile(String fileName) {
+		for (DecryptedFile df : getDecryptedFiles()) {
+			if (df.getEncryptedFile().equals(fileName)) {
+				return df;
+			}
+		}
+		return null;
+	}
 }

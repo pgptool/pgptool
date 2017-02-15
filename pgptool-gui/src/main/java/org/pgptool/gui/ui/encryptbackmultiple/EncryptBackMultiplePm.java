@@ -34,7 +34,6 @@ import javax.swing.Action;
 import javax.swing.JOptionPane;
 
 import org.apache.log4j.Logger;
-import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
@@ -48,6 +47,7 @@ import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
+import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Preconditions;
@@ -109,7 +109,7 @@ public class EncryptBackMultiplePm extends PresentationModelBase {
 		if (!keyRingService.readKeys().isEmpty()) {
 			return true;
 		}
-		EntryPoint.showMessageBox(text("phrase.noKeysForEncryption"), text("term.attention"), MessageSeverity.WARNING);
+		UiUtils.messageBox(text("phrase.noKeysForEncryption"), text("term.attention"), MessageSeverity.WARNING);
 		host.getActionToOpenCertificatesList().actionPerformed(null);
 		if (keyRingService.readKeys().isEmpty()) {
 			return false;
@@ -299,7 +299,7 @@ public class EncryptBackMultiplePm extends PresentationModelBase {
 		private void showSummaryMessage(Map<String, Throwable> errors, Map<String, Throwable> warnings, String msg) {
 			int severity = (errors.size() + warnings.size() == 0) ? JOptionPane.INFORMATION_MESSAGE
 					: JOptionPane.WARNING_MESSAGE;
-			EntryPoint.showMessageBox(null, msg, Messages.get("encrypBackMany.action"), severity);
+			UiUtils.messageBox(null, msg, Messages.get("encrypBackMany.action"), severity);
 		};
 
 		private String buildSummaryMessage(int successCount, Map<String, Throwable> errors,

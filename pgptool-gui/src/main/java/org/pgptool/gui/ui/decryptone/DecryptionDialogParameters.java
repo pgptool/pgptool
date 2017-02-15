@@ -33,7 +33,7 @@ public class DecryptionDialogParameters implements Serializable {
 
 	private boolean useSameFolder;
 	private boolean useTempFolder;
-	private String targetFile; // means user excplicitly provided it
+	private String targetFile; // means user explicitly provided it
 
 	private String decryptionKeyId;
 

@@ -54,6 +54,7 @@ import org.pgptool.gui.ui.keyslist.ComparatorKeyByNameImpl;
 import org.pgptool.gui.ui.tools.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.ListChangeListenerAnyEventImpl;
 import org.pgptool.gui.ui.tools.SaveFileChooserDialog;
+import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -178,7 +179,7 @@ public class EncryptOnePm extends PresentationModelBase {
 		if (!keyRingService.readKeys().isEmpty()) {
 			return true;
 		}
-		EntryPoint.showMessageBox(text("phrase.noKeysForEncryption"), text("term.attention"), MessageSeverity.WARNING);
+		UiUtils.messageBox(text("phrase.noKeysForEncryption"), text("term.attention"), MessageSeverity.WARNING);
 		host.getActionToOpenCertificatesList().actionPerformed(null);
 		if (keyRingService.readKeys().isEmpty()) {
 			return false;
@@ -320,7 +321,7 @@ public class EncryptOnePm extends PresentationModelBase {
 				return;
 			}
 
-			EntryPoint.showMessageBox(findRegisteredWindowIfAny(),
+			UiUtils.messageBox(findRegisteredWindowIfAny(),
 					text("error.notAllRecipientsAvailable", Arrays.asList(missedKeys)), text("term.attention"),
 					JOptionPane.WARNING_MESSAGE);
 		}
@@ -383,7 +384,7 @@ public class EncryptOnePm extends PresentationModelBase {
 				askOperSystemToBrowseForFolder(targetFileName);
 			} else {
 				// Or show confirmation
-				EntryPoint.showMessageBox(text("phrase.encryptionSuccess"), text("term.success"), MessageSeverity.INFO);
+				UiUtils.messageBox(text("phrase.encryptionSuccess"), text("term.success"), MessageSeverity.INFO);
 			}
 
 			// Remember parameters

@@ -34,6 +34,7 @@ import java.util.Set;
 import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.apache.commons.io.FilenameUtils;
@@ -54,6 +55,7 @@ import org.pgptool.gui.ui.encryptone.EncryptOnePm;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 import org.pgptool.gui.ui.tools.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.SaveFileChooserDialog;
+import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.summerb.approaches.security.api.exceptions.InvalidPasswordException;
@@ -248,7 +250,7 @@ public class DecryptOnePm extends PresentationModelBase {
 		if (!keyRingService.readKeys().isEmpty()) {
 			return true;
 		}
-		EntryPoint.showMessageBox(text("phrase.noKeysForDecryption"), text("term.attention"), MessageSeverity.WARNING);
+		UiUtils.messageBox(text("phrase.noKeysForDecryption"), text("term.attention"), MessageSeverity.WARNING);
 		host.getActionToOpenCertificatesList().actionPerformed(null);
 		if (keyRingService.readKeys().isEmpty()) {
 			return false;
@@ -323,6 +325,10 @@ public class DecryptOnePm extends PresentationModelBase {
 			DecryptionDialogParameters params = findParamsBasedOnSourceFile(sourceFile.getValue());
 			if (params != null) {
 				useSugestedParameters(params);
+
+				// QUESTION: Should we check if this file was already decrypted
+				// AND still can be found on the disk? Maybe we can just offer
+				// to open it?
 			}
 		}
 
@@ -475,7 +481,7 @@ public class DecryptOnePm extends PresentationModelBase {
 			// Cache password
 			CACHE_KEYID_TO_PASSWORD.put(key.getKeyInfo().getKeyId(), password.getValue());
 			// Remember parameters
-			persistDecryptionDialogParametersForCurrentInputs();
+			persistDecryptionDialogParametersForCurrentInputs(targetFileName);
 			persistEncryptionDialogParameters(targetFileName);
 			decryptedHistoryService.add(new DecryptedFile(sourceFileStr, targetFileName));
 
@@ -502,7 +508,7 @@ public class DecryptOnePm extends PresentationModelBase {
 			}
 
 			if (confirmationMessageRequired) {
-				EntryPoint.showMessageBox(text("phrase.decryptionSuccess", targetFileName), text("term.success"),
+				UiUtils.messageBox(text("phrase.decryptionSuccess", targetFileName), text("term.success"),
 						MessageSeverity.INFO);
 			}
 
@@ -530,9 +536,7 @@ public class DecryptOnePm extends PresentationModelBase {
 			if (isUseSameFolder.getValue()) {
 				return madeUpTargetFileName(sourceFile.getValue(), PathUtils.extractBasePath(sourceFile.getValue()));
 			} else if (isUseTempFolder.getValue()) {
-				String ret = madeUpTargetFileName(sourceFile.getValue(), decryptedTempFolder.getTempFolderBasePath());
-				ret = ensureFileNameVacant(ret);
-				return ret;
+				return getEffectiveFileNameForTempFolder();
 			}
 
 			// Validation for target folder!! ---
@@ -547,8 +551,22 @@ public class DecryptOnePm extends PresentationModelBase {
 			return ret;
 		}
 
-		private void persistDecryptionDialogParametersForCurrentInputs() {
-			DecryptionDialogParameters dialogParameters = buildDecryptionDialogParameters();
+		private String getEffectiveFileNameForTempFolder() {
+			DecryptedFile dfm = decryptedHistoryService.findByEncryptedFile(getSourceFile().getValue());
+			if (dfm == null) {
+				String ret = madeUpTargetFileName(sourceFile.getValue(), decryptedTempFolder.getTempFolderBasePath());
+				return ensureFileNameVacant(ret);
+			}
+
+			if (!UiUtils.confirm("warning.fileWasAlreadyDecryptedIntoTempFolder",
+					new Object[] { dfm.getEncryptedFile(), dfm.getDecryptedFile() }, findRegisteredWindowIfAny())) {
+				return null;
+			}
+			return dfm.getDecryptedFile();
+		}
+
+		private void persistDecryptionDialogParametersForCurrentInputs(String targetFile) {
+			DecryptionDialogParameters dialogParameters = buildDecryptionDialogParameters(targetFile);
 			configPairs.put(CONFIG_PAIR_BASE + dialogParameters.getSourceFile(), dialogParameters);
 			configPairs.put(CONFIG_PAIR_BASE + PathUtils.extractBasePath(dialogParameters.getSourceFile()),
 					dialogParameters);
@@ -581,12 +599,12 @@ public class DecryptOnePm extends PresentationModelBase {
 			return ret;
 		}
 
-		private DecryptionDialogParameters buildDecryptionDialogParameters() {
+		private DecryptionDialogParameters buildDecryptionDialogParameters(String targetFile) {
 			DecryptionDialogParameters ret = new DecryptionDialogParameters();
 			ret.setSourceFile(sourceFile.getValue());
 			ret.setUseSameFolder(isUseSameFolder.getValue());
 			ret.setUseTempFolder(isUseTempFolder.getValue());
-			ret.setTargetFile(targetFile.getValue());
+			ret.setTargetFile(targetFile);
 			ret.setDecryptionKeyId(selectedKey.getValue().getKeyInfo().getKeyId());
 			ret.setDeleteSourceFile(isDeleteSourceAfter.getValue());
 			ret.setOpenTargetFolder(isOpenTargetFolderAfter.getValue());
@@ -598,13 +616,15 @@ public class DecryptOnePm extends PresentationModelBase {
 		 * bruteforce filename adding index to base filename until vacant
 		 * filename found.
 		 */
-		private String ensureFileNameVacant(String filePathName) {
-			String ret = filePathName;
+		private String ensureFileNameVacant(String requestedTargetFile) {
+			String ret = requestedTargetFile;
 			int idx = 0;
+			String basePathName = FilenameUtils.getFullPath(requestedTargetFile)
+					+ FilenameUtils.getBaseName(requestedTargetFile);
+			String ext = FilenameUtils.getExtension(requestedTargetFile);
 			while (new File(ret).exists()) {
 				idx++;
-				ret = FilenameUtils.getFullPath(filePathName) + FilenameUtils.getBaseName(filePathName) + "-" + idx
-						+ "." + FilenameUtils.getExtension(filePathName);
+				ret = basePathName + "-" + idx + "." + ext;
 			}
 			return ret;
 		}

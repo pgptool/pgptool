@@ -48,6 +48,7 @@ import org.pgptool.gui.ui.keyslist.ComparatorKeyByNameImpl;
 import org.pgptool.gui.ui.keyslist.KeysTableModel;
 import org.pgptool.gui.ui.keyslist.KeysTablePm;
 import org.pgptool.gui.ui.tools.MultipleFilesChooserDialog;
+import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
@@ -183,7 +184,7 @@ public class KeyImporterPm extends PresentationModelBase {
 
 			if (exceptions.size() > 0) {
 				String msg = buildSummaryMessage("error.keysLoadedStatistics", loadedKeys.size(), exceptions);
-				EntryPoint.showMessageBox(null, msg, Messages.get("term.attention"), JOptionPane.ERROR_MESSAGE);
+				UiUtils.messageBox(null, msg, Messages.get("term.attention"), JOptionPane.ERROR_MESSAGE);
 			}
 
 			if (loadedKeys.size() > 0) {
@@ -239,7 +240,7 @@ public class KeyImporterPm extends PresentationModelBase {
 
 				if (exceptions.size() > 0) {
 					String msg = buildSummaryMessage("error.keysImportStatistics", loadedCount, exceptions);
-					EntryPoint.showMessageBox(null, msg, Messages.get("term.attention"), JOptionPane.ERROR_MESSAGE);
+					UiUtils.messageBox(null, msg, Messages.get("term.attention"), JOptionPane.ERROR_MESSAGE);
 				}
 
 				host.handleImporterFinished();

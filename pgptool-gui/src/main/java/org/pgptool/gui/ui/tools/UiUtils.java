@@ -17,8 +17,10 @@
  *******************************************************************************/
 package org.pgptool.gui.ui.tools;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.util.Set;
@@ -26,12 +28,14 @@ import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.UIManager;
 import javax.swing.text.JTextComponent;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.log4j.Logger;
+import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
 
 import ru.skarpushin.swingpm.tools.edt.Edt;
@@ -74,9 +78,17 @@ public class UiUtils {
 	}
 
 	public static boolean confirm(String userPromptMessageCode, Object[] messageArgs, Window parent) {
-		int response = JOptionPane.showConfirmDialog(parent, Messages.get(userPromptMessageCode, messageArgs),
-				Messages.get("term.confirmation"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+		int response = JOptionPane.OK_OPTION;
 
+		String msg = Messages.get(userPromptMessageCode, messageArgs);
+		if (msg.length() > 70) {
+			JScrollPane scrollPane = prepareScrollableMessage(msg);
+			response = JOptionPane.showConfirmDialog(parent, scrollPane, Messages.get("term.confirmation"),
+					JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+		} else {
+			response = JOptionPane.showConfirmDialog(parent, msg, Messages.get("term.confirmation"),
+					JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+		}
 		return response == JOptionPane.OK_OPTION;
 	}
 
@@ -86,11 +98,6 @@ public class UiUtils {
 				Messages.get(windowTitle), JOptionPane.QUESTION_MESSAGE);
 
 		return ret == null ? null : ret.trim();
-	}
-
-	public static void showDuplicateNameValidationErrorMessage(Window parent) {
-		JOptionPane.showMessageDialog(parent, Messages.get("validation.entityWithSameNameExists"),
-				Messages.get("term.validationError"), JOptionPane.ERROR_MESSAGE);
 	}
 
 	public static int getFontRelativeSize(int size) {
@@ -173,6 +180,39 @@ public class UiUtils {
 		window.requestFocus();
 		window.setAlwaysOnTop(false);
 		window.repaint();
+	}
+
+	public static void messageBox(String messageText, String messageTitle, MessageSeverity messageSeverity) {
+		int messageType = JOptionPane.INFORMATION_MESSAGE;
+		if (messageSeverity == MessageSeverity.ERROR) {
+			messageType = JOptionPane.ERROR_MESSAGE;
+		} else if (messageSeverity == MessageSeverity.WARNING) {
+			messageType = JOptionPane.WARNING_MESSAGE;
+		} else if (messageSeverity == MessageSeverity.INFO) {
+			messageType = JOptionPane.INFORMATION_MESSAGE;
+		}
+		UiUtils.messageBox(null, messageText, messageTitle, messageType);
+	}
+
+	public static void messageBox(Component parent, String msg, String title, int messageType) {
+		if (msg.length() > 70) {
+			JScrollPane scrollPane = prepareScrollableMessage(msg);
+			JOptionPane.showMessageDialog(parent, scrollPane, title, messageType);
+		} else {
+			JOptionPane.showMessageDialog(parent, msg, title, messageType);
+		}
+	}
+
+	private static JScrollPane prepareScrollableMessage(String msg) {
+		JTextArea textArea = new JTextArea(msg);
+		textArea.setLineWrap(true);
+		textArea.setWrapStyleWord(true);
+		textArea.setEditable(false);
+		textArea.setMargin(new Insets(5, 5, 5, 5));
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setPreferredSize(new Dimension(700, 150));
+		scrollPane.getViewport().setView(textArea);
+		return scrollPane;
 	}
 
 }

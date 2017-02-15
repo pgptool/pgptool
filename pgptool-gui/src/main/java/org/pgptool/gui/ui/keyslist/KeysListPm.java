@@ -35,7 +35,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
-import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
@@ -240,7 +239,7 @@ public class KeysListPm extends PresentationModelBase {
 			String targetFile = buildPrivateKeyTargetChooser(key).askUserForFile();
 			if (targetFile != null) {
 				keyFilesOperations.exportPrivateKey(key, targetFile);
-				EntryPoint.showMessageBox(findRegisteredWindowIfAny(), text("keys.privateKey.exportWarning"),
+				UiUtils.messageBox(findRegisteredWindowIfAny(), text("keys.privateKey.exportWarning"),
 						text("term.attention"), JOptionPane.WARNING_MESSAGE);
 				browseForFolder(FilenameUtils.getFullPath(targetFile));
 			}

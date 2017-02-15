@@ -196,10 +196,9 @@ public class EntryPoint {
 		this.rootPm = rootPm;
 	}
 
-	public static void reportExceptionToUser(String errorMessageCode, Throwable cause) {
-		GenericException exc = new GenericException(errorMessageCode, cause);
+	public static void reportExceptionToUser(String errorMessageCode, Throwable cause, Object... messageArgs) {
+		GenericException exc = new GenericException(errorMessageCode, cause, messageArgs);
 		String msgs = ConsoleExceptionUtils.getAllMessages(exc);
-		// String msgs = ErrorUtils.getAllMessages(exc);
 		UiUtils.messageBox(null, msgs, Messages.get("term.error"), JOptionPane.ERROR_MESSAGE);
 	}
 

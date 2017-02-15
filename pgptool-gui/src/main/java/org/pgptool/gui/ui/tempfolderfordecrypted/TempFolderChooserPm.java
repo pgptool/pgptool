@@ -20,19 +20,19 @@ package org.pgptool.gui.ui.tempfolderfordecrypted;
 import static org.pgptool.gui.app.Messages.text;
 
 import java.awt.Component;
-import java.io.File;
 
-import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
-import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.ui.tools.browsefs.FolderChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.summerb.approaches.validation.FieldValidationException;
 
 import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
 
 /**
  * This simple presenter will provide user with ability to select other folder
@@ -47,41 +47,42 @@ public class TempFolderChooserPm extends PresentationModelBase {
 	@Autowired
 	private DecryptedTempFolder decryptedTempFolder;
 
+	private FolderChooserDialog folderChooserDialog;
+
 	public void present(Component parent) {
-		String newFolder = askuserForFolder(parent);
-		if (newFolder == null) {
-			return;
-		}
 		try {
-			decryptedTempFolder.setTempFolderBasePath(newFolder);
-			UiUtils.messageBox(parent, text("phrase.settingsChangedConfirmFolder", newFolder),
-					text("term.success"), JOptionPane.INFORMATION_MESSAGE);
+			String newFolder = getFolderChooserDialog().askUserForFolder(parent);
+			if (newFolder == null) {
+				return;
+			}
+			UiUtils.messageBox(parent, text("phrase.settingsChangedConfirmFolder", newFolder), text("term.success"),
+					JOptionPane.INFORMATION_MESSAGE);
 		} catch (Throwable t) {
 			log.error("Failed to save settigns for folder to use for temp decrypted files", t);
 			EntryPoint.reportExceptionToUser("error.failedToSetNewTempFolder", t);
 		}
 	}
 
-	private String askuserForFolder(Component parent) {
-		JFileChooser ofd = new JFileChooser();
-		ofd.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		ofd.setAcceptAllFileFilterUsed(true);
-		ofd.setMultiSelectionEnabled(false);
-		ofd.setDialogTitle(Messages.get("term.changeTempFolderForDecrypted"));
-		ofd.setApproveButtonText(Messages.get("action.choose"));
-		ofd.setCurrentDirectory(new File(decryptedTempFolder.getTempFolderBasePath()));
-		ofd.setSelectedFile(new File(decryptedTempFolder.getTempFolderBasePath()));
+	public FolderChooserDialog getFolderChooserDialog() {
+		if (folderChooserDialog == null) {
+			ValueAdapter<String> recentlyUsedFolder = new ValueAdapter<String>() {
+				@Override
+				public void setValue(String value) {
+					try {
+						decryptedTempFolder.setTempFolderBasePath(value);
+					} catch (FieldValidationException e) {
+						throw new RuntimeException("Failed to persist temp folder location", e);
+					}
+				}
 
-		int result = ofd.showOpenDialog(parent);
-		if (result != JFileChooser.APPROVE_OPTION) {
-			return null;
+				@Override
+				public String getValue() {
+					return decryptedTempFolder.getTempFolderBasePath();
+				}
+			};
+			folderChooserDialog = new FolderChooserDialog(text("term.changeTempFolderForDecrypted"),
+					recentlyUsedFolder);
 		}
-
-		File ret = ofd.getSelectedFile();
-		if (ret == null) {
-			return null;
-		}
-
-		return ret.getAbsolutePath();
+		return folderChooserDialog;
 	}
 }

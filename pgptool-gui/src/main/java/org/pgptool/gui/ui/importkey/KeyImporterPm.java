@@ -47,8 +47,8 @@ import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.keyslist.ComparatorKeyByNameImpl;
 import org.pgptool.gui.ui.keyslist.KeysTableModel;
 import org.pgptool.gui.ui.keyslist.KeysTablePm;
-import org.pgptool.gui.ui.tools.MultipleFilesChooserDialog;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.ui.tools.browsefs.MultipleFilesChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 

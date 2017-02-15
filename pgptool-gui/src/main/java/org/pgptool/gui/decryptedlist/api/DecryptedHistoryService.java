@@ -34,8 +34,8 @@ public interface DecryptedHistoryService {
 	void remove(String depcryptedFilePathname);
 
 	List<DecryptedFile> getDecryptedFiles();
-	
+
 	DecryptedFile findByDecryptedFile(String encryptionSourceFilename);
-	
+
 	DecryptedFile findByEncryptedFile(String encryptionTargetFilename);
 }

@@ -15,68 +15,73 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *******************************************************************************/
-package org.pgptool.gui.ui.tools;
+package org.pgptool.gui.ui.tools.browsefs;
 
 import java.awt.Component;
 import java.io.File;
 
 import javax.swing.JFileChooser;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
-import org.pgptool.gui.tools.PathUtils;
 import org.springframework.util.StringUtils;
 
-public class ExistingFileChooserDialog {
-	private static Logger log = Logger.getLogger(ExistingFileChooserDialog.class);
+public class MultipleFilesChooserDialog {
+	private static Logger log = Logger.getLogger(MultipleFilesChooserDialog.class);
 
 	private Component optionalParent;
 	private ConfigPairs configPairs;
 	private String configPairNameToRemember;
 
-	public ExistingFileChooserDialog(Component optionalParent, ConfigPairs configPairs,
+	public MultipleFilesChooserDialog(Component optionalParent, ConfigPairs configPairs,
 			String configPairNameToRemember) {
 		this.optionalParent = optionalParent;
 		this.configPairs = configPairs;
 		this.configPairNameToRemember = configPairNameToRemember;
 	}
 
-	public String askUserForFile() {
+	/**
+	 * Blocking call to browse for files
+	 * 
+	 * @return null if nothing was chosen, or array of files chosen otherwise
+	 */
+	public File[] askUserForMultipleFiles() {
 		JFileChooser ofd = buildFileChooserDialog();
 
 		int result = ofd.showOpenDialog(optionalParent);
 		if (result != JFileChooser.APPROVE_OPTION) {
-			return handleFileWasChosen(null);
+			handleFilesWereChosen(null);
+			return null;
 		}
-		File retFile = ofd.getSelectedFile();
-		if (retFile == null) {
-			return handleFileWasChosen(null);
+		File[] retFile = ofd.getSelectedFiles();
+		if (retFile == null || retFile.length == 0) {
+			handleFilesWereChosen(null);
+			return null;
 		}
 
-		String ret = retFile.getAbsolutePath();
-		ret = handleFileWasChosen(ret);
-		configPairs.put(configPairNameToRemember, PathUtils.extractBasePath(ret));
-		return ret;
+		handleFilesWereChosen(retFile);
+		configPairs.put(configPairNameToRemember,
+				FilenameUtils.getFullPathNoEndSeparator(retFile[0].getAbsolutePath()));
+		return retFile;
 	}
 
 	/**
 	 * Subclass can do post-processing if needed
 	 * 
-	 * @param filePathName
-	 *            user choice, might be null
-	 * @return value that will be returned to initial invoker
+	 * @param retFile
+	 *            might be null if no files were chosen
 	 */
-	protected String handleFileWasChosen(String filePathName) {
-		return filePathName;
+	protected void handleFilesWereChosen(File[] retFile) {
 	}
 
 	private JFileChooser buildFileChooserDialog() {
 		JFileChooser ofd = new JFileChooser();
 		ofd.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		ofd.setAcceptAllFileFilterUsed(true);
-		ofd.setMultiSelectionEnabled(false);
+		ofd.setMultiSelectionEnabled(true);
 		ofd.setDialogTitle(Messages.get("action.chooseExistingFile"));
 		ofd.setApproveButtonText(Messages.get("action.choose"));
 		suggestInitialDirectory(ofd);

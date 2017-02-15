@@ -24,6 +24,7 @@ import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -35,13 +36,16 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
+import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
-import org.pgptool.gui.ui.tools.SaveFileChooserDialog;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.ui.tools.browsefs.FolderChooserDialog;
+import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
+import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 
@@ -89,6 +93,8 @@ public class KeysListPm extends PresentationModelBase {
 		tableModelProp.getModelPropertyAccessor().addPropertyChangeListener(onSelectionChangedHandler);
 		onSelectionChangedHandler.propertyChange(null);
 
+		actionExportAllPublicKeys.setEnabled(hasData.getValue());
+
 		eventBus.register(this);
 	}
 
@@ -119,6 +125,7 @@ public class KeysListPm extends PresentationModelBase {
 		tableModelProp.getList().clear();
 		tableModelProp.getList().addAll(newKeysList);
 		hasData.setValueByOwner(!newKeysList.isEmpty());
+		actionExportAllPublicKeys.setEnabled(hasData.getValue());
 
 		// NOTE: Selection is not nicely maintained. Each update will clear the
 		// current selection if any
@@ -204,12 +211,17 @@ public class KeysListPm extends PresentationModelBase {
 			@Override
 			protected void suggestTarget(JFileChooser ofd) {
 				super.suggestTarget(ofd);
-				String userName = key.getKeyInfo().buildUserNameOnly();
-				File suggestedFileName = new File(
-						ofd.getCurrentDirectory().getAbsolutePath() + File.separator + userName + ".asc");
+				File suggestedFileName = suggestFileNameForKey(key, ofd.getCurrentDirectory().getAbsolutePath());
 				ofd.setSelectedFile(suggestedFileName);
 			}
+
 		};
+	}
+
+	private File suggestFileNameForKey(Key<KeyData> key, String basePathNoSlash) {
+		String userName = key.getKeyInfo().buildUserNameOnly();
+		File suggestedFileName = new File(basePathNoSlash + File.separator + userName + ".asc");
+		return suggestedFileName;
 	}
 
 	@SuppressWarnings("serial")
@@ -243,6 +255,54 @@ public class KeysListPm extends PresentationModelBase {
 						text("term.attention"), JOptionPane.WARNING_MESSAGE);
 				browseForFolder(FilenameUtils.getFullPath(targetFile));
 			}
+		}
+	};
+
+	@SuppressWarnings("serial")
+	public Action actionExportAllPublicKeys = new LocalizedAction("keys.exportAllPublic") {
+		private FolderChooserDialog folderChooserDialog;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			ArrayList<Key<KeyData>> keys = new ArrayList<>(tableModelProp.getList());
+			Preconditions.checkState(keys.size() > 0,
+					"Export all public keys action was triggered while there is no keys to export");
+
+			String newFolder = getFolderChooserDialog().askUserForFolder(findRegisteredWindowIfAny());
+			if (newFolder == null) {
+				return;
+			}
+
+			int keysExported = 0;
+			int keysTotal = keys.size();
+			try {
+				File folder = new File(newFolder);
+				Preconditions.checkArgument(folder.exists() || folder.mkdirs(),
+						"Failed to verify target folder existance " + newFolder);
+				for (int i = 0; i < keys.size(); i++) {
+					Key<KeyData> key = keys.get(i);
+					File targetFile = suggestFileNameForKey(key, newFolder);
+					keyFilesOperations.exportPublicKey(key, targetFile.getAbsolutePath());
+					keysExported++;
+				}
+			} catch (Throwable t) {
+				log.error("Failed to export keys", t);
+				EntryPoint.reportExceptionToUser("error.failedToExportKeys", t, keysExported, keysTotal);
+			} finally {
+				if (keysExported > 0) {
+					browseForFolder(newFolder);
+				}
+			}
+		}
+
+		public FolderChooserDialog getFolderChooserDialog() {
+			if (folderChooserDialog == null) {
+				ValueAdapterPersistentPropertyImpl<String> exportedKeysLocation = new ValueAdapterPersistentPropertyImpl<String>(
+						configPairs, "KeysListPm.exportedKeysLocation", null);
+				folderChooserDialog = new FolderChooserDialog(text("keys.chooseFolderForKeysExport"),
+						exportedKeysLocation);
+			}
+			return folderChooserDialog;
 		}
 	};
 

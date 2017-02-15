@@ -21,7 +21,8 @@ import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 
 public interface EncryptionParamsStorage {
 
-	void persistDialogParametersForCurrentInputs(EncryptionDialogParameters dialogParameters, boolean updateFolderSettings);
+	void persistDialogParametersForCurrentInputs(EncryptionDialogParameters dialogParameters,
+			boolean updateFolderSettings);
 
 	EncryptionDialogParameters findParamsBasedOnSourceFile(String sourceFile, boolean fallBackToFolderSettingsIfAny);
 

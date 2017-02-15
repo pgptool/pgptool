@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *******************************************************************************/
-package org.pgptool.gui.ui.tools;
+package org.pgptool.gui.ui.tools.browsefs;
 
 import java.awt.Window;
 import java.io.File;
@@ -29,6 +29,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
+import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.util.StringUtils;
 
 import com.google.common.base.Preconditions;

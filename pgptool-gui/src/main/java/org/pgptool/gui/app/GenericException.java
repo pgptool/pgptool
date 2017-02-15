@@ -32,7 +32,7 @@ public class GenericException extends Exception implements HasMessageCode, HasMe
 		super(messageCode, cause);
 		this.messageArgs = messageArgs;
 	}
-	
+
 	public GenericException(String messageCode, Object... messageArgs) {
 		super(messageCode);
 		this.messageArgs = messageArgs;

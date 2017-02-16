@@ -44,6 +44,6 @@ public interface KeyRingService<TKeyData extends KeyData> {
 
 	List<Key<TKeyData>> findMatchingKeys(Set<String> keysIds);
 
-	boolean isKeyAlreadyAdded(Key<TKeyData> key);
+	Key<TKeyData> findKeyById(String keyId);
 
 }

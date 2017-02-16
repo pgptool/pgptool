@@ -36,6 +36,7 @@ import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 
 import com.google.common.base.Preconditions;
@@ -54,6 +55,10 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 		Security.addProvider(new BouncyCastleProvider());
 	}
 
+	/**
+	 * This method is created to ensure static constructor of this class was
+	 * called
+	 */
 	public static synchronized void touch() {
 
 	}
@@ -62,7 +67,7 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 	}
 
 	@Override
-	public List<Key<KeyDataPgp>> readKeys() {
+	public synchronized List<Key<KeyDataPgp>> readKeys() {
 		ensureRead();
 		// NOTE: Return copy of the list!
 		return new ArrayList<>(pgpKeysRing);
@@ -147,25 +152,31 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 		Preconditions.checkArgument(key.getKeyData() != null, "key data required");
 		Preconditions.checkArgument(key.getKeyData() instanceof KeyDataPgp, "Wrong key data type");
 
-		ensureRead();
-		if (isKeyAlreadyAdded(key)) {
-			throw new RuntimeException("This key was already added");
+		Key<KeyDataPgp> existingKey = findKeyById(key.getKeyInfo().getKeyId());
+		if (existingKey != null) {
+			if (!existingKey.getKeyData().isCanBeUsedForDecryption() && key.getKeyData().isCanBeUsedForDecryption()) {
+				removeKey(existingKey);
+			} else {
+				throw new RuntimeException("This key was already added");
+			}
 		}
+
 		pgpKeysRing.add(key);
 		configRepository.persist(pgpKeysRing);
 		eventBus.post(EntityChangedEvent.added(key));
 	}
 
 	@Override
-	public boolean isKeyAlreadyAdded(Key<KeyDataPgp> key) {
-		Preconditions.checkArgument(key != null && key.getKeyInfo() != null, "KeyInfo must be provided");
+	public synchronized Key<KeyDataPgp> findKeyById(String keyId) {
+		Preconditions.checkArgument(StringUtils.hasText(keyId), "KeyId must be provided");
+		ensureRead();
 
 		for (Key<KeyDataPgp> cur : pgpKeysRing) {
-			if (cur.getKeyInfo().getKeyId().equals(key.getKeyInfo().getKeyId())) {
-				return true;
+			if (cur.getKeyInfo().getKeyId().equals(keyId)) {
+				return cur;
 			}
 		}
-		return false;
+		return null;
 	}
 
 	@Override

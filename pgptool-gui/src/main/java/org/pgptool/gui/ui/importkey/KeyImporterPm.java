@@ -142,7 +142,16 @@ public class KeyImporterPm extends PresentationModelBase {
 						try {
 							Key<KeyData> readKey = keyFilesOperations.readKeyFromFile(f.getAbsolutePath());
 							Preconditions.checkState(readKey != null, "Key wasn't parsed");
-							return !keyRingService.isKeyAlreadyAdded(readKey);
+
+							Key<KeyData> existingKey = keyRingService.findKeyById(readKey.getKeyInfo().getKeyId());
+							if (existingKey == null) {
+								return true;
+							}
+							if (!existingKey.getKeyData().isCanBeUsedForDecryption()
+									&& readKey.getKeyData().isCanBeUsedForDecryption()) {
+								return true;
+							}
+							return false;
 						} catch (Throwable t) {
 							// in this case it's not an issue. So it's debug
 							// level

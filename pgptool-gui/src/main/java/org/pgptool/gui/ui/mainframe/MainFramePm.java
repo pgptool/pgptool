@@ -171,10 +171,15 @@ public class MainFramePm extends PresentationModelBase {
 				return;
 			}
 
-			new File(row.getDecryptedFile()).delete();
+			File file = new File(row.getDecryptedFile());
 			// NOTE: We're assuming here that historyService will detect file
 			// was deleted and will fire an event saying that file is no longer
 			// that so that corresponding row will disappear from table
+			if (!file.exists() || file.delete()) {
+				return;
+			}
+
+			UiUtils.confirm("error.cannotDeletebecauseFileIsLocked", null, findRegisteredWindowIfAny());
 		}
 	};
 

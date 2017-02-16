@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <Product Id="*" Name="PGP Tool" Language="1033" Version="1.0" Manufacturer="Sergey Karpushin" UpgradeCode="2036E9EA-8A22-4B5B-AE6B-DDC41E3CE0F5">
+    <Product Id="*" Name="PGP Tool" Language="1033" Version="0.3.1.0" Manufacturer="Sergey Karpushin" UpgradeCode="2036E9EA-8A22-4B5B-AE6B-DDC41E3CE0F5">
         <Package Description="PGP Tool" Comments="Wix Installer" InstallerVersion="200" Compressed="yes" />
         <Media Id="1" Cabinet="simple.cab" EmbedCab="yes" />
         <Directory Id="TARGETDIR" Name="SourceDir">
@@ -10,7 +10,7 @@
                         <File Id="PGPTOOL.EXE" Name="pgptool.exe" Source=".\pgptool.exe" KeyPath="yes">
                             <Shortcut Id="ExeShortcut" Directory="ProgramMenuDir" Name="PGP Tool" Advertise="yes" Icon="StartMenuIcon.exe" IconIndex="0" />
                         </File>
-                        <File Id="PGPTOOLGUI_0.2.3.0.JAR" Name="pgptoolgui-0.2.3.0.jar" Source=".\pgptoolgui-0.2.3.0.jar" />
+                        <File Id="PGPTOOLGUI_0.3.1.0.JAR" Name="pgptoolgui-0.3.1.0.jar" Source=".\pgptoolgui-0.3.1.0.jar" />
                         <RegistryValue Root="HKCR" Key="*\shell\Encrypt to PGP\command" Value="&quot;[PGP_TOOL]pgptool.exe&quot; &quot;%1&quot;" Type="string" />
                         <ProgId Id="PGPTool.PGPFile" Description="PGP Tool File">
                             <Extension Id="pgp" ContentType="application/xyz">
@@ -40,5 +40,12 @@
         <UIRef Id="WixUI_Minimal" />
         <WixVariable Id="WixUILicenseRtf" Value="gpl-3.0.rtf" />
         <Icon Id="StartMenuIcon.exe" SourceFile=".\pgptool.exe" />
+        <Property Id="PREVIOUSVERSIONSINSTALLED" Secure="yes" />
+        <Upgrade Id="2036E9EA-8A22-4B5B-AE6B-DDC41E3CE0F5">
+            <UpgradeVersion Minimum="0.0.0.0" Maximum="99.0.0.0" Property="PREVIOUSVERSIONSINSTALLED" IncludeMinimum="yes" IncludeMaximum="no" />
+        </Upgrade>
+        <InstallExecuteSequence>
+            <RemoveExistingProducts Before="InstallInitialize" />
+        </InstallExecuteSequence>
     </Product>
 </Wix>

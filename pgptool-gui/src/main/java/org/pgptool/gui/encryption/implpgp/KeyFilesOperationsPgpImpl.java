@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.sql.Date;
 import java.util.Iterator;
+import java.util.Stack;
 
 import javax.xml.bind.ValidationException;
 
@@ -165,18 +166,20 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 		Preconditions.checkArgument(key != null && key.getKeyData() != null && key.getKeyInfo() != null,
 				"Key must be providedand fully described");
 		Preconditions.checkArgument(StringUtils.hasText(targetFilePathname), "targetFilePathname must be provided");
-		OutputStream outputStream = null;
+		Stack<OutputStream> os = new Stack<>();
 		try {
-			outputStream = new FileOutputStream(targetFilePathname);
+			os.push(new FileOutputStream(targetFilePathname));
 			if ("asc".equalsIgnoreCase(FilenameUtils.getExtension(targetFilePathname))) {
-				outputStream = new ArmoredOutputStream(outputStream);
+				os.push(new ArmoredOutputStream(os.peek()));
 			}
-			key.getKeyData().getPublicKeyRing().encode(outputStream);
+			key.getKeyData().getPublicKeyRing().encode(os.peek());
 		} catch (Throwable t) {
 			throw new RuntimeException(
 					"Failed to export private key " + key.getKeyInfo().getUser() + " to " + targetFilePathname, t);
 		} finally {
-			IoStreamUtils.safeClose(outputStream);
+			while (!os.isEmpty()) {
+				IoStreamUtils.safeClose(os.pop());
+			}
 		}
 	}
 
@@ -186,18 +189,20 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 				"Key must be providedand fully described");
 		Preconditions.checkArgument(key.getKeyData().getSecretKeyRing() != null, "KeyPair key wasn't provided");
 		Preconditions.checkArgument(StringUtils.hasText(targetFilePathname), "targetFilePathname must be provided");
-		OutputStream outputStream = null;
+		Stack<OutputStream> os = new Stack<>();
 		try {
-			outputStream = new FileOutputStream(targetFilePathname);
+			os.push(new FileOutputStream(targetFilePathname));
 			if ("asc".equalsIgnoreCase(FilenameUtils.getExtension(targetFilePathname))) {
-				outputStream = new ArmoredOutputStream(outputStream);
+				os.push(new ArmoredOutputStream(os.peek()));
 			}
-			key.getKeyData().getSecretKeyRing().encode(outputStream);
+			key.getKeyData().getSecretKeyRing().encode(os.peek());
 		} catch (Throwable t) {
 			throw new RuntimeException(
 					"Failed to export private key " + key.getKeyInfo().getUser() + " to " + targetFilePathname, t);
 		} finally {
-			IoStreamUtils.safeClose(outputStream);
+			while (!os.isEmpty()) {
+				IoStreamUtils.safeClose(os.pop());
+			}
 		}
 	}
 

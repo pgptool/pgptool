@@ -25,7 +25,9 @@ import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.ArrayList;
@@ -38,6 +40,8 @@ import org.apache.log4j.Logger;
 import org.summerb.utils.threads.RecurringBackgroundTask;
 
 public class MultipleFilesWatcher {
+	protected static final long TIME_TO_ENSURE_FILE_WAS_DELETED = 1000;
+
 	private static Logger log = Logger.getLogger(MultipleFilesWatcher.class);
 
 	private FilesWatcherHandler dirWatcherHandler;
@@ -195,6 +199,14 @@ public class MultipleFilesWatcher {
 
 						// print out event
 						log.debug("Watcher event: " + event.kind().name() + ", file " + child);
+						if (StandardWatchEventKinds.ENTRY_DELETE.equals(event.kind())) {
+							// In case it's a REMOVE event wait a second
+							// and see if file will appear again. If so change
+							// event type to UPDATE -- that is supposed to fix
+							// defect #75
+							log.debug("Double checking if file was really deleted and not re-created: " + child);
+							event = waitToCompensateFileRecreation(event, child.toString());
+						}
 						dirWatcherHandler.handleFileChanged(event.kind(), child.toString());
 					}
 
@@ -209,6 +221,44 @@ public class MultipleFilesWatcher {
 					}
 				}
 				log.debug("FileWatcher thread stopped " + watcherName);
+			}
+
+			@SuppressWarnings("unchecked")
+			private WatchEvent<?> waitToCompensateFileRecreation(WatchEvent<?> event, String filePathName) {
+				File file = new File(filePathName);
+				long timeoutAt = System.currentTimeMillis() + TIME_TO_ENSURE_FILE_WAS_DELETED;
+				while (!file.exists() && System.currentTimeMillis() < timeoutAt) {
+					try {
+						Thread.sleep(50);
+					} catch (InterruptedException ie) {
+						return event;
+					}
+				}
+				if (file.exists()) {
+					log.debug("Ok, it happens to be a MODIFY operation instead of delete: " + file);
+					return overrideEventKind((WatchEvent<Path>) event, StandardWatchEventKinds.ENTRY_MODIFY);
+				}
+				return event;
+			}
+
+			private <T> WatchEvent<T> overrideEventKind(WatchEvent<T> event, Kind<T> newKind) {
+				WatchEvent<T> retx = new WatchEvent<T>() {
+					@Override
+					public java.nio.file.WatchEvent.Kind<T> kind() {
+						return newKind;
+					}
+
+					@Override
+					public int count() {
+						return event.count();
+					}
+
+					@Override
+					public T context() {
+						return event.context();
+					}
+				};
+				return retx;
 			}
 
 			private void idleIfNoKeysRegistered() throws InterruptedException {

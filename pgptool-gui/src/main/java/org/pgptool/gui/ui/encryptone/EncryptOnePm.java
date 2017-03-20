@@ -38,6 +38,7 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.MessageSeverity;
@@ -48,7 +49,6 @@ import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
-import org.pgptool.gui.tools.PathUtils;
 import org.pgptool.gui.ui.decryptone.DecryptOnePm;
 import org.pgptool.gui.ui.keyslist.ComparatorKeyByNameImpl;
 import org.pgptool.gui.ui.tools.ListChangeListenerAnyEventImpl;
@@ -159,10 +159,10 @@ public class EncryptOnePm extends PresentationModelBase {
 				protected void suggestTarget(JFileChooser ofd) {
 					String sourceFileStr = sourceFile.getValue();
 					if (StringUtils.hasText(targetFile.getValue())) {
-						ofd.setCurrentDirectory(new File(PathUtils.extractBasePath(targetFile.getValue())));
+						ofd.setCurrentDirectory(new File(FilenameUtils.getFullPathNoEndSeparator(targetFile.getValue())));
 						ofd.setSelectedFile(new File(targetFile.getValue()));
 					} else if (StringUtils.hasText(sourceFileStr) && new File(sourceFileStr).exists()) {
-						String basePath = PathUtils.extractBasePath(sourceFileStr);
+						String basePath = FilenameUtils.getFullPathNoEndSeparator(sourceFileStr);
 						ofd.setCurrentDirectory(new File(basePath));
 						ofd.setSelectedFile(new File(madeUpTargetFileName(sourceFileStr, basePath)));
 					} else {
@@ -294,7 +294,7 @@ public class EncryptOnePm extends PresentationModelBase {
 					// NOTE: Assuming that params fully valid and target file is
 					// provided
 					targetFile.setValueByOwner(madeUpTargetFileName(sourceFile.getValue(),
-							PathUtils.extractBasePath(params.getTargetFile())));
+							FilenameUtils.getFullPathNoEndSeparator(params.getTargetFile())));
 				}
 			} else {
 				targetFile.setValueByOwner("");
@@ -405,7 +405,7 @@ public class EncryptOnePm extends PresentationModelBase {
 		private String getEffectiveTargetFileName() {
 			if (!StringUtils.hasText(targetFile.getValue()) || isUseSameFolder.getValue()) {
 				isUseSameFolder.setValueByOwner(true);
-				return madeUpTargetFileName(sourceFile.getValue(), PathUtils.extractBasePath(sourceFile.getValue()));
+				return madeUpTargetFileName(sourceFile.getValue(), FilenameUtils.getFullPathNoEndSeparator(sourceFile.getValue()));
 			}
 
 			String targetFileName = targetFile.getValue();

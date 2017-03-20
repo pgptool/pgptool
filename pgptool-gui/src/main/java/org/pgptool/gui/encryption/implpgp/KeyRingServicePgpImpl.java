@@ -34,6 +34,7 @@ import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
+import org.pgptool.gui.encryption.api.dto.MatchedKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -215,10 +216,10 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 	 * keyIds passed here MIGHT NOT match key id from keyInfo
 	 */
 	@Override
-	public List<Key<KeyDataPgp>> findMatchingDecryptionKeys(Set<String> keysIds) {
+	public List<MatchedKey<KeyDataPgp>> findMatchingDecryptionKeys(Set<String> keysIds) {
 		Preconditions.checkArgument(!CollectionUtils.isEmpty(keysIds));
 
-		List<Key<KeyDataPgp>> ret = new ArrayList<>(keysIds.size());
+		List<MatchedKey<KeyDataPgp>> ret = new ArrayList<>(keysIds.size());
 		List<Key<KeyDataPgp>> allKeys = readKeys();
 		List<Key<KeyDataPgp>> decryptionKeys = allKeys.stream().filter(x -> x.getKeyData().isCanBeUsedForDecryption())
 				.collect(Collectors.toList());
@@ -230,7 +231,7 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 				String user = existingKey.getKeyInfo().getUser();
 				if (existingKey.getKeyData().isHasAlternativeId(neededKeyId)) {
 					log.debug("Found matching key: " + user);
-					ret.add(existingKey);
+					ret.add(new MatchedKey<>(neededKeyId, existingKey));
 					break;
 				}
 			}

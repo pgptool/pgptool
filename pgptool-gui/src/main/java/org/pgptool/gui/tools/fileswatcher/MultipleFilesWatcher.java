@@ -40,7 +40,7 @@ import org.apache.log4j.Logger;
 import org.summerb.utils.threads.RecurringBackgroundTask;
 
 public class MultipleFilesWatcher {
-	protected static final long TIME_TO_ENSURE_FILE_WAS_DELETED = 1000;
+	protected static final long TIME_TO_ENSURE_FILE_WAS_DELETED = 400;
 
 	private static Logger log = Logger.getLogger(MultipleFilesWatcher.class);
 
@@ -227,6 +227,8 @@ public class MultipleFilesWatcher {
 			private WatchEvent<?> waitToCompensateFileRecreation(WatchEvent<?> event, String filePathName) {
 				File file = new File(filePathName);
 				long timeoutAt = System.currentTimeMillis() + TIME_TO_ENSURE_FILE_WAS_DELETED;
+				// TODO: Problem with this wait is that file doesn't disappear
+				// immediately after we delete it from list of decrypted files
 				while (!file.exists() && System.currentTimeMillis() < timeoutAt) {
 					try {
 						Thread.sleep(50);
@@ -235,6 +237,8 @@ public class MultipleFilesWatcher {
 					}
 				}
 				if (file.exists()) {
+					// TODO: And what if file was just over-written by another
+					// decryption operation?
 					log.debug("Ok, it happens to be a MODIFY operation instead of delete: " + file);
 					return overrideEventKind((WatchEvent<Path>) event, StandardWatchEventKinds.ENTRY_MODIFY);
 				}

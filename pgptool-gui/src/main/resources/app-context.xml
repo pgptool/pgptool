@@ -85,4 +85,8 @@
 	<bean class="org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleView" lazy-init="true" scope="singleton" />
 	<bean class="org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultiplePm" scope="prototype" />
 
+	<bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPm" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordManyKeysView" scope="singleton" />
+	<bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordOneKeyView" scope="singleton" />
+
 </beans>

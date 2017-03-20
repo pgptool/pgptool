@@ -30,18 +30,14 @@ import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
 import org.pgptool.gui.app.Messages;
-import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
 
@@ -62,9 +58,6 @@ public class DecryptOneView extends DialogViewBaseCustom<DecryptOnePm> {
 	private JRadioButton chkUseBrowseFolder;
 	private JTextField edTargetFile;
 	private JButton btnBrowseTarget;
-
-	private JComboBox<Key<KeyData>> decryptionKey;
-	private JPasswordField edPassword;
 
 	private JCheckBox chkDeleteSourceAfter;
 	private JCheckBox chkOpenTargetFolderAfter;
@@ -88,7 +81,7 @@ public class DecryptOneView extends DialogViewBaseCustom<DecryptOnePm> {
 	}
 
 	private Component buildControllsPanel() {
-		SgLayout sgl = new SgLayout(2, 11, spacing(1), 2);
+		SgLayout sgl = new SgLayout(2, 8, spacing(1), 2);
 		sgl.setColSize(0, 1, SgLayout.SIZE_TYPE_ASKCOMPONENT);
 		sgl.setColSize(1, spacing(40), SgLayout.SIZE_TYPE_CONSTANT);
 
@@ -126,20 +119,6 @@ public class DecryptOneView extends DialogViewBaseCustom<DecryptOnePm> {
 		pnlTargetFile.add(edTargetFile = new JTextField(), BorderLayout.CENTER);
 		pnlTargetFile.add(btnBrowseTarget = new JButton(), BorderLayout.EAST);
 		ret.add(pnlTargetFile, sgl.cs(1, row));
-
-		// spacing
-		row++;
-		ret.add(buildEmptyLine(), sgl.cs(0, row, 2, 1));
-
-		// recipients
-		row++;
-		ret.add(new JLabel(text("term.decryptionKey")), sgl.cs(0, row));
-		ret.add(decryptionKey = new JComboBox<>(), sgl.cs(1, row));
-		row++;
-		JPanel panelPassword = new JPanel(new BorderLayout(spacing(1), 0));
-		panelPassword.add(new JLabel(text("term.password")), BorderLayout.WEST);
-		panelPassword.add(edPassword = new JPasswordField(), BorderLayout.CENTER);
-		ret.add(panelPassword, sgl.cs(1, row));
 
 		// spacing
 		row++;
@@ -187,9 +166,6 @@ public class DecryptOneView extends DialogViewBaseCustom<DecryptOnePm> {
 		bindingContext.registerPropertyValuePropagation(pm.getTargetFileEnabled(), edTargetFile, "enabled");
 		bindingContext.setupBinding(pm.actionBrowseTarget, btnBrowseTarget);
 
-		bindingContext.setupBinding(pm.getSelectedKey(), decryptionKey);
-		bindingContext.setupBinding(pm.getPassword(), edPassword);
-
 		bindingContext.setupBinding(pm.getIsDeleteSourceAfter(), chkDeleteSourceAfter);
 		bindingContext.setupBinding(pm.getIsOpenTargetFolderAfter(), chkOpenTargetFolderAfter);
 		bindingContext.setupBinding(pm.getIsOpenAssociatedApplication(), chkOpenAssociatedApplication);
@@ -202,7 +178,6 @@ public class DecryptOneView extends DialogViewBaseCustom<DecryptOnePm> {
 	protected void handleDialogShown() {
 		super.handleDialogShown();
 		dialog.getRootPane().setDefaultButton(btnPerformOperation);
-		edPassword.requestFocusInWindow();
 	}
 
 	@Override

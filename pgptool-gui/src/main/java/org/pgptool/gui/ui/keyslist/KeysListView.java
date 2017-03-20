@@ -72,7 +72,7 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 		bindingContext.setupBinding(pm.getActionImport(), miImport);
 		bindingContext.setupBinding(pm.getActionCreate(), miCreate);
 		bindingContext.setupBinding(pm.actionExportAllPublicKeys, miExportPublicKeys);
-		
+
 		bindingContext.setupBinding(pm.getActionClose(), miClose);
 	}
 

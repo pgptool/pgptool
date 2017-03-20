@@ -69,6 +69,8 @@ import org.pgptool.gui.bkgoperation.ProgressHandler;
 import org.pgptool.gui.bkgoperation.UserReqeustedCancellationException;
 import org.pgptool.gui.encryption.api.EncryptionService;
 import org.pgptool.gui.encryption.api.dto.Key;
+import org.pgptool.gui.tools.IoStreamUtils;
+import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.springframework.util.StringUtils;
 import org.summerb.approaches.security.api.exceptions.InvalidPasswordException;
 
@@ -231,9 +233,12 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 	}
 
 	@Override
-	public void decrypt(String sourceFile, String targetFile, Key<KeyDataPgp> decryptionKey, String passphrase)
+	public void decrypt(String sourceFile, String targetFile, PasswordDeterminedForKey<KeyDataPgp> keyAndPassword)
 			throws InvalidPasswordException {
 		log.debug("Decrytping " + sourceFile);
+
+		Key<KeyDataPgp> decryptionKey = keyAndPassword.getMatchedKey();
+		String passphrase = keyAndPassword.getPassword();
 
 		Preconditions.checkArgument(StringUtils.hasText(sourceFile) && new File(sourceFile).exists(),
 				"Source file name must be correct");
@@ -241,19 +246,21 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 		Preconditions.checkArgument(decryptionKey != null, "decryption key must be provided");
 		Preconditions.checkArgument(StringUtils.hasText(passphrase), "Passphrase must be provided");
 
+		InputStream in = null;
 		try {
-			PGPSecretKey secretKey = getSecretKey(sourceFile, decryptionKey);
+			PGPSecretKey secretKey = decryptionKey.getKeyData().findSecretKeyById(keyAndPassword.getDecryptionKeyId());
 			PGPPrivateKey privateKey = getPrivateKey(passphrase, secretKey);
 
-			InputStream in = new BufferedInputStream(new FileInputStream(sourceFile));
+			in = new BufferedInputStream(new FileInputStream(sourceFile));
 			PGPPublicKeyEncryptedData publicKeyEncryptedData = getPublicKeyEncryptedDataByKeyId(in, secretKey);
 			decryptFile(publicKeyEncryptedData, privateKey, targetFile);
-			in.close();
 		} catch (Throwable t) {
 			Throwables.propagateIfInstanceOf(t, InvalidPasswordException.class);
 
 			log.error("Decryption failed", t);
 			throw new RuntimeException("Decryption failed", t);
+		} finally {
+			IoStreamUtils.safeClose(in);
 		}
 	}
 
@@ -364,19 +371,75 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 		}
 	}
 
-	private PGPSecretKey getSecretKey(String sourceFile, Key<KeyDataPgp> decryptionKey) {
+	@Override
+	public String getNameOfFileEncrypted(String encryptedFile, PasswordDeterminedForKey<KeyDataPgp> keyAndPassword)
+			throws InvalidPasswordException {
+		log.debug("Pre-Decrytping to get initial file name from " + encryptedFile);
+
+		Key<KeyDataPgp> decryptionKey = keyAndPassword.getMatchedKey();
+		String passphrase = keyAndPassword.getPassword();
+
+		Preconditions.checkArgument(StringUtils.hasText(encryptedFile) && new File(encryptedFile).exists(),
+				"Source file name must be correct");
+		Preconditions.checkArgument(decryptionKey != null, "decryption key must be provided");
+		Preconditions.checkArgument(StringUtils.hasText(passphrase), "Passphrase must be provided");
+
+		InputStream in = null;
 		try {
-			Set<String> possibleDecryptionKeys = findKeyIdsForDecryption(sourceFile);
-			for (String requestedDecryptionKeyId : possibleDecryptionKeys) {
-				PGPSecretKey secretKey = decryptionKey.getKeyData().findSecretKeyById(requestedDecryptionKeyId);
-				if (secretKey != null) {
-					return secretKey;
+			PGPSecretKey secretKey = decryptionKey.getKeyData().findSecretKeyById(keyAndPassword.getDecryptionKeyId());
+			PGPPrivateKey privateKey = getPrivateKey(passphrase, secretKey);
+
+			in = new BufferedInputStream(new FileInputStream(encryptedFile));
+			PGPPublicKeyEncryptedData publicKeyEncryptedData = getPublicKeyEncryptedDataByKeyId(in, secretKey);
+			return getInitialFileName(publicKeyEncryptedData, privateKey);
+		} catch (Throwable t) {
+			Throwables.propagateIfInstanceOf(t, InvalidPasswordException.class);
+
+			log.error("Decryption failed", t);
+			throw new RuntimeException("Decryption failed", t);
+		} finally {
+			IoStreamUtils.safeClose(in);
+		}
+	}
+
+	private String getInitialFileName(PGPPublicKeyEncryptedData pbe, PGPPrivateKey privateKey) {
+		InputStream clear = null;
+		try {
+			clear = pbe.getDataStream(new BcPublicKeyDataDecryptorFactory(privateKey));
+
+			BcPGPObjectFactory plainFact = new BcPGPObjectFactory(clear);
+			Object message = plainFact.nextObject();
+			if (message instanceof PGPMarker) {
+				message = plainFact.nextObject();
+			}
+
+			BcPGPObjectFactory pgpFactory = null;
+			if (message instanceof PGPCompressedData) {
+				PGPCompressedData cData = (PGPCompressedData) message;
+				pgpFactory = new BcPGPObjectFactory(cData.getDataStream());
+				message = pgpFactory.nextObject();
+			}
+
+			int watchDog = 0;
+			while (message != null) {
+				Preconditions.checkState(watchDog++ < 100, "Inifinite loop watch dog just hit");
+				if (message instanceof PGPLiteralData) {
+					PGPLiteralData ld = (PGPLiteralData) message;
+					return ld.getFileName();
+				} else if (message instanceof PGPOnePassSignatureList) {
+					message = pgpFactory.nextObject();
+				} else if (message instanceof PGPSignatureList) {
+					message = pgpFactory.nextObject();
+				} else {
+					throw new PGPException(
+							"Don't know how to decrypt the input file. Encountered unexpected block: " + message);
 				}
 			}
-			throw new IllegalArgumentException(
-					"The key that was selected is actually not suitable for decryption of given source file");
-		} catch (Throwable t) {
-			throw new RuntimeException("Cannot resolve secret key for decryption", t);
+			throw new IllegalStateException("Unknown file format, cannot determine initial file name");
+		} catch (Throwable e) {
+			throw new RuntimeException("Failed to get initial file name", e);
+		} finally {
+			IoStreamUtils.safeClose(clear);
 		}
 	}
 

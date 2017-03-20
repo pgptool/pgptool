@@ -22,11 +22,11 @@ import java.io.File;
 
 import javax.swing.JFileChooser;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
-import org.pgptool.gui.tools.PathUtils;
 import org.springframework.util.StringUtils;
 
 public class ExistingFileChooserDialog {
@@ -56,8 +56,8 @@ public class ExistingFileChooserDialog {
 		}
 
 		String ret = retFile.getAbsolutePath();
-		ret = handleFileWasChosen(ret);
-		configPairs.put(configPairNameToRemember, PathUtils.extractBasePath(ret));
+		ret = handleFileWasChosen(ret); 
+		configPairs.put(configPairNameToRemember, FilenameUtils.getFullPathNoEndSeparator(ret));
 		return ret;
 	}
 

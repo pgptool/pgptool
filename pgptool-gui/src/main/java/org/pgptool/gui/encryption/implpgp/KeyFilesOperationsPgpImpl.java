@@ -33,18 +33,26 @@ import org.apache.log4j.Logger;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
+import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
+import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
+import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyInfo;
 import org.pgptool.gui.encryption.api.dto.KeyTypeEnum;
 import org.pgptool.gui.tools.IoStreamUtils;
 import org.springframework.util.StringUtils;
+import org.summerb.approaches.security.api.exceptions.InvalidPasswordException;
+import org.summerb.approaches.validation.FieldValidationException;
+import org.summerb.approaches.validation.ValidationError;
 
 import com.google.common.base.Preconditions;
 
@@ -203,6 +211,34 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 			while (!os.isEmpty()) {
 				IoStreamUtils.safeClose(os.pop());
 			}
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	@Override
+	public void validateDecryptionKeyPassword(String requestedKeyId, Key<KeyDataPgp> key, String password)
+			throws FieldValidationException {
+		try {
+			PGPSecretKey secretKey = key.getKeyData().findSecretKeyById(requestedKeyId);
+			Preconditions.checkArgument(secretKey != null, "Matching secret key wasn't found");
+			PGPPrivateKey privateKey = getPrivateKey(password, secretKey);
+			Preconditions.checkArgument(privateKey != null, "Failed to extract private key");
+		} catch (InvalidPasswordException pe) {
+			throw new FieldValidationException(new ValidationError(pe.getMessageCode(), FN_PASSWORD));
+		} catch (Throwable t) {
+			throw new RuntimeException("Failed to verify key password", t);
+		}
+	}
+
+	private PGPPrivateKey getPrivateKey(String passphrase, PGPSecretKey secretKey) throws InvalidPasswordException {
+		try {
+			PBESecretKeyDecryptor decryptorFactory = new BcPBESecretKeyDecryptorBuilder(
+					new BcPGPDigestCalculatorProvider()).build(passphrase.toCharArray());
+			PGPPrivateKey privateKey = secretKey.extractPrivateKey(decryptorFactory);
+			return privateKey;
+		} catch (Throwable t) {
+			log.warn("Failed to extract private key. Most likely it because of incorrect passphrase provided", t);
+			throw new InvalidPasswordException();
 		}
 	}
 

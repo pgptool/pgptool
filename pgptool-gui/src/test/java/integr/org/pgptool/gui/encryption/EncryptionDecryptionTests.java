@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import javax.xml.bind.ValidationException;
 
@@ -41,6 +43,7 @@ import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.tools.TextFile;
+import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -100,9 +103,22 @@ public class EncryptionDecryptionTests {
 	public void testWeCanDecryptTheProductOfEncryption() throws Exception {
 		String targetFilename = tempDirPath + File.separator + FilenameUtils.getBaseName(testSubjectFilename) + ".pgp";
 		encryptionService.encrypt(testSubjectFilename, targetFilename, keys.values());
-		encryptionService.decrypt(targetFilename, targetFilename + ".test", keys.get("Alice.asc"), "pass");
+
+		PasswordDeterminedForKey keyAndPassword = buildPasswordDeterminedForKey(targetFilename, "Alice.asc", "pass");
+
+		encryptionService.decrypt(targetFilename, targetFilename + ".test", keyAndPassword);
 		String result = TextFile.read(targetFilename + ".test");
 		assertEquals(testSubjectContents, result);
+	}
+
+	private PasswordDeterminedForKey buildPasswordDeterminedForKey(String encryptedFile, String keyName,
+			String password) {
+		Set<String> decryptionKeys = encryptionService.findKeyIdsForDecryption(encryptedFile);
+		Key key = keys.get(keyName);
+		Optional<String> requestedKeyId = decryptionKeys.stream().filter(x -> key.getKeyData().isHasAlternativeId(x))
+				.findFirst();
+		assertTrue(requestedKeyId.isPresent());
+		return new PasswordDeterminedForKey<>(requestedKeyId.get(), key, password);
 	}
 
 	@Test
@@ -112,7 +128,11 @@ public class EncryptionDecryptionTests {
 
 		String targetFilename = tempDirPath + File.separator + FilenameUtils.getBaseName(testSubjectFilename) + ".pgp";
 		encryptionService.encrypt(testSubjectFilename, targetFilename, keys);
-		encryptionService.decrypt(targetFilename, targetFilename + ".test", key, "pass");
+
+		String decryptionKeyId = (String) encryptionService.findKeyIdsForDecryption(targetFilename).iterator().next();
+		PasswordDeterminedForKey keyAndPassword = new PasswordDeterminedForKey<>(decryptionKeyId, key, "pass");
+
+		encryptionService.decrypt(targetFilename, targetFilename + ".test", keyAndPassword);
 		String result = TextFile.read(targetFilename + ".test");
 		assertEquals(testSubjectContents, result);
 	}
@@ -144,8 +164,10 @@ public class EncryptionDecryptionTests {
 
 	private void decryptionTestRoutine(String sourceFile) throws InvalidPasswordException, URISyntaxException {
 		String targetFilename = tempDirPath + File.separator + FilenameUtils.getBaseName(sourceFile);
-		encryptionService.decrypt(TestTools.getFileNameForResource("encrypted/" + sourceFile), targetFilename,
-				keys.get("Alice.asc"), "pass");
+
+		String encryptedFile = TestTools.getFileNameForResource("encrypted/" + sourceFile);
+		PasswordDeterminedForKey keyAndPassword = buildPasswordDeterminedForKey(encryptedFile, "Alice.asc", "pass");
+		encryptionService.decrypt(encryptedFile, targetFilename, keyAndPassword);
 		assertTrue(new File(targetFilename).exists());
 	}
 }

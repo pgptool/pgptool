@@ -30,6 +30,7 @@ import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.config.api.ConfigRepository;
+import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.about.AboutHost;
 import org.pgptool.gui.ui.about.AboutPm;
@@ -46,6 +47,12 @@ import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleView;
 import org.pgptool.gui.ui.encryptone.EncryptOneHost;
 import org.pgptool.gui.ui.encryptone.EncryptOnePm;
 import org.pgptool.gui.ui.encryptone.EncryptOneView;
+import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordHost;
+import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordManyKeysView;
+import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordOneKeyView;
+import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPm;
+import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPmInitResult;
+import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.pgptool.gui.ui.importkey.KeyImporterHost;
 import org.pgptool.gui.ui.importkey.KeyImporterPm;
 import org.pgptool.gui.ui.importkey.KeyImporterView;
@@ -56,6 +63,7 @@ import org.pgptool.gui.ui.mainframe.MainFrameHost;
 import org.pgptool.gui.ui.mainframe.MainFramePm;
 import org.pgptool.gui.ui.mainframe.MainFrameView;
 import org.pgptool.gui.ui.tempfolderfordecrypted.TempFolderChooserPm;
+import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
@@ -381,6 +389,15 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 			public Action getActionToOpenCertificatesList() {
 				return keysListWindowHost.actionToOpenWindow;
 			}
+
+			@SuppressWarnings("unchecked")
+			@Override
+			public <T extends KeyData> PasswordDeterminedForKey<T> askUserForKeyAndPassword(
+					Set<String> possibleDecryptionKeys) {
+				GetKeyPasswordWindowOpener dialog = new GetKeyPasswordWindowOpener(possibleDecryptionKeys);
+				dialog.openWindow();
+				return (PasswordDeterminedForKey<T>) dialog.passwordDeterminedForKey;
+			}
 		};
 
 		@Override
@@ -448,6 +465,54 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		};
 	};
 
+	private class GetKeyPasswordWindowOpener
+			extends DialogOpener<GetKeyPasswordPm, DialogViewBaseCustom<GetKeyPasswordPm>> {
+		private Set<String> requestedDecryptionKeysIds;
+		private PasswordDeterminedForKey<?> passwordDeterminedForKey;
+
+		public GetKeyPasswordWindowOpener(Set<String> requestedDecryptionKeysIds) {
+			super(GetKeyPasswordPm.class, null, "action.chooseKeyAndPassword");
+			this.requestedDecryptionKeysIds = requestedDecryptionKeysIds;
+		}
+
+		GetKeyPasswordHost host = new GetKeyPasswordHost() {
+			@Override
+			public void onCancel() {
+				tearDown();
+			}
+
+			private void tearDown() {
+				if (view != null) {
+					view.unrender();
+				}
+				pm.detach();
+				pm = null;
+			}
+
+			@Override
+			public <T extends KeyData> void onPasswordDeterminedForKey(
+					PasswordDeterminedForKey<T> passwordDeterminedForKey) {
+				GetKeyPasswordWindowOpener.this.passwordDeterminedForKey = passwordDeterminedForKey;
+				tearDown();
+			}
+		};
+
+		@Override
+		protected boolean postConstructPm() {
+			GetKeyPasswordPmInitResult initResult = pm.init(host, requestedDecryptionKeysIds);
+			return initResult == GetKeyPasswordPmInitResult.ShowUiAndAskUser;
+		};
+
+		@Override
+		protected void buildViewInstance() {
+			if (pm.getMatchedKeys() != null && pm.getMatchedKeys().size() == 1) {
+				view = applicationContext.getBean(GetKeyPasswordOneKeyView.class);
+			} else {
+				view = applicationContext.getBean(GetKeyPasswordManyKeysView.class);
+			}
+		}
+	};
+
 	/**
 	 * This is just a helper inner class to hold top windows hosts.
 	 * 
@@ -495,10 +560,14 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 			}
 
 			if (view == null) {
-				view = applicationContext.getBean(viewClass);
+				buildViewInstance();
 			}
 			view.setPm(pm);
 			view.renderTo(null);
+		}
+
+		protected void buildViewInstance() {
+			view = applicationContext.getBean(viewClass);
 		}
 
 		/**

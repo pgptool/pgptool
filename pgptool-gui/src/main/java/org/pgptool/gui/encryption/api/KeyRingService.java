@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
+import org.pgptool.gui.encryption.api.dto.MatchedKey;
 
 public interface KeyRingService<TKeyData extends KeyData> {
 	List<Key<TKeyData>> readKeys();
@@ -40,7 +41,7 @@ public interface KeyRingService<TKeyData extends KeyData> {
 	 *            list of ids needs to be found.
 	 * @return list of keys or empty array if none found
 	 */
-	List<Key<TKeyData>> findMatchingDecryptionKeys(Set<String> keysIds);
+	List<MatchedKey<TKeyData>> findMatchingDecryptionKeys(Set<String> keysIds);
 
 	List<Key<TKeyData>> findMatchingKeys(Set<String> keysIds);
 

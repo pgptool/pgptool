@@ -15,19 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *******************************************************************************/
-package org.pgptool.gui.ui.decryptone;
-
-import java.util.Set;
-
-import javax.swing.Action;
+package org.pgptool.gui.ui.getkeypassword;
 
 import org.pgptool.gui.encryption.api.dto.KeyData;
-import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 
-public interface DecryptOneHost {
-	void handleClose();
+public interface GetKeyPasswordHost {
+	void onCancel();
 
-	Action getActionToOpenCertificatesList();
-
-	<T extends KeyData> PasswordDeterminedForKey<T> askUserForKeyAndPassword(Set<String> possibleDecryptionKeys);
+	<T extends KeyData> void onPasswordDeterminedForKey(PasswordDeterminedForKey<T> result);
 }

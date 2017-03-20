@@ -24,6 +24,7 @@ import org.pgptool.gui.bkgoperation.ProgressHandler;
 import org.pgptool.gui.bkgoperation.UserReqeustedCancellationException;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
+import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.summerb.approaches.security.api.exceptions.InvalidPasswordException;
 
 public interface EncryptionService<TKeyData extends KeyData> {
@@ -33,11 +34,24 @@ public interface EncryptionService<TKeyData extends KeyData> {
 	void encrypt(String sourceFile, String targetFile, Collection<Key<TKeyData>> recipients,
 			ProgressHandler optionalProgressHandler) throws UserReqeustedCancellationException;
 
-	void decrypt(String sourceFile, String targetFile, Key<TKeyData> decryptionKey, String passphrase)
+	void decrypt(String sourceFile, String targetFile, PasswordDeterminedForKey<TKeyData> keyAndPassword)
 			throws InvalidPasswordException;
 
 	/**
 	 * Discover all key ids which can be used for decryption
 	 */
 	Set<String> findKeyIdsForDecryption(String filePathName);
+
+	/**
+	 * This method "pre-decrypts" file only to get initial file name that was
+	 * encrypted
+	 * 
+	 * @param encryptedFile
+	 *            encrypted file
+	 * @param keyAndPassword
+	 *            key and password to use for decryption
+	 * @return initial file name that was encrypted (name only, no path)
+	 */
+	String getNameOfFileEncrypted(String encryptedFile, PasswordDeterminedForKey<TKeyData> keyAndPassword)
+			throws InvalidPasswordException;
 }

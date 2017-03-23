@@ -427,8 +427,10 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 					PGPLiteralData ld = (PGPLiteralData) message;
 					return ld.getFileName();
 				} else if (message instanceof PGPOnePassSignatureList) {
+					Preconditions.checkState(pgpFactory != null, "pgpFactory supposed to be not null");
 					message = pgpFactory.nextObject();
 				} else if (message instanceof PGPSignatureList) {
+					Preconditions.checkState(pgpFactory != null, "pgpFactory supposed to be not null");
 					message = pgpFactory.nextObject();
 				} else {
 					throw new PGPException(

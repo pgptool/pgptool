@@ -130,16 +130,14 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 	/**
 	 * 
 	 * @param commandLineArgs
-	 * @return true if command line command processed and ther is no need to
-	 *         continue application run sequence
 	 */
-	public boolean processCommandLine(String[] commandLineArgs) {
+	public void processCommandLine(String[] commandLineArgs) {
 		try {
 			if (commandLineArgs == null || commandLineArgs.length == 0) {
 				if (mainFrameView != null) {
 					mainFrameView.bringToFront();
 				}
-				return false;
+				return;
 			}
 
 			if (commandLineArgs.length > 1) {
@@ -163,7 +161,6 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		} catch (Throwable t) {
 			EntryPoint.reportExceptionToUser("error.failedToProcessCommandLine", t);
 		}
-		return false;
 	}
 
 	private void openNewDecryptionWindow(final String sourceFile) {

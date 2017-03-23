@@ -186,6 +186,7 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
 				return false;
 			}
 		}
+		log.info("As a secondary we see args were processed by primary instance " + targetFile);
 		return true;
 	}
 

@@ -47,6 +47,7 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import ru.skarpushin.swingpm.tools.SwingPmSettings;
+import ru.skarpushin.swingpm.tools.edt.Edt;
 
 public class EntryPoint {
 	public static Logger log = Logger.getLogger(EntryPoint.class);
@@ -153,7 +154,12 @@ public class EntryPoint {
 		public void handleArgsFromOtherInstance(String[] args) {
 			if (rootPmStatic != null) {
 				log.debug("Processing arguments from secondary instance: " + Arrays.toString(args));
-				rootPmStatic.processCommandLine(args);
+				Edt.invokeOnEdtAsync(new Runnable() {
+					@Override
+					public void run() {
+						rootPmStatic.processCommandLine(args);
+					}
+				});
 			} else {
 				log.debug("Posponing args processing from secondary instance: " + Arrays.toString(args));
 				postponedArgsFromSecondaryInstances.offer(args);

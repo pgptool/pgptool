@@ -59,6 +59,10 @@ public class Messages implements ApplicationContextAware {
 		return get(messageCode, args);
 	}
 
+	public static String text(Message msg) {
+		return get(msg.getMessageCode(), msg.getMessageArgs());
+	}
+
 	public static String get(String messageCode, Object... args) {
 		if (INSTANCE == null || INSTANCE.applicationContext == null) {
 			return messageCode;

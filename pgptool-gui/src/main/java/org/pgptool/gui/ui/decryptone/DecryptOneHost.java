@@ -21,6 +21,7 @@ import java.util.Set;
 
 import javax.swing.Action;
 
+import org.pgptool.gui.app.Message;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 
@@ -29,5 +30,10 @@ public interface DecryptOneHost {
 
 	Action getActionToOpenCertificatesList();
 
-	<T extends KeyData> PasswordDeterminedForKey<T> askUserForKeyAndPassword(Set<String> possibleDecryptionKeys);
+	/**
+	 * @param purpose
+	 *            describe to user what this password is for
+	 */
+	<T extends KeyData> PasswordDeterminedForKey<T> askUserForKeyAndPassword(Set<String> possibleDecryptionKeys,
+			Message purpose);
 }

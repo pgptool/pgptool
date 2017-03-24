@@ -27,6 +27,7 @@ import javax.swing.Action;
 
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
+import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.config.api.ConfigRepository;
@@ -390,8 +391,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 			@SuppressWarnings("unchecked")
 			@Override
 			public <T extends KeyData> PasswordDeterminedForKey<T> askUserForKeyAndPassword(
-					Set<String> possibleDecryptionKeys) {
-				GetKeyPasswordWindowOpener dialog = new GetKeyPasswordWindowOpener(possibleDecryptionKeys);
+					Set<String> possibleDecryptionKeys, Message purpose) {
+				GetKeyPasswordWindowOpener dialog = new GetKeyPasswordWindowOpener(possibleDecryptionKeys, purpose);
 				dialog.openWindow();
 				return (PasswordDeterminedForKey<T>) dialog.passwordDeterminedForKey;
 			}
@@ -466,10 +467,12 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 			extends DialogOpener<GetKeyPasswordPm, DialogViewBaseCustom<GetKeyPasswordPm>> {
 		private Set<String> requestedDecryptionKeysIds;
 		private PasswordDeterminedForKey<?> passwordDeterminedForKey;
+		private Message purpose;
 
-		public GetKeyPasswordWindowOpener(Set<String> requestedDecryptionKeysIds) {
+		public GetKeyPasswordWindowOpener(Set<String> requestedDecryptionKeysIds, Message purpose) {
 			super(GetKeyPasswordPm.class, null, "action.chooseKeyAndPassword");
 			this.requestedDecryptionKeysIds = requestedDecryptionKeysIds;
+			this.purpose = purpose;
 		}
 
 		GetKeyPasswordHost host = new GetKeyPasswordHost() {
@@ -496,7 +499,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 
 		@Override
 		protected boolean postConstructPm() {
-			GetKeyPasswordPmInitResult initResult = pm.init(host, requestedDecryptionKeysIds);
+			GetKeyPasswordPmInitResult initResult = pm.init(host, requestedDecryptionKeysIds, purpose);
 			return initResult == GetKeyPasswordPmInitResult.ShowUiAndAskUser;
 		};
 

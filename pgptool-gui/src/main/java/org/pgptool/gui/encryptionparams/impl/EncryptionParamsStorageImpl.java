@@ -34,7 +34,8 @@ public class EncryptionParamsStorageImpl implements EncryptionParamsStorage {
 			boolean updateFolderSettings) {
 		configPairs.put(CONFIG_PAIR_BASE + dialogParameters.getSourceFile(), dialogParameters);
 		if (updateFolderSettings) {
-			configPairs.put(CONFIG_PAIR_BASE + FilenameUtils.getFullPathNoEndSeparator(dialogParameters.getSourceFile()),
+			configPairs.put(
+					CONFIG_PAIR_BASE + FilenameUtils.getFullPathNoEndSeparator(dialogParameters.getSourceFile()),
 					dialogParameters);
 		}
 	}

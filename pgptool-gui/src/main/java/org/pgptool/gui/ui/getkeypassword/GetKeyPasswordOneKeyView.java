@@ -33,6 +33,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 
+import org.jdesktop.swingx.JXLabel;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
@@ -42,6 +43,7 @@ import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 public class GetKeyPasswordOneKeyView extends DialogViewBaseCustom<GetKeyPasswordPm> {
 	private JPanel pnl;
 
+	private JXLabel purpose;
 	private JLabel decryptionKey;
 	private JPasswordField edPassword;
 
@@ -57,7 +59,7 @@ public class GetKeyPasswordOneKeyView extends DialogViewBaseCustom<GetKeyPasswor
 	}
 
 	private Component buildControllsPanel() {
-		SgLayout sgl = new SgLayout(2, 2, spacing(1), 2);
+		SgLayout sgl = new SgLayout(2, 3, spacing(1), 2);
 		sgl.setColSize(0, 1, SgLayout.SIZE_TYPE_ASKCOMPONENT);
 		sgl.setColSize(1, spacing(40), SgLayout.SIZE_TYPE_CONSTANT);
 
@@ -66,7 +68,9 @@ public class GetKeyPasswordOneKeyView extends DialogViewBaseCustom<GetKeyPasswor
 
 		int row = 0;
 
-		// recipients
+		ret.add(purpose = new JXLabel(), sgl.cs(0, row, 2, 1));
+		purpose.setLineWrap(true);
+		row++;
 		ret.add(new JLabel(text("term.key")), sgl.cs(0, row));
 		ret.add(decryptionKey = new JLabel(), sgl.cs(1, row));
 		row++;
@@ -91,6 +95,7 @@ public class GetKeyPasswordOneKeyView extends DialogViewBaseCustom<GetKeyPasswor
 
 		decryptionKey.setText(pm.getSelectedKey().get(0).toString());
 		bindingContext.setupBinding(pm.getPassword(), edPassword);
+		bindingContext.setupBinding(pm.getPurpose(), purpose);
 
 		bindingContext.setupBinding(pm.actionChooseKey, btnPerformOperation);
 		bindingContext.setupBinding(pm.actionCancel, btnCancel);

@@ -157,9 +157,11 @@ public class EncryptOnePm extends PresentationModelBase {
 
 				@Override
 				protected void suggestTarget(JFileChooser ofd) {
+					// TODO: 77
 					String sourceFileStr = sourceFile.getValue();
 					if (StringUtils.hasText(targetFile.getValue())) {
-						ofd.setCurrentDirectory(new File(FilenameUtils.getFullPathNoEndSeparator(targetFile.getValue())));
+						ofd.setCurrentDirectory(
+								new File(FilenameUtils.getFullPathNoEndSeparator(targetFile.getValue())));
 						ofd.setSelectedFile(new File(targetFile.getValue()));
 					} else if (StringUtils.hasText(sourceFileStr) && new File(sourceFileStr).exists()) {
 						String basePath = FilenameUtils.getFullPathNoEndSeparator(sourceFileStr);
@@ -405,7 +407,8 @@ public class EncryptOnePm extends PresentationModelBase {
 		private String getEffectiveTargetFileName() {
 			if (!StringUtils.hasText(targetFile.getValue()) || isUseSameFolder.getValue()) {
 				isUseSameFolder.setValueByOwner(true);
-				return madeUpTargetFileName(sourceFile.getValue(), FilenameUtils.getFullPathNoEndSeparator(sourceFile.getValue()));
+				return madeUpTargetFileName(sourceFile.getValue(),
+						FilenameUtils.getFullPathNoEndSeparator(sourceFile.getValue()));
 			}
 
 			String targetFileName = targetFile.getValue();

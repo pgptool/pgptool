@@ -33,6 +33,7 @@ import javax.annotation.Resource;
 import javax.swing.Action;
 
 import org.apache.log4j.Logger;
+import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
@@ -90,11 +91,15 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 	private ModelSelInComboBoxProperty<Key<KeyData>> selectedKey;
 	private ModelListProperty<Key<KeyData>> decryptionKeys;
 	private ModelProperty<String> password;
+	private ModelProperty<String> purpose;
 	private ListEx<ValidationError> validationErrors = new ListExImpl<ValidationError>();
 
 	private List<MatchedKey<KeyData>> matchedKeys;
+	private Message purposeMessage;
 
-	public GetKeyPasswordPmInitResult init(GetKeyPasswordHost host, Set<String> keyIdsToChooseFrom) {
+	public GetKeyPasswordPmInitResult init(GetKeyPasswordHost host, Set<String> keyIdsToChooseFrom,
+			Message purposeMessage) {
+		this.purposeMessage = purposeMessage;
 		Preconditions.checkArgument(host != null);
 		this.host = host;
 
@@ -129,6 +134,8 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 	}
 
 	private void initModelProperties(List<Key<KeyData>> keys) {
+		purpose = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(text(purposeMessage)), "purpose",
+				validationErrors);
 		decryptionKeys = new ModelListProperty<Key<KeyData>>(this,
 				new ValueAdapterReadonlyImpl<List<Key<KeyData>>>(keys), "decryptionKeys");
 		selectedKey = new ModelSelInComboBoxProperty<Key<KeyData>>(this,
@@ -207,6 +214,10 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 
 	public List<MatchedKey<KeyData>> getMatchedKeys() {
 		return matchedKeys;
+	}
+
+	public ModelPropertyAccessor<String> getPurpose() {
+		return purpose.getModelPropertyAccessor();
 	}
 
 }

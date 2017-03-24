@@ -56,7 +56,7 @@ public class ExistingFileChooserDialog {
 		}
 
 		String ret = retFile.getAbsolutePath();
-		ret = handleFileWasChosen(ret); 
+		ret = handleFileWasChosen(ret);
 		configPairs.put(configPairNameToRemember, FilenameUtils.getFullPathNoEndSeparator(ret));
 		return ret;
 	}

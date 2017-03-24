@@ -35,6 +35,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
+import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
@@ -172,6 +173,7 @@ public class DecryptOnePm extends PresentationModelBase {
 
 				@Override
 				protected void suggestTarget(JFileChooser ofd) {
+					// TODO: 77
 					String sourceFileStr = sourceFile.getValue();
 					if (StringUtils.hasText(targetFile.getValue())) {
 						ofd.setCurrentDirectory(
@@ -310,7 +312,9 @@ public class DecryptOnePm extends PresentationModelBase {
 						&& sourceFileRecipientsKeysIds.contains(keyAndPassword.getDecryptionKeyId())) {
 					// it means same password and key can be used
 				} else {
-					keyAndPassword = host.askUserForKeyAndPassword(sourceFileRecipientsKeysIds);
+					Message purpose = new Message("phrase.needKeyToDecryptFile",
+							new Object[] { FilenameUtils.getName(sourceFileStr) });
+					keyAndPassword = host.askUserForKeyAndPassword(sourceFileRecipientsKeysIds, purpose);
 				}
 
 				if (keyAndPassword == null) {

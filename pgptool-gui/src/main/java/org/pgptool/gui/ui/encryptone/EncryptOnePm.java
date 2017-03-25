@@ -35,6 +35,7 @@ import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -102,6 +103,7 @@ public class EncryptOnePm extends PresentationModelBase {
 
 	private ExistingFileChooserDialog sourceFileChooser;
 	private SaveFileChooserDialog targetFileChooser;
+	private EncryptionDialogParameters encryptionDialogParameters;
 
 	public boolean init(EncryptOneHost host, String optionalSource) {
 		Preconditions.checkArgument(host != null);
@@ -157,20 +159,27 @@ public class EncryptOnePm extends PresentationModelBase {
 
 				@Override
 				protected void suggestTarget(JFileChooser ofd) {
-					// TODO: 77
 					String sourceFileStr = sourceFile.getValue();
 					if (StringUtils.hasText(targetFile.getValue())) {
-						ofd.setCurrentDirectory(
-								new File(FilenameUtils.getFullPathNoEndSeparator(targetFile.getValue())));
-						ofd.setSelectedFile(new File(targetFile.getValue()));
+						use(ofd, targetFile.getValue());
+					} else if (encryptionDialogParameters != null
+							&& encryptionDialogParameters.getTargetFile() != null) {
+						if (encryptionDialogParameters.getSourceFile().equals(sourceFile.getValue())) {
+							use(ofd, encryptionDialogParameters.getTargetFile());
+						} else {
+							use(ofd, madeUpTargetFileName(sourceFile.getValue(), FilenameUtils
+									.getFullPathNoEndSeparator(encryptionDialogParameters.getTargetFile())));
+						}
 					} else if (StringUtils.hasText(sourceFileStr) && new File(sourceFileStr).exists()) {
 						String basePath = FilenameUtils.getFullPathNoEndSeparator(sourceFileStr);
 						ofd.setCurrentDirectory(new File(basePath));
 						ofd.setSelectedFile(new File(madeUpTargetFileName(sourceFileStr, basePath)));
-					} else {
-						// NOTE: Can't think of a right way to react on this
-						// case
 					}
+				}
+
+				private void use(JFileChooser ofd, String filePathName) {
+					ofd.setCurrentDirectory(new File(FilenameUtils.getFullPathNoEndSeparator(filePathName)));
+					ofd.setSelectedFile(new File(filePathName));
 				}
 			};
 		}
@@ -196,8 +205,8 @@ public class EncryptOnePm extends PresentationModelBase {
 		isUseSameFolder = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(true), "saveToSameFolder");
 		isUseSameFolder.getModelPropertyAccessor().addPropertyChangeListener(onUseSameFolderChanged);
 		targetFile = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "targetFile");
+		targetFile.getModelPropertyAccessor().addPropertyChangeListener(onTargetFileChanged);
 		targetFileEnabled = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "targetFile");
-		onUseSameFolderChanged.propertyChange(null);
 
 		List<Key<KeyData>> allKeys = keyRingService.readKeys();
 		allKeys.sort(new ComparatorKeyByNameImpl<>());
@@ -211,7 +220,16 @@ public class EncryptOnePm extends PresentationModelBase {
 
 		isDeleteSourceAfter = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "deleteSourceAfter");
 		isOpenTargetFolderAfter = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "openTargetFolder");
+
+		onUseSameFolderChanged.propertyChange(null);
 	}
+
+	private PropertyChangeListener onTargetFileChanged = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			refreshPrimaryOperationAvailability();
+		}
+	};
 
 	public ExistingFileChooserDialog getSourceFileChooser() {
 		if (sourceFileChooser == null) {
@@ -254,10 +272,10 @@ public class EncryptOnePm extends PresentationModelBase {
 				return;
 			}
 
-			EncryptionDialogParameters params = encryptionParamsStorage
-					.findParamsBasedOnSourceFile(sourceFile.getValue(), true);
-			if (params != null) {
-				useSugestedParameters(params);
+			encryptionDialogParameters = encryptionParamsStorage.findParamsBasedOnSourceFile(sourceFile.getValue(),
+					true);
+			if (encryptionDialogParameters != null) {
+				useSugestedParameters(encryptionDialogParameters);
 			} else {
 				selectSelfAsRecipient();
 			}
@@ -338,8 +356,17 @@ public class EncryptOnePm extends PresentationModelBase {
 			// NOTE: MAGIC: This event might be triggered when using suggested
 			// parameters. So if value is already provided for target file then
 			// we'll not show file chooser
+			refreshPrimaryOperationAvailability();
 			if (result && !StringUtils.hasText(targetFile.getValue())) {
-				getTargetFileChooser().askUserForFile();
+				// NOTE: We need to let event processing go otherwise it all be
+				// messed up
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						getTargetFileChooser().askUserForFile();
+						refreshPrimaryOperationAvailability();
+					}
+				});
 			}
 		}
 	};
@@ -348,6 +375,7 @@ public class EncryptOnePm extends PresentationModelBase {
 		boolean result = true;
 		result &= !selectedRecipients.getList().isEmpty();
 		result &= StringUtils.hasText(sourceFile.getValue()) && new File(sourceFile.getValue()).exists();
+		result &= isUseSameFolder.getValue() || StringUtils.hasText(targetFile.getValue());
 		actionDoOperation.setEnabled(result);
 	}
 
@@ -460,6 +488,7 @@ public class EncryptOnePm extends PresentationModelBase {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			getTargetFileChooser().askUserForFile();
+			refreshPrimaryOperationAvailability();
 		}
 	};
 

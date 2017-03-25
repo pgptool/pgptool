@@ -117,6 +117,7 @@ public class DecryptOnePm extends PresentationModelBase {
 	private Set<String> sourceFileRecipientsKeysIds;
 	private PasswordDeterminedForKey<KeyData> keyAndPassword;
 	private String anticipatedTargetFileName;
+	private DecryptionDialogParameters decryptionDialogParameters;
 
 	public boolean init(DecryptOneHost host, String optionalSource) {
 		Preconditions.checkArgument(host != null);
@@ -173,20 +174,29 @@ public class DecryptOnePm extends PresentationModelBase {
 
 				@Override
 				protected void suggestTarget(JFileChooser ofd) {
-					// TODO: 77
 					String sourceFileStr = sourceFile.getValue();
 					if (StringUtils.hasText(targetFile.getValue())) {
-						ofd.setCurrentDirectory(
-								new File(FilenameUtils.getFullPathNoEndSeparator(targetFile.getValue())));
-						ofd.setSelectedFile(new File(targetFile.getValue()));
+						// Case 1: Based on current target
+						use(ofd, targetFile.getValue());
+					} else if (decryptionDialogParameters != null
+							&& decryptionDialogParameters.getTargetFile() != null) {
+						if (decryptionDialogParameters.getSourceFile().equals(sourceFileStr)) {
+							// exact match
+							use(ofd, decryptionDialogParameters.getTargetFile());
+						} else {
+							// case when suggested parameters are provided for
+							// neighbor
+							use(ofd, madeUpTargetFileName(FilenameUtils
+									.getFullPathNoEndSeparator(decryptionDialogParameters.getTargetFile())));
+						}
 					} else if (StringUtils.hasText(sourceFileStr) && new File(sourceFileStr).exists()) {
-						String basePath = FilenameUtils.getFullPathNoEndSeparator(sourceFileStr);
-						ofd.setCurrentDirectory(new File(basePath));
-						ofd.setSelectedFile(new File(madeUpTargetFileName(basePath)));
-					} else {
-						// NOTE: Can't think of a right way to react on this
-						// case
+						use(ofd, madeUpTargetFileName(FilenameUtils.getFullPathNoEndSeparator(sourceFileStr)));
 					}
+				}
+
+				private void use(JFileChooser ofd, String filePathName) {
+					ofd.setCurrentDirectory(new File(FilenameUtils.getFullPathNoEndSeparator(filePathName)));
+					ofd.setSelectedFile(new File(filePathName));
 				}
 			};
 		}
@@ -269,9 +279,9 @@ public class DecryptOnePm extends PresentationModelBase {
 
 			updatePrimaryOperationAvailability();
 
-			DecryptionDialogParameters params = findParamsBasedOnSourceFile(sourceFile.getValue());
-			if (params != null) {
-				useSugestedParameters(params);
+			decryptionDialogParameters = findParamsBasedOnSourceFile(sourceFile.getValue());
+			if (decryptionDialogParameters != null) {
+				useSugestedParameters(decryptionDialogParameters);
 
 				// QUESTION: Should we check if this file was already decrypted
 				// AND still can be found on the disk? Maybe we can just offer

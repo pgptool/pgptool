@@ -34,13 +34,11 @@ import javax.swing.Action;
 
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.Message;
-import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryption.api.dto.MatchedKey;
-import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.summerb.approaches.validation.FieldValidationException;
@@ -49,6 +47,8 @@ import org.summerb.approaches.validation.ValidationErrorsUtils;
 import org.summerb.approaches.validation.errors.FieldRequiredValidationError;
 
 import com.google.common.base.Preconditions;
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.collections.ListEx;
@@ -85,6 +85,8 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 	@Autowired
 	@Resource(name = "keyFilesOperations")
 	private KeyFilesOperations<KeyData> keyFilesOperations;
+	@Autowired
+	private EventBus eventBus;
 
 	private GetKeyPasswordHost host;
 
@@ -108,7 +110,7 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 		// NOTE: We're assuming here keys are distinct meaning same key will not
 		// appear 2 times
 		if (matchedKeys.size() == 0) {
-			UiUtils.messageBox(text("error.noMatchingKeysRegistered"), text("term.attention"), MessageSeverity.WARNING);
+			//UiUtils.messageBox(text("error.noMatchingKeysRegistered"), text("term.attention"), MessageSeverity.WARNING);
 			return GetKeyPasswordPmInitResult.NoMatchingKeys;
 		}
 
@@ -118,11 +120,18 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 		}
 
 		initModelProperties(matchedKeys.stream().map(x -> x.getMatchedKey()).collect(Collectors.toList()));
+		eventBus.register(this);
 
 		// x. ret
 		return GetKeyPasswordPmInitResult.ShowUiAndAskUser;
 	}
 
+	@Override
+	public void detach() {
+		super.detach();
+		eventBus.unregister(this);
+	}
+	
 	private boolean passwordWasCached(GetKeyPasswordHost host, List<MatchedKey<KeyData>> matchedKeys) {
 		for (MatchedKey<KeyData> k : matchedKeys) {
 			if (CACHE_KEYID_TO_PASSWORD.containsKey(k.getRequestedKeyId())) {
@@ -200,9 +209,20 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 			// If everything is ok -- return
 			PasswordDeterminedForKey<KeyData> ret = new PasswordDeterminedForKey<>(requestedKeyId, key, passwordStr);
 			CACHE_KEYID_TO_PASSWORD.put(requestedKeyId, ret);
-			host.onPasswordDeterminedForKey(ret);
+			//host.onPasswordDeterminedForKey(ret);
+			eventBus.post(ret);
 		}
 	};
+	
+	@Subscribe
+	public void onPasswordProvidedByOtherInstance(PasswordDeterminedForKey<KeyData> evt) {
+		for (MatchedKey<KeyData> mk : matchedKeys) {
+			if (mk.getRequestedKeyId().equals(evt.getDecryptionKeyId())) {
+				host.onPasswordDeterminedForKey(evt);
+				return;
+			}
+		}
+	}
 
 	public ModelSelInComboBoxPropertyAccessor<Key<KeyData>> getSelectedKey() {
 		return selectedKey.getModelSelInComboBoxPropertyAccessor();

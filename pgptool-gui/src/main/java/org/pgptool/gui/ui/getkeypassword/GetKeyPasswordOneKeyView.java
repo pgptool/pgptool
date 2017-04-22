@@ -21,34 +21,30 @@ import static org.pgptool.gui.app.Messages.text;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dialog.ModalityType;
+import java.awt.Container;
 import java.awt.FlowLayout;
-import java.awt.Window;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 
 import org.jdesktop.swingx.JXLabel;
-import org.pgptool.gui.app.Messages;
-import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
 
+import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class GetKeyPasswordOneKeyView extends DialogViewBaseCustom<GetKeyPasswordPm> {
+public class GetKeyPasswordOneKeyView extends ViewBase<GetKeyPasswordPm> {
 	private JPanel pnl;
 
 	private JXLabel purpose;
 	private JLabel decryptionKey;
-	private JPasswordField edPassword;
+	public JPasswordField edPassword;
 
-	private JButton btnPerformOperation;
-	private JButton btnCancel;
+	public JButton btnPerformOperation;
+	public JButton btnCancel;
 
 	@Override
 	protected void internalInitComponents() {
@@ -61,7 +57,7 @@ public class GetKeyPasswordOneKeyView extends DialogViewBaseCustom<GetKeyPasswor
 	private Component buildControllsPanel() {
 		SgLayout sgl = new SgLayout(2, 3, spacing(1), 2);
 		sgl.setColSize(0, 1, SgLayout.SIZE_TYPE_ASKCOMPONENT);
-		sgl.setColSize(1, spacing(40), SgLayout.SIZE_TYPE_CONSTANT);
+		sgl.setColSize(1, spacing(30), SgLayout.SIZE_TYPE_CONSTANT);
 
 		JPanel ret = new JPanel(sgl);
 		ret.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -101,34 +97,19 @@ public class GetKeyPasswordOneKeyView extends DialogViewBaseCustom<GetKeyPasswor
 		bindingContext.setupBinding(pm.actionCancel, btnCancel);
 	}
 
+	// TODO: On window show edPassword.requestFocusInWindow();
+	
 	@Override
-	protected void handleDialogShown() {
-		super.handleDialogShown();
-		dialog.getRootPane().setDefaultButton(btnPerformOperation);
-		edPassword.requestFocusInWindow();
+	protected void internalRenderTo(Container owner, Object constraints) {
+		owner.add(pnl, constraints);
 	}
 
 	@Override
-	protected JDialog initDialog(Window owner, Object constraints) {
-		JDialog ret = new JDialog(owner, ModalityType.APPLICATION_MODAL);
-		ret.setLayout(new BorderLayout());
-		ret.setResizable(false);
-		ret.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		ret.setTitle(Messages.get("action.providePasswordForAKey"));
-		ret.add(pnl, BorderLayout.CENTER);
-		ret.pack();
-		UiUtils.centerWindow(ret);
-		return ret;
+	protected void internalUnrender() {
+		pnl.getParent().remove(pnl);
 	}
 
-	@Override
-	protected JPanel getRootPanel() {
-		return pnl;
+	public static int spacing(int lettersCount) {
+		return UiUtils.getFontRelativeSize(lettersCount);
 	}
-
-	@Override
-	protected void dispatchWindowCloseEvent() {
-		btnCancel.getAction().actionPerformed(null);
-	}
-
 }

@@ -27,11 +27,9 @@ import javax.swing.Action;
 
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
-import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.config.api.ConfigRepository;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.about.AboutHost;
 import org.pgptool.gui.ui.about.AboutPm;
@@ -39,21 +37,16 @@ import org.pgptool.gui.ui.about.AboutView;
 import org.pgptool.gui.ui.createkey.CreateKeyHost;
 import org.pgptool.gui.ui.createkey.CreateKeyPm;
 import org.pgptool.gui.ui.createkey.CreateKeyView;
-import org.pgptool.gui.ui.decryptone.DecryptOneHost;
 import org.pgptool.gui.ui.decryptone.DecryptOnePm;
-import org.pgptool.gui.ui.decryptone.DecryptOneView;
+import org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogHost;
+import org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogPm;
+import org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogView;
 import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleHost;
 import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultiplePm;
 import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleView;
 import org.pgptool.gui.ui.encryptone.EncryptOneHost;
 import org.pgptool.gui.ui.encryptone.EncryptOnePm;
 import org.pgptool.gui.ui.encryptone.EncryptOneView;
-import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordHost;
-import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordManyKeysView;
-import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordOneKeyView;
-import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPm;
-import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPmInitResult;
-import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.pgptool.gui.ui.importkey.KeyImporterHost;
 import org.pgptool.gui.ui.importkey.KeyImporterPm;
 import org.pgptool.gui.ui.importkey.KeyImporterView;
@@ -64,7 +57,6 @@ import org.pgptool.gui.ui.mainframe.MainFrameHost;
 import org.pgptool.gui.ui.mainframe.MainFramePm;
 import org.pgptool.gui.ui.mainframe.MainFrameView;
 import org.pgptool.gui.ui.tempfolderfordecrypted.TempFolderChooserPm;
-import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
@@ -365,17 +357,17 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		};
 	};
 
-	private DialogOpener<DecryptOnePm, DecryptOneView> decryptionWindowHost = new DecryptionWindowOpener(null);
+	private DialogOpener<DecryptOneDialogPm, DecryptOneDialogView> decryptionWindowHost = new DecryptionWindowOpener(null);
 
-	private class DecryptionWindowOpener extends DialogOpener<DecryptOnePm, DecryptOneView> {
+	private class DecryptionWindowOpener extends DialogOpener<DecryptOneDialogPm, DecryptOneDialogView> {
 		private String sourceFile;
 
 		public DecryptionWindowOpener(String sourceFile) {
-			super(DecryptOnePm.class, DecryptOneView.class, "action.decrypt");
+			super(DecryptOneDialogPm.class, DecryptOneDialogView.class, "action.decrypt");
 			this.sourceFile = sourceFile;
 		}
 
-		DecryptOneHost host = new DecryptOneHost() {
+		DecryptOneDialogHost host = new DecryptOneDialogHost() {
 			@Override
 			public void handleClose() {
 				view.unrender();
@@ -386,15 +378,6 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 			@Override
 			public Action getActionToOpenCertificatesList() {
 				return keysListWindowHost.actionToOpenWindow;
-			}
-
-			@SuppressWarnings("unchecked")
-			@Override
-			public <T extends KeyData> PasswordDeterminedForKey<T> askUserForKeyAndPassword(
-					Set<String> possibleDecryptionKeys, Message purpose) {
-				GetKeyPasswordWindowOpener dialog = new GetKeyPasswordWindowOpener(possibleDecryptionKeys, purpose);
-				dialog.openWindow();
-				return (PasswordDeterminedForKey<T>) dialog.passwordDeterminedForKey;
 			}
 		};
 
@@ -461,56 +444,6 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 			});
 			return true;
 		};
-	};
-
-	private class GetKeyPasswordWindowOpener
-			extends DialogOpener<GetKeyPasswordPm, DialogViewBaseCustom<GetKeyPasswordPm>> {
-		private Set<String> requestedDecryptionKeysIds;
-		private PasswordDeterminedForKey<?> passwordDeterminedForKey;
-		private Message purpose;
-
-		public GetKeyPasswordWindowOpener(Set<String> requestedDecryptionKeysIds, Message purpose) {
-			super(GetKeyPasswordPm.class, null, "action.chooseKeyAndPassword");
-			this.requestedDecryptionKeysIds = requestedDecryptionKeysIds;
-			this.purpose = purpose;
-		}
-
-		GetKeyPasswordHost host = new GetKeyPasswordHost() {
-			@Override
-			public void onCancel() {
-				tearDown();
-			}
-
-			private void tearDown() {
-				if (view != null) {
-					view.unrender();
-				}
-				pm.detach();
-				pm = null;
-			}
-
-			@Override
-			public <T extends KeyData> void onPasswordDeterminedForKey(
-					PasswordDeterminedForKey<T> passwordDeterminedForKey) {
-				GetKeyPasswordWindowOpener.this.passwordDeterminedForKey = passwordDeterminedForKey;
-				tearDown();
-			}
-		};
-
-		@Override
-		protected boolean postConstructPm() {
-			GetKeyPasswordPmInitResult initResult = pm.init(host, requestedDecryptionKeysIds, purpose);
-			return initResult == GetKeyPasswordPmInitResult.ShowUiAndAskUser;
-		};
-
-		@Override
-		protected void buildViewInstance() {
-			if (pm.getMatchedKeys() != null && pm.getMatchedKeys().size() == 1) {
-				view = applicationContext.getBean(GetKeyPasswordOneKeyView.class);
-			} else {
-				view = applicationContext.getBean(GetKeyPasswordManyKeysView.class);
-			}
-		}
 	};
 
 	/**

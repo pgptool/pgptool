@@ -75,6 +75,9 @@
 	<bean class="org.pgptool.gui.ui.decryptone.DecryptOnePm" lazy-init="true" scope="prototype" />
 	<bean class="org.pgptool.gui.ui.decryptone.DecryptOneView" lazy-init="true" scope="prototype" />
 
+	<bean class="org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogPm" lazy-init="true" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogView" lazy-init="true" scope="prototype" />
+
 	<bean class="org.pgptool.gui.ui.tempfolderfordecrypted.TempFolderChooserPm" lazy-init="true" scope="singleton" />
 
 	<bean class="org.pgptool.gui.ui.createkey.CreateKeyView" lazy-init="true" scope="singleton" />
@@ -86,7 +89,7 @@
 	<bean class="org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultiplePm" scope="prototype" />
 
 	<bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPm" scope="prototype" />
-	<bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordManyKeysView" scope="singleton" />
-	<bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordOneKeyView" scope="singleton" />
+	<bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordManyKeysView" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordOneKeyView" scope="prototype" />
 
 </beans>

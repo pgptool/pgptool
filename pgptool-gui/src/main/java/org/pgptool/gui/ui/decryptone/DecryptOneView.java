@@ -22,28 +22,24 @@ import static org.pgptool.gui.app.Messages.text;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dialog.ModalityType;
+import java.awt.Container;
 import java.awt.FlowLayout;
-import java.awt.Window;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
-import org.pgptool.gui.app.Messages;
-import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
 
+import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class DecryptOneView extends DialogViewBaseCustom<DecryptOnePm> {
+public class DecryptOneView extends ViewBase<DecryptOnePm> {
 	private JPanel pnl;
 
 	private JPanel ajaxPanel;
@@ -63,8 +59,8 @@ public class DecryptOneView extends DialogViewBaseCustom<DecryptOnePm> {
 	private JCheckBox chkOpenTargetFolderAfter;
 	private JCheckBox chkOpenAssociatedApplication;
 
-	private JButton btnPerformOperation;
-	private JButton btnCancel;
+	public JButton btnPerformOperation;
+	public JButton btnCancel;
 
 	@Override
 	protected void internalInitComponents() {
@@ -174,33 +170,20 @@ public class DecryptOneView extends DialogViewBaseCustom<DecryptOnePm> {
 		bindingContext.setupBinding(pm.actionCancel, btnCancel);
 	}
 
+	public static int spacing(int lettersCount) {
+		return UiUtils.getFontRelativeSize(lettersCount);
+	}
+
+	// TODO: dialog.getRootPane().setDefaultButton(btnPerformOperation);
+
 	@Override
-	protected void handleDialogShown() {
-		super.handleDialogShown();
-		dialog.getRootPane().setDefaultButton(btnPerformOperation);
+	protected void internalRenderTo(Container owner, Object constraints) {
+		owner.add(pnl, constraints);
 	}
 
 	@Override
-	protected JDialog initDialog(Window owner, Object constraints) {
-		JDialog ret = new JDialog(owner, ModalityType.MODELESS);
-		ret.setLayout(new BorderLayout());
-		ret.setResizable(false);
-		ret.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		ret.setTitle(Messages.get("action.decrypt"));
-		ret.add(pnl, BorderLayout.CENTER);
-		ret.pack();
-		UiUtils.centerWindow(ret);
-		return ret;
-	}
-
-	@Override
-	protected JPanel getRootPanel() {
-		return pnl;
-	}
-
-	@Override
-	protected void dispatchWindowCloseEvent() {
-		btnCancel.getAction().actionPerformed(null);
+	protected void internalUnrender() {
+		pnl.getParent().remove(pnl);
 	}
 
 }

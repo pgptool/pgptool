@@ -46,6 +46,7 @@ import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
+import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
 import org.pgptool.gui.ui.encryptone.EncryptOnePm;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
@@ -98,7 +99,7 @@ public class DecryptOnePm extends PresentationModelBase {
 	@Autowired
 	private DecryptedHistoryService decryptedHistoryService;
 
-	private DecryptOneHost host;
+	private DecryptOneHost<KeyData> host;
 
 	private ModelProperty<String> sourceFile;
 	private ModelProperty<Boolean> isUseSameFolder;
@@ -267,83 +268,77 @@ public class DecryptOnePm extends PresentationModelBase {
 		validationErrors.removeAll(ValidationErrorsUtils.findErrorsForField(FN_TARGET_FILE, validationErrors));
 	}
 
+	@SuppressWarnings("deprecation")
 	private PropertyChangeListener onSourceFileModified = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			log.debug("Source changed to : " + sourceFile.getValue());
 
-			if (!validateSourceFile()) {
-				updatePrimaryOperationAvailability();
-				return;
-			}
-
-			updatePrimaryOperationAvailability();
-
-			decryptionDialogParameters = findParamsBasedOnSourceFile(sourceFile.getValue());
-			if (decryptionDialogParameters != null) {
-				useSugestedParameters(decryptionDialogParameters);
-
-				// QUESTION: Should we check if this file was already decrypted
-				// AND still can be found on the disk? Maybe we can just offer
-				// to open it?
-			}
-		}
-
-		/**
-		 * It actually does couple things:
-		 * 
-		 * 1) validate source file exists
-		 * 
-		 * 2) get password for this file
-		 * 
-		 * 3) get anticipated file name
-		 * 
-		 * @return true if we can proceed with this file
-		 */
-		@SuppressWarnings("deprecation")
-		private boolean validateSourceFile() {
 			validationErrors.removeAll(ValidationErrorsUtils.findErrorsForField(FN_SOURCE_FILE, validationErrors));
 
 			try {
 				String sourceFileStr = sourceFile.getValue();
 				if (!StringUtils.hasText(sourceFileStr)) {
 					validationErrors.add(new FieldRequiredValidationError(FN_SOURCE_FILE));
-					return false;
+					return;
 				}
 
 				if (!new File(sourceFileStr).exists()) {
 					validationErrors.add(new ValidationError("error.thisFileDoesntExist", FN_SOURCE_FILE));
-					return false;
+					return;
 				}
 
 				// Determine key and password here
 				sourceFileRecipientsKeysIds = encryptionService.findKeyIdsForDecryption(sourceFileStr);
 				if (keyAndPassword != null
 						&& sourceFileRecipientsKeysIds.contains(keyAndPassword.getDecryptionKeyId())) {
-					// it means same password and key can be used
+					keyAndPasswordCallback.onKeyPasswordResult(keyAndPassword);
 				} else {
 					Message purpose = new Message("phrase.needKeyToDecryptFile",
 							new Object[] { FilenameUtils.getName(sourceFileStr) });
-					keyAndPassword = host.askUserForKeyAndPassword(sourceFileRecipientsKeysIds, purpose);
+					// Detour
+					host.askUserForKeyAndPassword(sourceFileRecipientsKeysIds, purpose, keyAndPasswordCallback);
+					// NOTE: That might lead to immediate sync call to
+					// keyAndPasswordCallback if password was cached. If user
+					// needs to be requested then new window will appear and
+					// callback will be called later upon user input event
 				}
-
-				if (keyAndPassword == null) {
-					validationErrors.add(new ValidationError("error.noMatchingKeysRegistered", FN_SOURCE_FILE));
-					return false;
-				}
-
-				// Get target file name ("pre-decrypt")
-				String targetFileName = encryptionService.getNameOfFileEncrypted(sourceFileStr, keyAndPassword);
-				anticipatedTargetFileName = patchTargetFilenameIfNeeded(sourceFileStr, targetFileName);
-
-				return true;
 			} catch (Throwable t) {
 				log.error("Failed to find decryption keys", t);
 				validationErrors.add(
 						new ValidationError("error.failedToDetermineDecryptionMetodsForGivenFile", FN_SOURCE_FILE));
-				return false;
+			} finally {
+				updatePrimaryOperationAvailability();
 			}
 		}
+
+		private KeyAndPasswordCallback<KeyData> keyAndPasswordCallback = (
+				PasswordDeterminedForKey<KeyData> keyAndPassword) -> {
+			try {
+				DecryptOnePm.this.keyAndPassword = keyAndPassword;
+				if (keyAndPassword == null) {
+					validationErrors.add(new ValidationError("error.noMatchingKeysRegistered", FN_SOURCE_FILE));
+					return;
+				}
+
+				String sourceFileStr = sourceFile.getValue();
+				// Get target file name ("pre-decrypt")
+				String targetFileName = encryptionService.getNameOfFileEncrypted(sourceFileStr, keyAndPassword);
+				anticipatedTargetFileName = patchTargetFilenameIfNeeded(sourceFileStr, targetFileName);
+
+				// Continue with source file change handling
+				decryptionDialogParameters = findParamsBasedOnSourceFile(sourceFile.getValue());
+				if (decryptionDialogParameters != null) {
+					useSugestedParameters(decryptionDialogParameters);
+				}
+			} catch (Throwable t) {
+				log.error("Failed to find decryption keys", t);
+				validationErrors.add(
+						new ValidationError("error.failedToDetermineDecryptionMetodsForGivenFile", FN_SOURCE_FILE));
+			} finally {
+				updatePrimaryOperationAvailability();
+			}
+		};
 
 		private String patchTargetFilenameIfNeeded(String sourceFileStr, String targetFilename) {
 			if (StringUtils.hasText(targetFilename)) {
@@ -424,6 +419,7 @@ public class DecryptOnePm extends PresentationModelBase {
 		boolean result = true;
 		result &= StringUtils.hasText(sourceFile.getValue()) && new File(sourceFile.getValue()).exists();
 		result &= keyAndPassword != null;
+		result &= validationErrors.size() == 0;
 		actionDoOperation.setEnabled(result);
 	}
 

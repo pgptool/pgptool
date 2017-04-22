@@ -49,6 +49,7 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
 	private static final String ROLE_LOCK_FILE_EXTENSION = ".role-lock";
 	private static final String DIR_LOCK_FILE_EXTENSION = ".dir-lock";
 	private static final String PARAMS_FILE_EXTENSION = "args";
+	private static final String PARAMS_FILE_EXTENSION_TEMP = "temp";
 
 	private String tagName;
 	private PrimaryInstanceListener primaryInstanceListener;
@@ -88,8 +89,11 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
 
 			lockRole = new FileBasedLock(basePathForCommands + File.separator + tagName + ROLE_LOCK_FILE_EXTENSION);
 			if (!lockRole.tryLock()) {
+				log.info("This instance is not condiered as a primary instance");
 				return false;
 			}
+			log.info("From now on this instance considered as a primary instance");
+
 			Runtime.getRuntime().addShutdownHook(shutDownHook);
 
 			this.primaryInstanceListener = primaryInstanceListener;
@@ -122,19 +126,35 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
 			}
 
 			try {
-				InvokePrimaryInstanceArgs args = ConfigRepositoryImpl.readObject(fileName);
+				InvokePrimaryInstanceArgs args = tryReadArgs(fileName);
+				Preconditions.checkState(args != null, "Failed to read args file");
 				primaryInstanceListener.handleArgsFromOtherInstance(args.getCommandLineArgs());
+				safeDelete(fileName);
 			} catch (Throwable t) {
 				log.error("Failed to handle single instance command", t);
-			} finally {
-				if (fileName != null) {
-					try {
-						new File(fileName).delete();
-					} catch (Throwable t) {
-						log.warn("Failed to remove commands file", t);
-					}
-				}
 			}
+		}
+
+		private void safeDelete(String fileName) {
+			try {
+				new File(fileName).delete();
+			} catch (Throwable t) {
+				log.warn("Failed to remove commands file", t);
+			}
+		}
+
+		/**
+		 * We might need to perform couple attempts because rename action
+		 * initiated by other instance might block args file
+		 */
+		private InvokePrimaryInstanceArgs tryReadArgs(String fileName) throws InterruptedException {
+			long timeoutAt = System.currentTimeMillis() + LOCK_ARGS_SUBMISSION_TIMEOUT;
+			InvokePrimaryInstanceArgs args = ConfigRepositoryImpl.readObject(fileName);
+			while (args == null && System.currentTimeMillis() < timeoutAt) {
+				Thread.sleep(50);
+				args = ConfigRepositoryImpl.readObject(fileName);
+			}
+			return args;
 		}
 
 		@Override
@@ -192,10 +212,14 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
 
 	private File sendCommand(String[] args) {
 		String fileName = basePathForCommands + File.separator + getProcessId() + "_" + System.currentTimeMillis();
-		String tempFileName = fileName + ".temp";
+		String tempFileName = fileName + "." + PARAMS_FILE_EXTENSION_TEMP;
+		log.debug("Creating temp args file: " + tempFileName);
 		ConfigRepositoryImpl.writeObject(new InvokePrimaryInstanceArgs(args), tempFileName);
-		File targetFile = new File(fileName + ".args");
+		log.debug("Done creating temp args file: " + tempFileName);
+		File targetFile = new File(fileName + "." + PARAMS_FILE_EXTENSION);
+		log.debug("Renaming temp args file: " + tempFileName);
 		new File(tempFileName).renameTo(targetFile);
+		log.debug("Done renaming temp args file: " + tempFileName);
 		return targetFile;
 	}
 

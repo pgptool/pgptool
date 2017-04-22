@@ -141,6 +141,8 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 			oos = new ObjectOutputStream(fout);
 			oos.writeObject(o);
 			oos.flush();
+			oos.close();
+			fout.close();
 		} catch (Throwable t) {
 			throw new RuntimeException("Failed to write config: " + destinationFile, t);
 		} finally {

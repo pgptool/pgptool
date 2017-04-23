@@ -84,7 +84,7 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 				return;
 			}
 			pgpKeysRing = configRepository.readOrConstruct(PgpKeysRing.class);
-			dumpKeys();
+			//dumpKeys();
 			if (pgpKeysRing.size() == 0) {
 				keyGeneratorService.expectNewKeyCreation();
 			}

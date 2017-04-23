@@ -23,13 +23,16 @@ import java.awt.Font;
 import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.text.JTextComponent;
 
@@ -124,6 +127,35 @@ public class UiUtils {
 			}
 
 			private void fixFontSize() {
+				double scaleFactor = getScaleFactor();
+				//dumpLFDefault();
+				if (scaleFactor - 1 < 0.0001) {
+					log.debug("Font size will not be changed");
+					return;
+				}
+				int targetFontSize = (int) (12 * scaleFactor);
+				log.debug("Decided to change font size to " + targetFontSize);
+				setDefaultSize(targetFontSize);
+			}
+
+			private void dumpLFDefault() {
+				if (!log.isDebugEnabled()) {
+					return;
+				}
+
+				log.debug("Dumping all LF default...");
+
+				TreeMap<String, Object> sortedDefaults = new TreeMap<>((a, b) -> a.compareTo(b));
+				UIDefaults defaults = UIManager.getLookAndFeelDefaults();
+				for (Entry<Object, Object> def : defaults.entrySet()) {
+					sortedDefaults.put(def.getKey().toString(), def.getValue());
+				}
+				for (Entry<String, Object> def : sortedDefaults.entrySet()) {
+					log.debug(def.getKey() + " = " + def.getValue().toString());
+				}
+			}
+
+			private double getScaleFactor() {
 				Toolkit toolkit = Toolkit.getDefaultToolkit();
 				int dpi = toolkit.getScreenResolution();
 				if (dpi == 96) {
@@ -134,11 +166,11 @@ public class UiUtils {
 								"Screen dpi seem to be 96. Not going to change font size. Btw current size seem to be "
 										+ current);
 					}
-					return;
+					return 1;
 				}
-				int targetFontSize = 12 * dpi / 96;
-				log.debug("Screen dpi = " + dpi + ", decided to change font size to " + targetFontSize);
-				setDefaultSize(targetFontSize);
+				double scaleFactor = dpi / 96;
+				log.debug("Screen dpi = " + dpi);
+				return scaleFactor;
 			}
 
 			public void setDefaultSize(int size) {

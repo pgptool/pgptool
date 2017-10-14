@@ -188,9 +188,8 @@ public class KeysListPm extends PresentationModelBase {
 			protected void suggestTarget(JFileChooser ofd) {
 				super.suggestTarget(ofd);
 
-				String userName = key.getKeyInfo().buildUserNameOnly();
-				File suggestedFileName = new File(
-						ofd.getCurrentDirectory().getAbsolutePath() + File.separator + userName + ".asc");
+				File suggestedFileName = suggestFileNameForKey(key, ofd.getCurrentDirectory().getAbsolutePath(), false,
+						false);
 				ofd.setSelectedFile(suggestedFileName);
 			}
 		};
@@ -211,17 +210,38 @@ public class KeysListPm extends PresentationModelBase {
 			@Override
 			protected void suggestTarget(JFileChooser ofd) {
 				super.suggestTarget(ofd);
-				File suggestedFileName = suggestFileNameForKey(key, ofd.getCurrentDirectory().getAbsolutePath());
+				File suggestedFileName = suggestFileNameForKey(key, ofd.getCurrentDirectory().getAbsolutePath(), false,
+						false);
 				ofd.setSelectedFile(suggestedFileName);
 			}
-
 		};
 	}
 
-	private File suggestFileNameForKey(Key<KeyData> key, String basePathNoSlash) {
+	private File suggestFileNameForKey(Key<KeyData> key, String basePathNoSlash, boolean isAddExtension,
+			boolean isMitigateOverwrite) {
 		String userName = key.getKeyInfo().buildUserNameOnly();
-		File suggestedFileName = new File(basePathNoSlash + File.separator + userName + ".asc");
-		return suggestedFileName;
+		String fileName = basePathNoSlash + File.separator + userName;
+		String fileNameWithoutExt = fileName;
+		if (isAddExtension) {
+			fileName += ".asc";
+		}
+		if (isMitigateOverwrite) {
+			fileName = addKeyIdIfFileAlreadyExists(key, isAddExtension, fileName, fileNameWithoutExt);
+		}
+		return new File(fileName);
+	}
+
+	private String addKeyIdIfFileAlreadyExists(Key<KeyData> key, boolean isAddExtension, String fileName,
+			String fileNameWithoutExt) {
+		if (!new File(fileName).exists()) {
+			return fileName;
+		}
+
+		fileName = fileNameWithoutExt + "-" + key.getKeyInfo().getKeyId();
+		if (isAddExtension) {
+			fileName += ".asc";
+		}
+		return fileName;
 	}
 
 	@SuppressWarnings("serial")
@@ -261,7 +281,7 @@ public class KeysListPm extends PresentationModelBase {
 			if (targetFile == null) {
 				return;
 			}
-
+			
 			try {
 				keyFilesOperations.exportPrivateKey(key, targetFile);
 			} catch (Throwable t) {
@@ -299,9 +319,7 @@ public class KeysListPm extends PresentationModelBase {
 						"Failed to verify target folder existance " + newFolder);
 				for (int i = 0; i < keys.size(); i++) {
 					Key<KeyData> key = keys.get(i);
-					File targetFile = suggestFileNameForKey(key, newFolder);
-					// TODO: What if we have 2 different keys for person with a
-					// same name?
+					File targetFile = suggestFileNameForKey(key, newFolder, true, true);
 					keyFilesOperations.exportPublicKey(key, targetFile.getAbsolutePath());
 					keysExported++;
 				}

@@ -71,8 +71,9 @@ public class SaveFileChooserDialog {
 				return onDialogClosed(null, ofd);
 			}
 
-			if (userWantsToSelectOtherFile = retFile.exists()) {
-				if (UiUtils.confirm("confirm.overWriteExistingFile", new Object[] { retFile.getAbsolutePath() },
+			File retFileWithExt = new File(enforceExtension(retFile.getAbsolutePath(), ofd));
+			if (userWantsToSelectOtherFile = retFileWithExt.exists()) {
+				if (UiUtils.confirm("confirm.overWriteExistingFile", new Object[] { retFileWithExt.getAbsolutePath() },
 						parentWindow)) {
 					userWantsToSelectOtherFile = false;
 				}

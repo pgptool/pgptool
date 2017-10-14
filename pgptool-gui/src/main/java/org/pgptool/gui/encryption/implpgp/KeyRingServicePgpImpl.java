@@ -84,7 +84,7 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 				return;
 			}
 			pgpKeysRing = configRepository.readOrConstruct(PgpKeysRing.class);
-			//dumpKeys();
+			// dumpKeys();
 			if (pgpKeysRing.size() == 0) {
 				keyGeneratorService.expectNewKeyCreation();
 			}
@@ -120,14 +120,15 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 				}
 			} else {
 				PGPPublicKeyRing pkr = key.getKeyData().getPublicKeyRing();
+				if (pkr != null) {
+					log.debug("PUBLIC KEYRING: FIRST Public Key");
+					logPublicKey(pkr.getPublicKey());
 
-				log.debug("PUBLIC KEYRING: FIRST Public Key");
-				logPublicKey(pkr.getPublicKey());
-
-				log.debug("PUBLIC KEYRING: ITERATING Public Keys");
-				for (Iterator<PGPPublicKey> iterPK = pkr.getPublicKeys(); iterPK.hasNext();) {
-					PGPPublicKey pk = iterPK.next();
-					logPublicKey(pk);
+					log.debug("PUBLIC KEYRING: ITERATING Public Keys");
+					for (Iterator<PGPPublicKey> iterPK = pkr.getPublicKeys(); iterPK.hasNext();) {
+						PGPPublicKey pk = iterPK.next();
+						logPublicKey(pk);
+					}
 				}
 			}
 		}

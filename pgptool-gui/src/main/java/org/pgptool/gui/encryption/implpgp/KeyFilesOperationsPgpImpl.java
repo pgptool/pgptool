@@ -180,10 +180,14 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 			if ("asc".equalsIgnoreCase(FilenameUtils.getExtension(targetFilePathname))) {
 				os.push(new ArmoredOutputStream(os.peek()));
 			}
-			key.getKeyData().getPublicKeyRing().encode(os.peek());
+			if (key.getKeyData().getPublicKeyRing() != null) {
+				key.getKeyData().getPublicKeyRing().encode(os.peek());
+			} else {
+				key.getKeyData().getSecretKeyRing().getPublicKey().encode(os.peek());
+			}
 		} catch (Throwable t) {
 			throw new RuntimeException(
-					"Failed to export private key " + key.getKeyInfo().getUser() + " to " + targetFilePathname, t);
+					"Failed to export public key " + key.getKeyInfo().getUser() + " to " + targetFilePathname, t);
 		} finally {
 			while (!os.isEmpty()) {
 				IoStreamUtils.safeClose(os.pop());
@@ -204,6 +208,9 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 				os.push(new ArmoredOutputStream(os.peek()));
 			}
 			key.getKeyData().getSecretKeyRing().encode(os.peek());
+			if (key.getKeyData().getPublicKeyRing() != null) {
+				key.getKeyData().getPublicKeyRing().encode(os.peek());
+			}
 		} catch (Throwable t) {
 			throw new RuntimeException(
 					"Failed to export private key " + key.getKeyInfo().getUser() + " to " + targetFilePathname, t);

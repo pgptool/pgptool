@@ -233,10 +233,19 @@ public class KeysListPm extends PresentationModelBase {
 			}
 			Key<KeyData> key = tableModelProp.getValue();
 			String targetFile = buildPublicKeyTargetChooser(key).askUserForFile();
-			if (targetFile != null) {
-				keyFilesOperations.exportPublicKey(key, targetFile);
-				browseForFolder(FilenameUtils.getFullPath(targetFile));
+			if (targetFile == null) {
+				return;
 			}
+
+			try {
+				keyFilesOperations.exportPublicKey(key, targetFile);
+			} catch (Throwable t) {
+				log.error("Failed to export key " + key, t);
+				EntryPoint.reportExceptionToUser("error.failedToExportPublicKey", t, key.toString());
+				return;
+			}
+
+			browseForFolder(FilenameUtils.getFullPath(targetFile));
 		}
 	};
 
@@ -249,12 +258,21 @@ public class KeysListPm extends PresentationModelBase {
 			}
 			Key<KeyData> key = tableModelProp.getValue();
 			String targetFile = buildPrivateKeyTargetChooser(key).askUserForFile();
-			if (targetFile != null) {
-				keyFilesOperations.exportPrivateKey(key, targetFile);
-				UiUtils.messageBox(findRegisteredWindowIfAny(), text("keys.privateKey.exportWarning"),
-						text("term.attention"), JOptionPane.WARNING_MESSAGE);
-				browseForFolder(FilenameUtils.getFullPath(targetFile));
+			if (targetFile == null) {
+				return;
 			}
+
+			try {
+				keyFilesOperations.exportPrivateKey(key, targetFile);
+			} catch (Throwable t) {
+				log.error("Failed to export private key " + key, t);
+				EntryPoint.reportExceptionToUser("error.failedToExportPrivateKey", t, key.toString());
+				return;
+			}
+
+			UiUtils.messageBox(findRegisteredWindowIfAny(), text("keys.privateKey.exportWarning"),
+					text("term.attention"), JOptionPane.WARNING_MESSAGE);
+			browseForFolder(FilenameUtils.getFullPath(targetFile));
 		}
 	};
 
@@ -282,6 +300,8 @@ public class KeysListPm extends PresentationModelBase {
 				for (int i = 0; i < keys.size(); i++) {
 					Key<KeyData> key = keys.get(i);
 					File targetFile = suggestFileNameForKey(key, newFolder);
+					// TODO: What if we have 2 different keys for person with a
+					// same name?
 					keyFilesOperations.exportPublicKey(key, targetFile.getAbsolutePath());
 					keysExported++;
 				}

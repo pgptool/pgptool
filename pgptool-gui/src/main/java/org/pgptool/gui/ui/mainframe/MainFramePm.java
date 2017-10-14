@@ -28,8 +28,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.swing.Action;
+import javax.swing.JOptionPane;
 
+import org.apache.commons.io.FilenameUtils;
 import org.pgptool.gui.app.EntryPoint;
+import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.decryptedlist.api.DecryptedHistoryService;
@@ -167,7 +170,8 @@ public class MainFramePm extends PresentationModelBase {
 	protected Action actionDelete = new RowContextAction("action.deleteUnencryptedFile") {
 		@Override
 		public void onActionPerformed(DecryptedFile row) {
-			if (!UiUtils.confirm("confirmation.areUserSureToDeletDecryptedFile", null, findRegisteredWindowIfAny())) {
+			if (!UiUtils.confirm("confirmation.areUserSureToDeletDecryptedFile",
+					new Object[] { FilenameUtils.getName(row.getDecryptedFile()) }, findRegisteredWindowIfAny())) {
 				return;
 			}
 
@@ -179,7 +183,8 @@ public class MainFramePm extends PresentationModelBase {
 				return;
 			}
 
-			UiUtils.confirm("error.cannotDeletebecauseFileIsLocked", null, findRegisteredWindowIfAny());
+			UiUtils.messageBox(findRegisteredWindowIfAny(), Messages.get("error.cannotDeletebecauseFileIsLocked"),
+					Messages.get("term.error"), JOptionPane.ERROR_MESSAGE);
 		}
 	};
 

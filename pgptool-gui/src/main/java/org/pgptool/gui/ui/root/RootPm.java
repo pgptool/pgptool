@@ -47,6 +47,9 @@ import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleView;
 import org.pgptool.gui.ui.encryptone.EncryptOneHost;
 import org.pgptool.gui.ui.encryptone.EncryptOnePm;
 import org.pgptool.gui.ui.encryptone.EncryptOneView;
+import org.pgptool.gui.ui.encrypttext.EncryptTextHost;
+import org.pgptool.gui.ui.encrypttext.EncryptTextPm;
+import org.pgptool.gui.ui.encrypttext.EncryptTextView;
 import org.pgptool.gui.ui.importkey.KeyImporterHost;
 import org.pgptool.gui.ui.importkey.KeyImporterPm;
 import org.pgptool.gui.ui.importkey.KeyImporterView;
@@ -234,6 +237,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		public void openEncryptBackMultipleFor(Set<String> decryptedFiles) {
 			new EncryptBackManyWindowOpener(decryptedFiles).actionToOpenWindow.actionPerformed(null);
 		}
+
+		@Override
+		public Action getActionForEncryptText() {
+			return encryptTextHost.actionToOpenWindow;
+		}
 	};
 
 	private void openMainFrameWindow() {
@@ -283,6 +291,36 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 				view.unrender();
 				pm.detach();
 				pm = null;
+			}
+		};
+
+		@Override
+		protected boolean postConstructPm() {
+			if (!pm.init(host)) {
+				// This happens if user clicked cancel during first render of
+				// "Browse dialog"
+				pm.detach();
+				pm = null;
+				return false;
+			}
+			return true;
+		};
+	};
+
+	private DialogOpener<EncryptTextPm, EncryptTextView> encryptTextHost = new DialogOpener<EncryptTextPm, EncryptTextView>(
+			EncryptTextPm.class, EncryptTextView.class, "action.encryptText") {
+
+		EncryptTextHost host = new EncryptTextHost() {
+			@Override
+			public void handleClose() {
+				view.unrender();
+				pm.detach();
+				pm = null;
+			}
+
+			@Override
+			public Action getActionToOpenCertificatesList() {
+				return keysListWindowHost.actionToOpenWindow;
 			}
 		};
 
@@ -357,7 +395,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		};
 	};
 
-	private DialogOpener<DecryptOneDialogPm, DecryptOneDialogView> decryptionWindowHost = new DecryptionWindowOpener(null);
+	private DialogOpener<DecryptOneDialogPm, DecryptOneDialogView> decryptionWindowHost = new DecryptionWindowOpener(
+			null);
 
 	private class DecryptionWindowOpener extends DialogOpener<DecryptOneDialogPm, DecryptOneDialogView> {
 		private String sourceFile;
@@ -506,8 +545,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		/**
 		 * NOTE: Override it if any further initialization of PM needed
 		 * 
-		 * @return true if we should proceed and open view. false if operation
-		 *         should be canceled -- no view will be opened
+		 * @return true if we should proceed and open view. false if operation should be
+		 *         canceled -- no view will be opened
 		 */
 		protected boolean postConstructPm() {
 			return true;

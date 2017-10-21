@@ -34,6 +34,8 @@ public interface EncryptionService<TKeyData extends KeyData> {
 	void encrypt(String sourceFile, String targetFile, Collection<Key<TKeyData>> recipients,
 			ProgressHandler optionalProgressHandler) throws UserReqeustedCancellationException;
 
+	String encryptText(String sourceText, Collection<Key<TKeyData>> recipients);
+
 	void decrypt(String sourceFile, String targetFile, PasswordDeterminedForKey<TKeyData> keyAndPassword)
 			throws InvalidPasswordException;
 

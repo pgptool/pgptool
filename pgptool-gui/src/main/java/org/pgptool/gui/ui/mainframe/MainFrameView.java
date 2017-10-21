@@ -85,6 +85,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private JMenuItem miConfigExit;
 	private JMenuItem miEncrypt;
 	private JMenuItem miDecrypt;
+	private JMenuItem miEncryptText;
 	private JMenuItem miEncryptBackAll;
 
 	private JPanel panelTablePlaceholder;
@@ -118,9 +119,13 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		row++;
 		JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		pnlButtons.add(new JButton(actionEncrypt));
-		pnlButtons.add(new JLabel("   "));
+		pnlButtons.add(new JLabel("  "));
+		pnlButtons.add(new JButton(actionEncryptText));
+		pnlButtons.add(new JLabel("  "));
 		pnlButtons.add(new JButton(actionDecrypt));
-		pnlButtons.add(new JLabel("   "));
+		pnlButtons.add(new JLabel("  "));
+		pnlButtons.add(new JButton(actionDecryptText));
+		pnlButtons.add(new JLabel("  "));
 		pnlButtons.add(new JButton(actionKeyring));
 		panelRoot.add(pnlButtons, sgl.cs(0, row));
 
@@ -137,7 +142,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	}
 
 	@SuppressWarnings("serial")
-	private Action actionEncrypt = new ToolbarAction("action.encrypt", "/icons/encrypt.png") {
+	private Action actionEncrypt = new ToolbarAction("action.encryptFile", "/icons/encrypt.png") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if (pm != null) {
@@ -145,9 +150,27 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 			}
 		}
 	};
+	
+	@SuppressWarnings("serial")
+	private Action actionEncryptText = new ToolbarAction("action.encryptText", "/icons/encrypt.png") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (pm != null) {
+				pm.getActionEncryptText().actionPerformed(e);
+			}
+		}
+	};
 
 	@SuppressWarnings("serial")
-	private Action actionDecrypt = new ToolbarAction("action.decrypt", "/icons/decrypt.png") {
+	private Action actionDecryptText = new ToolbarAction("action.decryptText", "/icons/decrypt.png") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// TODO: Impl #90
+		}
+	};
+
+	@SuppressWarnings("serial")
+	private Action actionDecrypt = new ToolbarAction("action.decryptFile", "/icons/decrypt.png") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if (pm != null) {
@@ -315,6 +338,8 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		menuActions.add(miEncrypt = new JMenuItem());
 		menuActions.add(miDecrypt = new JMenuItem());
 		menuActions.addSeparator();
+		menuActions.add(miEncryptText = new JMenuItem());
+		menuActions.addSeparator();
 		menuActions.add(miEncryptBackAll = new JMenuItem());
 
 		menuBar.add(menuFile);
@@ -381,6 +406,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		bindingContext.setupBinding(pm.getActionShowKeysList(), miShowKeyList);
 		bindingContext.setupBinding(pm.getActionChangeFolderForDecrypted(), miChangeTempFolderForDecrypted);
 		bindingContext.setupBinding(pm.getActionEncrypt(), miEncrypt);
+		bindingContext.setupBinding(pm.getActionEncryptText(), miEncryptText);
 		bindingContext.setupBinding(pm.actionEncryptBackAll, miEncryptBackAll);
 		bindingContext.setupBinding(pm.getActionDecrypt(), miDecrypt);
 	}

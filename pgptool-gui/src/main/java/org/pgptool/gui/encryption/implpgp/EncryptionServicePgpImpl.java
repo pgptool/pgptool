@@ -19,12 +19,15 @@ package org.pgptool.gui.encryption.implpgp;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringReader;
 import java.math.BigInteger;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
@@ -38,6 +41,7 @@ import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
+import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPEncryptedData;
@@ -96,6 +100,26 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 	}
 
 	@Override
+	public String encryptText(String sourceText, Collection<Key<KeyDataPgp>> recipients) {
+		try {
+			PGPEncryptedDataGenerator dataGenerator = buildEncryptedDataGenerator(
+					buildKeysListForEncryption(recipients));
+
+			EncryptionSourceInfo encryptionSourceInfo = new EncryptionSourceInfo("text.asc", sourceText.length(),
+					System.currentTimeMillis());
+			ByteArrayOutputStream pOut = new ByteArrayOutputStream();
+			ByteArrayInputStream pIn = new ByteArrayInputStream(sourceText.getBytes("UTF-8"));
+			ArmoredOutputStream armoredOut = new ArmoredOutputStream(pOut);
+			doEncryptFile(pIn, encryptionSourceInfo, armoredOut, dataGenerator, null, PGPLiteralData.BINARY);
+			armoredOut.flush();
+			armoredOut.close();
+			return pOut.toString();
+		} catch (Throwable t) {
+			throw new RuntimeException("Encryption failed", t);
+		}
+	}
+
+	@Override
 	public void encrypt(String sourceFile, String targetFile, Collection<Key<KeyDataPgp>> recipients,
 			ProgressHandler optionalProgressHandler) throws UserReqeustedCancellationException {
 		try {
@@ -109,7 +133,8 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 					buildKeysListForEncryption(recipients));
 
 			OutputStream out = new BufferedOutputStream(new FileOutputStream(targetFile, false));
-			doEncryptFile(out, sourceFile, dataGenerator, progress);
+			doEncryptFile(new FileInputStream(sourceFile), EncryptionSourceInfo.fromFile(sourceFile), out,
+					dataGenerator, progress, PGPLiteralData.BINARY);
 			out.close();
 		} catch (Throwable t) {
 			Throwables.propagateIfInstanceOf(t, UserReqeustedCancellationException.class);
@@ -117,53 +142,53 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 		}
 	}
 
-	private static void doEncryptFile(OutputStream out, String sourceFileStr, PGPEncryptedDataGenerator encDataGen,
-			Updater progress)
+	private static void doEncryptFile(InputStream pIn, EncryptionSourceInfo encryptionSourceInfo, OutputStream out,
+			PGPEncryptedDataGenerator encDataGen, Updater progress, char outputType)
 			throws IOException, NoSuchProviderException, PGPException, UserReqeustedCancellationException {
 		OutputStream encryptedStream = encDataGen.open(out, new byte[BUFFER_SIZE]);
 		PGPCompressedDataGenerator compressedDataGen = new PGPCompressedDataGenerator(PGPCompressedData.ZIP);
 		OutputStream compressedStream = compressedDataGen.open(encryptedStream);
-		File sourceFile = new File(sourceFileStr);
-		estimateFullOperationSize(sourceFile, progress);
-		writeFileToLiteralData(sourceFile, compressedStream, PGPLiteralData.BINARY, new byte[BUFFER_SIZE], progress);
+		estimateFullOperationSize(encryptionSourceInfo, progress);
+		writeFileToLiteralData(pIn, encryptionSourceInfo, compressedStream, outputType, new byte[BUFFER_SIZE],
+				progress);
 		compressedDataGen.close();
 		encryptedStream.close();
 	}
 
-	private static void estimateFullOperationSize(File sourceFile, Updater progress) {
+	private static void estimateFullOperationSize(EncryptionSourceInfo encryptionSourceInfo, Updater progress) {
 		if (progress == null) {
 			return;
 		}
-		progress.updateTotalSteps(BigInteger.valueOf(sourceFile.length()));
+		progress.updateTotalSteps(BigInteger.valueOf(encryptionSourceInfo.getSize()));
 	}
 
-	public static void writeFileToLiteralData(File sourceFile, OutputStream out, char fileType, byte[] buffer,
-			Updater progress) throws IOException, UserReqeustedCancellationException {
-		PGPLiteralDataGenerator lData = new PGPLiteralDataGenerator();
-		OutputStream pOut = lData.open(out, fileType, sourceFile.getName(), new Date(sourceFile.lastModified()),
-				buffer);
-		pipeFileContents(sourceFile, pOut, buffer.length, progress);
-	}
-
-	private static void pipeFileContents(File file, OutputStream pOut, int bufSize, Updater progress)
+	public static void writeFileToLiteralData(InputStream pIn, EncryptionSourceInfo encryptionSourceInfo,
+			OutputStream out, char fileType, byte[] buffer, Updater progress)
 			throws IOException, UserReqeustedCancellationException {
+		PGPLiteralDataGenerator lData = new PGPLiteralDataGenerator();
+		OutputStream pOut = lData.open(out, fileType, encryptionSourceInfo.getName(),
+				new Date(encryptionSourceInfo.getModifiedAt()), buffer);
+		pipeFileContents(pIn, encryptionSourceInfo, pOut, buffer.length, progress);
+	}
+
+	private static void pipeFileContents(InputStream pIn, EncryptionSourceInfo encryptionSourceInfo, OutputStream pOut,
+			int bufSize, Updater progress) throws IOException, UserReqeustedCancellationException {
 		if (progress != null) {
-			progress.updateStepInfo("encryption.progress.encrypting", FilenameUtils.getName(file.getAbsolutePath()));
+			progress.updateStepInfo("encryption.progress.encrypting", encryptionSourceInfo.getName());
 		}
 
-		FileInputStream in = new FileInputStream(file);
 		byte[] buf = new byte[bufSize];
 		long totalRead = 0;
 
 		int len;
-		while ((len = in.read(buf)) > 0) {
+		while ((len = pIn.read(buf)) > 0) {
 			pOut.write(buf, 0, len);
 			totalRead += len;
 			updateProgress(progress, totalRead);
 		}
 
 		pOut.close();
-		in.close();
+		pIn.close();
 	}
 
 	private static void updateProgress(Updater progress, long totalBytesRead)

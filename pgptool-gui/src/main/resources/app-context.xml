@@ -92,4 +92,7 @@
 	<bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordManyKeysView" scope="prototype" />
 	<bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordOneKeyView" scope="prototype" />
 
+	<bean class="org.pgptool.gui.ui.encrypttext.EncryptTextPm" lazy-init="true" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.encrypttext.EncryptTextView" lazy-init="true" scope="prototype" />
+
 </beans>

@@ -15,32 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *******************************************************************************/
-package org.pgptool.gui.ui.mainframe;
-
-import java.util.Set;
+package org.pgptool.gui.ui.encrypttext;
 
 import javax.swing.Action;
 
-public interface MainFrameHost {
-	void handleExitApp();
+public interface EncryptTextHost {
+	void handleClose();
 
-	Action getActionShowAboutInfo();
-
-	Action getActionImportKey();
-
-	Action getActionShowKeysList();
-
-	Action getActionForEncrypt();
-
-	Action getActionForEncryptText();
-
-	Action getActionForDecrypt();
-
-	Action getActionChangeFolderForDecrypted();
-
-	void openEncryptDialogFor(String decryptedFile);
-
-	Action getActionCreateKey();
-
-	void openEncryptBackMultipleFor(Set<String> decryptedFiles);
+	Action getActionToOpenCertificatesList();
 }

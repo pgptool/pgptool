@@ -19,7 +19,6 @@ package org.pgptool.gui.ui.mainframe;
 
 import java.awt.Desktop;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -252,6 +251,10 @@ public class MainFramePm extends PresentationModelBase {
 	public Action getActionEncryptText() {
 		return host.getActionForEncryptText();
 	}
+	
+	public Action getActionDecryptText() {
+		return host.getActionForDecryptText();
+	}
 
 	public Action getActionDecrypt() {
 		return host.getActionForDecrypt();
@@ -301,4 +304,5 @@ public class MainFramePm extends PresentationModelBase {
 
 		protected abstract void onActionPerformed(DecryptedFile row);
 	}
+
 }

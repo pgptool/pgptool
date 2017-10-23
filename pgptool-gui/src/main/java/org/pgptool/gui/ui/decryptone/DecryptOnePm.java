@@ -379,9 +379,7 @@ public class DecryptOnePm extends PresentationModelBase {
 				}
 			}
 			// NOTE: MAGIC: We need to set it AFTER we set targetFolder. Because
-			// then isUseSameFolder onChange handler will not pen folder
-			// selection
-			// dialog
+			// then isUseSameFolder onChange handler will not open folder selection dialog
 			if (params.isUseSameFolder()) {
 				isUseSameFolder.setValueByOwner(true);
 			} else if (params.isUseTempFolder()) {
@@ -536,12 +534,11 @@ public class DecryptOnePm extends PresentationModelBase {
 		}
 
 		/**
-		 * We use this method to store parameters that program will suggest to
-		 * use when user will desire to encrypt back file that was just
-		 * decrypted
+		 * We use this method to store parameters that program will suggest to use when
+		 * user will desire to encrypt back file that was just decrypted
 		 * 
-		 * NOTE: Slight SRP concern here. We're interfering with responsibility
-		 * area of {@link EncryptOnePm}
+		 * NOTE: Slight SRP concern here. We're interfering with responsibility area of
+		 * {@link EncryptOnePm}
 		 * 
 		 * @param decryptedFile
 		 *            decrypted file path name
@@ -576,8 +573,8 @@ public class DecryptOnePm extends PresentationModelBase {
 		}
 
 		/**
-		 * bruteforce filename adding index to base filename until vacant
-		 * filename found.
+		 * bruteforce filename adding index to base filename until vacant filename
+		 * found.
 		 */
 		private String ensureFileNameVacant(String requestedTargetFile) {
 			String ret = requestedTargetFile;

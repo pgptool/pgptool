@@ -22,6 +22,11 @@ import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
+/**
+ * This component is a container that will change it's appearance on the fly
+ * between {@link GetKeyPasswordPm} and {@link DecryptOnePm} to provide more
+ * streamlined UX
+ */
 public class DecryptOneDialogPm extends PresentationModelBase implements ApplicationContextAware {
 	public static enum Intent {
 		Decrypt, PasswordRequest;

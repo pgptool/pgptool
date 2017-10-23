@@ -95,4 +95,10 @@
 	<bean class="org.pgptool.gui.ui.encrypttext.EncryptTextPm" lazy-init="true" scope="prototype" />
 	<bean class="org.pgptool.gui.ui.encrypttext.EncryptTextView" lazy-init="true" scope="prototype" />
 
+	<bean class="org.pgptool.gui.ui.decrypttext.DecryptTextPm" lazy-init="true" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.decrypttext.DecryptTextView" lazy-init="true" scope="prototype" />
+
+	<bean class="org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogView" scope="prototype" />
+
 </beans>

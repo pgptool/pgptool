@@ -12,6 +12,10 @@ public class Message implements HasMessageCode, HasMessageArgs {
 		this.args = args;
 	}
 
+	public Message(String code) {
+		this.code = code;
+	}
+
 	@Override
 	public Object[] getMessageArgs() {
 		return args;

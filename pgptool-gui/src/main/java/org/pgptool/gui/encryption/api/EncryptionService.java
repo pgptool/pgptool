@@ -17,6 +17,7 @@
  *******************************************************************************/
 package org.pgptool.gui.encryption.api;
 
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Set;
 
@@ -39,10 +40,19 @@ public interface EncryptionService<TKeyData extends KeyData> {
 	void decrypt(String sourceFile, String targetFile, PasswordDeterminedForKey<TKeyData> keyAndPassword)
 			throws InvalidPasswordException;
 
+	String decryptText(String encryptedText, PasswordDeterminedForKey<TKeyData> keyAndPassword)
+			throws InvalidPasswordException;
+
 	/**
 	 * Discover all key ids which can be used for decryption
 	 */
 	Set<String> findKeyIdsForDecryption(String filePathName);
+
+	/**
+	 * @param inputStream
+	 *            input stream for encrypted text
+	 */
+	Set<String> findKeyIdsForDecryption(InputStream inputStream);
 
 	/**
 	 * This method "pre-decrypts" file only to get initial file name that was

@@ -15,34 +15,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *******************************************************************************/
-package org.pgptool.gui.ui.mainframe;
+package org.pgptool.gui.ui.decrypttext;
 
+import java.awt.Window;
 import java.util.Set;
 
 import javax.swing.Action;
 
-public interface MainFrameHost {
-	void handleExitApp();
+import org.pgptool.gui.app.Message;
+import org.pgptool.gui.encryption.api.dto.KeyData;
+import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
 
-	Action getActionShowAboutInfo();
+public interface DecryptTextHost<TKeyData extends KeyData> {
+	void handleClose();
 
-	Action getActionImportKey();
+	Action getActionToOpenCertificatesList();
 
-	Action getActionShowKeysList();
+	/**
+	 * This method will allow to find out password for a key. If password is already
+	 * cached it will be returned right away (through callback). Otherwise method
+	 * will return null and call callback when user will provide password.
+	 * 
+	 * @param window
+	 */
+	void askUserForKeyAndPassword(Set<String> keysIds, Message purpose,
+			KeyAndPasswordCallback<TKeyData> keyAndPasswordCallback, Window parentWindow);
 
-	Action getActionForEncrypt();
-
-	Action getActionForEncryptText();
-
-	Action getActionForDecrypt();
-
-	Action getActionForDecryptText();
-
-	Action getActionChangeFolderForDecrypted();
-
-	void openEncryptDialogFor(String decryptedFile);
-
-	Action getActionCreateKey();
-
-	void openEncryptBackMultipleFor(Set<String> decryptedFiles);
+	void openEncryptText(Set<String> recipientsList);
 }

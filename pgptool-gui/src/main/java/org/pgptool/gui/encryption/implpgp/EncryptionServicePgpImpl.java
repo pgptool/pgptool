@@ -27,7 +27,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.StringReader;
 import java.math.BigInteger;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
@@ -224,16 +223,33 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 		return encryptedDataGenerator;
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
 	public Set<String> findKeyIdsForDecryption(String filePathName) {
 		Preconditions.checkArgument(StringUtils.hasText(filePathName) && new File(filePathName).exists(),
 				"filePathName has to point to existing file");
-
 		log.debug("Looking for decryption keys for file " + filePathName);
 
-		try (FileInputStream stream = new FileInputStream(new File(filePathName))) {
-			PGPObjectFactory factory = new PGPObjectFactory(PGPUtil.getDecoderStream(stream),
+		FileInputStream stream = null;
+		try {
+			stream = new FileInputStream(new File(filePathName));
+		} catch (Throwable t) {
+			throw new RuntimeException("Failed to open file " + filePathName, t);
+		}
+
+		try {
+			return findKeyIdsForDecryption(stream);
+		} finally {
+			IoStreamUtils.safeClose(stream);
+		}
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Override
+	public Set<String> findKeyIdsForDecryption(InputStream inputStream) {
+		Preconditions.checkArgument(inputStream != null, "Input stream must not be null");
+
+		try {
+			PGPObjectFactory factory = new PGPObjectFactory(PGPUtil.getDecoderStream(inputStream),
 					KeyFilesOperationsPgpImpl.fingerprintCalculator);
 
 			for (Iterator iter = factory.iterator(); iter.hasNext();) {
@@ -253,7 +269,38 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 			}
 			throw new RuntimeException("Information about decryption methods was not found");
 		} catch (Throwable t) {
-			throw new RuntimeException("This file foesnt't look like encrypted file OR format is not supported", t);
+			throw new RuntimeException("This file doesn't look like encrypted file OR format is not supported", t);
+		}
+	}
+
+	@Override
+	public String decryptText(String encryptedText, PasswordDeterminedForKey<KeyDataPgp> keyAndPassword)
+			throws InvalidPasswordException {
+		log.debug("Decrytping text");
+
+		Key<KeyDataPgp> decryptionKey = keyAndPassword.getMatchedKey();
+		String passphrase = keyAndPassword.getPassword();
+
+		Preconditions.checkArgument(StringUtils.hasText(encryptedText), "encryptedText required");
+		Preconditions.checkArgument(decryptionKey != null, "decryption key must be provided");
+		Preconditions.checkArgument(StringUtils.hasText(passphrase), "Passphrase must be provided");
+
+		InputStream in = null;
+		try {
+			PGPSecretKey secretKey = decryptionKey.getKeyData().findSecretKeyById(keyAndPassword.getDecryptionKeyId());
+			PGPPrivateKey privateKey = getPrivateKey(passphrase, secretKey);
+
+			in = new ByteArrayInputStream(encryptedText.getBytes("UTF-8"));
+			PGPPublicKeyEncryptedData publicKeyEncryptedData = getPublicKeyEncryptedDataByKeyId(in, secretKey);
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			decryptStream(publicKeyEncryptedData, privateKey, outputStream);
+			return outputStream.toString("UTF-8");
+		} catch (Throwable t) {
+			Throwables.propagateIfInstanceOf(t, InvalidPasswordException.class);
+			log.error("Text decryption failed", t);
+			throw new RuntimeException("Text decryption failed", t);
+		} finally {
+			IoStreamUtils.safeClose(in);
 		}
 	}
 
@@ -278,7 +325,8 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 
 			in = new BufferedInputStream(new FileInputStream(sourceFile));
 			PGPPublicKeyEncryptedData publicKeyEncryptedData = getPublicKeyEncryptedDataByKeyId(in, secretKey);
-			decryptFile(publicKeyEncryptedData, privateKey, targetFile);
+			FileOutputStream outputStream = new FileOutputStream(targetFile);
+			decryptStream(publicKeyEncryptedData, privateKey, outputStream);
 		} catch (Throwable t) {
 			Throwables.propagateIfInstanceOf(t, InvalidPasswordException.class);
 
@@ -294,10 +342,8 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 	 * 
 	 * Inspired by
 	 * https://github.com/bcgit/bc-java/blob/master/pg/src/main/java/org/bouncycastle/openpgp/examples/KeyBasedFileProcessor.java
-	 * 
-	 * @param publicKeyEncryptedData
 	 */
-	private void decryptFile(PGPPublicKeyEncryptedData pbe, PGPPrivateKey privateKey, String targetFile) {
+	private void decryptStream(PGPPublicKeyEncryptedData pbe, PGPPrivateKey privateKey, OutputStream outputStream) {
 		try {
 			InputStream clear = pbe.getDataStream(new BcPublicKeyDataDecryptorFactory(privateKey));
 
@@ -324,7 +370,7 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 					// NOTE: We know initial file name (in case we need it):
 					// ld.getFileName();
 					InputStream unc = ld.getInputStream();
-					OutputStream fOut = new BufferedOutputStream(new FileOutputStream(targetFile));
+					OutputStream fOut = new BufferedOutputStream(outputStream);
 					Streams.pipeAll(unc, fOut);
 					fOut.close();
 

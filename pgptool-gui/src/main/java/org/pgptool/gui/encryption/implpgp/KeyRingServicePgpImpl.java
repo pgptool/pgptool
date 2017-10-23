@@ -57,8 +57,7 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 	}
 
 	/**
-	 * This method is created to ensure static constructor of this class was
-	 * called
+	 * This method is created to ensure static constructor of this class was called
 	 */
 	public static synchronized void touch() {
 
@@ -174,7 +173,7 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 		ensureRead();
 
 		for (Key<KeyDataPgp> cur : pgpKeysRing) {
-			if (cur.getKeyInfo().getKeyId().equals(keyId)) {
+			if (cur.getKeyInfo().getKeyId().equals(keyId) || cur.getKeyData().isHasAlternativeId(keyId)) {
 				return cur;
 			}
 		}

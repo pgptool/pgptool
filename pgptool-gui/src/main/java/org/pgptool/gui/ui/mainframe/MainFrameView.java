@@ -86,6 +86,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private JMenuItem miEncrypt;
 	private JMenuItem miDecrypt;
 	private JMenuItem miEncryptText;
+	private JMenuItem miDecryptText;
 	private JMenuItem miEncryptBackAll;
 
 	private JPanel panelTablePlaceholder;
@@ -165,7 +166,9 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private Action actionDecryptText = new ToolbarAction("action.decryptText", "/icons/decrypt.png") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			// TODO: Impl #90
+			if (pm != null) {
+				pm.getActionDecryptText().actionPerformed(e);
+			}
 		}
 	};
 
@@ -339,6 +342,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		menuActions.add(miDecrypt = new JMenuItem());
 		menuActions.addSeparator();
 		menuActions.add(miEncryptText = new JMenuItem());
+		menuActions.add(miDecryptText = new JMenuItem());
 		menuActions.addSeparator();
 		menuActions.add(miEncryptBackAll = new JMenuItem());
 
@@ -407,6 +411,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		bindingContext.setupBinding(pm.getActionChangeFolderForDecrypted(), miChangeTempFolderForDecrypted);
 		bindingContext.setupBinding(pm.getActionEncrypt(), miEncrypt);
 		bindingContext.setupBinding(pm.getActionEncryptText(), miEncryptText);
+		bindingContext.setupBinding(pm.getActionDecryptText(), miDecryptText);
 		bindingContext.setupBinding(pm.actionEncryptBackAll, miEncryptBackAll);
 		bindingContext.setupBinding(pm.getActionDecrypt(), miDecrypt);
 	}

@@ -21,15 +21,18 @@ import static org.pgptool.gui.app.Messages.text;
 
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.Action;
 
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
+import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.config.api.ConfigRepository;
+import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.about.AboutHost;
 import org.pgptool.gui.ui.about.AboutPm;
@@ -41,6 +44,10 @@ import org.pgptool.gui.ui.decryptone.DecryptOnePm;
 import org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogHost;
 import org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogPm;
 import org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogView;
+import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
+import org.pgptool.gui.ui.decrypttext.DecryptTextHost;
+import org.pgptool.gui.ui.decrypttext.DecryptTextPm;
+import org.pgptool.gui.ui.decrypttext.DecryptTextView;
 import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleHost;
 import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultiplePm;
 import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleView;
@@ -50,6 +57,9 @@ import org.pgptool.gui.ui.encryptone.EncryptOneView;
 import org.pgptool.gui.ui.encrypttext.EncryptTextHost;
 import org.pgptool.gui.ui.encrypttext.EncryptTextPm;
 import org.pgptool.gui.ui.encrypttext.EncryptTextView;
+import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogHost;
+import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm;
+import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogView;
 import org.pgptool.gui.ui.importkey.KeyImporterHost;
 import org.pgptool.gui.ui.importkey.KeyImporterPm;
 import org.pgptool.gui.ui.importkey.KeyImporterView;
@@ -242,6 +252,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		public Action getActionForEncryptText() {
 			return encryptTextHost.actionToOpenWindow;
 		}
+
+		@Override
+		public Action getActionForDecryptText() {
+			return decryptTextHost.actionToOpenWindow;
+		}
 	};
 
 	private void openMainFrameWindow() {
@@ -307,8 +322,15 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		};
 	};
 
-	private DialogOpener<EncryptTextPm, EncryptTextView> encryptTextHost = new DialogOpener<EncryptTextPm, EncryptTextView>(
-			EncryptTextPm.class, EncryptTextView.class, "action.encryptText") {
+	protected EncryptTextDialogOpener encryptTextHost = new EncryptTextDialogOpener(new HashSet<>());
+
+	class EncryptTextDialogOpener extends DialogOpener<EncryptTextPm, EncryptTextView> {
+		private Set<String> preselectedKeyIds;
+
+		public EncryptTextDialogOpener(Set<String> preselectedKeyIds) {
+			super(EncryptTextPm.class, EncryptTextView.class, "action.encryptText");
+			this.preselectedKeyIds = preselectedKeyIds;
+		}
 
 		EncryptTextHost host = new EncryptTextHost() {
 			@Override
@@ -323,6 +345,87 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 				return keysListWindowHost.actionToOpenWindow;
 			}
 		};
+
+		@Override
+		protected boolean postConstructPm() {
+			if (!pm.init(host, preselectedKeyIds)) {
+				// This happens if user clicked cancel during first render of
+				// "Browse dialog"
+				pm.detach();
+				pm = null;
+				return false;
+			}
+			return true;
+		};
+	};
+
+	private class GetKeyPasswordDialogOpener extends DialogOpener<GetKeyPasswordDialogPm, GetKeyPasswordDialogView> {
+		private Set<String> keysIds;
+		private Message purpose;
+		private KeyAndPasswordCallback<?> keyAndPasswordCallback;
+		private Window parentWindow;
+
+		public GetKeyPasswordDialogOpener(Set<String> keysIds, Message purpose,
+				KeyAndPasswordCallback<?> keyAndPasswordCallback, Window parentWindow) {
+			super(GetKeyPasswordDialogPm.class, GetKeyPasswordDialogView.class, "action.providePasswordForTheKey");
+			this.keysIds = keysIds;
+			this.purpose = purpose;
+			this.keyAndPasswordCallback = keyAndPasswordCallback;
+			this.parentWindow = parentWindow;
+		}
+
+		GetKeyPasswordDialogHost host = new GetKeyPasswordDialogHost() {
+			@Override
+			public void handleClose() {
+				if (view != null) {
+					view.unrender();
+				}
+				pm.detach();
+				pm = null;
+			}
+		};
+
+		@Override
+		protected boolean postConstructPm() {
+			return pm.init(host, keysIds, purpose, keyAndPasswordCallback);
+		};
+
+		@Override
+		protected void doRenderView() {
+			view.renderTo(parentWindow);
+		}
+	};
+
+	private DialogOpener<DecryptTextPm, DecryptTextView> decryptTextHost = new DialogOpener<DecryptTextPm, DecryptTextView>(
+			DecryptTextPm.class, DecryptTextView.class, "action.decryptText") {
+
+		class DecryptTextHostImpl<TKeyData extends KeyData> implements DecryptTextHost<TKeyData> {
+			@Override
+			public void handleClose() {
+				view.unrender();
+				pm.detach();
+				pm = null;
+			}
+
+			@Override
+			public Action getActionToOpenCertificatesList() {
+				return keysListWindowHost.actionToOpenWindow;
+			}
+
+			@Override
+			public void askUserForKeyAndPassword(Set<String> keysIds, Message purpose,
+					KeyAndPasswordCallback<TKeyData> keyAndPasswordCallback, Window parentWindow) {
+				new GetKeyPasswordDialogOpener(keysIds, purpose, keyAndPasswordCallback,
+						parentWindow).actionToOpenWindow.actionPerformed(null);
+			}
+
+			@Override
+			public void openEncryptText(Set<String> recipientsList) {
+				new EncryptTextDialogOpener(recipientsList).actionToOpenWindow.actionPerformed(null);
+			}
+		};
+
+		private DecryptTextHostImpl<KeyData> host = new DecryptTextHostImpl<KeyData>();
 
 		@Override
 		protected boolean postConstructPm() {
@@ -535,6 +638,10 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 				buildViewInstance();
 			}
 			view.setPm(pm);
+			doRenderView();
+		}
+
+		protected void doRenderView() {
 			view.renderTo(null);
 		}
 

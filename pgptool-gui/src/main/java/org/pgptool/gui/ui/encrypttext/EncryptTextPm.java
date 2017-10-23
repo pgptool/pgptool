@@ -79,7 +79,7 @@ public class EncryptTextPm extends PresentationModelBase {
 	private ModelProperty<String> sourceText;
 	private ModelProperty<String> targetText;
 
-	public boolean init(EncryptTextHost host) {
+	public boolean init(EncryptTextHost host, Set<String> preselectedKeyIds) {
 		Preconditions.checkArgument(host != null);
 		this.host = host;
 
@@ -88,8 +88,38 @@ public class EncryptTextPm extends PresentationModelBase {
 		}
 
 		initModelProperties();
+		
+		if (preselectedKeyIds != null) {
+			Set<String> missedKeys = preselectRecipients(preselectedKeyIds);
+			notifyUserOfMissingKeysIfAny(missedKeys);
+		}
 
 		return true;
+	}
+	
+	private Set<String> preselectRecipients(Set<String> recipientsKeysIds) {
+		selectedRecipients.getList().clear();
+		Set<String> missedKeys = new HashSet<>();
+		for (String keyId : recipientsKeysIds) {
+			Optional<Key<KeyData>> key = availabileRecipients.getList().stream()
+					.filter(x -> x.getKeyData().isHasAlternativeId(keyId)).findFirst();
+			if (key.isPresent()) {
+				selectedRecipients.getList().add(key.get());
+			} else {
+				missedKeys.add(keyId);
+			}
+		}
+		return missedKeys;
+	}
+
+	private void notifyUserOfMissingKeysIfAny(Set<String> missedKeys) {
+		if (CollectionUtils.isEmpty(missedKeys)) {
+			return;
+		}
+
+		UiUtils.messageBox(findRegisteredWindowIfAny(),
+				text("error.notAllRecipientsAvailable", Arrays.asList(missedKeys)), text("term.attention"),
+				JOptionPane.WARNING_MESSAGE);
 	}
 
 	private boolean doWeHaveKeysToEncryptWith() {
@@ -116,10 +146,20 @@ public class EncryptTextPm extends PresentationModelBase {
 		onRecipientsSelectionChanged.onListChanged();
 
 		sourceText = new ModelProperty<>(this, new ValueAdapterHolderImpl<String>(""), "textToEncrypt");
+		sourceText.getModelPropertyAccessor().addPropertyChangeListener(onSourceTextChanged);
+		actionDoOperation.setEnabled(false);
 		targetText = new ModelProperty<>(this, new ValueAdapterHolderImpl<String>(""), "encryptedText");
 		targetText.getModelPropertyAccessor().addPropertyChangeListener(onTargetTextChanged);
 		actionCopyTargetToClipboard.setEnabled(false);
 	}
+
+	private PropertyChangeListener onSourceTextChanged = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			boolean hasText = StringUtils.hasText((String) evt.getNewValue());
+			actionDoOperation.setEnabled(hasText);
+		}
+	};
 
 	private PropertyChangeListener onTargetTextChanged = new PropertyChangeListener() {
 		@Override
@@ -184,11 +224,11 @@ public class EncryptTextPm extends PresentationModelBase {
 				return;
 			}
 
-			Set<String> missedKeys = selectRecipients(new HashSet<>(emails));
+			Set<String> missedKeys = selectRecipientsByEmails(new HashSet<>(emails));
 			notifyUserOfMissingKeysIfAny(missedKeys);
 		}
 
-		private Set<String> selectRecipients(Set<String> emails) {
+		private Set<String> selectRecipientsByEmails(Set<String> emails) {
 			selectedRecipients.getList().clear();
 			Set<String> missedEmails = new HashSet<>();
 			for (String email : emails) {

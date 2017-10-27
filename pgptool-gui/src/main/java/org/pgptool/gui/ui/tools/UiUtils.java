@@ -35,6 +35,7 @@ import javax.swing.text.JTextComponent;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.log4j.Logger;
+import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
 
@@ -214,5 +215,8 @@ public class UiUtils {
 		scrollPane.getViewport().setView(textArea);
 		return scrollPane;
 	}
-
+	
+	public static void reportExceptionToUser(String errorMessageCode, Throwable cause, Object... messageArgs) {
+		EntryPoint.reportExceptionToUser(errorMessageCode, cause, messageArgs);
+	}
 }

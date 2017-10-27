@@ -86,6 +86,7 @@ public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
 		edRecipients.setEditable(false);
 		edRecipients.setBackground(UIManager.getColor ( "Panel.background" ));
 		edRecipients.setMargin(new Insets(5, 5, 5, 5));
+		edRecipients.setLineWrap(true);
 
 		// decrypt button
 		JPanel btns = new JPanel(new BorderLayout(10, 0));

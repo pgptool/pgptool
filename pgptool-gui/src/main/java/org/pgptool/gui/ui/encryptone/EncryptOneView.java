@@ -35,6 +35,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
@@ -42,17 +43,19 @@ import javax.swing.ListSelectionModel;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
+import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
 
+import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
 public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 	private JPanel pnl;
 
-	private JPanel ajaxPanel;
-
 	private JPanel controlsPanel;
+	private TypedPropertyChangeListener<Boolean> isDisableControlsChanged;
+	
 	private JTextField edSourceFile;
 	private JButton btnBrowseSource;
 
@@ -69,21 +72,19 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 	private JButton btnPerformOperation;
 	private JButton btnCancel;
 
+	private JProgressBar pbar;
+
 	@Override
 	protected void internalInitComponents() {
 		pnl = new JPanel(new BorderLayout());
 
-		pnl.add(buildControllsPanel(), BorderLayout.CENTER);
-		buildAjaxIndicatorPanel();
+		pnl.add(controlsPanel = buildControllsPanel(), BorderLayout.CENTER);
+		isDisableControlsChanged = new ControlsDisabler(controlsPanel);
+		
 		pnl.add(buildPanelButtons(), BorderLayout.SOUTH);
 	}
 
-	private void buildAjaxIndicatorPanel() {
-		ajaxPanel = new JPanel(new BorderLayout());
-		ajaxPanel.add(new JLabel(text("phrase.pleaseWait")));
-	}
-
-	private Component buildControllsPanel() {
+	private JPanel buildControllsPanel() {
 		SgLayout sgl = new SgLayout(2, 10, spacing(1), 2);
 		sgl.setColSize(0, 1, SgLayout.SIZE_TYPE_ASKCOMPONENT);
 		sgl.setColSize(1, spacing(30), SgLayout.SIZE_TYPE_WEIGHTED);
@@ -142,7 +143,7 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 		// chkOpenTargetFolderAfter.setBorder(BorderFactory.createEmptyBorder());
 
 		// x. ret
-		return controlsPanel = ret;
+		return ret;
 	}
 
 	private Component buildEmptyLine() {
@@ -152,11 +153,19 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 	}
 
 	private JPanel buildPanelButtons() {
-		JPanel ret = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-		ret.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		ret.add(btnPerformOperation = new JButton());
-		ret.add(btnCancel = new JButton());
-		return ret;
+		JPanel bottomPanel = new JPanel(new BorderLayout(0, 0));
+		bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+		JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+		panelButtons.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
+		panelButtons.add(btnPerformOperation = new JButton());
+		panelButtons.add(btnCancel = new JButton());
+		bottomPanel.add(panelButtons, BorderLayout.EAST);
+
+		bottomPanel.add(pbar = new JProgressBar(0, 100), BorderLayout.CENTER);
+		pbar.setStringPainted(true);
+
+		return bottomPanel;
 	}
 
 	@Override
@@ -178,8 +187,16 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 
 		bindingContext.setupBinding(pm.actionDoOperation, btnPerformOperation);
 		bindingContext.setupBinding(pm.actionCancel, btnCancel);
-	}
 
+		bindingContext.registerPropertyValuePropagation(pm.getIsProgressVisible(), pbar, "visible");
+		bindingContext.registerPropertyValuePropagation(pm.getProgressNote(), pbar, "string");
+		bindingContext.registerPropertyValuePropagation(pm.getProgressValue(), pbar, "value");
+		pbar.setVisible(false);
+
+		bindingContext.registerOnChangeHandler(pm.getIsDisableControls(), isDisableControlsChanged);
+		isDisableControlsChanged.handlePropertyChanged(this, null, false, pm.getIsDisableControls().getValue());
+	}
+	
 	@Override
 	protected JDialog initDialog(Window owner, Object constraints) {
 		JDialog ret = new JDialog(owner, ModalityType.MODELESS);

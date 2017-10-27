@@ -136,6 +136,10 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 					dataGenerator, progress, PGPLiteralData.BINARY);
 			out.close();
 		} catch (Throwable t) {
+			File fileToDelete = new File(targetFile);
+			if (fileToDelete.exists() && !fileToDelete.delete()) {
+				log.warn("Failed to delete file after failed encryption: " + targetFile);
+			}
 			Throwables.propagateIfInstanceOf(t, UserReqeustedCancellationException.class);
 			throw new RuntimeException("Encryption failed", t);
 		}

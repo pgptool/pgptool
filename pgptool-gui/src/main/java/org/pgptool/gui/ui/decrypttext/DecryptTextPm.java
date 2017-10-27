@@ -31,7 +31,7 @@ import javax.swing.Action;
 import javax.swing.JOptionPane;
 
 import org.apache.log4j.Logger;
-import org.pgptool.gui.app.GenericException;
+import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.encryption.api.EncryptionService;
@@ -40,7 +40,6 @@ import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.tools.ClipboardUtil;
-import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.pgptool.gui.ui.tools.UiUtils;
@@ -171,8 +170,7 @@ public class DecryptTextPm extends PresentationModelBase {
 			return true;
 		} catch (Throwable t) {
 			log.info("Failed to process text from clipboard", t);
-			String msg = ConsoleExceptionUtils.getAllMessages(new GenericException("error.cantParseEncryptedText", t));
-			UiUtils.messageBox(msg, text("term.error"), MessageSeverity.ERROR);
+			EntryPoint.reportExceptionToUser("error.cantParseEncryptedText", t);
 			return false;
 		}
 	}
@@ -215,9 +213,7 @@ public class DecryptTextPm extends PresentationModelBase {
 				targetText.setValueByOwner(decryptedText);
 			} catch (Throwable t) {
 				log.error("Failed to decrypt from clipboard", t);
-				String msg = ConsoleExceptionUtils
-						.getAllMessages(new GenericException("error.cantParseEncryptedText", t));
-				UiUtils.messageBox(msg, text("term.error"), MessageSeverity.ERROR);
+				EntryPoint.reportExceptionToUser("error.cantParseEncryptedText", t);
 			}
 		}
 	};

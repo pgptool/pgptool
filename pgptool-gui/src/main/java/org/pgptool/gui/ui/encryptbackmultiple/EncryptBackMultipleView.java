@@ -40,6 +40,7 @@ import javax.swing.JProgressBar;
 
 import org.jdesktop.swingx.JXLabel;
 import org.pgptool.gui.app.Messages;
+import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
 
@@ -60,12 +61,14 @@ public class EncryptBackMultipleView extends DialogViewBaseCustom<EncryptBackMul
 	private JProgressBar pbar;
 
 	private JPanel panelControls;
+	private TypedPropertyChangeListener<Boolean> isDisableControlsChanged;
 
 	@Override
 	protected void internalInitComponents() {
 		pnl = new JPanel(new BorderLayout());
 
 		panelControls = buildControllsPanel();
+		isDisableControlsChanged = new ControlsDisabler(panelControls);
 		pnl.add(panelControls, BorderLayout.CENTER);
 		pnl.add(buildPanelButtons(), BorderLayout.SOUTH);
 	}
@@ -161,43 +164,6 @@ public class EncryptBackMultipleView extends DialogViewBaseCustom<EncryptBackMul
 		bindingContext.setupBinding(pm.actionDoOperation, btnPerformOperation);
 		bindingContext.setupBinding(pm.actionCancel, btnCancel);
 	}
-
-	private TypedPropertyChangeListener<Boolean> isDisableControlsChanged = new TypedPropertyChangeListener<Boolean>() {
-		private List<Component> disabledComponents = new ArrayList<>();
-
-		/**
-		 * NOTE: This logic is not perfect! Can be used only if there is no race
-		 * condition possible (like component was disabled from outside while
-		 * operation is in progress. In that case this component mut not be
-		 * enabled. But this case is not handled in current impl. COPY-PASTE
-		 * CAREFULLY
-		 */
-		@Override
-		public void handlePropertyChanged(Object source, String propertyName, Boolean oldValue,
-				Boolean isDisableControls) {
-			if (isDisableControls) {
-				disableForm(panelControls);
-			} else {
-				while (!disabledComponents.isEmpty()) {
-					disabledComponents.remove(0).setEnabled(true);
-				}
-			}
-		}
-
-		public void disableForm(Container container) {
-			Component[] components = container.getComponents();
-			for (Component component : components) {
-				if (component.isEnabled()) {
-					component.setEnabled(false);
-					disabledComponents.add(component);
-				}
-
-				if (component instanceof Container) {
-					disableForm((Container) component);
-				}
-			}
-		}
-	};
 
 	@Override
 	protected JDialog initDialog(Window owner, Object constraints) {

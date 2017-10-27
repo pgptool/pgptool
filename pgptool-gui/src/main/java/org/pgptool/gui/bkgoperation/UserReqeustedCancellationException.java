@@ -19,6 +19,12 @@ package org.pgptool.gui.bkgoperation;
 
 import org.summerb.approaches.i18n.HasMessageCode;
 
+/**
+ * Thrown when operation canceled due to cancelation requested by user
+ * 
+ * @author sergeyk
+ *
+ */
 public class UserReqeustedCancellationException extends Exception implements HasMessageCode {
 	private static final long serialVersionUID = 1290562826825044541L;
 

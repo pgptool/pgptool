@@ -37,6 +37,10 @@ import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.about.AboutHost;
 import org.pgptool.gui.ui.about.AboutPm;
 import org.pgptool.gui.ui.about.AboutView;
+import org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesHost;
+import org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesPm;
+import org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesView;
+import org.pgptool.gui.ui.checkForUpdates.UpdatesPolicy;
 import org.pgptool.gui.ui.createkey.CreateKeyHost;
 import org.pgptool.gui.ui.createkey.CreateKeyPm;
 import org.pgptool.gui.ui.createkey.CreateKeyView;
@@ -99,6 +103,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 	private ApplicationContext applicationContext;
 	private EventBus eventBus;
 	private ConfigRepository configRepository;
+	private UpdatesPolicy updatesPolicy;
 
 	private MainFramePm mainFramePm;
 	private MainFrameView mainFrameView;
@@ -117,6 +122,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 
 	public void present(String[] commandLineArgs) {
 		try {
+			updatesPolicy.start(checkForUpdatesDialog);
 			openMainFrameWindow();
 			processCommandLine(commandLineArgs);
 			// THINK: Perhaps we'd better not open main frame if we were invoked
@@ -257,11 +263,16 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		public Action getActionForDecryptText() {
 			return decryptTextHost.actionToOpenWindow;
 		}
+
+		@Override
+		public Action getActionCheckForUpdates() {
+			return checkForUpdatesDialog.actionToOpenWindow;
+		}
 	};
 
 	private void openMainFrameWindow() {
 		mainFramePm = applicationContext.getBean(MainFramePm.class);
-		mainFramePm.init(mainFrameHost);
+		mainFramePm.init(mainFrameHost, updatesPolicy);
 		MainFrameView view = getMainFrameView();
 		view.setPm(mainFramePm);
 		view.renderTo(null);
@@ -571,6 +582,27 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		};
 	};
 
+	public class CheckForUpdatesDialog extends DialogOpener<CheckForUpdatesPm, CheckForUpdatesView> {
+		public CheckForUpdatesDialog() {
+			super(CheckForUpdatesPm.class, CheckForUpdatesView.class, "action.checkForUpdates");
+		}
+
+		public CheckForUpdatesHost host = new CheckForUpdatesHost() {
+			@Override
+			public void handleClose() {
+				view.unrender();
+			}
+		};
+
+		@Override
+		protected boolean postConstructPm() {
+			pm.init(host, updatesPolicy);
+			return true;
+		};
+	}
+
+	private CheckForUpdatesDialog checkForUpdatesDialog = new CheckForUpdatesDialog();
+
 	private DialogOpener<AboutPm, AboutView> aboutWindowHost = new DialogOpener<AboutPm, AboutView>(AboutPm.class,
 			AboutView.class, "term.aboutApp") {
 
@@ -602,7 +634,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		private Class<TPmType> pmClass;
 		private Class<TViewType> viewClass;
 
-		protected final Action actionToOpenWindow;
+		public final Action actionToOpenWindow;
 		protected TPmType pm;
 		protected TViewType view;
 
@@ -628,10 +660,12 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 				return;
 			}
 
-			pm = applicationContext.getBean(pmClass);
-			if (!postConstructPm()) {
-				pm = null;
-				return;
+			if (pm == null) {
+				pm = applicationContext.getBean(pmClass);
+				if (!postConstructPm()) {
+					pm = null;
+					return;
+				}
 			}
 
 			if (view == null) {
@@ -676,5 +710,14 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 	@Autowired
 	public void setConfigRepository(ConfigRepository configRepository) {
 		this.configRepository = configRepository;
+	}
+
+	public UpdatesPolicy getUpdatesPolicy() {
+		return updatesPolicy;
+	}
+
+	@Autowired
+	public void setUpdatesPolicy(UpdatesPolicy updatesPolicy) {
+		this.updatesPolicy = updatesPolicy;
 	}
 }

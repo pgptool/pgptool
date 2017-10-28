@@ -36,6 +36,7 @@ import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.decryptedlist.api.DecryptedHistoryService;
+import org.pgptool.gui.ui.checkForUpdates.UpdatesPolicy;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
@@ -65,8 +66,10 @@ public class MainFramePm extends PresentationModelBase {
 
 	private ModelTableProperty<DecryptedFile> rows;
 	private ModelProperty<Boolean> hasData;
+	private UpdatesPolicy updatesPolicy;
 
-	public void init(MainFrameHost host) {
+	public void init(MainFrameHost host, UpdatesPolicy updatesPolicy) {
+		this.updatesPolicy = updatesPolicy;
 		Preconditions.checkArgument(host != null);
 		Preconditions.checkState(this.host == null);
 
@@ -231,6 +234,10 @@ public class MainFramePm extends PresentationModelBase {
 	protected Action getActionAbout() {
 		return host.getActionShowAboutInfo();
 	}
+	
+	public Action getActionCheckForUpdates() {
+		return host.getActionCheckForUpdates();
+	}
 
 	protected Action getActionImportKey() {
 		return host.getActionImportKey();
@@ -305,4 +312,11 @@ public class MainFramePm extends PresentationModelBase {
 		protected abstract void onActionPerformed(DecryptedFile row);
 	}
 
+	public Action getActionAutoCheckForUpdates() {
+		return updatesPolicy.actionAutoCheckForUpdates;
+	}
+
+	public ModelPropertyAccessor<?> getIsAutoUpdatesEnabled() {
+		return updatesPolicy.getIsAutoUpdatesEnabled();
+	}
 }

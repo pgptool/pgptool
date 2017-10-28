@@ -101,4 +101,13 @@
 	<bean class="org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm" scope="prototype" />
 	<bean class="org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogView" scope="prototype" />
 
+	<bean class="org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesPm" lazy-init="true" />
+	<bean class="org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesView" scope="prototype" />
+
+	<bean class="org.pgptool.gui.autoupdate.impl.NewVersionCheckerGitHubImpl">
+		<property name="configuredVersion" value="${configuredVersion}" />
+	</bean>
+	
+	<bean class="org.pgptool.gui.ui.checkForUpdates.UpdatesPolicy" />
+
 </beans>

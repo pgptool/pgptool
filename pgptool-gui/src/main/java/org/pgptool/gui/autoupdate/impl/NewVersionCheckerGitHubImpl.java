@@ -1,0 +1,172 @@
+package org.pgptool.gui.autoupdate.impl;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TimeZone;
+
+import org.apache.log4j.Logger;
+import org.pgptool.gui.app.GenericException;
+import org.pgptool.gui.autoupdate.api.NewVersionChecker;
+import org.pgptool.gui.autoupdate.api.UpdatePackageInfo;
+import org.pgptool.gui.github.api.LatestRelease;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
+import com.google.common.base.Preconditions;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
+	private static Logger log = Logger.getLogger(NewVersionCheckerGitHubImpl.class);
+	public static String VERSION_UNRESOLVED = "unresolved";
+
+	private String configuredVersion = null;
+
+	private String latestVersionUrl = "https://api.github.com/repos/pgptool/pgptool/releases/latest";
+	private Map<String, String> headers = Collections.singletonMap("Accept", "application/vnd.github.v3+json");
+	private Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+
+	@Override
+	public UpdatePackageInfo findNewUpdateIfAvailable() throws GenericException {
+		try {
+			String json = httpGet(latestVersionUrl, headers);
+			LatestRelease latestRelease = gson.fromJson(json, LatestRelease.class);
+			if (latestRelease.isDraft() || latestRelease.isPrerelease()) {
+				log.info("Ignoring draft or prerelease release " + latestRelease.getTagName());
+				return null;
+			}
+
+			if (CollectionUtils.isEmpty(latestRelease.getAssets())) {
+				log.info("GitHub API returned empty array of assets for release " + latestRelease.getTagName());
+				return null;
+			}
+
+			String currentVersion = getCurrentVersion();
+			if (currentVersion.equals(VERSION_UNRESOLVED)
+					|| compareVersions(currentVersion, latestRelease.getTagName()) >= 0) {
+				return null;
+			}
+
+			return buildUpdatePackageInfo(latestRelease);
+		} catch (Throwable t) {
+			throw new GenericException("error.failedToCheckForNewVersions", t);
+		}
+	}
+
+	private UpdatePackageInfo buildUpdatePackageInfo(LatestRelease latestRelease) {
+		UpdatePackageInfo ret = new UpdatePackageInfo();
+		ret.setPublishedAt(parseDate(latestRelease.getPublishedAt()));
+		ret.setReleaseNotes(latestRelease.getBody());
+		ret.setTitle(latestRelease.getName());
+		ret.setVersion(latestRelease.getTagName());
+		ret.setUpdatePackageUrl(getUrlBasedOnOS(latestRelease));
+		return ret;
+	}
+
+	private Date parseDate(String dateStr) {
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+			sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+			return sdf.parse(dateStr);
+		} catch (Throwable t) {
+			throw new RuntimeException("Failed to parse date: " + dateStr, t);
+		}
+	}
+
+	private String getUrlBasedOnOS(LatestRelease latestRelease) {
+		if (isWindows()) {
+			return latestRelease.getAssets().stream().filter(x -> x.getName().endsWith(".msi")).findAny()
+					.orElseThrow(() -> new IllegalStateException("no *.msi asset found")).getBrowserDownloadUrl();
+		}
+
+		return latestRelease.getAssets().stream().filter(x -> x.getName().endsWith(".zip")).findAny()
+				.orElseThrow(() -> new IllegalStateException("no *.zip asset found")).getBrowserDownloadUrl();
+	}
+
+	private boolean isWindows() {
+		return System.getProperty("os.name").toLowerCase().contains("windows");
+	}
+
+	private int compareVersions(String a, String b) {
+		String[] aparts = a.split("[\\.v]");
+		String[] bparts = b.split("[\\.v]");
+		for (int i = 0; i < Math.min(aparts.length, bparts.length); i++) {
+			if (StringUtils.isEmpty(aparts[i]) || StringUtils.isEmpty(bparts[i])) {
+				continue;
+			}
+
+			Integer ai = Integer.parseInt(aparts[i]);
+			Integer bi = Integer.parseInt(bparts[i]);
+			int result = ai.compareTo(bi);
+			if (result != 0) {
+				return result;
+			}
+		}
+		return 0;
+	}
+
+	@Override
+	public String getCurrentVersion() {
+		try {
+			if (configuredVersion != null) {
+				return configuredVersion;
+			}
+
+			String ret = NewVersionCheckerGitHubImpl.class.getPackage().getImplementationVersion();
+			Preconditions.checkState(StringUtils.hasText(ret),
+					"ImplementationVersion cannot be resolved. Perhaps we're in the DEV mode");
+			return ret;
+		} catch (Throwable t) {
+			log.warn("Failed to resolve current application version", t);
+			return VERSION_UNRESOLVED;
+		}
+	}
+
+	private String httpGet(String url, Map<String, String> headers) {
+		try {
+			URL obj = new URL(url);
+			HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+			// optional default is GET
+			con.setRequestMethod("GET");
+
+			// add request header
+			for (Entry<String, String> header : headers.entrySet()) {
+				con.setRequestProperty(header.getKey(), header.getValue());
+			}
+
+			int responseCode = con.getResponseCode();
+			if (200 != responseCode) {
+				throw new IllegalStateException(
+						"Unexpected response: " + responseCode + ": " + con.getResponseMessage());
+			}
+
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			String inputLine;
+			StringBuilder response = new StringBuilder();
+			while ((inputLine = in.readLine()) != null) {
+				response.append(inputLine);
+			}
+			in.close();
+			return response.toString();
+		} catch (Throwable t) {
+			throw new RuntimeException("HTTP request failed: " + url, t);
+		}
+	}
+
+	public String getConfiguredVersion() {
+		return configuredVersion;
+	}
+
+	public void setConfiguredVersion(String version) {
+		this.configuredVersion = !StringUtils.hasText(version) ? null : version;
+	}
+}

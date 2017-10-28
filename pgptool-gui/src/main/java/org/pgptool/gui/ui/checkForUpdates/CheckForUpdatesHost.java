@@ -15,36 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *******************************************************************************/
-package org.pgptool.gui.ui.mainframe;
+package org.pgptool.gui.ui.checkForUpdates;
 
-import java.util.Set;
-
-import javax.swing.Action;
-
-public interface MainFrameHost {
-	void handleExitApp();
-
-	Action getActionShowAboutInfo();
-
-	Action getActionImportKey();
-
-	Action getActionShowKeysList();
-
-	Action getActionForEncrypt();
-
-	Action getActionForEncryptText();
-
-	Action getActionForDecrypt();
-
-	Action getActionForDecryptText();
-
-	Action getActionChangeFolderForDecrypted();
-
-	Action getActionCheckForUpdates();
-
-	void openEncryptDialogFor(String decryptedFile);
-
-	Action getActionCreateKey();
-
-	void openEncryptBackMultipleFor(Set<String> decryptedFiles);
+public interface CheckForUpdatesHost {
+	void handleClose();
 }

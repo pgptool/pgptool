@@ -39,6 +39,7 @@ import javax.swing.DefaultListSelectionModel;
 import javax.swing.Icon;
 import javax.swing.InputMap;
 import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -82,6 +83,8 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private JMenuItem miShowKeyList;
 	private JMenuItem miChangeTempFolderForDecrypted;
 	private JMenuItem miAbout;
+	private JMenuItem miCheckForUpdates;
+	private JCheckBoxMenuItem miAutoCheckForUpdates;
 	private JMenuItem miConfigExit;
 	private JMenuItem miEncrypt;
 	private JMenuItem miDecrypt;
@@ -151,7 +154,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 			}
 		}
 	};
-	
+
 	@SuppressWarnings("serial")
 	private Action actionEncryptText = new ToolbarAction("action.encryptText", "/icons/encrypt.png") {
 		@Override
@@ -329,6 +332,9 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		menuFile.add(miChangeTempFolderForDecrypted = new JMenuItem());
 		menuFile.addSeparator();
 		menuFile.add(miAbout = new JMenuItem());
+		menuFile.add(miCheckForUpdates = new JMenuItem());
+		menuFile.add(miAutoCheckForUpdates = new JCheckBoxMenuItem());
+		menuFile.addSeparator();
 		menuFile.add(miConfigExit = new JMenuItem());
 
 		JMenu menuKeyring = new JMenu(Messages.get("term.keyring"));
@@ -405,6 +411,12 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private void bindToActions() {
 		bindingContext.setupBinding(pm.getActionConfigExit(), miConfigExit);
 		bindingContext.setupBinding(pm.getActionAbout(), miAbout);
+
+		bindingContext.setupBinding(pm.getActionCheckForUpdates(), miCheckForUpdates);
+		bindingContext.setupBinding(pm.getActionAutoCheckForUpdates(), miAutoCheckForUpdates);
+		bindingContext.registerPropertyValuePropagation(pm.getIsAutoUpdatesEnabled(), miAutoCheckForUpdates,
+				"state");
+
 		bindingContext.setupBinding(pm.getActionImportKey(), miPgpImportKey);
 		bindingContext.setupBinding(pm.getActionCreateKey(), miPgpCreateKey);
 		bindingContext.setupBinding(pm.getActionShowKeysList(), miShowKeyList);

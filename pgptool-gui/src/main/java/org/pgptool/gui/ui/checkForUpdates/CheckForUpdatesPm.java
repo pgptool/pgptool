@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *******************************************************************************/
-package org.pgptool.gui.ui.about;
+package org.pgptool.gui.ui.checkForUpdates;
 
 import static org.pgptool.gui.app.Messages.text;
 
@@ -27,12 +27,11 @@ import javax.swing.Action;
 
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
-import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.autoupdate.api.NewVersionChecker;
 import org.pgptool.gui.autoupdate.api.UpdatePackageInfo;
+import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
@@ -41,56 +40,69 @@ import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
-public class AboutPm extends PresentationModelBase implements InitializingBean {
-	private static Logger log = Logger.getLogger(AboutPm.class);
+public class CheckForUpdatesPm extends PresentationModelBase implements InitializingBean {
+	private static Logger log = Logger.getLogger(CheckForUpdatesPm.class);
 
-	@Value("${net.ts.baseUrl}")
-	private String urlToSite;
 	@Autowired
 	private NewVersionChecker newVersionChecker;
+	private CheckForUpdatesHost host;
+	private UpdatesPolicy updatesPolicy;
 
-	private ModelProperty<String> version;
-	private ModelProperty<String> linkToSite;
-
-	private ModelProperty<String> versionStatus;
+	private ModelProperty<String> currentVersion;
+	private ModelProperty<String> versionCheckStatus;
 	private ModelProperty<String> linkToNewVersion;
+	private ModelProperty<String> newVersion;
+	private ModelProperty<String> newVersionTitle;
+	private ModelProperty<String> newVersionReleaseNotes;
 
-	private AboutHost host;
 	private String updatePackageUrl;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		version = new ModelProperty<String>(this,
+		currentVersion = new ModelProperty<String>(this,
 				new ValueAdapterReadonlyImpl<String>(newVersionChecker.getCurrentVersion()), "version");
-		linkToSite = new ModelProperty<String>(this, new ValueAdapterReadonlyImpl<String>(urlToSite), "linkToSite");
 
-		versionStatus = new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "versionStatus");
+		versionCheckStatus = new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "versionStatus");
 		linkToNewVersion = new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "linkToNewVersion");
+
+		newVersionTitle = new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "newVersionTitle");
+		newVersion = new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "newVersionId");
+		newVersionReleaseNotes = new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""),
+				"newVersionReleaseNotes");
 	}
 
-	public void init(AboutHost host) {
+	public void init(CheckForUpdatesHost host, UpdatesPolicy updatesPolicy) {
 		this.host = host;
+		this.updatesPolicy = updatesPolicy;
+		actionSnoozeVersion.setEnabled(false);
+		actionDownloadNewVersion.setEnabled(false);
 		new Thread(checkForNewVersion).start();
 	}
 
 	private Runnable checkForNewVersion = new Runnable() {
 		@Override
 		public void run() {
-			versionStatus.setValueByOwner(text("phrase.checkingForNewVersion"));
+			versionCheckStatus.setValueByOwner(text("phrase.checkingForNewVersion"));
 			try {
-				UpdatePackageInfo newVersion = newVersionChecker.findNewUpdateIfAvailable();
-				if (newVersion == null) {
-					versionStatus.setValueByOwner(text("phrase.currentVersionIsUpToDate"));
+				UpdatePackageInfo newVersionInfo = newVersionChecker.findNewUpdateIfAvailable();
+				if (newVersionInfo == null) {
+					versionCheckStatus.setValueByOwner(text("phrase.currentVersionIsUpToDate"));
+					newVersionReleaseNotes.setValueByOwner(text("phrase.newVersionWasntPublishedYet"));
 					return;
 				}
 
-				versionStatus.setValueByOwner("");
-				linkToNewVersion.setValueByOwner(text("phrase.newerVersionAvailable", newVersion.getVersion()));
-
-				updatePackageUrl = newVersion.getUpdatePackageUrl();
-			} catch (GenericException e) {
+				versionCheckStatus.setValueByOwner("");
+				newVersion.setValueByOwner(newVersionInfo.getVersion());
+				actionSnoozeVersion.setEnabled(true);
+				actionDownloadNewVersion.setEnabled(true);
+				linkToNewVersion.setValueByOwner(text("phrase.newerVersionAvailable", newVersionInfo.getVersion()));
+				newVersionTitle.setValueByOwner(newVersionInfo.getTitle());
+				newVersionReleaseNotes.setValueByOwner(newVersionInfo.getReleaseNotes());
+				updatePackageUrl = newVersionInfo.getUpdatePackageUrl();
+			} catch (Throwable e) {
 				log.warn("Failed to check for new version", e);
-				versionStatus.setValueByOwner(text("phrase.currentVersionIsUpToDate"));
+				versionCheckStatus.setValueByOwner("");
+				newVersionReleaseNotes.setValueByOwner(ConsoleExceptionUtils.getAllMessages(e));
 			}
 		}
 	};
@@ -104,20 +116,16 @@ public class AboutPm extends PresentationModelBase implements InitializingBean {
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionOpenSite = new LocalizedAction("term.linkToSite") {
+	protected final Action actionSnoozeVersion = new LocalizedAction("action.snoozeVersion") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			try {
-				Desktop.getDesktop().browse(new URI(urlToSite));
-			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser("exception.unexpected", t);
-			}
+			updatesPolicy.snoozeVersion(newVersion.getValue());
 			host.handleClose();
 		}
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionDownloadNewVersion = new LocalizedAction("term.actionDownloadNewVersion") {
+	protected final Action actionDownloadNewVersion = new LocalizedAction("action.actionDownloadNewVersion") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
@@ -129,19 +137,27 @@ public class AboutPm extends PresentationModelBase implements InitializingBean {
 		}
 	};
 
-	public ModelPropertyAccessor<String> getVersion() {
-		return version.getModelPropertyAccessor();
+	public ModelPropertyAccessor<String> getCurrentVersion() {
+		return currentVersion.getModelPropertyAccessor();
 	}
 
-	public ModelPropertyAccessor<String> getLinkToSite() {
-		return linkToSite.getModelPropertyAccessor();
-	}
-
-	public ModelPropertyAccessor<String> getVersionStatus() {
-		return versionStatus.getModelPropertyAccessor();
+	public ModelPropertyAccessor<String> getVersionCheckStatus() {
+		return versionCheckStatus.getModelPropertyAccessor();
 	}
 
 	public ModelPropertyAccessor<String> getLinkToNewVersion() {
 		return linkToNewVersion.getModelPropertyAccessor();
+	}
+
+	public ModelPropertyAccessor<String> getNewVersionTitle() {
+		return newVersionTitle.getModelPropertyAccessor();
+	}
+
+	public ModelPropertyAccessor<String> getNewVersionReleaseNotes() {
+		return newVersionReleaseNotes.getModelPropertyAccessor();
+	}
+
+	public ModelPropertyAccessor<String> getNewVersion() {
+		return newVersion.getModelPropertyAccessor();
 	}
 }

@@ -17,6 +17,7 @@
  *******************************************************************************/
 package org.pgptool.gui.ui.tools;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -30,6 +31,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.text.JTextComponent;
 
@@ -118,10 +120,38 @@ public class UiUtils {
 			public void run() {
 				try {
 					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+					fixCheckBoxMenuItemForeground();
 					fixFontSize();
 				} catch (Throwable t) {
 					log.error("Failed to set L&F", t);
 				}
+			}
+
+			/**
+			 * In some cases (depends on OS theme) check menu item foreground is same as
+			 * bacground - thus it;'s invisible when cheked
+			 */
+			private void fixCheckBoxMenuItemForeground() {
+				UIDefaults defaults = UIManager.getDefaults();
+				Color selectionForeground = defaults.getColor("CheckBoxMenuItem.selectionForeground");
+				Color foreground = defaults.getColor("CheckBoxMenuItem.foreground");
+				Color background = defaults.getColor("CheckBoxMenuItem.background");
+				if (colorsDiffPercentage(selectionForeground, background) < 10) {
+					// TODO: That doesn't actually affect defaults. Need to find out how to fix it
+					defaults.put("CheckBoxMenuItem.selectionForeground", foreground);
+				}
+			}
+
+			private int colorsDiffPercentage(Color c1, Color c2) {
+				int diffRed = Math.abs(c1.getRed() - c2.getRed());
+				int diffGreen = Math.abs(c1.getGreen() - c2.getGreen());
+				int diffBlue = Math.abs(c1.getBlue() - c2.getBlue());
+
+				float pctDiffRed = (float) diffRed / 255;
+				float pctDiffGreen = (float) diffGreen / 255;
+				float pctDiffBlue = (float) diffBlue / 255;
+
+				return (int) ((pctDiffRed + pctDiffGreen + pctDiffBlue) / 3 * 100);
 			}
 
 			private void fixFontSize() {

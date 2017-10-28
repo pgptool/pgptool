@@ -15,69 +15,86 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *******************************************************************************/
-package org.pgptool.gui.ui.about;
+package org.pgptool.gui.ui.checkForUpdates;
+
+import static org.pgptool.gui.app.Messages.text;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dialog.ModalityType;
 import java.awt.FlowLayout;
+import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
-import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
-import org.pgptool.gui.ui.tools.WindowIcon;
 
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class AboutView extends DialogViewBaseCustom<AboutPm> {
+public class CheckForUpdatesView extends DialogViewBaseCustom<CheckForUpdatesPm> {
 	private JPanel pnl;
+	private JButton btnDownload;
+	private JButton btnSnoozeVersion;
 	private JButton btnClose;
 	private JLabel lblVersion;
-	private JLabel lblLinkToSite;
 	private JLabel lblVersionStatus;
 	private JLabel lblNewVersionLink;
+	private JLabel lblNewVersionTitle;
+	private JTextArea lblNewVersionReleaseNotes;
 
 	@Override
 	protected void internalInitComponents() {
 		SgLayout sgl = new SgLayout(2, 5, UiUtils.getFontRelativeSize(1), 2);
-		sgl.setColSize(0, 64, SgLayout.SIZE_TYPE_CONSTANT);
-		sgl.setColSize(1, UiUtils.getFontRelativeSize(20), SgLayout.SIZE_TYPE_CONSTANT);
+		sgl.setColSize(1, UiUtils.getFontRelativeSize(30), SgLayout.SIZE_TYPE_CONSTANT);
+		sgl.setRowSize(3, UiUtils.getFontRelativeSize(8), SgLayout.SIZE_TYPE_CONSTANT);
 		pnl = new JPanel(sgl);
 		pnl.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-		ImageIcon imageIcon = new ImageIcon(WindowIcon.loadImage("/icons/icon-64.png"));
-		JLabel lblIcon = new JLabel(imageIcon);
-		pnl.add(lblIcon, sgl.cs(0, 0, 1, 4));
-
-		pnl.add(new JLabel(UiUtils.plainToBoldHtmlString(Messages.get("term.version"))), sgl.cs(1, 0));
+		// version
+		int row = 0;
+		pnl.add(new JLabel(text("term.version")), sgl.cs(0, row));
 		JPanel pnlFlow = new JPanel(new FlowLayout(FlowLayout.LEADING, 5, 0));
 		pnlFlow.setBorder(BorderFactory.createEmptyBorder(0, -5, 0, 0));
 		pnlFlow.add(lblVersion = new JLabel());
 		pnlFlow.add(lblVersionStatus = new JLabel());
 		pnlFlow.add(lblNewVersionLink = new JLabel());
 		initSiteLink(lblNewVersionLink, newVersionLinkClickListener);
-		pnl.add(pnlFlow, sgl.cs(1, 1));
+		pnl.add(pnlFlow, sgl.cs(1, row));
+		row++;
 
-		pnl.add(new JLabel(UiUtils.plainToBoldHtmlString(Messages.get("term.linkToSite"))), sgl.cs(1, 2));
-		pnl.add(lblLinkToSite = new JLabel(), sgl.cs(1, 3));
-		initSiteLink(lblLinkToSite, siteLinkClickListener);
+		// new title
+		pnl.add(new JLabel(text("term.newVersionTitle")), sgl.cs(0, row));
+		pnl.add(lblNewVersionTitle = new JLabel(), sgl.cs(1, row));
+		row++;
 
-		JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-		pnlButtons.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
-		pnl.add(pnlButtons, sgl.cs(0, 4, 2, 1));
+		// new release notes
+		pnl.add(new JLabel(text("term.newVersionReleaseNotes")), sgl.cs(0, row, 2, 1));
+		row++;
+		pnl.add(new JScrollPane(lblNewVersionReleaseNotes = new JTextArea()), sgl.cs(0, row, 2, 1));
+		lblNewVersionReleaseNotes.setLineWrap(true);
+		lblNewVersionReleaseNotes.setMargin(new Insets(5, 5, 5, 5));
+		lblNewVersionReleaseNotes.setEditable(false);
+		row++;
+
+		// buttons
+		JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+		pnlButtons.setBorder(BorderFactory.createEmptyBorder(6, -5, 0, 0));
+		pnl.add(pnlButtons, sgl.cs(0, row, 2, 1));
+		pnlButtons.add(btnDownload = new JButton());
+		pnlButtons.add(btnSnoozeVersion = new JButton());
 		pnlButtons.add(btnClose = new JButton());
 	}
 
@@ -88,10 +105,6 @@ public class AboutView extends DialogViewBaseCustom<AboutPm> {
 
 		label.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
 		label.setForeground(Color.blue);
-		// Font font = lblLinkToSite.getFont();
-		// Map attributes = font.getAttributes();
-		// attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
-		// lblLinkToSite.setFont(font.deriveFont(attributes));
 		label.addMouseListener(mouseListener);
 	}
 
@@ -113,13 +126,6 @@ public class AboutView extends DialogViewBaseCustom<AboutPm> {
 		protected abstract void triggerAction();
 	}
 
-	private MouseListener siteLinkClickListener = new LinkMouseListener() {
-		@Override
-		protected void triggerAction() {
-			pm.actionOpenSite.actionPerformed(null);
-		}
-	};
-
 	private MouseListener newVersionLinkClickListener = new LinkMouseListener() {
 		@Override
 		protected void triggerAction() {
@@ -131,11 +137,15 @@ public class AboutView extends DialogViewBaseCustom<AboutPm> {
 	protected void internalBindToPm() {
 		super.internalBindToPm();
 
-		bindingContext.setupBinding(pm.getVersion(), lblVersion);
-		bindingContext.setupBinding(pm.getLinkToSite(), lblLinkToSite);
-		bindingContext.setupBinding(pm.getVersionStatus(), lblVersionStatus);
+		bindingContext.setupBinding(pm.getCurrentVersion(), lblVersion);
+		bindingContext.setupBinding(pm.getVersionCheckStatus(), lblVersionStatus);
 		bindingContext.setupBinding(pm.getLinkToNewVersion(), lblNewVersionLink);
 
+		bindingContext.setupBinding(pm.getNewVersionTitle(), lblNewVersionTitle);
+		bindingContext.setupBinding(pm.getNewVersionReleaseNotes(), lblNewVersionReleaseNotes);
+
+		bindingContext.setupBinding(pm.actionDownloadNewVersion, btnDownload);
+		bindingContext.setupBinding(pm.actionSnoozeVersion, btnSnoozeVersion);
 		bindingContext.setupBinding(pm.actionClose, btnClose);
 	}
 
@@ -145,7 +155,7 @@ public class AboutView extends DialogViewBaseCustom<AboutPm> {
 		ret.setLayout(new BorderLayout());
 		ret.setResizable(false);
 		ret.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		ret.setTitle(Messages.get("term.aboutApp"));
+		ret.setTitle(text("action.checkForUpdates"));
 		ret.add(pnl, BorderLayout.CENTER);
 		ret.pack();
 		UiUtils.centerWindow(ret);

@@ -55,6 +55,7 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 
 	private JPanel controlsPanel;
 	private TypedPropertyChangeListener<Boolean> isDisableControlsChanged;
+	private JProgressBar pbar;
 	
 	private JTextField edSourceFile;
 	private JButton btnBrowseSource;
@@ -71,8 +72,6 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 
 	private JButton btnPerformOperation;
 	private JButton btnCancel;
-
-	private JProgressBar pbar;
 
 	@Override
 	protected void internalInitComponents() {

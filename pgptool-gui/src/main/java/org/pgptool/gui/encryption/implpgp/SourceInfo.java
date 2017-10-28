@@ -4,22 +4,21 @@ import java.io.File;
 
 import org.apache.commons.io.FilenameUtils;
 
-public class EncryptionSourceInfo {
+public class SourceInfo {
 	private String name;
 	private long size;
 	private long modifiedAt;
 
-	public EncryptionSourceInfo(String name, long size, long modifiedAt) {
+	public SourceInfo(String name, long size, long modifiedAt) {
 		super();
 		this.name = name;
 		this.size = size;
 		this.modifiedAt = modifiedAt;
 	}
 
-	public static EncryptionSourceInfo fromFile(String filePathName) {
+	public static SourceInfo fromFile(String filePathName) {
 		File file = new File(filePathName);
-		EncryptionSourceInfo ret = new EncryptionSourceInfo(FilenameUtils.getName(filePathName), file.length(),
-				file.lastModified());
+		SourceInfo ret = new SourceInfo(FilenameUtils.getName(filePathName), file.length(), file.lastModified());
 		return ret;
 	}
 

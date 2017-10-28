@@ -44,7 +44,6 @@ import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
-import org.pgptool.gui.bkgoperation.Progress;
 import org.pgptool.gui.bkgoperation.ProgressHandler;
 import org.pgptool.gui.bkgoperation.UserReqeustedCancellationException;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
@@ -56,6 +55,7 @@ import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
 import org.pgptool.gui.ui.decryptone.DecryptOnePm;
 import org.pgptool.gui.ui.keyslist.ComparatorKeyByNameImpl;
 import org.pgptool.gui.ui.tools.ListChangeListenerAnyEventImpl;
+import org.pgptool.gui.ui.tools.ProgressHandlerPmMixinImpl;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
@@ -112,6 +112,7 @@ public class EncryptOnePm extends PresentationModelBase {
 	private ModelProperty<Integer> progressValue;
 	private ModelProperty<String> progressNote;
 	private ModelProperty<Boolean> isDisableControls;
+	private ProgressHandler progressHandler;
 
 	public boolean init(EncryptOneHost host, String optionalSource) {
 		Preconditions.checkArgument(host != null);
@@ -235,6 +236,7 @@ public class EncryptOnePm extends PresentationModelBase {
 		isProgressVisible = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "isProgressVisible");
 		progressValue = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(0), "progressValue");
 		progressNote = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "progressNote");
+		progressHandler = new ProgressHandlerPmMixinImpl(isProgressVisible, progressValue, progressNote);
 	}
 
 	private PropertyChangeListener onTargetFileChanged = new PropertyChangeListener() {
@@ -405,11 +407,11 @@ public class EncryptOnePm extends PresentationModelBase {
 		public void actionPerformed(ActionEvent e) {
 			actionDoOperation.setEnabled(false);
 			isDisableControls.setValueByOwner(true);
-			encryptionThread.start();
+			operationThread.start();
 		}
 	};
 
-	private Thread encryptionThread = new Thread("BkgOpEncryptOne") {
+	private Thread operationThread = new Thread("BkgOpEncryptOne") {
 		@Override
 		public void run() {
 			String targetFileName = getEffectiveTargetFileName();
@@ -423,9 +425,8 @@ public class EncryptOnePm extends PresentationModelBase {
 			} catch (Throwable t) {
 				log.error("Failed to encrypt", t);
 				EntryPoint.reportExceptionToUser("error.failedToEncryptFile", t);
-				return;
-			} finally {
 				isDisableControls.setValueByOwner(false);
+				return;
 			}
 
 			// Delete source if asked
@@ -487,29 +488,6 @@ public class EncryptOnePm extends PresentationModelBase {
 			}
 			return ret;
 		}
-
-		private ProgressHandler progressHandler = new ProgressHandler() {
-			@Override
-			public void onProgressUpdated(Progress progress) {
-				if (Thread.interrupted()) {
-					progress.requestCancelation();
-				}
-
-				if (!isProgressVisible.getValue()) {
-					progressNote.setValueByOwner("");
-					progressValue.setValueByOwner(0);
-					isProgressVisible.setValueByOwner(true);
-				} else {
-					int percentage = progress.getPercentage() == null ? 0 : progress.getPercentage();
-					progressNote.setValueByOwner("" + percentage + "%");
-					progressValue.setValueByOwner(percentage);
-				}
-
-				if (progress.isCompleted()) {
-					isProgressVisible.setValueByOwner(false);
-				}
-			}
-		};
 	};
 
 	private String madeUpTargetFileName(String sourceFileName, String targetBasedPath) {
@@ -522,8 +500,8 @@ public class EncryptOnePm extends PresentationModelBase {
 	protected final Action actionCancel = new LocalizedAction("action.cancel") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if (encryptionThread.isAlive()) {
-				encryptionThread.interrupt();
+			if (operationThread.isAlive()) {
+				operationThread.interrupt();
 			} else {
 				host.handleClose();
 			}

@@ -37,6 +37,7 @@ import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
+import org.pgptool.gui.bkgoperation.UserReqeustedCancellationException;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.decryptedlist.api.DecryptedHistoryService;
@@ -50,6 +51,7 @@ import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
 import org.pgptool.gui.ui.encryptone.EncryptOnePm;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
+import org.pgptool.gui.ui.tools.ProgressHandlerPmMixinImpl;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
@@ -120,6 +122,13 @@ public class DecryptOnePm extends PresentationModelBase {
 	private String anticipatedTargetFileName;
 	private DecryptionDialogParameters decryptionDialogParameters;
 
+	private ModelProperty<Boolean> isProgressVisible;
+	private ModelProperty<Integer> progressValue;
+	private ModelProperty<String> progressNote;
+	private ModelProperty<Boolean> isDisableControls;
+	private ProgressHandlerPmMixinImpl progressHandler;
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean init(DecryptOneHost host, String optionalSource) {
 		Preconditions.checkArgument(host != null);
 		this.host = host;
@@ -158,6 +167,12 @@ public class DecryptOnePm extends PresentationModelBase {
 		isOpenTargetFolderAfter = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "openTargetFolder");
 		isOpenAssociatedApplication = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false),
 				"openAssociatedApplication");
+
+		isDisableControls = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "isDisableControls");
+		isProgressVisible = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "isProgressVisible");
+		progressValue = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(0), "progressValue");
+		progressNote = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "progressNote");
+		progressHandler = new ProgressHandlerPmMixinImpl(isProgressVisible, progressValue, progressNote);
 	}
 
 	public SaveFileChooserDialog getTargetFileChooser() {
@@ -425,6 +440,15 @@ public class DecryptOnePm extends PresentationModelBase {
 	protected final Action actionDoOperation = new LocalizedAction("action.decrypt") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			actionDoOperation.setEnabled(false);
+			isDisableControls.setValueByOwner(true);
+			operationThread.start();
+		}
+	};
+
+	private Thread operationThread = new Thread("BkgOpDecryptOne") {
+		@Override
+		public void run() {
 			String targetFileName = getEffectiveTargetFileName();
 			if (targetFileName == null) {
 				return;
@@ -433,10 +457,14 @@ public class DecryptOnePm extends PresentationModelBase {
 			String sourceFileStr = sourceFile.getValue();
 
 			try {
-				encryptionService.decrypt(sourceFileStr, targetFileName, keyAndPassword);
+				encryptionService.decrypt(sourceFileStr, targetFileName, keyAndPassword, progressHandler);
+			} catch (UserReqeustedCancellationException ce) {
+				host.handleClose();
+				return;
 			} catch (Throwable t) {
 				log.error("Failed to decrypt", t);
 				EntryPoint.reportExceptionToUser("error.failedToDecryptFile", t);
+				isDisableControls.setValueByOwner(false);
 				return;
 			}
 
@@ -598,7 +626,11 @@ public class DecryptOnePm extends PresentationModelBase {
 	protected final Action actionCancel = new LocalizedAction("action.cancel") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			host.handleClose();
+			if (operationThread.isAlive()) {
+				operationThread.interrupt();
+			} else {
+				host.handleClose();
+			}
 		}
 	};
 
@@ -668,4 +700,19 @@ public class DecryptOnePm extends PresentationModelBase {
 		return false;
 	}
 
+	public ModelPropertyAccessor<Boolean> getIsProgressVisible() {
+		return isProgressVisible.getModelPropertyAccessor();
+	}
+
+	public ModelPropertyAccessor<Integer> getProgressValue() {
+		return progressValue.getModelPropertyAccessor();
+	}
+
+	public ModelPropertyAccessor<String> getProgressNote() {
+		return progressNote.getModelPropertyAccessor();
+	}
+
+	public ModelPropertyAccessor<Boolean> getIsDisableControls() {
+		return isDisableControls.getModelPropertyAccessor();
+	}
 }

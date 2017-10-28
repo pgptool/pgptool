@@ -31,20 +31,24 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
+import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.UiUtils;
 
 import ru.skarpushin.swingpm.base.ViewBase;
+import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
 public class DecryptOneView extends ViewBase<DecryptOnePm> {
 	private JPanel pnl;
 
-	private JPanel ajaxPanel;
-
 	private JPanel controlsPanel;
+	private TypedPropertyChangeListener<Boolean> isDisableControlsChanged;
+	private JProgressBar pbar;
+
 	private JTextField edSourceFile;
 	private JButton btnBrowseSource;
 
@@ -66,17 +70,13 @@ public class DecryptOneView extends ViewBase<DecryptOnePm> {
 	protected void internalInitComponents() {
 		pnl = new JPanel(new BorderLayout());
 
-		pnl.add(buildControllsPanel(), BorderLayout.CENTER);
-		buildAjaxIndicatorPanel();
+		pnl.add(controlsPanel = buildControllsPanel(), BorderLayout.CENTER);
+		isDisableControlsChanged = new ControlsDisabler(controlsPanel);
+		
 		pnl.add(buildPanelButtons(), BorderLayout.SOUTH);
 	}
 
-	private void buildAjaxIndicatorPanel() {
-		ajaxPanel = new JPanel(new BorderLayout());
-		ajaxPanel.add(new JLabel(text("phrase.pleaseWait")));
-	}
-
-	private Component buildControllsPanel() {
+	private JPanel buildControllsPanel() {
 		SgLayout sgl = new SgLayout(2, 8, spacing(1), 2);
 		sgl.setColSize(0, 1, SgLayout.SIZE_TYPE_ASKCOMPONENT);
 		sgl.setColSize(1, spacing(40), SgLayout.SIZE_TYPE_CONSTANT);
@@ -130,7 +130,7 @@ public class DecryptOneView extends ViewBase<DecryptOnePm> {
 		ret.add(chkOpenAssociatedApplication = new JCheckBox(), sgl.cs(1, row));
 
 		// x. ret
-		return controlsPanel = ret;
+		return ret;
 	}
 
 	private Component buildEmptyLine() {
@@ -140,11 +140,19 @@ public class DecryptOneView extends ViewBase<DecryptOnePm> {
 	}
 
 	private JPanel buildPanelButtons() {
-		JPanel ret = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-		ret.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		ret.add(btnPerformOperation = new JButton());
-		ret.add(btnCancel = new JButton());
-		return ret;
+		JPanel bottomPanel = new JPanel(new BorderLayout(0, 0));
+		bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+		JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+		panelButtons.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
+		panelButtons.add(btnPerformOperation = new JButton());
+		panelButtons.add(btnCancel = new JButton());
+		bottomPanel.add(panelButtons, BorderLayout.EAST);
+
+		bottomPanel.add(pbar = new JProgressBar(0, 100), BorderLayout.CENTER);
+		pbar.setStringPainted(true);
+
+		return bottomPanel;
 	}
 
 	@Override
@@ -168,6 +176,14 @@ public class DecryptOneView extends ViewBase<DecryptOnePm> {
 
 		bindingContext.setupBinding(pm.actionDoOperation, btnPerformOperation);
 		bindingContext.setupBinding(pm.actionCancel, btnCancel);
+		
+		bindingContext.registerPropertyValuePropagation(pm.getIsProgressVisible(), pbar, "visible");
+		bindingContext.registerPropertyValuePropagation(pm.getProgressNote(), pbar, "string");
+		bindingContext.registerPropertyValuePropagation(pm.getProgressValue(), pbar, "value");
+		pbar.setVisible(false);
+
+		bindingContext.registerOnChangeHandler(pm.getIsDisableControls(), isDisableControlsChanged);
+		isDisableControlsChanged.handlePropertyChanged(this, null, false, pm.getIsDisableControls().getValue());
 	}
 
 	public static int spacing(int lettersCount) {

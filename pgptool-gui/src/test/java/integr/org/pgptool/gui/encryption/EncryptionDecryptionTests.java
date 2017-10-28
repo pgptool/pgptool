@@ -102,11 +102,11 @@ public class EncryptionDecryptionTests {
 	@Test
 	public void testWeCanDecryptTheProductOfEncryption() throws Exception {
 		String targetFilename = tempDirPath + File.separator + FilenameUtils.getBaseName(testSubjectFilename) + ".pgp";
-		encryptionService.encrypt(testSubjectFilename, targetFilename, keys.values());
+		encryptionService.encrypt(testSubjectFilename, targetFilename, keys.values(), null);
 
 		PasswordDeterminedForKey keyAndPassword = buildPasswordDeterminedForKey(targetFilename, "Alice.asc", "pass");
 
-		encryptionService.decrypt(targetFilename, targetFilename + ".test", keyAndPassword);
+		encryptionService.decrypt(targetFilename, targetFilename + ".test", keyAndPassword, null);
 		String result = TextFile.read(targetFilename + ".test");
 		assertEquals(testSubjectContents, result);
 	}
@@ -127,12 +127,12 @@ public class EncryptionDecryptionTests {
 		List keys = Arrays.asList(key);
 
 		String targetFilename = tempDirPath + File.separator + FilenameUtils.getBaseName(testSubjectFilename) + ".pgp";
-		encryptionService.encrypt(testSubjectFilename, targetFilename, keys);
+		encryptionService.encrypt(testSubjectFilename, targetFilename, keys, null);
 
 		String decryptionKeyId = (String) encryptionService.findKeyIdsForDecryption(targetFilename).iterator().next();
 		PasswordDeterminedForKey keyAndPassword = new PasswordDeterminedForKey<>(decryptionKeyId, key, "pass");
 
-		encryptionService.decrypt(targetFilename, targetFilename + ".test", keyAndPassword);
+		encryptionService.decrypt(targetFilename, targetFilename + ".test", keyAndPassword, null);
 		String result = TextFile.read(targetFilename + ".test");
 		assertEquals(testSubjectContents, result);
 	}
@@ -162,12 +162,12 @@ public class EncryptionDecryptionTests {
 		decryptionTestRoutine("encr-sign3-testsubject.txt.pgp");
 	}
 
-	private void decryptionTestRoutine(String sourceFile) throws InvalidPasswordException, URISyntaxException {
+	private void decryptionTestRoutine(String sourceFile) throws Exception {
 		String targetFilename = tempDirPath + File.separator + FilenameUtils.getBaseName(sourceFile);
 
 		String encryptedFile = TestTools.getFileNameForResource("encrypted/" + sourceFile);
 		PasswordDeterminedForKey keyAndPassword = buildPasswordDeterminedForKey(encryptedFile, "Alice.asc", "pass");
-		encryptionService.decrypt(encryptedFile, targetFilename, keyAndPassword);
+		encryptionService.decrypt(encryptedFile, targetFilename, keyAndPassword, null);
 		assertTrue(new File(targetFilename).exists());
 	}
 }

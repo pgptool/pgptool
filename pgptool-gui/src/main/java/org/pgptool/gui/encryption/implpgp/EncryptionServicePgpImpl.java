@@ -93,18 +93,12 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 	private static final int BUFFER_SIZE = 1 << 16;
 
 	@Override
-	public void encrypt(String sourceFile, String targetFile, Collection<Key<KeyDataPgp>> recipients)
-			throws UserReqeustedCancellationException {
-		encrypt(sourceFile, targetFile, recipients, null);
-	}
-
-	@Override
 	public String encryptText(String sourceText, Collection<Key<KeyDataPgp>> recipients) {
 		try {
 			PGPEncryptedDataGenerator dataGenerator = buildEncryptedDataGenerator(
 					buildKeysListForEncryption(recipients));
 
-			EncryptionSourceInfo encryptionSourceInfo = new EncryptionSourceInfo("text.asc", sourceText.length(),
+			SourceInfo encryptionSourceInfo = new SourceInfo("text.asc", sourceText.length(),
 					System.currentTimeMillis());
 			ByteArrayOutputStream pOut = new ByteArrayOutputStream();
 			ByteArrayInputStream pIn = new ByteArrayInputStream(sourceText.getBytes("UTF-8"));
@@ -125,15 +119,15 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 			Updater progress = null;
 			if (optionalProgressHandler != null) {
 				progress = Progress.create("action.encrypt", optionalProgressHandler);
-				progress.updateStepInfo("encryption.progress.preparingKeys", FilenameUtils.getName(sourceFile));
+				progress.updateStepInfo("progress.preparingKeys", FilenameUtils.getName(sourceFile));
 			}
 
 			PGPEncryptedDataGenerator dataGenerator = buildEncryptedDataGenerator(
 					buildKeysListForEncryption(recipients));
 
 			OutputStream out = new BufferedOutputStream(new FileOutputStream(targetFile, false));
-			doEncryptFile(new FileInputStream(sourceFile), EncryptionSourceInfo.fromFile(sourceFile), out,
-					dataGenerator, progress, PGPLiteralData.BINARY);
+			doEncryptFile(new FileInputStream(sourceFile), SourceInfo.fromFile(sourceFile), out, dataGenerator,
+					progress, PGPLiteralData.BINARY);
 			out.close();
 		} catch (Throwable t) {
 			File fileToDelete = new File(targetFile);
@@ -145,7 +139,7 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 		}
 	}
 
-	private static void doEncryptFile(InputStream pIn, EncryptionSourceInfo encryptionSourceInfo, OutputStream out,
+	private static void doEncryptFile(InputStream pIn, SourceInfo encryptionSourceInfo, OutputStream out,
 			PGPEncryptedDataGenerator encDataGen, Updater progress, char outputType)
 			throws IOException, NoSuchProviderException, PGPException, UserReqeustedCancellationException {
 		OutputStream encryptedStream = encDataGen.open(out, new byte[BUFFER_SIZE]);
@@ -158,28 +152,26 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 		encryptedStream.close();
 	}
 
-	private static void estimateFullOperationSize(EncryptionSourceInfo encryptionSourceInfo, Updater progress) {
+	private static void estimateFullOperationSize(SourceInfo encryptionSourceInfo, Updater progress) {
 		if (progress == null) {
 			return;
 		}
 		progress.updateTotalSteps(BigInteger.valueOf(encryptionSourceInfo.getSize()));
 	}
 
-	public static void writeFileToLiteralData(InputStream pIn, EncryptionSourceInfo encryptionSourceInfo,
-			OutputStream out, char fileType, byte[] buffer, Updater progress)
-			throws IOException, UserReqeustedCancellationException {
+	public static void writeFileToLiteralData(InputStream pIn, SourceInfo encryptionSourceInfo, OutputStream out,
+			char fileType, byte[] buffer, Updater progress) throws IOException, UserReqeustedCancellationException {
 		PGPLiteralDataGenerator lData = new PGPLiteralDataGenerator();
 		OutputStream pOut = lData.open(out, fileType, encryptionSourceInfo.getName(),
 				new Date(encryptionSourceInfo.getModifiedAt()), buffer);
-		pipeFileContents(pIn, encryptionSourceInfo, pOut, buffer.length, progress);
-	}
-
-	private static void pipeFileContents(InputStream pIn, EncryptionSourceInfo encryptionSourceInfo, OutputStream pOut,
-			int bufSize, Updater progress) throws IOException, UserReqeustedCancellationException {
 		if (progress != null) {
 			progress.updateStepInfo("encryption.progress.encrypting", encryptionSourceInfo.getName());
 		}
+		pipeStream(pIn, pOut, buffer.length, progress);
+	}
 
+	private static void pipeStream(InputStream pIn, OutputStream pOut, int bufSize, Updater progress)
+			throws IOException, UserReqeustedCancellationException {
 		byte[] buf = new byte[bufSize];
 		long totalRead = 0;
 
@@ -297,7 +289,7 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 			in = new ByteArrayInputStream(encryptedText.getBytes("UTF-8"));
 			PGPPublicKeyEncryptedData publicKeyEncryptedData = getPublicKeyEncryptedDataByKeyId(in, secretKey);
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			decryptStream(publicKeyEncryptedData, privateKey, outputStream);
+			decryptStream(publicKeyEncryptedData, privateKey, outputStream, null);
 			return outputStream.toString("UTF-8");
 		} catch (Throwable t) {
 			Throwables.propagateIfInstanceOf(t, InvalidPasswordException.class);
@@ -309,9 +301,17 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 	}
 
 	@Override
-	public void decrypt(String sourceFile, String targetFile, PasswordDeterminedForKey<KeyDataPgp> keyAndPassword)
-			throws InvalidPasswordException {
+	public void decrypt(String sourceFile, String targetFile, PasswordDeterminedForKey<KeyDataPgp> keyAndPassword,
+			ProgressHandler optionalProgressHandler)
+			throws InvalidPasswordException, UserReqeustedCancellationException {
 		log.debug("Decrytping " + sourceFile);
+
+		Updater progress = null;
+		if (optionalProgressHandler != null) {
+			progress = Progress.create("action.decrypt", optionalProgressHandler);
+			progress.updateStepInfo("progress.preparingKeys", FilenameUtils.getName(sourceFile));
+			progress.updateTotalSteps(BigInteger.valueOf(new File(sourceFile).length()));
+		}
 
 		Key<KeyDataPgp> decryptionKey = keyAndPassword.getMatchedKey();
 		String passphrase = keyAndPassword.getPassword();
@@ -330,10 +330,15 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 			in = new BufferedInputStream(new FileInputStream(sourceFile));
 			PGPPublicKeyEncryptedData publicKeyEncryptedData = getPublicKeyEncryptedDataByKeyId(in, secretKey);
 			FileOutputStream outputStream = new FileOutputStream(targetFile);
-			decryptStream(publicKeyEncryptedData, privateKey, outputStream);
+			decryptStream(publicKeyEncryptedData, privateKey, outputStream, progress);
 		} catch (Throwable t) {
-			Throwables.propagateIfInstanceOf(t, InvalidPasswordException.class);
+			File fileToDelete = new File(targetFile);
+			if (fileToDelete.exists() && !fileToDelete.delete()) {
+				log.warn("Failed to delete file after failed decryption: " + targetFile);
+			}
 
+			Throwables.propagateIfInstanceOf(t, InvalidPasswordException.class);
+			Throwables.propagateIfInstanceOf(t, UserReqeustedCancellationException.class);
 			log.error("Decryption failed", t);
 			throw new RuntimeException("Decryption failed", t);
 		} finally {
@@ -347,7 +352,8 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 	 * Inspired by
 	 * https://github.com/bcgit/bc-java/blob/master/pg/src/main/java/org/bouncycastle/openpgp/examples/KeyBasedFileProcessor.java
 	 */
-	private void decryptStream(PGPPublicKeyEncryptedData pbe, PGPPrivateKey privateKey, OutputStream outputStream) {
+	private void decryptStream(PGPPublicKeyEncryptedData pbe, PGPPrivateKey privateKey, OutputStream outputStream,
+			Updater optionalProgress) throws UserReqeustedCancellationException {
 		try {
 			InputStream clear = pbe.getDataStream(new BcPublicKeyDataDecryptorFactory(privateKey));
 
@@ -375,7 +381,11 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 					// ld.getFileName();
 					InputStream unc = ld.getInputStream();
 					OutputStream fOut = new BufferedOutputStream(outputStream);
-					Streams.pipeAll(unc, fOut);
+					if (optionalProgress != null) {
+						optionalProgress.updateStepInfo("progress.decrypting");
+					}
+
+					pipeStream(unc, fOut, BUFFER_SIZE, optionalProgress);
 					fOut.close();
 
 					if (pbe.isIntegrityProtected()) {
@@ -402,6 +412,7 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 				}
 			}
 		} catch (Throwable e) {
+			Throwables.propagateIfInstanceOf(e, UserReqeustedCancellationException.class);
 			throw new RuntimeException("Decryption failed", e);
 		}
 	}

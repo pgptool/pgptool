@@ -125,6 +125,12 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 	}
 
 	@Override
+	protected void handleDialogShown() {
+		super.handleDialogShown();
+		dialog.getRootPane().setDefaultButton(btnCreate);
+	}
+
+	@Override
 	protected void dispatchWindowCloseEvent() {
 		btnCancel.getAction().actionPerformed(null);
 	}

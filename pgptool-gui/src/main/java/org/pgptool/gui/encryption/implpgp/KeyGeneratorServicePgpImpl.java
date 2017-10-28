@@ -57,14 +57,14 @@ import com.google.common.base.Throwables;
 public class KeyGeneratorServicePgpImpl implements KeyGeneratorService<KeyDataPgp>, DisposableBean {
 	private static Logger log = Logger.getLogger(KeyGeneratorServicePgpImpl.class);
 
-	// NOTE: Shouldn't I generate it each time. Is it safe to have it hardcoded?
+	// TODO: Shouldn't I generate it each time. Is it safe to have it hardcoded?
 	BigInteger g = new BigInteger(
 			"153d5d6172adb43045b68ae8e1de1070b6137005686d29d3d73a7749199681ee5b212c9b96bfdcfa5b20cd5e3fd2044895d609cf9b410b7a0f12ca1cb9a428cc",
 			16);
 	BigInteger p = new BigInteger(
 			"9494fec095f3b85ee286542b3836fc81a5dd0a0349b4c239dd38744d488cf8e31db8bcb7d33b41abb9e5a33cca9144b1cef332c94bf0573bf047a3aca98cdf3b",
 			16);
-	private static DsaKeyPairParams DEFAULT_DSA_KEY_PARAMETERS = new DsaKeyPairParams("DSA", "BC", 1024);
+	private static DsaKeyPairParams DEFAULT_DSA_KEY_PARAMETERS = new DsaKeyPairParams("DSA", "BC", 2048);
 
 	private Map<DsaKeyPairParams, Future<KeyPair>> pregeneratedDsaKeyPairs = new ConcurrentHashMap<>();
 	private ExecutorService executorService;
@@ -104,17 +104,17 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService<KeyDataPg
 			// JcaPGPContentSignerBuilder keySignerBuilder = new
 			// JcaPGPContentSignerBuilder(
 			// dsaKeyPair.getPublicKey().getAlgorithm(),
-			// HashAlgorithmTags.SHA1);
+			// HashAlgorithmTags.SHA256);
 
 			// BC
 			BcPGPContentSignerBuilder keySignerBuilderBC = new BcPGPContentSignerBuilder(
-					dsaKeyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1);
+					dsaKeyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA256);
 
 			// PGPDigestCalculator
 			// JCA
 			// PGPDigestCalculator sha1Calc = new
 			// JcaPGPDigestCalculatorProviderBuilder().build()
-			// .get(HashAlgorithmTags.SHA1);
+			// .get(HashAlgorithmTags.SHA256);
 
 			// BC
 			PGPDigestCalculator sha1CalcBC = new BcPGPDigestCalculatorProvider().get(HashAlgorithmTags.SHA1);
@@ -168,8 +168,8 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService<KeyDataPg
 
 	/**
 	 * NOTE: It feels like a little over-engineered thing since generation takes
-	 * like 1 second not that long as it was advertised. So perhaps we might
-	 * decide to get rid of it and run it on demand
+	 * like 1 second not that long as it was advertised. So perhaps we might decide
+	 * to get rid of it and run it on demand
 	 * 
 	 * @param params
 	 * @return

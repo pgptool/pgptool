@@ -65,7 +65,6 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyKeyEncryptionMethodGenerator;
-import org.bouncycastle.util.io.Streams;
 import org.pgptool.gui.bkgoperation.Progress;
 import org.pgptool.gui.bkgoperation.Progress.Updater;
 import org.pgptool.gui.bkgoperation.ProgressHandler;
@@ -79,6 +78,7 @@ import org.summerb.approaches.security.api.exceptions.InvalidPasswordException;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.io.CountingInputStream;
 
 /**
  * 
@@ -167,19 +167,29 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 		if (progress != null) {
 			progress.updateStepInfo("encryption.progress.encrypting", encryptionSourceInfo.getName());
 		}
-		pipeStream(pIn, pOut, buffer.length, progress);
+		pipeStream(pIn, pOut, buffer.length, progress, null);
 	}
 
-	private static void pipeStream(InputStream pIn, OutputStream pOut, int bufSize, Updater progress)
-			throws IOException, UserReqeustedCancellationException {
+	/**
+	 * @param countingStream
+	 *            this stream is passed for progress reporting only. Optional, if
+	 *            not provided then return from pIn method will be used
+	 */
+	private static void pipeStream(InputStream pIn, OutputStream pOut, int bufSize, Updater progress,
+			CountingInputStream countingStream) throws IOException, UserReqeustedCancellationException {
 		byte[] buf = new byte[bufSize];
 		long totalRead = 0;
 
 		int len;
 		while ((len = pIn.read(buf)) > 0) {
 			pOut.write(buf, 0, len);
-			totalRead += len;
-			updateProgress(progress, totalRead);
+
+			if (countingStream == null) {
+				totalRead += len;
+				updateProgress(progress, totalRead);
+			} else {
+				updateProgress(progress, countingStream.getCount());
+			}
 		}
 
 		pOut.close();
@@ -289,7 +299,7 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 			in = new ByteArrayInputStream(encryptedText.getBytes("UTF-8"));
 			PGPPublicKeyEncryptedData publicKeyEncryptedData = getPublicKeyEncryptedDataByKeyId(in, secretKey);
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			decryptStream(publicKeyEncryptedData, privateKey, outputStream, null);
+			decryptStream(publicKeyEncryptedData, privateKey, outputStream, null, null);
 			return outputStream.toString("UTF-8");
 		} catch (Throwable t) {
 			Throwables.propagateIfInstanceOf(t, InvalidPasswordException.class);
@@ -307,10 +317,11 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 		log.debug("Decrytping " + sourceFile);
 
 		Updater progress = null;
+		BigInteger sourceSize = BigInteger.valueOf(new File(sourceFile).length());
 		if (optionalProgressHandler != null) {
 			progress = Progress.create("action.decrypt", optionalProgressHandler);
 			progress.updateStepInfo("progress.preparingKeys", FilenameUtils.getName(sourceFile));
-			progress.updateTotalSteps(BigInteger.valueOf(new File(sourceFile).length()));
+			progress.updateTotalSteps(sourceSize);
 		}
 
 		Key<KeyDataPgp> decryptionKey = keyAndPassword.getMatchedKey();
@@ -327,10 +338,19 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 			PGPSecretKey secretKey = decryptionKey.getKeyData().findSecretKeyById(keyAndPassword.getDecryptionKeyId());
 			PGPPrivateKey privateKey = getPrivateKey(passphrase, secretKey);
 
-			in = new BufferedInputStream(new FileInputStream(sourceFile));
+			CountingInputStream countingStream = new CountingInputStream(new FileInputStream(sourceFile));
+			in = new BufferedInputStream(countingStream);
 			PGPPublicKeyEncryptedData publicKeyEncryptedData = getPublicKeyEncryptedDataByKeyId(in, secretKey);
 			FileOutputStream outputStream = new FileOutputStream(targetFile);
-			decryptStream(publicKeyEncryptedData, privateKey, outputStream, progress);
+			decryptStream(publicKeyEncryptedData, privateKey, outputStream, progress, countingStream);
+
+			if (optionalProgressHandler != null) {
+				// NOTE: The problem with decryption is that BC doesn't provide API to get
+				// compressed+encrypted file size so it's hard to report progress precisely. We
+				// do our best, but still it's very approximate. So that's why we need to
+				// explicitly set 100% after operation was completed
+				progress.updateTotalSteps(sourceSize);
+			}
 		} catch (Throwable t) {
 			File fileToDelete = new File(targetFile);
 			if (fileToDelete.exists() && !fileToDelete.delete()) {
@@ -351,9 +371,13 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 	 * 
 	 * Inspired by
 	 * https://github.com/bcgit/bc-java/blob/master/pg/src/main/java/org/bouncycastle/openpgp/examples/KeyBasedFileProcessor.java
+	 * 
+	 * @param countingStream
+	 *            this stream is passed for progress reporting only, must not be
+	 *            used to actually read data
 	 */
 	private void decryptStream(PGPPublicKeyEncryptedData pbe, PGPPrivateKey privateKey, OutputStream outputStream,
-			Updater optionalProgress) throws UserReqeustedCancellationException {
+			Updater optionalProgress, CountingInputStream countingStream) throws UserReqeustedCancellationException {
 		try {
 			InputStream clear = pbe.getDataStream(new BcPublicKeyDataDecryptorFactory(privateKey));
 
@@ -385,7 +409,7 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 						optionalProgress.updateStepInfo("progress.decrypting");
 					}
 
-					pipeStream(unc, fOut, BUFFER_SIZE, optionalProgress);
+					pipeStream(unc, fOut, BUFFER_SIZE, optionalProgress, countingStream);
 					fOut.close();
 
 					if (pbe.isIntegrityProtected()) {

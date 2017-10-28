@@ -113,6 +113,7 @@ public class EncryptOnePm extends PresentationModelBase {
 	private ModelProperty<String> progressNote;
 	private ModelProperty<Boolean> isDisableControls;
 	private ProgressHandler progressHandler;
+	private Thread operationThread;
 
 	public boolean init(EncryptOneHost host, String optionalSource) {
 		Preconditions.checkArgument(host != null);
@@ -407,11 +408,12 @@ public class EncryptOnePm extends PresentationModelBase {
 		public void actionPerformed(ActionEvent e) {
 			actionDoOperation.setEnabled(false);
 			isDisableControls.setValueByOwner(true);
+			operationThread = new Thread(operationWorker);
 			operationThread.start();
 		}
 	};
 
-	private Thread operationThread = new Thread("BkgOpEncryptOne") {
+	private Runnable operationWorker = new Runnable() {
 		@Override
 		public void run() {
 			String targetFileName = getEffectiveTargetFileName();
@@ -425,6 +427,7 @@ public class EncryptOnePm extends PresentationModelBase {
 			} catch (Throwable t) {
 				log.error("Failed to encrypt", t);
 				EntryPoint.reportExceptionToUser("error.failedToEncryptFile", t);
+				actionDoOperation.setEnabled(true);
 				isDisableControls.setValueByOwner(false);
 				return;
 			}
@@ -500,7 +503,7 @@ public class EncryptOnePm extends PresentationModelBase {
 	protected final Action actionCancel = new LocalizedAction("action.cancel") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if (operationThread.isAlive()) {
+			if (operationThread != null && operationThread.isAlive()) {
 				operationThread.interrupt();
 			} else {
 				host.handleClose();

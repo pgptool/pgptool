@@ -127,6 +127,7 @@ public class DecryptOnePm extends PresentationModelBase {
 	private ModelProperty<String> progressNote;
 	private ModelProperty<Boolean> isDisableControls;
 	private ProgressHandlerPmMixinImpl progressHandler;
+	private Thread operationThread;
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean init(DecryptOneHost host, String optionalSource) {
@@ -442,15 +443,18 @@ public class DecryptOnePm extends PresentationModelBase {
 		public void actionPerformed(ActionEvent e) {
 			actionDoOperation.setEnabled(false);
 			isDisableControls.setValueByOwner(true);
+			operationThread = new Thread(operationWorker);
 			operationThread.start();
 		}
 	};
 
-	private Thread operationThread = new Thread("BkgOpDecryptOne") {
+	private Runnable operationWorker = new Runnable() {
 		@Override
 		public void run() {
 			String targetFileName = getEffectiveTargetFileName();
 			if (targetFileName == null) {
+				actionDoOperation.setEnabled(true);
+				isDisableControls.setValueByOwner(false);
 				return;
 			}
 
@@ -464,6 +468,7 @@ public class DecryptOnePm extends PresentationModelBase {
 			} catch (Throwable t) {
 				log.error("Failed to decrypt", t);
 				EntryPoint.reportExceptionToUser("error.failedToDecryptFile", t);
+				actionDoOperation.setEnabled(true);
 				isDisableControls.setValueByOwner(false);
 				return;
 			}
@@ -626,7 +631,7 @@ public class DecryptOnePm extends PresentationModelBase {
 	protected final Action actionCancel = new LocalizedAction("action.cancel") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if (operationThread.isAlive()) {
+			if (operationThread != null && operationThread.isAlive()) {
 				operationThread.interrupt();
 			} else {
 				host.handleClose();

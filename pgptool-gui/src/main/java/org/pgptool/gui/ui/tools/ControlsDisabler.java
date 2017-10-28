@@ -36,6 +36,7 @@ public class ControlsDisabler implements TypedPropertyChangeListener<Boolean> {
 				disabledComponents.remove(0).setEnabled(true);
 			}
 		}
+		rootPanelToDisable.repaint();
 	}
 
 	public void disableForm(Container container) {

@@ -163,9 +163,9 @@ public class UiUtils {
 	}
 
 	/**
-	 * Hack to make sure window is visible. On windows it's sometimes created
-	 * but on a background. User can see "flashing" icon in a task bar but
-	 * window stays on a background.
+	 * Hack to make sure window is visible. On windows it's sometimes created but on
+	 * a background. User can see "flashing" icon in a task bar but window stays on
+	 * a background.
 	 * 
 	 * PRESUMING: setVisible(true) was already called
 	 * 
@@ -204,7 +204,7 @@ public class UiUtils {
 		}
 	}
 
-	private static JScrollPane prepareScrollableMessage(String msg) {
+	public static JScrollPane prepareScrollableMessage(String msg) {
 		JTextArea textArea = new JTextArea(msg);
 		textArea.setLineWrap(true);
 		textArea.setWrapStyleWord(true);
@@ -215,7 +215,7 @@ public class UiUtils {
 		scrollPane.getViewport().setView(textArea);
 		return scrollPane;
 	}
-	
+
 	public static void reportExceptionToUser(String errorMessageCode, Throwable cause, Object... messageArgs) {
 		EntryPoint.reportExceptionToUser(errorMessageCode, cause, messageArgs);
 	}

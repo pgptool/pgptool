@@ -30,6 +30,7 @@ import java.util.Set;
 import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.apache.commons.io.FilenameUtils;
@@ -459,7 +460,6 @@ public class DecryptOnePm extends PresentationModelBase {
 			}
 
 			String sourceFileStr = sourceFile.getValue();
-
 			try {
 				encryptionService.decrypt(sourceFileStr, targetFileName, keyAndPassword, progressHandler);
 			} catch (UserReqeustedCancellationException ce) {
@@ -551,11 +551,30 @@ public class DecryptOnePm extends PresentationModelBase {
 				return ensureFileNameVacant(ret);
 			}
 
-			if (!UiUtils.confirm("warning.fileWasAlreadyDecryptedIntoTempFolder",
-					new Object[] { dfm.getEncryptedFile(), dfm.getDecryptedFile() }, findRegisteredWindowIfAny())) {
+			// Suggest to open instead of overwrite
+			String msg = text("warning.fileWasAlreadyDecryptedIntoTempFolder",
+					new Object[] { dfm.getEncryptedFile(), dfm.getDecryptedFile() });
+			int response = JOptionPane.showConfirmDialog(findRegisteredWindowIfAny(),
+					UiUtils.prepareScrollableMessage(msg), text("term.confirmation"), JOptionPane.YES_NO_CANCEL_OPTION,
+					JOptionPane.QUESTION_MESSAGE);
+
+			if (response == JOptionPane.CANCEL_OPTION) {
+				return null;
+			} else if (response == JOptionPane.NO_OPTION) {
+				// overwrite
+				return dfm.getDecryptedFile();
+			} else {
+				// NOTE: That is a nasty violation of something. This method should not control
+				// PM workflow like this. But today I don't feel myself ok, I hope you will
+				// forgive me. Will refactor it later.
+				if (isOpenTargetFolderAfter.getValue()) {
+					browseForFolder(dfm.getDecryptedFile());
+				} else {
+					openAssociatedApp(dfm.getDecryptedFile());
+				}
+				host.handleClose();
 				return null;
 			}
-			return dfm.getDecryptedFile();
 		}
 
 		private void persistDecryptionDialogParametersForCurrentInputs(String targetFile) {

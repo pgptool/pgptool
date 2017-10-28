@@ -21,6 +21,7 @@ import java.io.File;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent.Kind;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
@@ -34,10 +35,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 
 import com.google.common.base.Preconditions;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.eventbus.EventBus;
 
 public class DecryptedHistoryServiceImpl implements DecryptedHistoryService, InitializingBean, DisposableBean {
 	private static Logger log = Logger.getLogger(DecryptedHistoryServiceImpl.class);
+
+	protected static final long TIME_TO_ENSURE_FILE_WAS_DELETED_MS = 2000;
 
 	private static final String PREFIX = "decrhist:";
 
@@ -47,6 +52,9 @@ public class DecryptedHistoryServiceImpl implements DecryptedHistoryService, Ini
 	private EventBus eventBus;
 
 	private MultipleFilesWatcher multipleFilesWatcher;
+
+	private Cache<String, DecryptedFile> recentlyRemoved = CacheBuilder.newBuilder()
+			.expireAfterWrite(TIME_TO_ENSURE_FILE_WAS_DELETED_MS, TimeUnit.MILLISECONDS).build();
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -73,6 +81,14 @@ public class DecryptedHistoryServiceImpl implements DecryptedHistoryService, Ini
 	private FilesWatcherHandler dirWatcherHandler = new FilesWatcherHandler() {
 		@Override
 		public void handleFileChanged(Kind<?> entryDelete, String fileAbsolutePathname) {
+			if (StandardWatchEventKinds.ENTRY_CREATE.equals(entryDelete)) {
+				DecryptedFile recentlyRemovedEntry = recentlyRemoved.getIfPresent(fileAbsolutePathname);
+				if (recentlyRemovedEntry != null) {
+					add(recentlyRemovedEntry);
+					return;
+				}
+			}
+
 			if (!StandardWatchEventKinds.ENTRY_DELETE.equals(entryDelete)) {
 				return;
 			}
@@ -108,6 +124,9 @@ public class DecryptedHistoryServiceImpl implements DecryptedHistoryService, Ini
 				// if it's not there -- nothing to delete
 				return;
 			}
+
+			// Remember this file in case it will appear right away
+			recentlyRemoved.put(depcryptedFilePathname, existing);
 
 			configPairs.put(key, null);
 			eventBus.post(EntityChangedEvent.removedObject(existing));

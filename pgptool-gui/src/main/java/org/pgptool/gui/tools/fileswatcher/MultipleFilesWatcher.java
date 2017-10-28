@@ -17,6 +17,7 @@
  *******************************************************************************/
 package org.pgptool.gui.tools.fileswatcher;
 
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
@@ -25,9 +26,7 @@ import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
-import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.ArrayList;
@@ -40,8 +39,6 @@ import org.apache.log4j.Logger;
 import org.summerb.utils.threads.RecurringBackgroundTask;
 
 public class MultipleFilesWatcher {
-	protected static final long TIME_TO_ENSURE_FILE_WAS_DELETED = 400;
-
 	private static Logger log = Logger.getLogger(MultipleFilesWatcher.class);
 
 	private FilesWatcherHandler dirWatcherHandler;
@@ -54,10 +51,9 @@ public class MultipleFilesWatcher {
 	private WatchService watcher;
 
 	/**
-	 * since WatchService is not notifying us in case of parent folders removal
-	 * AND we don't want to overcomplicate code to watch ALL parent folders
-	 * we're having here another simple thread that will go and check folders
-	 * existance
+	 * since WatchService is not notifying us in case of parent folders removal AND
+	 * we don't want to overcomplicate code to watch ALL parent folders we're having
+	 * here another simple thread that will go and check folders existance
 	 */
 	private RecurringBackgroundTask dirsExistanceWatcherTask;
 
@@ -110,7 +106,7 @@ public class MultipleFilesWatcher {
 				}
 
 				Path path = Paths.get(baseFolderStr);
-				WatchKey key = path.register(watcher, ENTRY_DELETE, ENTRY_MODIFY);
+				WatchKey key = path.register(watcher, ENTRY_DELETE, ENTRY_MODIFY, ENTRY_CREATE);
 				baseFolder = new BaseFolder(baseFolderStr, key, path, relativeFilename);
 
 				keys.put(key, baseFolder);
@@ -142,10 +138,12 @@ public class MultipleFilesWatcher {
 					return;
 				}
 
-				keys.remove(baseFolder.key);
-				baseFolders.remove(baseFolder.folder);
-				baseFolder.key.cancel();
-				log.debug("Folder watch key is canceled " + baseFolderStr);
+				// NOTE: Decided to turn this off, because file might re-appear in case it's app
+				// re-created it. See #91, #75
+				// keys.remove(baseFolder.key);
+				// baseFolders.remove(baseFolder.folder);
+				// baseFolder.key.cancel();
+				// log.debug("Folder watch key is canceled " + baseFolderStr);
 			}
 		} catch (Throwable t) {
 			log.error("Failed to watch file " + filePathName, t);
@@ -193,20 +191,13 @@ public class MultipleFilesWatcher {
 						Path name = ev.context();
 						Path child = baseFolder.path.resolve(name);
 						String relativeFilename = FilenameUtils.getName(child.toString());
-						if (!baseFolder.interestedFiles.contains(relativeFilename)) {
+						if (!baseFolder.interestedFiles.contains(relativeFilename)
+								&& !event.kind().equals(ENTRY_CREATE)) {
 							continue;
 						}
 
 						// print out event
 						log.debug("Watcher event: " + event.kind().name() + ", file " + child);
-						if (StandardWatchEventKinds.ENTRY_DELETE.equals(event.kind())) {
-							// In case it's a REMOVE event wait a second
-							// and see if file will appear again. If so change
-							// event type to UPDATE -- that is supposed to fix
-							// defect #75
-							log.debug("Double checking if file was really deleted and not re-created: " + child);
-							event = waitToCompensateFileRecreation(event, child.toString());
-						}
 						dirWatcherHandler.handleFileChanged(event.kind(), child.toString());
 					}
 
@@ -221,48 +212,6 @@ public class MultipleFilesWatcher {
 					}
 				}
 				log.debug("FileWatcher thread stopped " + watcherName);
-			}
-
-			@SuppressWarnings("unchecked")
-			private WatchEvent<?> waitToCompensateFileRecreation(WatchEvent<?> event, String filePathName) {
-				File file = new File(filePathName);
-				long timeoutAt = System.currentTimeMillis() + TIME_TO_ENSURE_FILE_WAS_DELETED;
-				// TODO: Problem with this wait is that file doesn't disappear
-				// immediately after we delete it from list of decrypted files
-				while (!file.exists() && System.currentTimeMillis() < timeoutAt) {
-					try {
-						Thread.sleep(50);
-					} catch (InterruptedException ie) {
-						return event;
-					}
-				}
-				if (file.exists()) {
-					// TODO: And what if file was just over-written by another
-					// decryption operation?
-					log.debug("Ok, it happens to be a MODIFY operation instead of delete: " + file);
-					return overrideEventKind((WatchEvent<Path>) event, StandardWatchEventKinds.ENTRY_MODIFY);
-				}
-				return event;
-			}
-
-			private <T> WatchEvent<T> overrideEventKind(WatchEvent<T> event, Kind<T> newKind) {
-				WatchEvent<T> retx = new WatchEvent<T>() {
-					@Override
-					public java.nio.file.WatchEvent.Kind<T> kind() {
-						return newKind;
-					}
-
-					@Override
-					public int count() {
-						return event.count();
-					}
-
-					@Override
-					public T context() {
-						return event.context();
-					}
-				};
-				return retx;
 			}
 
 			private void idleIfNoKeysRegistered() throws InterruptedException {

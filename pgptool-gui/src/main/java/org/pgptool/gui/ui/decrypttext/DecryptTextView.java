@@ -84,7 +84,7 @@ public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
 		ret.add(new JLabel(text("term.encryptedFor")), sgl.cs(0, 2));
 		ret.add(new JScrollPane(edRecipients = new JTextArea()), sgl.cs(0, 3));
 		edRecipients.setEditable(false);
-		edRecipients.setBackground(UIManager.getColor ( "Panel.background" ));
+		edRecipients.setBackground(UIManager.getColor("Panel.background"));
 		edRecipients.setMargin(new Insets(5, 5, 5, 5));
 		edRecipients.setLineWrap(true);
 
@@ -97,12 +97,12 @@ public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
 		ret.add(new JLabel(text("term.decryptedText")), sgl.cs(1, 0));
 		ret.add(new JScrollPane(edTargetText = new JTextArea()), sgl.cs(1, 1, 1, 3));
 		edTargetText.setMargin(new Insets(5, 5, 5, 5));
-		
+
 		btns = new JPanel(new GridLayout(1, 0, 10, 0));
 		btns.add(btnCopyTargetToClipboard = new JButton());
 		btns.add(btnReply = new JButton());
 		ret.add(btns, sgl.cs(1, 4));
-		
+
 		// x. ret
 		return ret;
 	}

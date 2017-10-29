@@ -56,7 +56,7 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 	private JPanel controlsPanel;
 	private TypedPropertyChangeListener<Boolean> isDisableControlsChanged;
 	private JProgressBar pbar;
-	
+
 	private JTextField edSourceFile;
 	private JButton btnBrowseSource;
 
@@ -79,7 +79,7 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 
 		pnl.add(controlsPanel = buildControllsPanel(), BorderLayout.CENTER);
 		isDisableControlsChanged = new ControlsDisabler(controlsPanel);
-		
+
 		pnl.add(buildPanelButtons(), BorderLayout.SOUTH);
 	}
 
@@ -195,7 +195,7 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 		bindingContext.registerOnChangeHandler(pm.getIsDisableControls(), isDisableControlsChanged);
 		isDisableControlsChanged.handlePropertyChanged(this, null, false, pm.getIsDisableControls().getValue());
 	}
-	
+
 	@Override
 	protected JDialog initDialog(Window owner, Object constraints) {
 		JDialog ret = new JDialog(owner, ModalityType.MODELESS);

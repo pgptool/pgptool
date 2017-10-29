@@ -281,7 +281,7 @@ public class KeysListPm extends PresentationModelBase {
 			if (targetFile == null) {
 				return;
 			}
-			
+
 			try {
 				keyFilesOperations.exportPrivateKey(key, targetFile);
 			} catch (Throwable t) {

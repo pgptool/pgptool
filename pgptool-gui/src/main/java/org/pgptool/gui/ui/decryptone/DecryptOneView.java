@@ -72,7 +72,7 @@ public class DecryptOneView extends ViewBase<DecryptOnePm> {
 
 		pnl.add(controlsPanel = buildControllsPanel(), BorderLayout.CENTER);
 		isDisableControlsChanged = new ControlsDisabler(controlsPanel);
-		
+
 		pnl.add(buildPanelButtons(), BorderLayout.SOUTH);
 	}
 
@@ -176,7 +176,7 @@ public class DecryptOneView extends ViewBase<DecryptOnePm> {
 
 		bindingContext.setupBinding(pm.actionDoOperation, btnPerformOperation);
 		bindingContext.setupBinding(pm.actionCancel, btnCancel);
-		
+
 		bindingContext.registerPropertyValuePropagation(pm.getIsProgressVisible(), pbar, "visible");
 		bindingContext.registerPropertyValuePropagation(pm.getProgressNote(), pbar, "string");
 		bindingContext.registerPropertyValuePropagation(pm.getProgressValue(), pbar, "value");

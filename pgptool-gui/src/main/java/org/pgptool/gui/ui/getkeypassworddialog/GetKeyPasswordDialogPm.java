@@ -33,7 +33,7 @@ public class GetKeyPasswordDialogPm extends PresentationModelBase implements App
 			KeyAndPasswordCallback<?> keyAndPasswordCallback) {
 		this.host = host;
 		this.keyAndPasswordCallback = keyAndPasswordCallback;
-		
+
 		GetKeyPasswordPmInitResult result = getKeyPasswordPm.init(getPasswordHost, keysIds, purpose);
 		if (result == GetKeyPasswordPmInitResult.NoMatchingKeys) {
 			keyAndPasswordCallback.onKeyPasswordResult(null);

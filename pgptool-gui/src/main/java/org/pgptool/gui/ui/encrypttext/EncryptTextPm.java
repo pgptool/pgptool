@@ -88,7 +88,7 @@ public class EncryptTextPm extends PresentationModelBase {
 		}
 
 		initModelProperties();
-		
+
 		if (preselectedKeyIds != null) {
 			Set<String> missedKeys = preselectRecipients(preselectedKeyIds);
 			notifyUserOfMissingKeysIfAny(missedKeys);
@@ -96,7 +96,7 @@ public class EncryptTextPm extends PresentationModelBase {
 
 		return true;
 	}
-	
+
 	private Set<String> preselectRecipients(Set<String> recipientsKeysIds) {
 		selectedRecipients.getList().clear();
 		Set<String> missedKeys = new HashSet<>();

@@ -34,8 +34,8 @@ public interface KeyRingService<TKeyData extends KeyData> {
 	/**
 	 * This method will find all keys that are compatible with IDs provided and
 	 * suitable for decryption. It might not be the keyId itself, but ID that is
-	 * supported by the key. Which means it doens't necessarily true that
-	 * (pseudo code) keysIds.containsAll(return.getIds)
+	 * supported by the key. Which means it doens't necessarily true that (pseudo
+	 * code) keysIds.containsAll(return.getIds)
 	 * 
 	 * @param keysIds
 	 *            list of ids needs to be found.

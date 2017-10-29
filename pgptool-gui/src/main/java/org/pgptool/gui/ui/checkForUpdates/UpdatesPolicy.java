@@ -19,7 +19,6 @@ import org.springframework.util.StringUtils;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
-import ru.skarpushin.swingpm.tools.edt.Edt;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
 
 public class UpdatesPolicy implements ApplicationContextAware {

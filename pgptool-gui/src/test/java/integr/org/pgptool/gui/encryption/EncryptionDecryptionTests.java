@@ -51,7 +51,6 @@ import org.springframework.test.annotation.ProfileValueSourceConfiguration;
 import org.springframework.test.annotation.SystemProfileValueSource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.summerb.approaches.security.api.exceptions.InvalidPasswordException;
 
 import integr.org.pgptool.gui.TestTools;
 

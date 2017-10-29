@@ -23,8 +23,8 @@ public class Key<TKeyData extends KeyData> implements Serializable {
 	private static final long serialVersionUID = 1614562515516152578L;
 
 	/**
-	 * This field contains some parts of parsed data. It's intended for
-	 * read-only use, do not change it manually
+	 * This field contains some parts of parsed data. It's intended for read-only
+	 * use, do not change it manually
 	 */
 	private KeyInfo keyInfo;
 	private TKeyData keyData;

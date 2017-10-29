@@ -153,7 +153,7 @@ public class EncryptTextView extends DialogViewBaseCustom<EncryptTextPm> {
 	protected JPanel getRootPanel() {
 		return pnl;
 	}
-	
+
 	@Override
 	protected void handleDialogShown() {
 		super.handleDialogShown();

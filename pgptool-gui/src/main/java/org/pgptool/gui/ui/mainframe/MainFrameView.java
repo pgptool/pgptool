@@ -414,8 +414,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 		bindingContext.setupBinding(pm.getActionCheckForUpdates(), miCheckForUpdates);
 		bindingContext.setupBinding(pm.getActionAutoCheckForUpdates(), miAutoCheckForUpdates);
-		bindingContext.registerPropertyValuePropagation(pm.getIsAutoUpdatesEnabled(), miAutoCheckForUpdates,
-				"state");
+		bindingContext.registerPropertyValuePropagation(pm.getIsAutoUpdatesEnabled(), miAutoCheckForUpdates, "state");
 
 		bindingContext.setupBinding(pm.getActionImportKey(), miPgpImportKey);
 		bindingContext.setupBinding(pm.getActionCreateKey(), miPgpCreateKey);

@@ -22,8 +22,8 @@ import java.nio.file.WatchEvent;
 
 public interface DirWatcherHandler {
 	/**
-	 * This method is invoked when watcher can no longer continue operation
-	 * mostly this happens if watched dir was removed
+	 * This method is invoked when watcher can no longer continue operation mostly
+	 * this happens if watched dir was removed
 	 */
 	void watcherHasToStop();
 

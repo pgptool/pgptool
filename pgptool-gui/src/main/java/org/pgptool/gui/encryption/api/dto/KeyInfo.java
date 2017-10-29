@@ -96,8 +96,8 @@ public class KeyInfo implements Serializable {
 	/**
 	 * Returns user name without email or any other special symbols
 	 * 
-	 * NOTE: This method doesn't seem to belong to this class because it feels
-	 * like an impl-specific thing
+	 * NOTE: This method doesn't seem to belong to this class because it feels like
+	 * an impl-specific thing
 	 * 
 	 * NOTE 2: Name of this is not started with "get" to avoid serialization
 	 * confusion

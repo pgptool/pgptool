@@ -234,7 +234,7 @@ public class MainFramePm extends PresentationModelBase {
 	protected Action getActionAbout() {
 		return host.getActionShowAboutInfo();
 	}
-	
+
 	public Action getActionCheckForUpdates() {
 		return host.getActionCheckForUpdates();
 	}
@@ -258,7 +258,7 @@ public class MainFramePm extends PresentationModelBase {
 	public Action getActionEncryptText() {
 		return host.getActionForEncryptText();
 	}
-	
+
 	public Action getActionDecryptText() {
 		return host.getActionForDecryptText();
 	}

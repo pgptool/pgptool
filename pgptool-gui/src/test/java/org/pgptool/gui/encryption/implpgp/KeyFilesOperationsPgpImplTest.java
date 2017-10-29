@@ -74,23 +74,23 @@ public class KeyFilesOperationsPgpImplTest {
 	@Test
 	public void testCanExportPublicFromPrivateKey() throws Exception {
 		KeyFilesOperationsPgpImpl fixture = buildFixture();
-		
+
 		Key<KeyDataPgp> key = fixture.readKeyFromFile(TestTools.getFileNameForResource("keys/Bob.asc"));
-		
+
 		// now export private key
 		File privateKey1 = new File(tempFolder + File.separator + "bob-private1.asc");
 		fixture.exportPrivateKey(key, privateKey1.getAbsolutePath());
-		
+
 		// now re-import private key
 		key = fixture.readKeyFromFile(privateKey1.getAbsolutePath());
-		
+
 		// now export public key
 		File publicKey1 = new File(tempFolder + File.separator + "bob-public1.asc");
 		fixture.exportPublicKey(key, publicKey1.getAbsolutePath());
 
 		assertTrue(publicKey1.exists());
 		assertTrue(publicKey1.length() > 0);
-		
+
 		// now read public key
 		Key<KeyDataPgp> publicKey = fixture.readKeyFromFile(publicKey1.getAbsolutePath());
 		assertEquals(key.getKeyInfo().getUser(), publicKey.getKeyInfo().getUser());

@@ -554,9 +554,8 @@ public class DecryptOnePm extends PresentationModelBase {
 			// Suggest to open instead of overwrite
 			String msg = text("warning.fileWasAlreadyDecryptedIntoTempFolder",
 					new Object[] { dfm.getEncryptedFile(), dfm.getDecryptedFile() });
-			int response = JOptionPane.showConfirmDialog(findRegisteredWindowIfAny(),
-					UiUtils.getMultilineMessage(msg), text("term.confirmation"), JOptionPane.YES_NO_CANCEL_OPTION,
-					JOptionPane.QUESTION_MESSAGE);
+			int response = JOptionPane.showConfirmDialog(findRegisteredWindowIfAny(), UiUtils.getMultilineMessage(msg),
+					text("term.confirmation"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 
 			if (response == JOptionPane.CANCEL_OPTION) {
 				return null;

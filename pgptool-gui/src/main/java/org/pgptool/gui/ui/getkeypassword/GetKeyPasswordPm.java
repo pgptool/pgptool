@@ -110,7 +110,8 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 		// NOTE: We're assuming here keys are distinct meaning same key will not
 		// appear 2 times
 		if (matchedKeys.size() == 0) {
-			//UiUtils.messageBox(text("error.noMatchingKeysRegistered"), text("term.attention"), MessageSeverity.WARNING);
+			// UiUtils.messageBox(text("error.noMatchingKeysRegistered"),
+			// text("term.attention"), MessageSeverity.WARNING);
 			return GetKeyPasswordPmInitResult.NoMatchingKeys;
 		}
 
@@ -131,7 +132,7 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 		super.detach();
 		eventBus.unregister(this);
 	}
-	
+
 	private boolean passwordWasCached(GetKeyPasswordHost host, List<MatchedKey<KeyData>> matchedKeys) {
 		for (MatchedKey<KeyData> k : matchedKeys) {
 			if (CACHE_KEYID_TO_PASSWORD.containsKey(k.getRequestedKeyId())) {
@@ -209,11 +210,11 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 			// If everything is ok -- return
 			PasswordDeterminedForKey<KeyData> ret = new PasswordDeterminedForKey<>(requestedKeyId, key, passwordStr);
 			CACHE_KEYID_TO_PASSWORD.put(requestedKeyId, ret);
-			//host.onPasswordDeterminedForKey(ret);
+			// host.onPasswordDeterminedForKey(ret);
 			eventBus.post(ret);
 		}
 	};
-	
+
 	@Subscribe
 	public void onPasswordProvidedByOtherInstance(PasswordDeterminedForKey<KeyData> evt) {
 		for (MatchedKey<KeyData> mk : matchedKeys) {

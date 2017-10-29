@@ -46,8 +46,8 @@ public class EncryptionDialogParameters implements Serializable {
 	private boolean isOpenTargetFolder;
 
 	/**
-	 * If true it means this instance was created by decrypt dialog to help
-	 * suggest parameters on encryption
+	 * If true it means this instance was created by decrypt dialog to help suggest
+	 * parameters on encryption
 	 */
 	private boolean isPropagatedFromDecrypt;
 

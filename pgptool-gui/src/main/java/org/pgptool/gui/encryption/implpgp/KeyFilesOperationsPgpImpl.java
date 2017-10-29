@@ -60,8 +60,8 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 	private static Logger log = Logger.getLogger(KeyFilesOperationsPgpImpl.class);
 
 	/**
-	 * Considering this as not a violation to DI since I don't see scenarios
-	 * when we'll need to change this
+	 * Considering this as not a violation to DI since I don't see scenarios when
+	 * we'll need to change this
 	 */
 	protected final static BcKeyFingerprintCalculator fingerprintCalculator = new BcKeyFingerprintCalculator();
 

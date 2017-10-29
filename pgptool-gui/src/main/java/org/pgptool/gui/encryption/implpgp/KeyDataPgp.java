@@ -125,9 +125,9 @@ public class KeyDataPgp extends KeyData {
 	}
 
 	/**
-	 * @return PGPPublicKeyRing or NULL if it's not separately defined. If it's
-	 *         NULL check secret key ring. It's might be NULL if only private
-	 *         key ring was imported without separate public ring
+	 * @return PGPPublicKeyRing or NULL if it's not separately defined. If it's NULL
+	 *         check secret key ring. It's might be NULL if only private key ring
+	 *         was imported without separate public ring
 	 */
 	public PGPPublicKeyRing getPublicKeyRing() {
 		return publicKeyRing;

@@ -31,10 +31,9 @@ public interface DecryptOneHost<TKeyData extends KeyData> {
 	Action getActionToOpenCertificatesList();
 
 	/**
-	 * This method will allow to find out password for a key. If password is
-	 * already cached it will be returned right away (through callback).
-	 * Otherwise method will return null and call callback when user will
-	 * provide password.
+	 * This method will allow to find out password for a key. If password is already
+	 * cached it will be returned right away (through callback). Otherwise method
+	 * will return null and call callback when user will provide password.
 	 */
 	void askUserForKeyAndPassword(Set<String> sourceFileRecipientsKeysIds, Message purpose,
 			KeyAndPasswordCallback<TKeyData> keyAndPasswordCallback);

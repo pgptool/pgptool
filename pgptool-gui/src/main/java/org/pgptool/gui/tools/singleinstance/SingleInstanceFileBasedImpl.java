@@ -57,9 +57,9 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
 	private FileBasedLock lockRole;
 
 	/**
-	 * This additional lock will be used by parties to enter critical section
-	 * before writing any changes to this directory. It will help us avoid any
-	 * race conditions
+	 * This additional lock will be used by parties to enter critical section before
+	 * writing any changes to this directory. It will help us avoid any race
+	 * conditions
 	 */
 	private FileBasedLock lockNewArgsSubmissons;
 	private SingleDirWatcher singleDirWatcher;
@@ -144,8 +144,8 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
 		}
 
 		/**
-		 * We might need to perform couple attempts because rename action
-		 * initiated by other instance might block args file
+		 * We might need to perform couple attempts because rename action initiated by
+		 * other instance might block args file
 		 */
 		private InvokePrimaryInstanceArgs tryReadArgs(String fileName) throws InterruptedException {
 			long timeoutAt = System.currentTimeMillis() + LOCK_ARGS_SUBMISSION_TIMEOUT;

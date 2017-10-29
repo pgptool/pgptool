@@ -98,7 +98,7 @@ public class GetKeyPasswordOneKeyView extends ViewBase<GetKeyPasswordPm> {
 	}
 
 	// TODO: On window show edPassword.requestFocusInWindow();
-	
+
 	@Override
 	protected void internalRenderTo(Container owner, Object constraints) {
 		owner.add(pnl, constraints);

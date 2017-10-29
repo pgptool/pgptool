@@ -1,6 +1,5 @@
 package org.pgptool.gui.ui.tools;
 
-import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.bkgoperation.Progress;
 import org.pgptool.gui.bkgoperation.ProgressHandler;
 

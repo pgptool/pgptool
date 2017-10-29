@@ -43,8 +43,8 @@ public class Messages implements ApplicationContextAware {
 	}
 
 	/**
-	 * Convert message code to display text. Same as {@link #get(String)}, but
-	 * more self-descriptive in case static import is used
+	 * Convert message code to display text. Same as {@link #get(String)}, but more
+	 * self-descriptive in case static import is used
 	 */
 	public static String text(String messageCode) {
 		return get(messageCode, (Object[]) null);

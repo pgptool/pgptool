@@ -27,6 +27,7 @@ import java.awt.Window;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
@@ -37,6 +38,7 @@ import javax.swing.text.JTextComponent;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.log4j.Logger;
+import org.jdesktop.swingx.JXLabel;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
@@ -61,33 +63,13 @@ public class UiUtils {
 		return "<html><body>" + StringEscapeUtils.escapeXml(text) + "</body></html>";
 	}
 
-	public static JTextComponent buildMultilineLabel(String labelText) {
-		// JXLabel lblx = new JXLabel(labelText);
-		// lblx.setLineWrap(true);
-		// //lblx.setMaxLineSpan(100);
-		// return lblx;
-
-		JLabel lbl = new JLabel();
-
-		JTextArea ret = new JTextArea(labelText);
-		ret.setBorder(BorderFactory.createEmptyBorder());
-		ret.setEditable(false);
-		ret.setLineWrap(true);
-		ret.setBackground(lbl.getBackground());
-		ret.setForeground(lbl.getForeground());
-		ret.setFont(lbl.getFont());
-
-		return ret;
-	}
-
 	public static boolean confirm(String userPromptMessageCode, Object[] messageArgs, Window parent) {
 		int response = JOptionPane.OK_OPTION;
 
 		String msg = Messages.get(userPromptMessageCode, messageArgs);
 		if (msg.length() > 70) {
-			JScrollPane scrollPane = prepareScrollableMessage(msg);
-			response = JOptionPane.showConfirmDialog(parent, scrollPane, Messages.get("term.confirmation"),
-					JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+			response = JOptionPane.showConfirmDialog(parent, getMultilineMessage(msg),
+					Messages.get("term.confirmation"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 		} else {
 			response = JOptionPane.showConfirmDialog(parent, msg, Messages.get("term.confirmation"),
 					JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -226,24 +208,18 @@ public class UiUtils {
 	}
 
 	public static void messageBox(Component parent, String msg, String title, int messageType) {
-		if (msg.length() > 70) {
-			JScrollPane scrollPane = prepareScrollableMessage(msg);
-			JOptionPane.showMessageDialog(parent, scrollPane, title, messageType);
+		if (msg.length() > 100) {
+			JOptionPane.showMessageDialog(parent, getMultilineMessage(msg), title, messageType);
 		} else {
 			JOptionPane.showMessageDialog(parent, msg, title, messageType);
 		}
 	}
 
-	public static JScrollPane prepareScrollableMessage(String msg) {
-		JTextArea textArea = new JTextArea(msg);
-		textArea.setLineWrap(true);
-		textArea.setWrapStyleWord(true);
-		textArea.setEditable(false);
-		textArea.setMargin(new Insets(5, 5, 5, 5));
-		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setPreferredSize(new Dimension(700, 150));
-		scrollPane.getViewport().setView(textArea);
-		return scrollPane;
+	public static JComponent getMultilineMessage(String msg) {
+		JXLabel lbl = new JXLabel(msg);
+		lbl.setLineWrap(true);
+		lbl.setMaxLineSpan(getFontRelativeSize(30));
+		return lbl;
 	}
 
 	public static void reportExceptionToUser(String errorMessageCode, Throwable cause, Object... messageArgs) {

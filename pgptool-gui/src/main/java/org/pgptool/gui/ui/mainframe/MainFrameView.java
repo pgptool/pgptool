@@ -475,7 +475,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 			frame.setSize(new Dimension(UiUtils.getFontRelativeSize(90), UiUtils.getFontRelativeSize(50)));
 			frame.setLayout(new BorderLayout());
 			frame.setResizable(true);
-			frame.setMinimumSize(new Dimension(UiUtils.getFontRelativeSize(60), UiUtils.getFontRelativeSize(25)));
+			frame.setMinimumSize(new Dimension(UiUtils.getFontRelativeSize(60), UiUtils.getFontRelativeSize(35)));
 			frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 			updateWindowTitle();
 			frame.add(panelRoot, BorderLayout.CENTER);

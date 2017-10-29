@@ -202,6 +202,11 @@ public class UiUtils {
 		UiUtils.messageBox(null, messageText, messageTitle, messageType);
 	}
 
+	/**
+	 * @param messageType
+	 *            one of the JOptionPane ERROR_MESSAGE, INFORMATION_MESSAGE,
+	 *            WARNING_MESSAGE, QUESTION_MESSAGE, or PLAIN_MESSAGE
+	 */
 	public static void messageBox(Component parent, String msg, String title, int messageType) {
 		if (msg.length() > 100) {
 			JOptionPane.showMessageDialog(parent, getMultilineMessage(msg), title, messageType);

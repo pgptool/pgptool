@@ -319,4 +319,8 @@ public class MainFramePm extends PresentationModelBase {
 	public ModelPropertyAccessor<?> getIsAutoUpdatesEnabled() {
 		return updatesPolicy.getIsAutoUpdatesEnabled();
 	}
+
+	public Action getActionShowFeedbackForm() {
+		return host.getActionShowFeedbackForm();
+	}
 }

@@ -61,6 +61,9 @@ import org.pgptool.gui.ui.encryptone.EncryptOneView;
 import org.pgptool.gui.ui.encrypttext.EncryptTextHost;
 import org.pgptool.gui.ui.encrypttext.EncryptTextPm;
 import org.pgptool.gui.ui.encrypttext.EncryptTextView;
+import org.pgptool.gui.ui.feedbackForm.FeedbackFormHost;
+import org.pgptool.gui.ui.feedbackForm.FeedbackFormPm;
+import org.pgptool.gui.ui.feedbackForm.FeedbackFormView;
 import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogHost;
 import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm;
 import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogView;
@@ -268,6 +271,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		public Action getActionCheckForUpdates() {
 			return checkForUpdatesDialog.actionToOpenWindow;
 		}
+		
+		@Override
+		public Action getActionShowFeedbackForm() {
+			return feedbackFormHost.actionToOpenWindow;
+		}
 	};
 
 	private void openMainFrameWindow() {
@@ -307,6 +315,25 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		}
 		return mainFrameView;
 	}
+
+	private DialogOpener<FeedbackFormPm, FeedbackFormView> feedbackFormHost = new DialogOpener<FeedbackFormPm, FeedbackFormView>(
+			FeedbackFormPm.class, FeedbackFormView.class, "action.leaveFeedback") {
+
+		FeedbackFormHost host = new FeedbackFormHost() {
+			@Override
+			public void handleClose() {
+				view.unrender();
+				pm.detach();
+				pm = null;
+			}
+		};
+
+		@Override
+		protected boolean postConstructPm() {
+			pm.init(host);
+			return true;
+		};
+	};
 
 	private DialogOpener<KeyImporterPm, KeyImporterView> importKeyWindowHost = new DialogOpener<KeyImporterPm, KeyImporterView>(
 			KeyImporterPm.class, KeyImporterView.class, "action.importKey") {

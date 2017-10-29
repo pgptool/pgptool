@@ -1,14 +1,9 @@
 package org.pgptool.gui.autoupdate.impl;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TimeZone;
 
 import org.apache.log4j.Logger;
@@ -16,6 +11,7 @@ import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.autoupdate.api.NewVersionChecker;
 import org.pgptool.gui.autoupdate.api.UpdatePackageInfo;
 import org.pgptool.gui.github.api.LatestRelease;
+import org.pgptool.gui.tools.HttpTools;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -37,7 +33,7 @@ public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
 	@Override
 	public UpdatePackageInfo findNewUpdateIfAvailable() throws GenericException {
 		try {
-			String json = httpGet(latestVersionUrl, headers);
+			String json = HttpTools.httpGet(latestVersionUrl, headers);
 			LatestRelease latestRelease = gson.fromJson(json, LatestRelease.class);
 			if (latestRelease.isDraft() || latestRelease.isPrerelease()) {
 				log.info("Ignoring draft or prerelease release " + latestRelease.getTagName());
@@ -127,38 +123,6 @@ public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
 		} catch (Throwable t) {
 			log.warn("Failed to resolve current application version", t);
 			return VERSION_UNRESOLVED;
-		}
-	}
-
-	private String httpGet(String url, Map<String, String> headers) {
-		try {
-			URL obj = new URL(url);
-			HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-
-			// optional default is GET
-			con.setRequestMethod("GET");
-
-			// add request header
-			for (Entry<String, String> header : headers.entrySet()) {
-				con.setRequestProperty(header.getKey(), header.getValue());
-			}
-
-			int responseCode = con.getResponseCode();
-			if (200 != responseCode) {
-				throw new IllegalStateException(
-						"Unexpected response: " + responseCode + ": " + con.getResponseMessage());
-			}
-
-			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-			String inputLine;
-			StringBuilder response = new StringBuilder();
-			while ((inputLine = in.readLine()) != null) {
-				response.append(inputLine);
-			}
-			in.close();
-			return response.toString();
-		} catch (Throwable t) {
-			throw new RuntimeException("HTTP request failed: " + url, t);
 		}
 	}
 

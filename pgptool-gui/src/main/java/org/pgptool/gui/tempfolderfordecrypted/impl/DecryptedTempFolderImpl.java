@@ -20,11 +20,15 @@ package org.pgptool.gui.tempfolderfordecrypted.impl;
 import java.io.File;
 import java.util.Random;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
+import org.pgptool.gui.app.MessageSeverity;
+import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.config.api.ConfigsBasePathResolver;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.tools.TextFile;
+import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +40,6 @@ import org.summerb.approaches.validation.FieldValidationException;
 import org.summerb.approaches.validation.ValidationError;
 import org.summerb.approaches.validation.errors.FieldRequiredValidationError;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 public class DecryptedTempFolderImpl implements DecryptedTempFolder, InitializingBean, ApplicationContextAware {
@@ -53,15 +56,34 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		tempFolderBasePath = configPairs.find(CONFIG_DECRYPTED_TEMP_FOLDER,
-				configsBasePathResolver.getConfigsBasePath() + File.separator + "decrypted");
-		ensureDirIsCreated(tempFolderBasePath);
+		String defaultValue1 = configsBasePathResolver.getConfigsBasePath() + File.separator + "decrypted";
+		String defaultValue2 = SystemUtils.getJavaIoTmpDir().getAbsolutePath() + File.separator + "decrypted";
+		tempFolderBasePath = configPairs.find(CONFIG_DECRYPTED_TEMP_FOLDER, defaultValue1);
+
+		if (ensureDirExists(tempFolderBasePath)) {
+			return;
+		}
+
+		if (ensureDirExists(defaultValue1)) {
+			UiUtils.messageBox(
+					Messages.get("decrypt.temp.folder.changedDueToFailure", tempFolderBasePath, defaultValue1),
+					Messages.get("term.attention"), MessageSeverity.WARNING);
+			setTempFolderBasePath(defaultValue1);
+		} else if (ensureDirExists(defaultValue2)) {
+			UiUtils.messageBox(
+					Messages.get("decrypt.temp.folder.changedDueToFailure", tempFolderBasePath, defaultValue2),
+					Messages.get("term.attention"), MessageSeverity.WARNING);
+			setTempFolderBasePath(defaultValue2);
+		} else {
+			UiUtils.messageBox(Messages.get("decrypt.temp.folder.failure"), Messages.get("term.attention"),
+					MessageSeverity.WARNING);
+			tempFolderBasePath = "./";
+		}
 	}
 
-	private void ensureDirIsCreated(String dir) {
+	private boolean ensureDirExists(String dir) {
 		File file = new File(dir);
-		Preconditions.checkState(file.exists() || file.mkdirs(),
-				"Failed to ensure all dirs created during path: " + dir);
+		return file.exists() || file.mkdirs();
 	}
 
 	@Override
@@ -82,7 +104,7 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
 			if (!StringUtils.hasText(newValue)) {
 				throw new FieldValidationException(new FieldRequiredValidationError(CONFIG_DECRYPTED_TEMP_FOLDER));
 			}
-			ensureDirIsCreated(newValue);
+			ensureDirExists(newValue);
 			ensureWeCanCreateFilesThere(newValue);
 		} catch (Throwable t) {
 			Throwables.propagateIfInstanceOf(t, FieldValidationException.class);

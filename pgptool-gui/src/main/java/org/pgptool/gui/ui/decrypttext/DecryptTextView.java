@@ -97,6 +97,8 @@ public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
 		ret.add(new JLabel(text("term.decryptedText")), sgl.cs(1, 0));
 		ret.add(new JScrollPane(edTargetText = new JTextArea()), sgl.cs(1, 1, 1, 3));
 		edTargetText.setMargin(new Insets(5, 5, 5, 5));
+		edTargetText.setWrapStyleWord(true);
+		edTargetText.setLineWrap(true);
 
 		btns = new JPanel(new GridLayout(1, 0, 10, 0));
 		btns.add(btnCopyTargetToClipboard = new JButton());

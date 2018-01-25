@@ -156,8 +156,7 @@ public class EncryptTextPm extends PresentationModelBase {
 	private PropertyChangeListener onSourceTextChanged = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			boolean hasText = StringUtils.hasText((String) evt.getNewValue());
-			actionDoOperation.setEnabled(hasText);
+			refreshPrimaryOperationAvailability();
 		}
 	};
 
@@ -171,7 +170,8 @@ public class EncryptTextPm extends PresentationModelBase {
 
 	protected void refreshPrimaryOperationAvailability() {
 		boolean result = true;
-		result &= !selectedRecipients.getList().isEmpty();
+		result &= selectedRecipients != null && !selectedRecipients.getList().isEmpty();
+		result &= sourceText != null && StringUtils.hasText(sourceText.getValue());
 		actionDoOperation.setEnabled(result);
 	}
 

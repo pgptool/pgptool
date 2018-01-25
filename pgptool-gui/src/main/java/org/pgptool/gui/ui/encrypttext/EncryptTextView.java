@@ -95,6 +95,8 @@ public class EncryptTextView extends DialogViewBaseCustom<EncryptTextPm> {
 		ret.add(new JLabel(text("term.textToEncrypt")), sgl.cs(1, 0));
 		ret.add(new JScrollPane(edSourceText = new JTextArea()), sgl.cs(1, 1));
 		edSourceText.setMargin(new Insets(5, 5, 5, 5));
+		edSourceText.setWrapStyleWord(true);
+		edSourceText.setLineWrap(true);
 
 		JPanel btns = new JPanel(new GridLayout(1, 1, 10, 0));
 		btns.add(btnPasteSourceFromClipboard = new JButton());

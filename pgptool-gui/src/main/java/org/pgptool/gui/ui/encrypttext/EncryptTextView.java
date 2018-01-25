@@ -43,6 +43,7 @@ import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
+import org.pgptool.gui.ui.tools.TextEditUxUtils;
 import org.pgptool.gui.ui.tools.UiUtils;
 
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
@@ -97,6 +98,7 @@ public class EncryptTextView extends DialogViewBaseCustom<EncryptTextPm> {
 		edSourceText.setMargin(new Insets(5, 5, 5, 5));
 		edSourceText.setWrapStyleWord(true);
 		edSourceText.setLineWrap(true);
+		TextEditUxUtils.setCommonTextEditorActions(edSourceText);
 
 		JPanel btns = new JPanel(new GridLayout(1, 1, 10, 0));
 		btns.add(btnPasteSourceFromClipboard = new JButton());
@@ -107,6 +109,7 @@ public class EncryptTextView extends DialogViewBaseCustom<EncryptTextPm> {
 		ret.add(new JLabel(text("term.encryptedText")), sgl.cs(2, 0));
 		ret.add(new JScrollPane(edTargetText = new JTextArea()), sgl.cs(2, 1));
 		edTargetText.setMargin(new Insets(5, 5, 5, 5));
+		TextEditUxUtils.setCommonTextEditorActions(edTargetText);
 		ret.add(btnCopyTargetToClipboard = new JButton(), sgl.cs(2, 2));
 
 		// x. ret

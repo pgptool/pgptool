@@ -244,4 +244,5 @@ public class UiUtils {
 	public static void reportExceptionToUser(String errorMessageCode, Throwable cause, Object... messageArgs) {
 		EntryPoint.reportExceptionToUser(errorMessageCode, cause, messageArgs);
 	}
+
 }

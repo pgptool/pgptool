@@ -40,6 +40,7 @@ import javax.swing.UIManager;
 
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
+import org.pgptool.gui.ui.tools.TextEditUxUtils;
 import org.pgptool.gui.ui.tools.UiUtils;
 
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
@@ -79,6 +80,7 @@ public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
 		ret.add(new JLabel(text("term.textToDecrypt")), sgl.cs(0, 0));
 		ret.add(new JScrollPane(edSourceText = new JTextArea()), sgl.cs(0, 1));
 		edSourceText.setMargin(new Insets(5, 5, 5, 5));
+		TextEditUxUtils.setCommonTextEditorActions(edSourceText);
 
 		// recipients
 		ret.add(new JLabel(text("term.encryptedFor")), sgl.cs(0, 2));
@@ -99,6 +101,7 @@ public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
 		edTargetText.setMargin(new Insets(5, 5, 5, 5));
 		edTargetText.setWrapStyleWord(true);
 		edTargetText.setLineWrap(true);
+		TextEditUxUtils.setCommonTextEditorActions(edTargetText);
 
 		btns = new JPanel(new GridLayout(1, 0, 10, 0));
 		btns.add(btnCopyTargetToClipboard = new JButton());

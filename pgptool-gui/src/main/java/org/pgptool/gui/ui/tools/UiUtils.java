@@ -21,6 +21,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.util.Set;
@@ -28,6 +29,9 @@ import java.util.Set;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
@@ -208,17 +212,32 @@ public class UiUtils {
 	 *            WARNING_MESSAGE, QUESTION_MESSAGE, or PLAIN_MESSAGE
 	 */
 	public static void messageBox(Component parent, String msg, String title, int messageType) {
-		if (msg.length() > 100) {
+		if (msg.length() > 300) {
+			JOptionPane.showMessageDialog(parent, getScrollableMessage(msg), title, messageType);
+		} else if (msg.length() > 100) {
 			JOptionPane.showMessageDialog(parent, getMultilineMessage(msg), title, messageType);
 		} else {
 			JOptionPane.showMessageDialog(parent, msg, title, messageType);
 		}
 	}
 
+	private static JScrollPane getScrollableMessage(String msg) {
+		JTextArea textArea = new JTextArea(msg);
+		textArea.setLineWrap(true);
+		textArea.setWrapStyleWord(true);
+		textArea.setEditable(false);
+		textArea.setMargin(new Insets(5, 5, 5, 5));
+		textArea.setFont(new JTextField().getFont()); // dirty fix to use better font
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setPreferredSize(new Dimension(700, 150));
+		scrollPane.getViewport().setView(textArea);
+		return scrollPane;
+	}
+
 	public static JComponent getMultilineMessage(String msg) {
 		JXLabel lbl = new JXLabel(msg);
 		lbl.setLineWrap(true);
-		lbl.setMaxLineSpan(getFontRelativeSize(30));
+		lbl.setMaxLineSpan(getFontRelativeSize(50));
 		return lbl;
 	}
 

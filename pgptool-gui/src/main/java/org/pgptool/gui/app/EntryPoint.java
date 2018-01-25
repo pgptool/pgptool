@@ -96,7 +96,8 @@ public class EntryPoint {
 		} catch (Throwable t) {
 			log.error("Failed to startup application", t);
 			reportAppInitFailureMessageToUser(t);
-			throw new RuntimeException("Application failed to start", t);
+			// throw new RuntimeException("Application failed to start", t);
+			System.exit(-1);
 		} finally {
 			if (splashScreenView != null) {
 				splashScreenView.close();

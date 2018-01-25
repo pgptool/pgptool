@@ -40,6 +40,7 @@ import org.summerb.approaches.validation.FieldValidationException;
 import org.summerb.approaches.validation.ValidationError;
 import org.summerb.approaches.validation.errors.FieldRequiredValidationError;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 public class DecryptedTempFolderImpl implements DecryptedTempFolder, InitializingBean, ApplicationContextAware {

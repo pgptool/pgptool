@@ -54,7 +54,8 @@ public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
 	private JTextArea edTargetText;
 	private JButton btnCopyTargetToClipboard;
 
-	private JButton btnPerformOperation;
+	private JButton btnPasteAndDecrypt;
+	private JButton btnDecrypt;
 	private JButton btnCancel;
 	private JButton btnReply;
 
@@ -92,7 +93,8 @@ public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
 
 		// decrypt button
 		JPanel btns = new JPanel(new BorderLayout(10, 0));
-		btns.add(btnPerformOperation = new JButton(), BorderLayout.CENTER);
+		btns.add(btnPasteAndDecrypt = new JButton(), BorderLayout.CENTER);
+		btns.add(btnDecrypt = new JButton(), BorderLayout.EAST);
 		ret.add(btns, sgl.cs(0, 4));
 
 		// target text
@@ -129,7 +131,9 @@ public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
 
 		bindingContext.setupBinding(pm.actionCopyTargetToClipboard, btnCopyTargetToClipboard);
 
-		bindingContext.setupBinding(pm.actionDoOperation, btnPerformOperation);
+		bindingContext.setupBinding(pm.actionPasteAndDecrypt, btnPasteAndDecrypt);
+		bindingContext.setupBinding(pm.actionDecrypt, btnDecrypt);
+
 		bindingContext.setupBinding(pm.actionCancel, btnCancel);
 		bindingContext.setupBinding(pm.actionReply, btnReply);
 	}

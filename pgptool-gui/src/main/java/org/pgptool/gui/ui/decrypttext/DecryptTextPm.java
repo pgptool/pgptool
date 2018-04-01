@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -103,6 +104,8 @@ public class DecryptTextPm extends PresentationModelBase {
 
 	private void initModelProperties() {
 		sourceText = new ModelProperty<>(this, new ValueAdapterHolderImpl<String>(""), "textToEncrypt");
+		sourceText.getModelPropertyAccessor().addPropertyChangeListener(onSourceTextChanged);
+		actionDecrypt.setEnabled(false);
 
 		targetText = new ModelProperty<>(this, new ValueAdapterHolderImpl<String>(""), "encryptedText");
 		targetText.getModelPropertyAccessor().addPropertyChangeListener(onTargetTextChanged);
@@ -110,6 +113,13 @@ public class DecryptTextPm extends PresentationModelBase {
 
 		recipients = new ModelProperty<>(this, new ValueAdapterHolderImpl<String>(""), "recipients");
 	}
+
+	private PropertyChangeListener onSourceTextChanged = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			actionDecrypt.setEnabled(StringUtils.hasText((String) evt.getNewValue()));
+		}
+	};
 
 	private PropertyChangeListener onTargetTextChanged = new PropertyChangeListener() {
 		@Override
@@ -139,40 +149,33 @@ public class DecryptTextPm extends PresentationModelBase {
 		return targetText.getModelPropertyAccessor();
 	}
 
-	private boolean pasteFromCLipboardAndTryDecrypt() {
+	private void decrypt() throws UnsupportedEncodingException {
+		// Discover possible keys
+		ByteArrayInputStream inputStream = new ByteArrayInputStream(sourceText.getValue().getBytes("UTF-8"));
+		keysIds = encryptionService.findKeyIdsForDecryption(inputStream);
+
+		// Show list of emails
+		recipientsList = new HashSet<>(keysIds);
+		recipients.setValueByOwner(collectRecipientsNames(keysIds));
+
+		// Request password for decryption key
+		if (keyAndPassword != null && keysIds.contains(keyAndPassword.getDecryptionKeyId())) {
+			keyAndPasswordCallback.onKeyPasswordResult(keyAndPassword);
+		} else {
+			Message purpose = new Message("phrase.needKeyToDecryptFromClipboard");
+			host.askUserForKeyAndPassword(keysIds, purpose, keyAndPasswordCallback, findRegisteredWindowIfAny());
+		}
+	}
+
+	private String pasteFromCLipboard() {
 		String clipboard = ClipboardUtil.tryGetClipboardText();
 		if (clipboard == null || !StringUtils.hasText(clipboard)) {
 			UiUtils.messageBox(findRegisteredWindowIfAny(), text("warning.noTextInClipboard"), text("term.attention"),
 					JOptionPane.INFORMATION_MESSAGE);
-			return false;
+			return null;
 		}
-
-		try {
-			// Discover possible keys
-			ByteArrayInputStream inputStream = new ByteArrayInputStream(clipboard.getBytes("UTF-8"));
-			keysIds = encryptionService.findKeyIdsForDecryption(inputStream);
-
-			sourceText.setValueByOwner(clipboard);
-
-			// Show list of emails
-			recipientsList = new HashSet<>(keysIds);
-			recipients.setValueByOwner(collectRecipientsNames(keysIds));
-
-			// Request password for decryption key
-			if (keyAndPassword != null && keysIds.contains(keyAndPassword.getDecryptionKeyId())) {
-				keyAndPasswordCallback.onKeyPasswordResult(keyAndPassword);
-			} else {
-				Message purpose = new Message("phrase.needKeyToDecryptFromClipboard");
-				host.askUserForKeyAndPassword(keysIds, purpose, keyAndPasswordCallback, findRegisteredWindowIfAny());
-			}
-
-			// set text to text area
-			return true;
-		} catch (Throwable t) {
-			log.info("Failed to process text from clipboard", t);
-			EntryPoint.reportExceptionToUser("error.cantParseEncryptedText", t);
-			return false;
-		}
+		sourceText.setValueByOwner(clipboard);
+		return clipboard;
 	}
 
 	private String collectRecipientsNames(Set<String> keysIds) {
@@ -212,7 +215,7 @@ public class DecryptTextPm extends PresentationModelBase {
 				// Set target text
 				targetText.setValueByOwner(decryptedText);
 			} catch (Throwable t) {
-				log.error("Failed to decrypt from clipboard", t);
+				log.error("Failed to decrypt text", t);
 				EntryPoint.reportExceptionToUser("error.cantParseEncryptedText", t);
 			}
 		}
@@ -236,10 +239,34 @@ public class DecryptTextPm extends PresentationModelBase {
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionDoOperation = new LocalizedAction("action.decryptFromClipboard") {
+	protected final Action actionPasteAndDecrypt = new LocalizedAction("action.decryptFromClipboard") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			pasteFromCLipboardAndTryDecrypt();
+			try {
+				String clipboard = pasteFromCLipboard();
+				if (clipboard == null) {
+					return;
+				}
+				decrypt();
+			} catch (Throwable t) {
+				log.info("Failed to process text", t);
+				EntryPoint.reportExceptionToUser("error.cantParseEncryptedText", t);
+			}
+		}
+	};
+
+	@SuppressWarnings("serial")
+	protected final Action actionDecrypt = new LocalizedAction("action.decrypt") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				Preconditions.checkState(StringUtils.hasText(sourceText.getValue()),
+						"Action must not be invoked if source text is empty");
+				decrypt();
+			} catch (Throwable t) {
+				log.info("Failed to process text", t);
+				EntryPoint.reportExceptionToUser("error.cantParseEncryptedText", t);
+			}
 		}
 	};
 

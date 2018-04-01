@@ -17,11 +17,13 @@
  *******************************************************************************/
 package org.pgptool.gui.config.api;
 
+import org.summerb.approaches.jdbccrud.common.DtoBase;
+
 public interface ConfigRepository {
-	<T> T read(Class<T> clazz);
+	<T extends DtoBase> T read(Class<T> clazz);
 
-	<T> T readOrConstruct(Class<T> clazz);
+	<T extends DtoBase> T readOrConstruct(Class<T> clazz);
 
-	<T> void persist(T object);
+	<T extends DtoBase> void persist(T object);
 
 }

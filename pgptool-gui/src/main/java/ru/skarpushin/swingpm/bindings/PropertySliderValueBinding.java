@@ -3,7 +3,6 @@ package ru.skarpushin.swingpm.bindings;
 import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.JSlider;
 
-import ru.skarpushin.swingpm.bindings.Binding;
 import ru.skarpushin.swingpm.modelprops.slider.ModelSliderPropertyAccessor;
 
 public class PropertySliderValueBinding implements Binding {

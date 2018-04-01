@@ -30,6 +30,7 @@ import org.pgptool.gui.configpairs.impl.ConfigPairsMapDbImpl;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
+import org.summerb.approaches.jdbccrud.common.DtoBase;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
@@ -72,7 +73,7 @@ public class ConfigRepositoryMapDbImpl implements ConfigRepository, Initializing
 	}
 
 	@Override
-	public <T> void persist(T object) {
+	public <T extends DtoBase> void persist(T object) {
 		try {
 			Preconditions.checkArgument(object != null, "Can't persist null object");
 			map.put(object.getClass().getName(), object);
@@ -85,7 +86,7 @@ public class ConfigRepositoryMapDbImpl implements ConfigRepository, Initializing
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T read(Class<T> clazz) {
+	public <T extends DtoBase> T read(Class<T> clazz) {
 		try {
 			Preconditions.checkArgument(clazz != null, "Class must be provided");
 			return (T) map.get(clazz.getName());
@@ -95,7 +96,7 @@ public class ConfigRepositoryMapDbImpl implements ConfigRepository, Initializing
 	}
 
 	@Override
-	public <T> T readOrConstruct(Class<T> clazz) {
+	public <T extends DtoBase> T readOrConstruct(Class<T> clazz) {
 		T result = read(clazz);
 		if (result == null) {
 			try {

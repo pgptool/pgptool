@@ -17,9 +17,9 @@
  *******************************************************************************/
 package org.pgptool.gui.decryptedlist.api;
 
-import java.io.Serializable;
+import org.summerb.approaches.jdbccrud.common.DtoBase;
 
-public class DecryptedFile implements Serializable {
+public class DecryptedFile implements DtoBase {
 	private static final long serialVersionUID = -6339203835731870415L;
 
 	private String encryptedFile;

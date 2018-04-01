@@ -29,6 +29,7 @@ import org.pgptool.gui.config.api.ConfigsBasePathResolver;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
+import org.summerb.approaches.jdbccrud.common.DtoBase;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
@@ -52,7 +53,7 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 	}
 
 	@Override
-	public <T> void persist(T object) {
+	public <T extends DtoBase> void persist(T object) {
 		try {
 			Preconditions.checkArgument(object != null, "Can't persist null object");
 			String filename = buildFilenameForClass(object.getClass());
@@ -68,7 +69,7 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 	}
 
 	@Override
-	public <T> T read(Class<T> clazz) {
+	public <T extends DtoBase> T read(Class<T> clazz) {
 		try {
 			Preconditions.checkArgument(clazz != null, "Class must be provided");
 			String filename = buildFilenameForClass(clazz);
@@ -82,7 +83,7 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 	}
 
 	@Override
-	public <T> T readOrConstruct(Class<T> clazz) {
+	public <T extends DtoBase> T readOrConstruct(Class<T> clazz) {
 		T result = read(clazz);
 		if (result == null) {
 			try {
@@ -96,7 +97,7 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T readObject(String sourceFile) {
+	public static <T extends DtoBase> T readObject(String sourceFile) {
 		ObjectInputStream ois = null;
 		try {
 			File file = new File(sourceFile);

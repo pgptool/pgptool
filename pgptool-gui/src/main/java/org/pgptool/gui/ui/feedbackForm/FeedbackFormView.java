@@ -37,7 +37,6 @@ import javax.swing.JSlider;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-import org.jdesktop.swingx.JXLabel;
 import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;

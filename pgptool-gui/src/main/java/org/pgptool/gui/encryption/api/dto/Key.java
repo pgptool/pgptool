@@ -17,9 +17,9 @@
  *******************************************************************************/
 package org.pgptool.gui.encryption.api.dto;
 
-import java.io.Serializable;
+import org.summerb.approaches.jdbccrud.common.DtoBase;
 
-public class Key<TKeyData extends KeyData> implements Serializable {
+public class Key<TKeyData extends KeyData> implements DtoBase {
 	private static final long serialVersionUID = 1614562515516152578L;
 
 	/**

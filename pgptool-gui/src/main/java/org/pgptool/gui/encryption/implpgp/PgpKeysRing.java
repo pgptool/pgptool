@@ -20,8 +20,9 @@ package org.pgptool.gui.encryption.implpgp;
 import java.util.ArrayList;
 
 import org.pgptool.gui.encryption.api.dto.Key;
+import org.summerb.approaches.jdbccrud.common.DtoBase;
 
-public class PgpKeysRing extends ArrayList<Key<KeyDataPgp>> {
+public class PgpKeysRing extends ArrayList<Key<KeyDataPgp>> implements DtoBase {
 	private static final long serialVersionUID = -227126239011425515L;
 
 }

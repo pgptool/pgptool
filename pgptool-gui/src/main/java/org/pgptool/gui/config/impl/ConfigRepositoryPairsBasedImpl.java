@@ -21,6 +21,7 @@ import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
+import org.summerb.approaches.jdbccrud.common.DtoBase;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
@@ -38,7 +39,7 @@ public class ConfigRepositoryPairsBasedImpl implements ConfigRepository {
 	private EventBus eventBus;
 
 	@Override
-	public <T> void persist(T object) {
+	public <T extends DtoBase> void persist(T object) {
 		try {
 			Preconditions.checkArgument(object != null, "Can't persist null object");
 			configPairs.put(object.getClass().getName(), object);
@@ -50,7 +51,7 @@ public class ConfigRepositoryPairsBasedImpl implements ConfigRepository {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T read(Class<T> clazz) {
+	public <T extends DtoBase> T read(Class<T> clazz) {
 		try {
 			Preconditions.checkArgument(clazz != null, "Class must be provided");
 			return (T) configPairs.find(clazz.getName(), null);
@@ -60,7 +61,7 @@ public class ConfigRepositoryPairsBasedImpl implements ConfigRepository {
 	}
 
 	@Override
-	public <T> T readOrConstruct(Class<T> clazz) {
+	public <T extends DtoBase> T readOrConstruct(Class<T> clazz) {
 		T result = read(clazz);
 		if (result == null) {
 			try {

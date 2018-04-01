@@ -546,7 +546,7 @@ public class DecryptOnePm extends PresentationModelBase {
 
 		private String getEffectiveFileNameForTempFolder() {
 			DecryptedFile dfm = decryptedHistoryService.findByEncryptedFile(getSourceFile().getValue());
-			if (dfm == null) {
+			if (dfm == null || !dfm.getDecryptedFile().startsWith(decryptedTempFolder.getTempFolderBasePath())) {
 				String ret = madeUpTargetFileName(decryptedTempFolder.getTempFolderBasePath());
 				return ensureFileNameVacant(ret);
 			}

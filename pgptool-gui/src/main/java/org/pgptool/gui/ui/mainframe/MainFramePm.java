@@ -41,12 +41,14 @@ import org.pgptool.gui.ui.checkForUpdates.UpdatesPolicy;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
+import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent.ChangeType;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.table.ModelTableProperty;
@@ -116,12 +118,24 @@ public class MainFramePm extends PresentationModelBase {
 			return;
 		}
 
-		List<DecryptedFile> newKeysList = decryptedHistoryService.getDecryptedFiles();
-		rows.getList().clear();
-		rows.getList().addAll(newKeysList);
-		hasData.setValueByOwner(!newKeysList.isEmpty());
-		// NOTE: Selection is not nicely maintained. Each update will clear the
-		// current selection if any
+		@SuppressWarnings("unchecked")
+		EntityChangedEvent<DecryptedFile> e = (EntityChangedEvent<DecryptedFile>) event;
+
+		ListEx<DecryptedFile> list = rows.getList();
+		if (e.getChangeType() == ChangeType.ADDED) {
+			list.add(e.getValue());
+		} else if (e.getChangeType() == ChangeType.UPDATED) {
+			throw new IllegalStateException(
+					"Files in this table are not really supposed to be modified. They either added or removed");
+		} else {
+			int prevSelIndex = list.indexOf(event.getValue());
+			list.remove(prevSelIndex);
+			if (!list.isEmpty()) {
+				rows.setValueByOwner(list.get(Math.min(list.size() - 1, prevSelIndex)));
+			}
+		}
+
+		hasData.setValueByOwner(!list.isEmpty());
 	}
 
 	@Override

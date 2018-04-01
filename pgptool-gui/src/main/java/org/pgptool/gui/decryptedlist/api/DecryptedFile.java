@@ -25,8 +25,6 @@ public class DecryptedFile implements DtoBase {
 	private String encryptedFile;
 	private String decryptedFile;
 
-	// private List<String> recipientsKeysIds;
-
 	public DecryptedFile() {
 	}
 
@@ -49,5 +47,36 @@ public class DecryptedFile implements DtoBase {
 
 	public void setDecryptedFile(String decryptedFile) {
 		this.decryptedFile = decryptedFile;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((decryptedFile == null) ? 0 : decryptedFile.hashCode());
+		result = prime * result + ((encryptedFile == null) ? 0 : encryptedFile.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DecryptedFile other = (DecryptedFile) obj;
+		if (decryptedFile == null) {
+			if (other.decryptedFile != null)
+				return false;
+		} else if (!decryptedFile.equals(other.decryptedFile))
+			return false;
+		if (encryptedFile == null) {
+			if (other.encryptedFile != null)
+				return false;
+		} else if (!encryptedFile.equals(other.encryptedFile))
+			return false;
+		return true;
 	}
 }

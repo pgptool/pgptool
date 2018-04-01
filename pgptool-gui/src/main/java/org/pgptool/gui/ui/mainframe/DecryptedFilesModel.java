@@ -21,14 +21,22 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.FilenameUtils;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
+import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 
 import ru.skarpushin.swingpm.modelprops.table.LightweightTableModel;
 
 public class DecryptedFilesModel implements LightweightTableModel<DecryptedFile> {
 	public static final int COLUMN_ENCRYPTED_FILE = 0;
 	public static final int COLUMN_DECRYPTED_FILE = 1;
+
+	private DecryptedTempFolder decryptedTempFolder;
+
+	public DecryptedFilesModel(DecryptedTempFolder decryptedTempFolder) {
+		this.decryptedTempFolder = decryptedTempFolder;
+	}
 
 	/**
 	 * Absoilute pathname to File object
@@ -67,9 +75,30 @@ public class DecryptedFilesModel implements LightweightTableModel<DecryptedFile>
 		case COLUMN_ENCRYPTED_FILE:
 			return buildStringForEncryptedFile(r);
 		case COLUMN_DECRYPTED_FILE:
-			return r.getDecryptedFile();
+			return getTargetFileName(r);
 		default:
 			throw new IllegalArgumentException("Wrong column index: " + columnIndex);
+		}
+	}
+
+	/**
+	 * If file was decrypted to temp dir or to the same dir as source file, don't
+	 * show the path
+	 * 
+	 * @param r
+	 * @return
+	 */
+	private Object getTargetFileName(DecryptedFile r) {
+		if (r.getDecryptedFile().toLowerCase().startsWith(decryptedTempFolder.getTempFolderBasePath().toLowerCase())) {
+			return FilenameUtils.getName(r.getDecryptedFile());
+		} else {
+			String sourceBasePath = FilenameUtils.getFullPath(r.getEncryptedFile());
+			String targetBasePath = FilenameUtils.getFullPath(r.getDecryptedFile());
+			if (sourceBasePath.equalsIgnoreCase(targetBasePath)) {
+				return FilenameUtils.getName(r.getDecryptedFile());
+			}
+
+			return r.getDecryptedFile();
 		}
 	}
 

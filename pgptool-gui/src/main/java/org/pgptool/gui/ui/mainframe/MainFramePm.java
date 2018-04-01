@@ -36,6 +36,7 @@ import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.decryptedlist.api.DecryptedHistoryService;
+import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.ui.checkForUpdates.UpdatesPolicy;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +62,8 @@ public class MainFramePm extends PresentationModelBase {
 	private EventBus eventBus;
 	@Autowired
 	private DecryptedHistoryService decryptedHistoryService;
+	@Autowired
+	private DecryptedTempFolder decryptedTempFolder;
 
 	private MainFrameHost host;
 
@@ -76,7 +79,8 @@ public class MainFramePm extends PresentationModelBase {
 		this.host = host;
 
 		List<DecryptedFile> initialKeys = decryptedHistoryService.getDecryptedFiles();
-		rows = new ModelTableProperty<>(this, initialKeys, "decryptedFiles", new DecryptedFilesModel());
+		rows = new ModelTableProperty<>(this, initialKeys, "decryptedFiles",
+				new DecryptedFilesModel(decryptedTempFolder));
 		hasData = new ModelProperty<Boolean>(this, new ValueAdapterHolderImpl<>(!initialKeys.isEmpty()), "hasData") {
 			@Override
 			public boolean setValueByOwner(Boolean value) {

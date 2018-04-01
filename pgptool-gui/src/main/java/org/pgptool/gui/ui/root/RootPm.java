@@ -19,8 +19,10 @@ package org.pgptool.gui.ui.root;
 
 import static org.pgptool.gui.app.Messages.text;
 
+import java.awt.Desktop;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -271,10 +273,45 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		public Action getActionCheckForUpdates() {
 			return checkForUpdatesDialog.actionToOpenWindow;
 		}
-		
+
 		@Override
 		public Action getActionShowFeedbackForm() {
 			return feedbackFormHost.actionToOpenWindow;
+		}
+
+		private Action buyMeCoffee = buildAction("action.buyMeCoffee", "https://www.buymeacoffee.com/skarpushind");
+
+		@SuppressWarnings("serial")
+		private LocalizedAction buildAction(String messageCode, String url) {
+			return new LocalizedAction(messageCode) {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					try {
+						Desktop.getDesktop().browse(new URI(url));
+					} catch (Throwable t) {
+						EntryPoint.reportExceptionToUser("failed.toOpenBrowser", t);
+					}
+				}
+			};
+		}
+
+		@Override
+		public Action getActionBuyMeCoffee() {
+			return buyMeCoffee;
+		}
+
+		private Action openFaq = buildAction("action.openFaq", "https://pgptool.github.io/#faq");
+
+		@Override
+		public Action getActionFaq() {
+			return openFaq;
+		}
+
+		private Action openHelp = buildAction("action.openHelp", "https://pgptool.github.io/#help");
+
+		@Override
+		public Action getActionHelp() {
+			return openHelp;
 		}
 	};
 

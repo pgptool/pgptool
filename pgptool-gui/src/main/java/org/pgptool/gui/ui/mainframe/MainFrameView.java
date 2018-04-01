@@ -82,6 +82,9 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private JMenuItem miPgpImportKey;
 	private JMenuItem miShowKeyList;
 	private JMenuItem miChangeTempFolderForDecrypted;
+	private JMenuItem miBmc;
+	private JMenuItem miFaq;
+	private JMenuItem miHelp;
 	private JMenuItem miAbout;
 	private JMenuItem miCheckForUpdates;
 	private JCheckBoxMenuItem miAutoCheckForUpdates;
@@ -332,8 +335,12 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		JMenu menuFile = new JMenu(Messages.get("term.appTitle"));
 		menuFile.add(miChangeTempFolderForDecrypted = new JMenuItem());
 		menuFile.addSeparator();
-		menuFile.add(miAbout = new JMenuItem());
+		menuFile.add(miBmc = new JMenuItem());
 		menuFile.add(miWriteFeedback = new JMenuItem());
+		menuFile.add(miFaq = new JMenuItem());
+		menuFile.add(miHelp = new JMenuItem());
+		menuFile.addSeparator();
+		menuFile.add(miAbout = new JMenuItem());
 		menuFile.add(miCheckForUpdates = new JMenuItem());
 		menuFile.add(miAutoCheckForUpdates = new JCheckBoxMenuItem());
 		menuFile.addSeparator();
@@ -412,8 +419,12 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 	private void bindToActions() {
 		bindingContext.setupBinding(pm.getActionConfigExit(), miConfigExit);
+		
+		bindingContext.setupBinding(pm.getActionBuyMeCoffee(), miBmc);
+		bindingContext.setupBinding(pm.getActionFaq(), miFaq);
+		bindingContext.setupBinding(pm.getActionHelp(), miHelp);
+		
 		bindingContext.setupBinding(pm.getActionAbout(), miAbout);
-
 		bindingContext.setupBinding(pm.getActionCheckForUpdates(), miCheckForUpdates);
 		bindingContext.setupBinding(pm.getActionAutoCheckForUpdates(), miAutoCheckForUpdates);
 		bindingContext.setupBinding(pm.getActionShowFeedbackForm(), miWriteFeedback);

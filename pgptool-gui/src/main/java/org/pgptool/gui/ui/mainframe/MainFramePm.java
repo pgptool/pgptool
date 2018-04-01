@@ -253,6 +253,18 @@ public class MainFramePm extends PresentationModelBase {
 		return host.getActionShowAboutInfo();
 	}
 
+	public Action getActionBuyMeCoffee() {
+		return host.getActionBuyMeCoffee();
+	}
+
+	public Action getActionFaq() {
+		return host.getActionFaq();
+	}
+
+	public Action getActionHelp() {
+		return host.getActionHelp();
+	}
+
 	public Action getActionCheckForUpdates() {
 		return host.getActionCheckForUpdates();
 	}

@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import javax.crypto.spec.DHParameterSpec;
@@ -47,15 +46,18 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.validation.FieldValidationException;
 import org.summerb.approaches.validation.ValidationContext;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
-public class KeyGeneratorServicePgpImpl implements KeyGeneratorService<KeyDataPgp>, DisposableBean {
+public class KeyGeneratorServicePgpImpl implements KeyGeneratorService<KeyDataPgp> {
 	private static Logger log = Logger.getLogger(KeyGeneratorServicePgpImpl.class);
+
+	@Autowired
+	private ExecutorService executorService;
 
 	// TODO: Shouldn't I generate it each time. Is it safe to have it hardcoded?
 	BigInteger g = new BigInteger(
@@ -67,17 +69,9 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService<KeyDataPg
 	private static DsaKeyPairParams DEFAULT_DSA_KEY_PARAMETERS = new DsaKeyPairParams("DSA", "BC", 2048);
 
 	private Map<DsaKeyPairParams, Future<KeyPair>> pregeneratedDsaKeyPairs = new ConcurrentHashMap<>();
-	private ExecutorService executorService;
 
 	public KeyGeneratorServicePgpImpl() {
 		KeyRingServicePgpImpl.touch();
-	}
-
-	@Override
-	public void destroy() throws Exception {
-		if (executorService != null) {
-			executorService.shutdownNow();
-		}
 	}
 
 	@Override
@@ -207,15 +201,8 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService<KeyDataPg
 	}
 
 	private void precalculateKeyPair(DsaKeyPairParams params) {
-		Future<KeyPair> future = getExecutorService().submit(new PrecalculateDsaKeyPair(params));
+		Future<KeyPair> future = executorService.submit(new PrecalculateDsaKeyPair(params));
 		pregeneratedDsaKeyPairs.put(params, future);
-	}
-
-	public synchronized ExecutorService getExecutorService() {
-		if (executorService == null) {
-			executorService = Executors.newSingleThreadExecutor();
-		}
-		return executorService;
 	}
 
 	public static class PrecalculateDsaKeyPair implements Callable<KeyPair> {
@@ -241,7 +228,9 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService<KeyDataPg
 				KeyPairGenerator dsaKpg = KeyPairGenerator.getInstance(dsaKeyPairParams.algorithm,
 						dsaKeyPairParams.provider);
 				dsaKpg.initialize(dsaKeyPairParams.keysize);
+				log.info("Started key generation");
 				KeyPair dsaKp = dsaKpg.generateKeyPair();
+				log.info("Key generation is complete");
 				return dsaKp;
 			} catch (Throwable t) {
 				log.error("Failed to generate DSA keypair " + dsaKeyPairParams, t);

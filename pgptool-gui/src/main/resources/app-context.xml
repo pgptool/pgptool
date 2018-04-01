@@ -32,6 +32,8 @@
 		<property name="defaultEncoding" value="UTF-8" />
 		<property name="fallbackToSystemLocale" value="true" />
 	</bean>
+	
+	<bean id="executorService" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" destroy-method="shutdownNow" />
 
 	<context:annotation-config />
 

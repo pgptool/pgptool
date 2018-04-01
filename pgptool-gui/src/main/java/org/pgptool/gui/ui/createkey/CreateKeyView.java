@@ -29,6 +29,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
@@ -45,6 +46,7 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 	private JTextField email;
 	private JPasswordField passphrase;
 	private JPasswordField passphraseAgain;
+	private JProgressBar progressBar;
 
 	private JButton btnCreate;
 	private JButton btnCancel;
@@ -86,11 +88,21 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 	}
 
 	private JPanel buildPanelButtons() {
-		JPanel ret = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-		ret.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
-		ret.add(btnCreate = new JButton());
-		ret.add(btnCancel = new JButton());
-		return ret;
+		JPanel whole = new JPanel(new BorderLayout());
+
+		progressBar = new JProgressBar(0, 100);
+		progressBar.setToolTipText(Messages.text("phrase.generatingYourSecureKey"));
+		progressBar.setIndeterminate(true);
+
+		JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+		btns.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
+		btns.add(progressBar);
+		btns.add(new JLabel("  "));
+		btns.add(btnCreate = new JButton());
+		btns.add(btnCancel = new JButton());
+		whole.add(btns, BorderLayout.EAST);
+
+		return whole;
 	}
 
 	@Override
@@ -104,6 +116,8 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 
 		bindingContext.setupBinding(pm.actionCreate, btnCreate);
 		bindingContext.setupBinding(pm.actionCancel, btnCancel);
+
+		bindingContext.registerPropertyValuePropagation(pm.getProgressBarVisible(), progressBar, "visible");
 	}
 
 	@Override

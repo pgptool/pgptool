@@ -49,6 +49,8 @@ import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class FeedbackFormPm extends PresentationModelBase implements InitializingBean {
+	protected static final int DEFAULT_RATING = 7;
+	
 	@Autowired
 	private ConfigPairs configPairs;
 	@Autowired
@@ -72,7 +74,7 @@ public class FeedbackFormPm extends PresentationModelBase implements Initializin
 		email = new ModelProperty<String>(this,
 				new ValueAdapterPersistentPropertyImpl<String>(configPairs, "email", ""), "email", vee);
 		feedback = new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "feedback", vee);
-		rating = new ModelSliderProperty(this, new ValueAdapterHolderImpl<Integer>(7), 1, 10, "rating", vee);
+		rating = new ModelSliderProperty(this, new ValueAdapterHolderImpl<Integer>(DEFAULT_RATING), 1, 10, "rating", vee);
 
 		showConnectingToServerStatus = new ModelProperty<Boolean>(this, new ValueAdapterHolderImpl<Boolean>(true),
 				"showTestingConnection");

@@ -25,6 +25,10 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Insets;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -32,8 +36,8 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
-import javax.swing.JSlider;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
@@ -41,7 +45,6 @@ import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
 
-import ru.skarpushin.swingpm.bindings.PropertySliderValueBinding;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
 public class FeedbackFormView extends DialogViewBaseCustom<FeedbackFormPm> {
@@ -54,7 +57,8 @@ public class FeedbackFormView extends DialogViewBaseCustom<FeedbackFormPm> {
 	private JPanel controls;
 	private JTextArea edFeedback;
 	private JTextField edEmail;
-	private JSlider rating;
+
+	private List<JRadioButton> rating = new ArrayList<>();
 	private ControlsDisabler controlsBlocker;
 
 	@Override
@@ -95,8 +99,15 @@ public class FeedbackFormView extends DialogViewBaseCustom<FeedbackFormPm> {
 		int row = 0;
 		ret.add(new JLabel(text("term.rating")), sgl.cs(0, row));
 		row++;
-		rating = new JSlider();
-		ret.add(rating, sgl.cs(0, row));
+		JPanel ratingPanel = new JPanel();
+		for (int i = 1; i <= 10; i++) {
+			JRadioButton radioButton = new JRadioButton("" + i, i == FeedbackFormPm.DEFAULT_RATING);
+			rating.add(radioButton);
+			radioButton.addActionListener(buildRadioBUttonActionListener(radioButton));
+			ratingPanel.add(radioButton);
+		}
+
+		ret.add(ratingPanel, sgl.cs(0, row));
 		row++;
 
 		// new release notes
@@ -117,6 +128,23 @@ public class FeedbackFormView extends DialogViewBaseCustom<FeedbackFormPm> {
 		return ret;
 	}
 
+	private ActionListener buildRadioBUttonActionListener(JRadioButton radioButton) {
+		return new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int idx = rating.indexOf(radioButton);
+				for (int i = 0; i < rating.size(); i++) {
+					if (i == idx) {
+						pm.getRating().setValue(i + 1);
+						rating.get(i).setSelected(true);
+					} else {
+						rating.get(i).setSelected(false);
+					}
+				}
+			}
+		};
+	}
+
 	@Override
 	protected void handleDialogShown() {
 		super.handleDialogShown();
@@ -127,7 +155,6 @@ public class FeedbackFormView extends DialogViewBaseCustom<FeedbackFormPm> {
 	protected void internalBindToPm() {
 		super.internalBindToPm();
 
-		bindingContext.add(new PropertySliderValueBinding(pm.getRating(), rating));
 		bindingContext.setupBinding(pm.getFeedback(), edFeedback);
 		bindingContext.setupBinding(pm.getEmail(), edEmail);
 
@@ -147,7 +174,7 @@ public class FeedbackFormView extends DialogViewBaseCustom<FeedbackFormPm> {
 
 		ret.setResizable(true);
 		ret.setSize(new Dimension(UiUtils.getFontRelativeSize(50), UiUtils.getFontRelativeSize(30)));
-		ret.setMinimumSize(new Dimension(UiUtils.getFontRelativeSize(50), UiUtils.getFontRelativeSize(30)));
+		ret.setMinimumSize(new Dimension(UiUtils.getFontRelativeSize(30), UiUtils.getFontRelativeSize(30)));
 
 		ret.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		ret.setTitle(text("action.leaveFeedback"));

@@ -248,6 +248,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		}
 
 		@Override
+		public void openDecryptDialogFor(String encryptedFile) {
+			new DecryptionWindowOpener(encryptedFile).actionToOpenWindow.actionPerformed(null);
+		}
+
+		@Override
 		public Action getActionCreateKey() {
 			return createKeyWindowHost.actionToOpenWindow;
 		}

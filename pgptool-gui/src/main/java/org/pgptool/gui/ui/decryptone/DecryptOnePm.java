@@ -623,6 +623,7 @@ public class DecryptOnePm extends PresentationModelBase {
 			ret.setDeleteSourceFile(isDeleteSourceAfter.getValue());
 			ret.setOpenTargetFolder(isOpenTargetFolderAfter.getValue());
 			ret.setOpenAssociatedApplication(isOpenAssociatedApplication.getValue());
+			ret.setCreatedAt(System.currentTimeMillis());
 			return ret;
 		}
 

@@ -136,6 +136,9 @@
 	<bean class="org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesPm" lazy-init="true" />
 	<bean class="org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesView" scope="prototype" />
 
+	<bean class="org.pgptool.gui.ui.historyquicksearch.HistoryQuickSearchPm" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.historyquicksearch.HistoryQuickSearchView" lazy-init="true" scope="singleton" />
+
 	<bean class="org.pgptool.gui.autoupdate.impl.NewVersionCheckerGitHubImpl">
 		<property name="configuredVersion" value="${configuredVersion}" />
 	</bean>

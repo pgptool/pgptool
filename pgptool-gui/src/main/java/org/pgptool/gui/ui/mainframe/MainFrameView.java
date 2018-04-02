@@ -22,7 +22,6 @@ import static org.pgptool.gui.app.Messages.text;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -50,6 +49,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -103,10 +103,13 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private JPopupMenu ctxMenu;
 	private JLabel lblNoDataToDisplay;
 
+	private JToolBar toolbar;
+
 	@Override
 	protected void internalInitComponents() {
 		initMenuBar();
 		initFormComponents();
+		initToolBar();
 
 		ctxMenu = new JPopupMenu();
 	}
@@ -115,29 +118,13 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		lblNoDataToDisplay = new JLabel(Messages.get("phrase.noDecryptedFilesAreMonitoredAtTheMoment"));
 		lblNoDataToDisplay.setHorizontalAlignment(JLabel.CENTER);
 
-		SgLayout sgl = new SgLayout(1, 4, 0, 0);
+		SgLayout sgl = new SgLayout(1, 2, 0, 0);
 		sgl.setColSize(0, 100, SgLayout.SIZE_TYPE_WEIGHTED);
-		sgl.setRowSize(3, 100, SgLayout.SIZE_TYPE_WEIGHTED);
+		sgl.setRowSize(1, 100, SgLayout.SIZE_TYPE_WEIGHTED);
 		panelRoot = new JPanel(sgl);
 		panelRoot.setBorder(BorderFactory.createEmptyBorder(7, 7, 7, 7));
 
 		int row = 0;
-		panelRoot.add(new JLabel(UiUtils.plainToBoldHtmlString(text("phrase.primaryOperations"))), sgl.cs(0, row));
-
-		row++;
-		JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-		pnlButtons.add(new JButton(actionEncrypt));
-		pnlButtons.add(new JLabel("  "));
-		pnlButtons.add(new JButton(actionEncryptText));
-		pnlButtons.add(new JLabel("  "));
-		pnlButtons.add(new JButton(actionDecrypt));
-		pnlButtons.add(new JLabel("  "));
-		pnlButtons.add(new JButton(actionDecryptText));
-		pnlButtons.add(new JLabel("  "));
-		pnlButtons.add(new JButton(actionKeyring));
-		panelRoot.add(pnlButtons, sgl.cs(0, row));
-
-		row++;
 		JLabel lblPrevDecryptedFiles = new JLabel(
 				UiUtils.plainToBoldHtmlString(text("phrase.previouslyDecrpytedFiles")));
 		panelRoot.add(lblPrevDecryptedFiles, sgl.cs(0, row));
@@ -148,6 +135,53 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		panelTablePlaceholder.add(initTableComponent(), BorderLayout.CENTER);
 		panelRoot.add(panelTablePlaceholder, sgl.cs(0, row));
 	}
+
+	private void initToolBar() {
+		toolbar = new JToolBar("Main actions");
+		toolbar.add(new JButton(actionEncrypt));
+		toolbar.add(new JButton(actionEncryptText));
+		toolbar.addSeparator();
+		toolbar.add(new JButton(actionDecrypt));
+		toolbar.add(new JButton(actionDecryptText));
+		toolbar.add(new JButton(actionHistory));
+		toolbar.addSeparator();
+		toolbar.add(new JButton(actionKeyring));
+	}
+
+	// I'll leave this code for a while here in case I'll decide to revert to this
+	// UX design decision
+	// private JPanel buildQUickSearchPanel() {
+	// // And no goes painful procedure of setting up quick search controls
+	// JPanel quickSearch = new JPanel();
+	// int charWidth = UiUtils.getFontRelativeSize(1);
+	// quickSearch.setBorder(BorderFactory.createEmptyBorder(0, charWidth / 2, 0,
+	// charWidth / 2));
+	// quickSearch.setLayout(new BoxLayout(quickSearch, BoxLayout.Y_AXIS));
+	//
+	// quickSearch.add(Box.createVerticalGlue());
+	//
+	// JLabel qsLabel = new JLabel(text("term.quickSearch"));
+	// qsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+	// quickSearch.add(qsLabel);
+	//
+	// quickSearch.add(Box.createRigidArea(new Dimension(0, charWidth / 4)));
+	//
+	// JTextField qsEdit = new JTextField();
+	// Dimension size = new Dimension(UiUtils.getFontRelativeSize(10), (int)
+	// qsEdit.getPreferredSize().getHeight());
+	// qsEdit.setMaximumSize(size);
+	// qsEdit.setPreferredSize(size);
+	// qsEdit.setAlignmentX(Component.LEFT_ALIGNMENT);
+	// quickSearch.add(qsEdit);
+	//
+	// quickSearch.add(Box.createVerticalGlue());
+	//
+	// JPanel quickSearchWrappignPanel = new JPanel();
+	// quickSearchWrappignPanel.setLayout(new BoxLayout(quickSearchWrappignPanel,
+	// BoxLayout.Y_AXIS));
+	// quickSearchWrappignPanel.add(quickSearch);
+	// return quickSearchWrappignPanel;
+	// }
 
 	@SuppressWarnings("serial")
 	private Action actionEncrypt = new ToolbarAction("action.encryptFile", "/icons/encrypt.png") {
@@ -160,7 +194,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	};
 
 	@SuppressWarnings("serial")
-	private Action actionEncryptText = new ToolbarAction("action.encryptText", "/icons/encrypt.png") {
+	private Action actionEncryptText = new ToolbarAction("term.text", "/icons/encrypt.png") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if (pm != null) {
@@ -170,7 +204,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	};
 
 	@SuppressWarnings("serial")
-	private Action actionDecryptText = new ToolbarAction("action.decryptText", "/icons/decrypt.png") {
+	private Action actionDecryptText = new ToolbarAction("term.text", "/icons/decrypt.png") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if (pm != null) {
@@ -185,6 +219,16 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		public void actionPerformed(ActionEvent e) {
 			if (pm != null) {
 				pm.getActionDecrypt().actionPerformed(e);
+			}
+		}
+	};
+
+	@SuppressWarnings("serial")
+	private Action actionHistory = new ToolbarAction("term.history", "/icons/search-48.png") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (pm != null) {
+				pm.actionHistoryQuickSearch.actionPerformed(e);
 			}
 		}
 	};
@@ -492,6 +536,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 			frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 			updateWindowTitle();
 			frame.add(panelRoot, BorderLayout.CENTER);
+			frame.add(toolbar, BorderLayout.PAGE_START);
 			frame.addWindowListener(windowAdapter);
 			frame.setJMenuBar(menuBar);
 

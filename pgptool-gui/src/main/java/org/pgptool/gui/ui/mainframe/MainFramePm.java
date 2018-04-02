@@ -37,8 +37,15 @@ import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.ui.checkForUpdates.UpdatesPolicy;
+import org.pgptool.gui.ui.decryptone.DecryptionDialogParameters;
+import org.pgptool.gui.ui.historyquicksearch.HistoryQuickSearchHost;
+import org.pgptool.gui.ui.historyquicksearch.HistoryQuickSearchPm;
+import org.pgptool.gui.ui.historyquicksearch.HistoryQuickSearchView;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent.ChangeType;
 
@@ -55,7 +62,7 @@ import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
 import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
-public class MainFramePm extends PresentationModelBase {
+public class MainFramePm extends PresentationModelBase implements ApplicationContextAware {
 	// private static Logger log = Logger.getLogger(MainFramePm.class);
 
 	@Autowired
@@ -64,6 +71,9 @@ public class MainFramePm extends PresentationModelBase {
 	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
 	@Autowired
 	private DecryptedTempFolder decryptedTempFolder;
+
+	private HistoryQuickSearchView historyQuickSearchView;
+	private HistoryQuickSearchPm historyQuickSearchPm;
 
 	private MainFrameHost host;
 
@@ -77,6 +87,8 @@ public class MainFramePm extends PresentationModelBase {
 		Preconditions.checkState(this.host == null);
 
 		this.host = host;
+
+		historyQuickSearchPm.init(historyQuickSearchHost);
 
 		List<DecryptedFile> initialKeys = monitoringDecryptedFilesService.getDecryptedFiles();
 		rows = new ModelTableProperty<>(this, initialKeys, "decryptedFiles",
@@ -140,6 +152,14 @@ public class MainFramePm extends PresentationModelBase {
 	public void detach() {
 		super.detach();
 		eventBus.unregister(this);
+
+		if (historyQuickSearchView != null) {
+			historyQuickSearchView.unrender();
+			historyQuickSearchView.detach();
+			historyQuickSearchView = null;
+		}
+
+		historyQuickSearchPm.detach();
 	}
 
 	@SuppressWarnings("serial")
@@ -242,6 +262,7 @@ public class MainFramePm extends PresentationModelBase {
 			}
 		}
 	};
+	private ApplicationContext applicationContext;
 
 	protected Action getActionConfigExit() {
 		return actionConfigExit;
@@ -341,5 +362,51 @@ public class MainFramePm extends PresentationModelBase {
 
 	public Action getActionShowFeedbackForm() {
 		return host.getActionShowFeedbackForm();
+	}
+
+	private HistoryQuickSearchHost historyQuickSearchHost = new HistoryQuickSearchHost() {
+		@Override
+		public void handleChosen(DecryptionDialogParameters optionalTsRecordSubject) {
+			getHistoryQuickSearchView().unrender();
+			if (optionalTsRecordSubject == null) {
+				return;
+			}
+			host.openDecryptDialogFor(optionalTsRecordSubject.getSourceFile());
+		}
+
+		@Override
+		public void handleCancel() {
+			getHistoryQuickSearchView().unrender();
+		}
+	};
+
+	@SuppressWarnings("serial")
+	protected Action actionHistoryQuickSearch = new LocalizedAction("term.history") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			getHistoryQuickSearchView().renderTo(null);
+		}
+	};
+
+	private HistoryQuickSearchView getHistoryQuickSearchView() {
+		if (historyQuickSearchView == null) {
+			historyQuickSearchView = applicationContext.getBean(HistoryQuickSearchView.class);
+			historyQuickSearchView.setPm(getHistoryQuickSearchPm());
+		}
+		return historyQuickSearchView;
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
+	}
+
+	public HistoryQuickSearchPm getHistoryQuickSearchPm() {
+		return historyQuickSearchPm;
+	}
+
+	@Autowired
+	public void setHistoryQuickSearchPm(HistoryQuickSearchPm historyQuickSearchPm) {
+		this.historyQuickSearchPm = historyQuickSearchPm;
 	}
 }

@@ -41,6 +41,8 @@ public class DecryptionDialogParameters implements Serializable {
 	private boolean isOpenTargetFolder;
 	private boolean isOpenAssociatedApplication;
 
+	private long createdAt;
+	
 	public String getSourceFile() {
 		return sourceFile;
 	}
@@ -103,5 +105,13 @@ public class DecryptionDialogParameters implements Serializable {
 
 	public void setUseTempFolder(boolean useTempFolder) {
 		this.useTempFolder = useTempFolder;
+	}
+
+	public long getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(long createdAt) {
+		this.createdAt = createdAt;
 	}
 }

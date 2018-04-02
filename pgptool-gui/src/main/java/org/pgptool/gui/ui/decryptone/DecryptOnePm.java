@@ -57,7 +57,6 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.StringUtils;
 import org.summerb.approaches.validation.ValidationError;
 import org.summerb.approaches.validation.ValidationErrorsUtils;
@@ -85,10 +84,8 @@ public class DecryptOnePm extends PresentationModelBase {
 	private static final String[] EXTENSIONS = new String[] { "gpg", "pgp", "asc" };
 
 	@Autowired
-	@Qualifier("appProps")
 	private ConfigPairs appProps;
 	@Autowired
-	@Qualifier("decryptionParams")
 	private ConfigPairs decryptionParams;
 
 	@Autowired

@@ -60,7 +60,6 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -83,7 +82,6 @@ public class EncryptOnePm extends PresentationModelBase {
 	private static final String SOURCE_FOLDER = "EncryptOnePm.SOURCE_FOLDER";
 
 	@Autowired
-	@Qualifier("appProps")
 	private ConfigPairs appProps;
 	@Autowired
 	private EncryptionParamsStorage encryptionParamsStorage;

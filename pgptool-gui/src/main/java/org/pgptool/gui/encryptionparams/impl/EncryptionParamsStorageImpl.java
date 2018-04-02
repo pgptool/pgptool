@@ -22,13 +22,11 @@ import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 public class EncryptionParamsStorageImpl implements EncryptionParamsStorage {
 	public static final String CONFIG_PAIR_BASE = "Encrypt:";
 
 	@Autowired
-	@Qualifier("encryptionParams")
 	private ConfigPairs encryptionParams;
 
 	@Override

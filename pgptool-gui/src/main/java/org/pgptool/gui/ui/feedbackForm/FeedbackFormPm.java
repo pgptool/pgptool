@@ -34,7 +34,6 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Required;
 import org.summerb.approaches.validation.FieldValidationException;
 import org.summerb.approaches.validation.ValidationError;
@@ -53,7 +52,6 @@ public class FeedbackFormPm extends PresentationModelBase implements Initializin
 	protected static final int DEFAULT_RATING = 7;
 
 	@Autowired
-	@Qualifier("appProps")
 	private ConfigPairs appProps;
 	@Autowired
 	private UserFeedbackService userFeedbackService;

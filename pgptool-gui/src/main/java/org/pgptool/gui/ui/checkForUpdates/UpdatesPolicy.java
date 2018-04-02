@@ -12,7 +12,6 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.StringUtils;
@@ -28,7 +27,6 @@ public class UpdatesPolicy implements ApplicationContextAware {
 	public static final String PROP_SNOOZED_VERSION = UPDATES_POLICY + "SnoozedVersion";
 
 	@Autowired
-	@Qualifier("appProps")
 	private ConfigPairs appProps;
 	private ApplicationContext applicationContext;
 	private CheckForUpdatesPm checkForUpdatesPm;

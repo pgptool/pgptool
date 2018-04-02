@@ -419,11 +419,11 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 	private void bindToActions() {
 		bindingContext.setupBinding(pm.getActionConfigExit(), miConfigExit);
-		
+
 		bindingContext.setupBinding(pm.getActionBuyMeCoffee(), miBmc);
 		bindingContext.setupBinding(pm.getActionFaq(), miFaq);
 		bindingContext.setupBinding(pm.getActionHelp(), miHelp);
-		
+
 		bindingContext.setupBinding(pm.getActionAbout(), miAbout);
 		bindingContext.setupBinding(pm.getActionCheckForUpdates(), miCheckForUpdates);
 		bindingContext.setupBinding(pm.getActionAutoCheckForUpdates(), miAutoCheckForUpdates);

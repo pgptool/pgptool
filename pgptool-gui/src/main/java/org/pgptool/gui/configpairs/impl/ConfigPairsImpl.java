@@ -97,8 +97,8 @@ public class ConfigPairsImpl implements ConfigPairs, InitializingBean {
 			if (!configPairMigrator.test(e)) {
 				continue;
 			}
-			log.info("Migrated into config pairs " + clarification + " key " + e.getKey());
 			Entry<String, Object> migrated = configPairMigrator.apply(e);
+			log.info("Migrated into config pairs `" + clarification + "` key: " + migrated.getKey());
 			configPairsEnvelop.put(migrated.getKey(), migrated.getValue());
 		}
 		log.info("Migrated config pairs " + clarification + " count: " + configPairsEnvelop.size());

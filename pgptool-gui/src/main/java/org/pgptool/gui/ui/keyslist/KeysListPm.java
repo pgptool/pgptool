@@ -47,7 +47,6 @@ import org.pgptool.gui.ui.tools.browsefs.FolderChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 
 import com.google.common.base.Preconditions;
@@ -71,7 +70,6 @@ public class KeysListPm extends PresentationModelBase {
 	@Resource(name = "keyRingService")
 	private KeyRingService<KeyData> keyRingService;
 	@Autowired
-	@Qualifier("appProps")
 	private ConfigPairs appProps;
 	@Autowired
 	@Resource(name = "keyFilesOperations")

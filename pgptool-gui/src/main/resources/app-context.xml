@@ -54,7 +54,7 @@
 	<bean id="encryptionService" class="org.pgptool.gui.encryption.implpgp.EncryptionServicePgpImpl" />
 	<bean id="keyGeneratorService" class="org.pgptool.gui.encryption.implpgp.KeyGeneratorServicePgpImpl" />
 
-	<bean class="org.pgptool.gui.decryptedlist.impl.DecryptedHistoryServiceImpl" />
+	<bean class="org.pgptool.gui.decryptedlist.impl.MonitoringDecryptedFilesServiceImpl" />
 
 	<!-- Views -->
 	<bean class="org.pgptool.gui.ui.root.RootPm" scope="singleton" />

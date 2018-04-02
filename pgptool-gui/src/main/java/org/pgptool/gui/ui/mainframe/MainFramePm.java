@@ -35,7 +35,7 @@ import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
-import org.pgptool.gui.decryptedlist.api.DecryptedHistoryService;
+import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.ui.checkForUpdates.UpdatesPolicy;
 import org.pgptool.gui.ui.tools.UiUtils;
@@ -63,7 +63,7 @@ public class MainFramePm extends PresentationModelBase {
 	@Autowired
 	private EventBus eventBus;
 	@Autowired
-	private DecryptedHistoryService decryptedHistoryService;
+	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
 	@Autowired
 	private DecryptedTempFolder decryptedTempFolder;
 
@@ -80,7 +80,7 @@ public class MainFramePm extends PresentationModelBase {
 
 		this.host = host;
 
-		List<DecryptedFile> initialKeys = decryptedHistoryService.getDecryptedFiles();
+		List<DecryptedFile> initialKeys = monitoringDecryptedFilesService.getDecryptedFiles();
 		rows = new ModelTableProperty<>(this, initialKeys, "decryptedFiles",
 				new DecryptedFilesModel(decryptedTempFolder));
 		hasData = new ModelProperty<Boolean>(this, new ValueAdapterHolderImpl<>(!initialKeys.isEmpty()), "hasData") {
@@ -213,7 +213,7 @@ public class MainFramePm extends PresentationModelBase {
 	protected Action actionForget = new RowContextAction("action.forgetDecrypted") {
 		@Override
 		public void onActionPerformed(DecryptedFile row) {
-			decryptedHistoryService.remove(row.getDecryptedFile());
+			monitoringDecryptedFilesService.remove(row.getDecryptedFile());
 		}
 	};
 

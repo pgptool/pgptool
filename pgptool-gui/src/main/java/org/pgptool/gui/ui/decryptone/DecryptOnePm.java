@@ -41,7 +41,7 @@ import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.bkgoperation.UserReqeustedCancellationException;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
-import org.pgptool.gui.decryptedlist.api.DecryptedHistoryService;
+import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
 import org.pgptool.gui.encryption.api.EncryptionService;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
@@ -100,7 +100,7 @@ public class DecryptOnePm extends PresentationModelBase {
 	@Resource(name = "keyFilesOperations")
 	private KeyFilesOperations<KeyData> keyFilesOperations;
 	@Autowired
-	private DecryptedHistoryService decryptedHistoryService;
+	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
 
 	private DecryptOneHost<KeyData> host;
 
@@ -476,7 +476,7 @@ public class DecryptOnePm extends PresentationModelBase {
 			// Remember parameters
 			persistDecryptionDialogParametersForCurrentInputs(targetFileName);
 			persistEncryptionDialogParameters(targetFileName);
-			decryptedHistoryService.add(new DecryptedFile(sourceFileStr, targetFileName));
+			monitoringDecryptedFilesService.add(new DecryptedFile(sourceFileStr, targetFileName));
 
 			// Delete source if asked
 			if (isDeleteSourceAfter.getValue()) {
@@ -545,8 +545,9 @@ public class DecryptOnePm extends PresentationModelBase {
 		}
 
 		private String getEffectiveFileNameForTempFolder() {
-			DecryptedFile dfm = decryptedHistoryService.findByEncryptedFile(getSourceFile().getValue());
-			if (dfm == null || !dfm.getDecryptedFile().startsWith(decryptedTempFolder.getTempFolderBasePath())) {
+			DecryptedFile dfm = monitoringDecryptedFilesService.findByEncryptedFile(getSourceFile().getValue(),
+					x -> x.getDecryptedFile().startsWith(decryptedTempFolder.getTempFolderBasePath()));
+			if (dfm == null) {
 				String ret = madeUpTargetFileName(decryptedTempFolder.getTempFolderBasePath());
 				return ensureFileNameVacant(ret);
 			}

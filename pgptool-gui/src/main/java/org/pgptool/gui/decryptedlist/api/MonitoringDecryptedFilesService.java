@@ -18,8 +18,9 @@
 package org.pgptool.gui.decryptedlist.api;
 
 import java.util.List;
+import java.util.function.Predicate;
 
-public interface DecryptedHistoryService {
+public interface MonitoringDecryptedFilesService {
 	/**
 	 * Register decrypted file for history
 	 */
@@ -35,7 +36,7 @@ public interface DecryptedHistoryService {
 
 	List<DecryptedFile> getDecryptedFiles();
 
-	DecryptedFile findByDecryptedFile(String encryptionSourceFilename);
+	DecryptedFile findByDecryptedFile(String decryptedFile);
 
-	DecryptedFile findByEncryptedFile(String encryptionTargetFilename);
+	DecryptedFile findByEncryptedFile(String encryptedFile, Predicate<DecryptedFile> filter);
 }

@@ -22,11 +22,12 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent.Kind;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import org.apache.log4j.Logger;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
-import org.pgptool.gui.decryptedlist.api.DecryptedHistoryService;
+import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
 import org.pgptool.gui.tools.fileswatcher.FilesWatcherHandler;
 import org.pgptool.gui.tools.fileswatcher.MultipleFilesWatcher;
 import org.springframework.beans.factory.DisposableBean;
@@ -39,8 +40,9 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.eventbus.EventBus;
 
-public class DecryptedHistoryServiceImpl implements DecryptedHistoryService, InitializingBean, DisposableBean {
-	private static Logger log = Logger.getLogger(DecryptedHistoryServiceImpl.class);
+public class MonitoringDecryptedFilesServiceImpl
+		implements MonitoringDecryptedFilesService, InitializingBean, DisposableBean {
+	private static Logger log = Logger.getLogger(MonitoringDecryptedFilesServiceImpl.class);
 
 	protected static final long TIME_TO_ENSURE_FILE_WAS_DELETED_MS = 2000;
 
@@ -59,7 +61,7 @@ public class DecryptedHistoryServiceImpl implements DecryptedHistoryService, Ini
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		// TODO: Fix. Smells like DI violation
-		multipleFilesWatcher = new MultipleFilesWatcher(dirWatcherHandler, "DecryptedHistoryService");
+		multipleFilesWatcher = new MultipleFilesWatcher(dirWatcherHandler, "MonitoringDecryptedFilesService");
 		List<DecryptedFile> entries = getDecryptedFiles();
 		for (DecryptedFile entry : entries) {
 			String decryptedFile = entry.getDecryptedFile();
@@ -146,22 +148,14 @@ public class DecryptedHistoryServiceImpl implements DecryptedHistoryService, Ini
 	}
 
 	@Override
-	public DecryptedFile findByDecryptedFile(String fileName) {
-		for (DecryptedFile df : getDecryptedFiles()) {
-			if (df.getDecryptedFile().equals(fileName)) {
-				return df;
-			}
-		}
-		return null;
+	public DecryptedFile findByDecryptedFile(String decryptedFile) {
+		return getDecryptedFiles().stream().filter(x -> x.getDecryptedFile().equals(decryptedFile)).findFirst()
+				.orElse(null);
 	}
 
 	@Override
-	public DecryptedFile findByEncryptedFile(String fileName) {
-		for (DecryptedFile df : getDecryptedFiles()) {
-			if (df.getEncryptedFile().equals(fileName)) {
-				return df;
-			}
-		}
-		return null;
+	public DecryptedFile findByEncryptedFile(String encryptedFile, Predicate<DecryptedFile> filter) {
+		return getDecryptedFiles().stream().filter(x -> x.getEncryptedFile().equals(encryptedFile) && filter.test(x))
+				.findFirst().orElse(null);
 	}
 }

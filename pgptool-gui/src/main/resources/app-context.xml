@@ -32,7 +32,7 @@
 		<property name="defaultEncoding" value="UTF-8" />
 		<property name="fallbackToSystemLocale" value="true" />
 	</bean>
-	
+
 	<bean id="executorService" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" destroy-method="shutdownNow" />
 
 	<context:annotation-config />
@@ -44,17 +44,47 @@
 	<bean id="configsBasePathResolver" class="org.pgptool.gui.config.impl.ConfigsBasePathResolverUserHomeImpl">
 		<property name="configFolderName" value="${configuration.configFolderName}" />
 	</bean>
-	<bean id="configRepository" class="org.pgptool.gui.config.impl.ConfigRepositoryPairsBasedImpl" />
-	<bean class="org.pgptool.gui.configpairs.impl.ConfigPairsMapDbImpl" />
+
+	<!-- TODO: Remove these old things after Migration complete -->
+	<bean id="oldConfigParis" class="org.pgptool.gui.configpairs.impl.ConfigPairsMapDbImpl" autowire-candidate="false" />
+	<bean id="oldConfigRepository" class="org.pgptool.gui.config.impl.ConfigRepositoryPairsBasedImpl" p:configPairs-ref="oldConfigParis"
+		autowire-candidate="false" />
+
+	<bean id="configRepository" class="org.pgptool.gui.config.impl.ConfigRepositoryImpl" />
+	<bean id="appProps" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl" p:oldConfigPairs-ref="oldConfigParis">
+		<constructor-arg value="app-props" />
+		<constructor-arg>
+			<bean class="org.pgptool.gui.configpairs.impl.AppPropertiesMigrationPredicate" />
+		</constructor-arg>
+	</bean>
+	<bean id="encryptionParams" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl" p:oldConfigPairs-ref="oldConfigParis">
+		<constructor-arg value="encr-params" />
+		<constructor-arg>
+			<bean class="org.pgptool.gui.configpairs.impl.EncryptionParamsMigrationPredicate" />
+		</constructor-arg>
+	</bean>
+	<bean id="decryptionParams" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl" p:oldConfigPairs-ref="oldConfigParis">
+		<constructor-arg value="decr-params" />
+		<constructor-arg>
+			<bean class="org.pgptool.gui.configpairs.impl.DecryptionSettingsMigrationPredicate" />
+		</constructor-arg>
+	</bean>
+	<bean id="monitoredDecrypted" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl" p:oldConfigPairs-ref="oldConfigParis">
+		<constructor-arg value="mon-decr" />
+		<constructor-arg>
+			<bean class="org.pgptool.gui.configpairs.impl.MonitoredDecryptedMigrationPredicate" />
+		</constructor-arg>
+	</bean>
+
 	<bean class="org.pgptool.gui.tempfolderfordecrypted.impl.DecryptedTempFolderImpl" />
 	<bean class="org.pgptool.gui.encryptionparams.impl.EncryptionParamsStorageImpl" />
 
 	<bean id="keyFilesOperations" class="org.pgptool.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
-	<bean id="keyRingService" class="org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl" />
+	<bean id="keyRingService" class="org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl" p:oldConfigRepository-ref="oldConfigRepository" />
 	<bean id="encryptionService" class="org.pgptool.gui.encryption.implpgp.EncryptionServicePgpImpl" />
 	<bean id="keyGeneratorService" class="org.pgptool.gui.encryption.implpgp.KeyGeneratorServicePgpImpl" />
 
-	<bean class="org.pgptool.gui.decryptedlist.impl.MonitoringDecryptedFilesServiceImpl" />
+	<bean class="org.pgptool.gui.decryptedlist.impl.MonitoringDecryptedFilesServiceImpl" p:oldConfigPairs-ref="oldConfigParis" />
 
 	<!-- Views -->
 	<bean class="org.pgptool.gui.ui.root.RootPm" scope="singleton" />
@@ -109,16 +139,16 @@
 	<bean class="org.pgptool.gui.autoupdate.impl.NewVersionCheckerGitHubImpl">
 		<property name="configuredVersion" value="${configuredVersion}" />
 	</bean>
-	
+
 	<bean class="org.pgptool.gui.ui.checkForUpdates.UpdatesPolicy" />
 
 	<bean class="org.pgptool.gui.ui.feedbackForm.FeedbackFormView" scope="prototype" />
 	<bean class="org.pgptool.gui.ui.feedbackForm.FeedbackFormPm" scope="prototype">
-		<property name="formUrlForBrowser" value ="${feedback.formUrlForBrowser}" />
+		<property name="formUrlForBrowser" value="${feedback.formUrlForBrowser}" />
 	</bean>
-	
+
 	<bean class="org.pgptool.gui.feedback.impl.UserFeedbackServiceImpl">
-		<property name="endpoint" value="${feedback.formUrlForApi}"/>
+		<property name="endpoint" value="${feedback.formUrlForApi}" />
 	</bean>
 
 </beans>

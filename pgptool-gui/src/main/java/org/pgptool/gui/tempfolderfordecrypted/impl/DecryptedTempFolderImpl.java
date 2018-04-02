@@ -32,6 +32,7 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.StringUtils;
@@ -49,7 +50,8 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
 	@Autowired
 	private ConfigsBasePathResolver configsBasePathResolver;
 	@Autowired
-	private ConfigPairs configPairs;
+	@Qualifier("appProps")
+	private ConfigPairs appProps;
 
 	private String tempFolderBasePath;
 	private ApplicationContext applicationContext;
@@ -58,7 +60,7 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
 	public void afterPropertiesSet() throws Exception {
 		String defaultValue1 = configsBasePathResolver.getConfigsBasePath() + File.separator + "decrypted";
 		String defaultValue2 = SystemUtils.getJavaIoTmpDir().getAbsolutePath() + File.separator + "decrypted";
-		tempFolderBasePath = configPairs.find(CONFIG_DECRYPTED_TEMP_FOLDER, defaultValue1);
+		tempFolderBasePath = appProps.find(CONFIG_DECRYPTED_TEMP_FOLDER, defaultValue1);
 
 		if (ensureDirExists(tempFolderBasePath)) {
 			return;
@@ -95,7 +97,7 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
 	public void setTempFolderBasePath(String newValue) throws FieldValidationException {
 		validate(newValue);
 		tempFolderBasePath = newValue;
-		configPairs.put(CONFIG_DECRYPTED_TEMP_FOLDER, tempFolderBasePath);
+		appProps.put(CONFIG_DECRYPTED_TEMP_FOLDER, tempFolderBasePath);
 	}
 
 	@SuppressWarnings("deprecation")

@@ -22,8 +22,13 @@ import org.summerb.approaches.jdbccrud.common.DtoBase;
 public interface ConfigRepository {
 	<T extends DtoBase> T read(Class<T> clazz);
 
+	<T extends DtoBase> T read(Class<T> clazz, String clarification);
+
 	<T extends DtoBase> T readOrConstruct(Class<T> clazz);
+
+	<T extends DtoBase> T readOrConstruct(Class<T> clazz, String clarification);
 
 	<T extends DtoBase> void persist(T object);
 
+	<T extends DtoBase> void persist(T object, String clarification);
 }

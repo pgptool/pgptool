@@ -34,6 +34,7 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Required;
 import org.summerb.approaches.validation.FieldValidationException;
 import org.summerb.approaches.validation.ValidationError;
@@ -50,9 +51,10 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class FeedbackFormPm extends PresentationModelBase implements InitializingBean {
 	protected static final int DEFAULT_RATING = 7;
-	
+
 	@Autowired
-	private ConfigPairs configPairs;
+	@Qualifier("appProps")
+	private ConfigPairs appProps;
 	@Autowired
 	private UserFeedbackService userFeedbackService;
 	private String formUrlForBrowser;
@@ -71,10 +73,11 @@ public class FeedbackFormPm extends PresentationModelBase implements Initializin
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		email = new ModelProperty<String>(this,
-				new ValueAdapterPersistentPropertyImpl<String>(configPairs, "email", ""), "email", vee);
+		email = new ModelProperty<String>(this, new ValueAdapterPersistentPropertyImpl<String>(appProps, "email", ""),
+				"email", vee);
 		feedback = new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "feedback", vee);
-		rating = new ModelSliderProperty(this, new ValueAdapterHolderImpl<Integer>(DEFAULT_RATING), 1, 10, "rating", vee);
+		rating = new ModelSliderProperty(this, new ValueAdapterHolderImpl<Integer>(DEFAULT_RATING), 1, 10, "rating",
+				vee);
 
 		showConnectingToServerStatus = new ModelProperty<Boolean>(this, new ValueAdapterHolderImpl<Boolean>(true),
 				"showTestingConnection");
@@ -106,7 +109,7 @@ public class FeedbackFormPm extends PresentationModelBase implements Initializin
 			host.handleClose();
 		}
 	};
-	
+
 	@SuppressWarnings("serial")
 	protected final Action actionSubmit = new LocalizedAction("action.submit") {
 		@Override

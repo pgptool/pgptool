@@ -60,6 +60,7 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -82,7 +83,8 @@ public class EncryptOnePm extends PresentationModelBase {
 	private static final String SOURCE_FOLDER = "EncryptOnePm.SOURCE_FOLDER";
 
 	@Autowired
-	private ConfigPairs configPairs;
+	@Qualifier("appProps")
+	private ConfigPairs appProps;
 	@Autowired
 	private EncryptionParamsStorage encryptionParamsStorage;
 
@@ -148,7 +150,7 @@ public class EncryptOnePm extends PresentationModelBase {
 	public SaveFileChooserDialog getTargetFileChooser() {
 		if (targetFileChooser == null) {
 			targetFileChooser = new SaveFileChooserDialog(findRegisteredWindowIfAny(), "action.chooseTargetFile",
-					"action.choose", configPairs, "EncryptionTargetChooser") {
+					"action.choose", appProps, "EncryptionTargetChooser") {
 				@Override
 				protected String onDialogClosed(String filePathName, JFileChooser ofd) {
 					String ret = super.onDialogClosed(filePathName, ofd);
@@ -249,7 +251,7 @@ public class EncryptOnePm extends PresentationModelBase {
 
 	public ExistingFileChooserDialog getSourceFileChooser() {
 		if (sourceFileChooser == null) {
-			sourceFileChooser = new ExistingFileChooserDialog(findRegisteredWindowIfAny(), configPairs, SOURCE_FOLDER) {
+			sourceFileChooser = new ExistingFileChooserDialog(findRegisteredWindowIfAny(), appProps, SOURCE_FOLDER) {
 				@Override
 				protected void doFileChooserPostConstruct(JFileChooser ofd) {
 					super.doFileChooserPostConstruct(ofd);

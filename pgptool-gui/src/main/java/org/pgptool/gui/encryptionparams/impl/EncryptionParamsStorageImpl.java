@@ -22,20 +22,21 @@ import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 public class EncryptionParamsStorageImpl implements EncryptionParamsStorage {
 	public static final String CONFIG_PAIR_BASE = "Encrypt:";
 
 	@Autowired
-	private ConfigPairs configPairs;
+	@Qualifier("encryptionParams")
+	private ConfigPairs encryptionParams;
 
 	@Override
 	public void persistDialogParametersForCurrentInputs(EncryptionDialogParameters dialogParameters,
 			boolean updateFolderSettings) {
-		configPairs.put(CONFIG_PAIR_BASE + dialogParameters.getSourceFile(), dialogParameters);
+		encryptionParams.put(dialogParameters.getSourceFile(), dialogParameters);
 		if (updateFolderSettings) {
-			configPairs.put(
-					CONFIG_PAIR_BASE + FilenameUtils.getFullPathNoEndSeparator(dialogParameters.getSourceFile()),
+			encryptionParams.put(FilenameUtils.getFullPathNoEndSeparator(dialogParameters.getSourceFile()),
 					dialogParameters);
 		}
 	}
@@ -43,9 +44,9 @@ public class EncryptionParamsStorageImpl implements EncryptionParamsStorage {
 	@Override
 	public EncryptionDialogParameters findParamsBasedOnSourceFile(String sourceFile,
 			boolean fallBackToFolderSettingsIfAny) {
-		EncryptionDialogParameters params = configPairs.find(CONFIG_PAIR_BASE + sourceFile, null);
+		EncryptionDialogParameters params = encryptionParams.find(sourceFile, null);
 		if (fallBackToFolderSettingsIfAny && params == null) {
-			params = configPairs.find(CONFIG_PAIR_BASE + FilenameUtils.getFullPathNoEndSeparator(sourceFile), null);
+			params = encryptionParams.find(FilenameUtils.getFullPathNoEndSeparator(sourceFile), null);
 		}
 		return params;
 	}

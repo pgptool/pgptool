@@ -33,7 +33,6 @@ import com.google.common.eventbus.EventBus;
  *
  */
 public class ConfigRepositoryPairsBasedImpl implements ConfigRepository {
-	@Autowired
 	private ConfigPairs configPairs;
 	@Autowired
 	private EventBus eventBus;
@@ -72,5 +71,29 @@ public class ConfigRepositoryPairsBasedImpl implements ConfigRepository {
 		}
 
 		return result;
+	}
+
+	public ConfigPairs getConfigPairs() {
+		return configPairs;
+	}
+
+	@Autowired
+	public void setConfigPairs(ConfigPairs configPairs) {
+		this.configPairs = configPairs;
+	}
+
+	@Override
+	public <T extends DtoBase> T read(Class<T> clazz, String clarification) {
+		throw new IllegalStateException("Operation is not supported");
+	}
+
+	@Override
+	public <T extends DtoBase> T readOrConstruct(Class<T> clazz, String clarification) {
+		throw new IllegalStateException("Operation is not supported");
+	}
+
+	@Override
+	public <T extends DtoBase> void persist(T object, String clarification) {
+		throw new IllegalStateException("Operation is not supported");
 	}
 }

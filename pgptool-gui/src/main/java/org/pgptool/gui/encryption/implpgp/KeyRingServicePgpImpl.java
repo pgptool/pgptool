@@ -36,6 +36,7 @@ import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.MatchedKey;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
@@ -47,6 +48,7 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 	private static Logger log = Logger.getLogger(KeyRingServicePgpImpl.class);
 
 	private ConfigRepository configRepository;
+	private ConfigRepository oldConfigRepository;
 	private EventBus eventBus;
 	private KeyGeneratorService<KeyDataPgp> keyGeneratorService;
 
@@ -82,11 +84,28 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 			if (pgpKeysRing != null) {
 				return;
 			}
-			pgpKeysRing = configRepository.readOrConstruct(PgpKeysRing.class);
+			pgpKeysRing = configRepository.read(PgpKeysRing.class);
+
+			migrateFromOldConfigIfPossible();
+
 			// dumpKeys();
 			if (pgpKeysRing.size() == 0) {
 				keyGeneratorService.expectNewKeyCreation();
 			}
+		}
+	}
+
+	private void migrateFromOldConfigIfPossible() {
+		if (pgpKeysRing != null) {
+			return;
+		}
+
+		pgpKeysRing = oldConfigRepository.read(PgpKeysRing.class);
+		if (pgpKeysRing == null) {
+			pgpKeysRing = new PgpKeysRing();
+		} else {
+			configRepository.persist(pgpKeysRing);
+			log.info("Migrated KeyRing from old config");
 		}
 	}
 
@@ -268,6 +287,15 @@ public class KeyRingServicePgpImpl implements KeyRingService<KeyDataPgp> {
 	@Autowired
 	public void setKeyGeneratorService(KeyGeneratorService<KeyDataPgp> keyGeneratorService) {
 		this.keyGeneratorService = keyGeneratorService;
+	}
+
+	public ConfigRepository getOldConfigRepository() {
+		return oldConfigRepository;
+	}
+
+	@Required
+	public void setOldConfigRepository(ConfigRepository oldConfigRepository) {
+		this.oldConfigRepository = oldConfigRepository;
 	}
 
 }

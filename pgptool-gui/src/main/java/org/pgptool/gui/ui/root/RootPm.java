@@ -33,7 +33,6 @@ import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
-import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.about.AboutHost;
@@ -107,7 +106,6 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 	private EntryPoint entryPoint;
 	private ApplicationContext applicationContext;
 	private EventBus eventBus;
-	private ConfigRepository configRepository;
 	private UpdatesPolicy updatesPolicy;
 
 	private MainFramePm mainFramePm;
@@ -765,15 +763,6 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 	@Autowired
 	public void setEventBus(EventBus eventBus) {
 		this.eventBus = eventBus;
-	}
-
-	public ConfigRepository getConfigRepository() {
-		return configRepository;
-	}
-
-	@Autowired
-	public void setConfigRepository(ConfigRepository configRepository) {
-		this.configRepository = configRepository;
 	}
 
 	public UpdatesPolicy getUpdatesPolicy() {

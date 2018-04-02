@@ -20,9 +20,11 @@ package org.pgptool.gui.decryptedlist.impl;
 import java.io.File;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent.Kind;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
@@ -33,6 +35,8 @@ import org.pgptool.gui.tools.fileswatcher.MultipleFilesWatcher;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Required;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 
 import com.google.common.base.Preconditions;
@@ -46,10 +50,13 @@ public class MonitoringDecryptedFilesServiceImpl
 
 	protected static final long TIME_TO_ENSURE_FILE_WAS_DELETED_MS = 2000;
 
-	private static final String PREFIX = "decrhist:";
+	public static final String PREFIX = "decrhist:";
 
+	private ConfigPairs oldConfigPairs;
 	@Autowired
-	private ConfigPairs configPairs;
+	@Qualifier("monitoredDecrypted")
+	private ConfigPairs monitoredDecrypted;
+
 	@Autowired
 	private EventBus eventBus;
 
@@ -60,6 +67,10 @@ public class MonitoringDecryptedFilesServiceImpl
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
+		setupFileWatcher();
+	}
+
+	private void setupFileWatcher() {
 		// TODO: Fix. Smells like DI violation
 		multipleFilesWatcher = new MultipleFilesWatcher(dirWatcherHandler, "MonitoringDecryptedFilesService");
 		List<DecryptedFile> entries = getDecryptedFiles();
@@ -107,7 +118,7 @@ public class MonitoringDecryptedFilesServiceImpl
 			Preconditions.checkArgument(decryptedFile.getEncryptedFile() != null,
 					"decryptedFile.EncryptedFile is NULL");
 
-			configPairs.put(buildKey(decryptedFile.getDecryptedFile()), decryptedFile);
+			monitoredDecrypted.put(buildKey(decryptedFile.getDecryptedFile()), decryptedFile);
 			eventBus.post(EntityChangedEvent.added(decryptedFile));
 			multipleFilesWatcher.watchForFileChanges(decryptedFile.getDecryptedFile());
 		} catch (Throwable t) {
@@ -121,7 +132,7 @@ public class MonitoringDecryptedFilesServiceImpl
 			Preconditions.checkArgument(depcryptedFilePathname != null, "depcryptedFilePathname is NULL");
 
 			String key = buildKey(depcryptedFilePathname);
-			DecryptedFile existing = configPairs.find(key, null);
+			DecryptedFile existing = monitoredDecrypted.find(key, null);
 			if (existing == null) {
 				// if it's not there -- nothing to delete
 				return;
@@ -130,7 +141,8 @@ public class MonitoringDecryptedFilesServiceImpl
 			// Remember this file in case it will appear right away
 			recentlyRemoved.put(depcryptedFilePathname, existing);
 
-			configPairs.put(key, null);
+			monitoredDecrypted.put(key, null);
+
 			eventBus.post(EntityChangedEvent.removedObject(existing));
 			multipleFilesWatcher.stopWatchingFile(depcryptedFilePathname);
 		} catch (Throwable t) {
@@ -139,12 +151,13 @@ public class MonitoringDecryptedFilesServiceImpl
 	}
 
 	private String buildKey(String decryptedFile) {
-		return PREFIX + decryptedFile;
+		return decryptedFile;
 	}
 
 	@Override
 	public synchronized List<DecryptedFile> getDecryptedFiles() {
-		return configPairs.findAllWithPrefixedKey(PREFIX);
+		return new ArrayList<>(monitoredDecrypted.getAll().stream().map(x -> (DecryptedFile) x.getValue())
+				.collect(Collectors.toList()));
 	}
 
 	@Override
@@ -157,5 +170,14 @@ public class MonitoringDecryptedFilesServiceImpl
 	public DecryptedFile findByEncryptedFile(String encryptedFile, Predicate<DecryptedFile> filter) {
 		return getDecryptedFiles().stream().filter(x -> x.getEncryptedFile().equals(encryptedFile) && filter.test(x))
 				.findFirst().orElse(null);
+	}
+
+	public ConfigPairs getOldConfigPairs() {
+		return oldConfigPairs;
+	}
+
+	@Required
+	public void setOldConfigPairs(ConfigPairs oldConfigPairs) {
+		this.oldConfigPairs = oldConfigPairs;
 	}
 }

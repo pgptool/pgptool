@@ -12,6 +12,7 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.StringUtils;
@@ -27,7 +28,8 @@ public class UpdatesPolicy implements ApplicationContextAware {
 	public static final String PROP_SNOOZED_VERSION = UPDATES_POLICY + "SnoozedVersion";
 
 	@Autowired
-	private ConfigPairs configPairs;
+	@Qualifier("appProps")
+	private ConfigPairs appProps;
 	private ApplicationContext applicationContext;
 	private CheckForUpdatesPm checkForUpdatesPm;
 	private CheckForUpdatesDialog checkForUpdatesDialog;
@@ -37,10 +39,10 @@ public class UpdatesPolicy implements ApplicationContextAware {
 
 	public void start(CheckForUpdatesDialog checkForUpdatesDialog) {
 		this.checkForUpdatesDialog = checkForUpdatesDialog;
-		this.snoozedVersion = new ValueAdapterPersistentPropertyImpl<String>(configPairs, PROP_SNOOZED_VERSION, null);
+		this.snoozedVersion = new ValueAdapterPersistentPropertyImpl<String>(appProps, PROP_SNOOZED_VERSION, null);
 
 		isAutoUpdatesEnabled = new ModelProperty<>(this,
-				new ValueAdapterPersistentPropertyImpl<Boolean>(configPairs, PROP_IS_AUTO, null), PROP_IS_AUTO);
+				new ValueAdapterPersistentPropertyImpl<Boolean>(appProps, PROP_IS_AUTO, null), PROP_IS_AUTO);
 		if (isAutoUpdatesEnabled.getValue() == null) {
 			isAutoUpdatesEnabled.setValueByOwner(UiUtils.confirm("prompt.doAutoUpdatesCheck", null, null));
 		}

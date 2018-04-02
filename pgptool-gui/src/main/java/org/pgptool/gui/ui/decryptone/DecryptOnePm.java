@@ -57,6 +57,7 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.StringUtils;
 import org.summerb.approaches.validation.ValidationError;
 import org.summerb.approaches.validation.ValidationErrorsUtils;
@@ -79,12 +80,17 @@ public class DecryptOnePm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(DecryptOnePm.class);
 
 	private static final String SOURCE_FOLDER = "DecryptOnePm.SOURCE_FOLDER";
-	private static final String CONFIG_PAIR_BASE = "Decrypt:";
+	public static final String CONFIG_PAIR_BASE = "Decrypt:";
 
 	private static final String[] EXTENSIONS = new String[] { "gpg", "pgp", "asc" };
 
 	@Autowired
-	private ConfigPairs configPairs;
+	@Qualifier("appProps")
+	private ConfigPairs appProps;
+	@Autowired
+	@Qualifier("decryptionParams")
+	private ConfigPairs decryptionParams;
+
 	@Autowired
 	private EncryptionParamsStorage encryptionParamsStorage;
 
@@ -180,7 +186,7 @@ public class DecryptOnePm extends PresentationModelBase {
 	public SaveFileChooserDialog getTargetFileChooser() {
 		if (targetFileChooser == null) {
 			targetFileChooser = new SaveFileChooserDialog(findRegisteredWindowIfAny(), "action.chooseTargetFile",
-					"action.choose", configPairs, "DecryptionTargetChooser") {
+					"action.choose", appProps, "DecryptionTargetChooser") {
 				@Override
 				protected String onDialogClosed(String filePathName, JFileChooser ofd) {
 					String ret = super.onDialogClosed(filePathName, ofd);
@@ -235,7 +241,7 @@ public class DecryptOnePm extends PresentationModelBase {
 
 	public ExistingFileChooserDialog getSourceFileChooser() {
 		if (sourceFileChooser == null) {
-			sourceFileChooser = new ExistingFileChooserDialog(findRegisteredWindowIfAny(), configPairs, SOURCE_FOLDER) {
+			sourceFileChooser = new ExistingFileChooserDialog(findRegisteredWindowIfAny(), appProps, SOURCE_FOLDER) {
 				@Override
 				protected void doFileChooserPostConstruct(JFileChooser ofd) {
 					super.doFileChooserPostConstruct(ofd);
@@ -375,9 +381,9 @@ public class DecryptOnePm extends PresentationModelBase {
 		}
 
 		protected DecryptionDialogParameters findParamsBasedOnSourceFile(String sourceFile) {
-			DecryptionDialogParameters params = configPairs.find(CONFIG_PAIR_BASE + sourceFile, null);
+			DecryptionDialogParameters params = decryptionParams.find(sourceFile, null);
 			if (params == null) {
-				params = configPairs.find(CONFIG_PAIR_BASE + FilenameUtils.getFullPathNoEndSeparator(sourceFile), null);
+				params = decryptionParams.find(FilenameUtils.getFullPathNoEndSeparator(sourceFile), null);
 			}
 			return params;
 		}
@@ -579,9 +585,8 @@ public class DecryptOnePm extends PresentationModelBase {
 
 		private void persistDecryptionDialogParametersForCurrentInputs(String targetFile) {
 			DecryptionDialogParameters dialogParameters = buildDecryptionDialogParameters(targetFile);
-			configPairs.put(CONFIG_PAIR_BASE + dialogParameters.getSourceFile(), dialogParameters);
-			configPairs.put(
-					CONFIG_PAIR_BASE + FilenameUtils.getFullPathNoEndSeparator(dialogParameters.getSourceFile()),
+			decryptionParams.put(dialogParameters.getSourceFile(), dialogParameters);
+			decryptionParams.put(FilenameUtils.getFullPathNoEndSeparator(dialogParameters.getSourceFile()),
 					dialogParameters);
 		}
 

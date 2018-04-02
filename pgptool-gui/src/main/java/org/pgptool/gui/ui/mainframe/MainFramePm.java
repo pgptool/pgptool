@@ -33,7 +33,6 @@ import javax.swing.JOptionPane;
 import org.apache.commons.io.FilenameUtils;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Messages;
-import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
@@ -59,7 +58,6 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 public class MainFramePm extends PresentationModelBase {
 	// private static Logger log = Logger.getLogger(MainFramePm.class);
 
-	private ConfigRepository configRepository;
 	@Autowired
 	private EventBus eventBus;
 	@Autowired
@@ -311,15 +309,6 @@ public class MainFramePm extends PresentationModelBase {
 
 	public ModelPropertyAccessor<Boolean> getHasData() {
 		return hasData.getModelPropertyAccessor();
-	}
-
-	public ConfigRepository getConfigRepository() {
-		return configRepository;
-	}
-
-	@Autowired
-	public void setConfigRepository(ConfigRepository configRepository) {
-		this.configRepository = configRepository;
 	}
 
 	private abstract class RowContextAction extends LocalizedAction {

@@ -50,6 +50,7 @@ import org.pgptool.gui.ui.keyslist.KeysTablePm;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.MultipleFilesChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.StringUtils;
 
 import com.google.common.base.Preconditions;
@@ -66,7 +67,8 @@ public class KeyImporterPm extends PresentationModelBase {
 	private static final String[] EXTENSIONS = new String[] { "asc", "bpg" };
 
 	@Autowired
-	private ConfigPairs configPairs;
+	@Qualifier("appProps")
+	private ConfigPairs appProps;
 
 	@Autowired
 	@Resource(name = "keyFilesOperations")
@@ -110,7 +112,7 @@ public class KeyImporterPm extends PresentationModelBase {
 
 	public MultipleFilesChooserDialog getSourceFileChooser() {
 		if (sourceFileChooser == null) {
-			sourceFileChooser = new MultipleFilesChooserDialog(findRegisteredWindowIfAny(), configPairs,
+			sourceFileChooser = new MultipleFilesChooserDialog(findRegisteredWindowIfAny(), appProps,
 					BROWSE_FOLDER) {
 				@Override
 				protected void doFileChooserPostConstruct(JFileChooser ofd) {

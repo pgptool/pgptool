@@ -28,6 +28,7 @@ import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.config.api.ConfigsBasePathResolver;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 import org.summerb.approaches.jdbccrud.common.DtoBase;
 
@@ -54,14 +55,27 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 
 	@Override
 	public <T extends DtoBase> void persist(T object) {
+		persist(object, null);
+	}
+
+	@Override
+	public <T extends DtoBase> void persist(T object, String clarification) {
 		try {
 			Preconditions.checkArgument(object != null, "Can't persist null object");
 			String filename = buildFilenameForClass(object.getClass());
+			filename = addClarification(filename, clarification);
 			writeObject(object, filename);
 			eventBus.post(EntityChangedEvent.updated(object));
 		} catch (Throwable t) {
 			throw new RuntimeException("Failed to persist object " + object, t);
 		}
+	}
+
+	private String addClarification(String filename, String clarification) {
+		if (StringUtils.hasText(clarification)) {
+			filename += "." + clarification;
+		}
+		return filename;
 	}
 
 	private String buildFilenameForClass(Class<?> clazz) {
@@ -70,9 +84,15 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 
 	@Override
 	public <T extends DtoBase> T read(Class<T> clazz) {
+		return read(clazz, null);
+	}
+
+	@Override
+	public <T extends DtoBase> T read(Class<T> clazz, String clarification) {
 		try {
 			Preconditions.checkArgument(clazz != null, "Class must be provided");
 			String filename = buildFilenameForClass(clazz);
+			filename = addClarification(filename, clarification);
 			if (!new File(filename).exists()) {
 				return null;
 			}
@@ -84,7 +104,12 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 
 	@Override
 	public <T extends DtoBase> T readOrConstruct(Class<T> clazz) {
-		T result = read(clazz);
+		return readOrConstruct(clazz, null);
+	}
+
+	@Override
+	public <T extends DtoBase> T readOrConstruct(Class<T> clazz, String clarification) {
+		T result = read(clazz, clarification);
 		if (result == null) {
 			try {
 				result = clazz.newInstance();

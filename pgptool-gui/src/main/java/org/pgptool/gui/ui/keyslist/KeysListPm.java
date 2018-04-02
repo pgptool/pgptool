@@ -47,6 +47,7 @@ import org.pgptool.gui.ui.tools.browsefs.FolderChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 
 import com.google.common.base.Preconditions;
@@ -70,7 +71,8 @@ public class KeysListPm extends PresentationModelBase {
 	@Resource(name = "keyRingService")
 	private KeyRingService<KeyData> keyRingService;
 	@Autowired
-	private ConfigPairs configPairs;
+	@Qualifier("appProps")
+	private ConfigPairs appProps;
 	@Autowired
 	@Resource(name = "keyFilesOperations")
 	private KeyFilesOperations<KeyData> keyFilesOperations;
@@ -174,7 +176,7 @@ public class KeysListPm extends PresentationModelBase {
 
 	public SaveFileChooserDialog buildPrivateKeyTargetChooser(final Key<KeyData> key) {
 		return new SaveFileChooserDialog(findRegisteredWindowIfAny(), "action.exportPrivateKey", "action.export",
-				configPairs, "ExportKeyDialog") {
+				appProps, "ExportKeyDialog") {
 			@Override
 			protected void onFileChooserPostConstrct(JFileChooser ofd) {
 				ofd.setAcceptAllFileFilterUsed(false);
@@ -197,7 +199,7 @@ public class KeysListPm extends PresentationModelBase {
 
 	public SaveFileChooserDialog buildPublicKeyTargetChooser(Key<KeyData> key) {
 		return new SaveFileChooserDialog(findRegisteredWindowIfAny(), "action.exportPublicKey", "action.export",
-				configPairs, "ExportKeyDialog") {
+				appProps, "ExportKeyDialog") {
 			@Override
 			protected void onFileChooserPostConstrct(JFileChooser ofd) {
 				ofd.setAcceptAllFileFilterUsed(false);
@@ -336,7 +338,7 @@ public class KeysListPm extends PresentationModelBase {
 		public FolderChooserDialog getFolderChooserDialog() {
 			if (folderChooserDialog == null) {
 				ValueAdapterPersistentPropertyImpl<String> exportedKeysLocation = new ValueAdapterPersistentPropertyImpl<String>(
-						configPairs, "KeysListPm.exportedKeysLocation", null);
+						appProps, "KeysListPm.exportedKeysLocation", null);
 				folderChooserDialog = new FolderChooserDialog(text("keys.chooseFolderForKeysExport"),
 						exportedKeysLocation);
 			}

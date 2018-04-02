@@ -18,6 +18,8 @@
 package org.pgptool.gui.configpairs.api;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Simple service for key-value properties. name might a little bit unusual, but
@@ -35,4 +37,6 @@ public interface ConfigPairs {
 	 * Will return values of all pairs where key is prefixed with keyPrefix
 	 */
 	<T> List<T> findAllWithPrefixedKey(String keyPrefix);
+
+	Set<Map.Entry<String, Object>> getAll();
 }

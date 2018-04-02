@@ -20,6 +20,8 @@ package org.pgptool.gui.configpairs.impl;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.mapdb.DB;
@@ -121,6 +123,11 @@ public class ConfigPairsMapDbImpl implements ConfigPairs, InitializingBean {
 			}
 		}
 		return ret;
+	}
+
+	@Override
+	public Set<Entry<String, Object>> getAll() {
+		return map.entrySet();
 	}
 
 }

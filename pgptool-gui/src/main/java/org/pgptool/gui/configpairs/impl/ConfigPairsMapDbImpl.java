@@ -81,16 +81,7 @@ public class ConfigPairsMapDbImpl implements ConfigPairs, InitializingBean {
 
 	@Override
 	public void put(String key, Object value) {
-		try {
-			if (value == null) {
-				map.remove(key);
-				return;
-			}
-
-			map.put(key, value);
-		} finally {
-			db.commit();
-		}
+		throw new IllegalStateException("Not supported. Migrating.");
 	}
 
 	@Override

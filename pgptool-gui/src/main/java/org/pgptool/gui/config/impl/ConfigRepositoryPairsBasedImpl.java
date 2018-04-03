@@ -20,7 +20,6 @@ package org.pgptool.gui.config.impl;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 import org.summerb.approaches.jdbccrud.common.DtoBase;
 
 import com.google.common.base.Preconditions;
@@ -39,13 +38,7 @@ public class ConfigRepositoryPairsBasedImpl implements ConfigRepository {
 
 	@Override
 	public <T extends DtoBase> void persist(T object) {
-		try {
-			Preconditions.checkArgument(object != null, "Can't persist null object");
-			configPairs.put(object.getClass().getName(), object);
-			eventBus.post(EntityChangedEvent.updated(object));
-		} catch (Throwable t) {
-			throw new RuntimeException("Failed to persist object " + object, t);
-		}
+		throw new IllegalStateException("Not supported. Migrating.");
 	}
 
 	@SuppressWarnings("unchecked")

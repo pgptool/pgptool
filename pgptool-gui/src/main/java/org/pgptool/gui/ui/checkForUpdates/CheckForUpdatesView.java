@@ -42,6 +42,7 @@ import javax.swing.JTextArea;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
 
+import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
 public class CheckForUpdatesView extends DialogViewBaseCustom<CheckForUpdatesPm> {
@@ -59,7 +60,7 @@ public class CheckForUpdatesView extends DialogViewBaseCustom<CheckForUpdatesPm>
 	protected void internalInitComponents() {
 		SgLayout sgl = new SgLayout(2, 5, UiUtils.getFontRelativeSize(1), 2);
 		sgl.setColSize(1, UiUtils.getFontRelativeSize(30), SgLayout.SIZE_TYPE_CONSTANT);
-		sgl.setRowSize(3, UiUtils.getFontRelativeSize(8), SgLayout.SIZE_TYPE_CONSTANT);
+		sgl.setRowSize(3, UiUtils.getFontRelativeSize(4), SgLayout.SIZE_TYPE_CONSTANT);
 		pnl = new JPanel(sgl);
 		pnl.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -133,6 +134,15 @@ public class CheckForUpdatesView extends DialogViewBaseCustom<CheckForUpdatesPm>
 		}
 	};
 
+	private TypedPropertyChangeListener<String> onReleaseNotesChanged = new TypedPropertyChangeListener<String>() {
+		@Override
+		public void handlePropertyChanged(Object source, String propertyName, String oldValue, String newValue) {
+			lblNewVersionReleaseNotes.setText(newValue == null ? "" : newValue);
+			// TODO: Move this line into PropertyBinder into SwingPM
+			lblNewVersionReleaseNotes.select(0, 0);
+		}
+	};
+
 	@Override
 	protected void internalBindToPm() {
 		super.internalBindToPm();
@@ -142,7 +152,7 @@ public class CheckForUpdatesView extends DialogViewBaseCustom<CheckForUpdatesPm>
 		bindingContext.setupBinding(pm.getLinkToNewVersion(), lblNewVersionLink);
 
 		bindingContext.setupBinding(pm.getNewVersionTitle(), lblNewVersionTitle);
-		bindingContext.setupBinding(pm.getNewVersionReleaseNotes(), lblNewVersionReleaseNotes);
+		bindingContext.registerOnChangeHandler(pm.getNewVersionReleaseNotes(), onReleaseNotesChanged);
 
 		bindingContext.setupBinding(pm.actionDownloadNewVersion, btnDownload);
 		bindingContext.setupBinding(pm.actionSnoozeVersion, btnSnoozeVersion);

@@ -138,6 +138,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 	private void initToolBar() {
 		toolbar = new JToolBar("Main actions");
+		toolbar.setRollover(false);
 		toolbar.add(new JButton(actionEncrypt));
 		toolbar.add(new JButton(actionEncryptText));
 		toolbar.addSeparator();

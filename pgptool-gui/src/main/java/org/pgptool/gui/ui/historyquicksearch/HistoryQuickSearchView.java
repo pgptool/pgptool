@@ -30,6 +30,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.border.CompoundBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
@@ -69,7 +70,10 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 		sgl.setColSize(1, UiUtils.getFontRelativeSize(10), SgLayout.SIZE_TYPE_CONSTANT);
 		sgl.setRowSize(3, UiUtils.getFontRelativeSize(26), SgLayout.SIZE_TYPE_CONSTANT);
 		panelRoot = new JPanel(sgl);
-		panelRoot.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+		CompoundBorder panelBorder = BorderFactory.createCompoundBorder(BorderFactory.createRaisedBevelBorder(),
+				BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		panelRoot.setBorder(panelBorder);
 
 		panelRoot.add(new JLabel(Messages.get("term.quickSearch")), sgl.cs(0, 0, 2, 1));
 		edQuickSearch = new JTextField();

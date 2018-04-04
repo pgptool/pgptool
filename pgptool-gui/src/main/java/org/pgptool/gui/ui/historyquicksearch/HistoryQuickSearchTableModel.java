@@ -53,7 +53,7 @@ public class HistoryQuickSearchTableModel implements TableModel {
 		case COLUMN_NAME:
 			return " " + FilenameUtils.getName(s.getSourceFile());
 		case COLUMN_PATH:
-			return " " + FilenameUtils.getPath(s.getSourceFile());
+			return " " + FilenameUtils.getFullPath(s.getSourceFile());
 		default:
 			throw new IllegalArgumentException("Wrong column index: " + columnIndex);
 		}

@@ -60,7 +60,7 @@ public class CheckForUpdatesView extends DialogViewBaseCustom<CheckForUpdatesPm>
 	protected void internalInitComponents() {
 		SgLayout sgl = new SgLayout(2, 5, UiUtils.getFontRelativeSize(1), 2);
 		sgl.setColSize(1, UiUtils.getFontRelativeSize(30), SgLayout.SIZE_TYPE_CONSTANT);
-		sgl.setRowSize(3, UiUtils.getFontRelativeSize(4), SgLayout.SIZE_TYPE_CONSTANT);
+		sgl.setRowSize(3, UiUtils.getFontRelativeSize(9), SgLayout.SIZE_TYPE_CONSTANT);
 		pnl = new JPanel(sgl);
 		pnl.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 

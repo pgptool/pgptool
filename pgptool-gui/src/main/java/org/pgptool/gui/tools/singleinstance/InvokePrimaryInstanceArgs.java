@@ -17,9 +17,9 @@
  *******************************************************************************/
 package org.pgptool.gui.tools.singleinstance;
 
-import java.io.Serializable;
+import org.summerb.approaches.jdbccrud.common.DtoBase;
 
-public class InvokePrimaryInstanceArgs implements Serializable {
+public class InvokePrimaryInstanceArgs implements DtoBase {
 	private static final long serialVersionUID = -1935402056245763044L;
 
 	private String[] commandLineArgs;

@@ -50,7 +50,11 @@ public class ConfigPairsMapDbImpl implements ConfigPairs, InitializingBean {
 		ensureAllDirsCreated();
 		String mapDbFilename = getFilesBasePath() + File.separator + "config-pairs.mapdb";
 		log.debug("Creating mapDB at " + mapDbFilename);
-		db = DBMaker.fileDB(mapDbFilename).transactionEnable().make();
+		if (new File(mapDbFilename).exists()) {
+			db = DBMaker.fileDB(mapDbFilename).readOnly().make();
+		} else {
+			db = DBMaker.fileDB(mapDbFilename).transactionEnable().make();
+		}
 		map = db.hashMap("config-pairs", Serializer.STRING, Serializer.JAVA).createOrOpen();
 		makeSureWeCanReadAllSettings();
 	}

@@ -19,7 +19,9 @@ package org.pgptool.gui.configpairs.impl;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -27,7 +29,6 @@ import org.apache.log4j.Logger;
 import org.mapdb.DB;
 import org.mapdb.DBException.SerializationError;
 import org.mapdb.DBMaker;
-import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 import org.pgptool.gui.config.api.ConfigsBasePathResolver;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
@@ -42,21 +43,37 @@ public class ConfigPairsMapDbImpl implements ConfigPairs, InitializingBean {
 
 	private String configsBasepath = File.separator + "configs";
 	private DB db;
-	private HTreeMap<String, Object> map;
+	private Map<String, Object> map;
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		ensureAllDirsCreated();
 		String mapDbFilename = getFilesBasePath() + File.separator + "config-pairs.mapdb";
-		log.debug("Creating mapDB at " + mapDbFilename);
 		if (new File(mapDbFilename).exists()) {
-			db = DBMaker.fileDB(mapDbFilename).readOnly().make();
+			try { //
+				log.debug("Opening legacy config store at " + mapDbFilename);
+				db = DBMaker.fileDB(mapDbFilename).concurrencyDisable().readOnly().make();
+				map = db.hashMap("config-pairs", Serializer.STRING, Serializer.JAVA).createOrOpen();
+				makeSureWeCanReadAllSettings();
+			} catch (Throwable t) {
+				log.warn("Failed to open legacy config store " + mapDbFilename, t);
+				db = null;
+				map = null;
+				initStub();
+			}
 		} else {
-			db = DBMaker.fileDB(mapDbFilename).transactionEnable().make();
+			initStub();
 		}
-		map = db.hashMap("config-pairs", Serializer.STRING, Serializer.JAVA).createOrOpen();
-		makeSureWeCanReadAllSettings();
+	}
+
+	/**
+	 * This method will init empty map just to maintain backwards compatibility. It
+	 * wont acept any values and there will be no phisical file created
+	 */
+	private void initStub() {
+		log.debug("Initializing stub for legacy config store");
+		map = Collections.emptyMap();
 	}
 
 	private void makeSureWeCanReadAllSettings() {
@@ -66,9 +83,10 @@ public class ConfigPairsMapDbImpl implements ConfigPairs, InitializingBean {
 				// forces value read
 			}
 		} catch (SerializationError se) {
-			log.warn("Failed to read config pairs. Looks like outdated DTO version. Have to clear the whole map.", se);
-			map.clear();
-			db.commit();
+			log.warn("Failed to read config pairs. Looks like outdated DTO version", se);
+			// NOTE: Following functionality was disabled since we migrating away from MapDB
+			// map.clear();
+			// db.commit();
 		}
 	}
 
@@ -97,8 +115,9 @@ public class ConfigPairsMapDbImpl implements ConfigPairs, InitializingBean {
 		} catch (SerializationError se) {
 			log.warn("Failed to read from config: " + key
 					+ ". Looks like outdated DTO version. Have to clear the whole map.", se);
-			map.clear();
-			db.commit();
+			// NOTE: Following functionality was disabled since we migrating away from MapDB
+			// map.clear();
+			// db.commit();
 		} catch (Throwable t) {
 			log.warn("Failed to read from config: " + key, t);
 		}
@@ -112,7 +131,7 @@ public class ConfigPairsMapDbImpl implements ConfigPairs, InitializingBean {
 	@Override
 	public <T> List<T> findAllWithPrefixedKey(String keyPrefix) {
 		List<T> ret = new ArrayList<>();
-		for (String key : map.getKeys()) {
+		for (String key : map.keySet()) {
 			if (key.startsWith(keyPrefix)) {
 				ret.add((T) map.get(key));
 			}

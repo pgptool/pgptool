@@ -50,11 +50,8 @@
 
 	<bean id="configRepository" class="org.pgptool.gui.config.impl.ConfigRepositoryImpl" />
 
-	<bean id="oldConfigParis" class="org.pgptool.gui.configpairs.impl.ConfigPairsMapDbImpl" autowire-candidate="false" />
-	<bean id="oldConfigRepository" class="org.pgptool.gui.config.impl.ConfigRepositoryPairsBasedImpl" p:configPairs-ref="oldConfigParis" />
-
 	<bean id="keyFilesOperations" class="org.pgptool.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
-	<bean id="keyRingService" class="org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl" p:oldConfigRepository-ref="oldConfigRepository" />
+	<bean id="keyRingService" class="org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl" />
 	<bean id="encryptionService" class="org.pgptool.gui.encryption.implpgp.EncryptionServicePgpImpl" />
 	<bean id="keyGeneratorService" class="org.pgptool.gui.encryption.implpgp.KeyGeneratorServicePgpImpl" />
 

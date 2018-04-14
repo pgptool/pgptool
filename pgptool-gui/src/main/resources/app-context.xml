@@ -45,46 +45,29 @@
 		<property name="configFolderName" value="${configuration.configFolderName}" />
 	</bean>
 
-	<!-- TODO: Remove these old things after Migration complete -->
-	<bean id="oldConfigParis" class="org.pgptool.gui.configpairs.impl.ConfigPairsMapDbImpl" autowire-candidate="false" />
-	<bean id="oldConfigRepository" class="org.pgptool.gui.config.impl.ConfigRepositoryPairsBasedImpl" p:configPairs-ref="oldConfigParis"
-		autowire-candidate="false" />
-
 	<bean id="configRepository" class="org.pgptool.gui.config.impl.ConfigRepositoryImpl" />
-	<bean id="appProps" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl" p:oldConfigPairs-ref="oldConfigParis">
+	<bean id="appProps" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
 		<constructor-arg value="app-props" />
-		<constructor-arg>
-			<bean class="org.pgptool.gui.configpairs.impl.AppPropertiesMigrationPredicate" />
-		</constructor-arg>
 	</bean>
-	<bean id="encryptionParams" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl" p:oldConfigPairs-ref="oldConfigParis">
+	<bean id="encryptionParams" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
 		<constructor-arg value="encr-params" />
-		<constructor-arg>
-			<bean class="org.pgptool.gui.configpairs.impl.EncryptionParamsMigrationPredicate" />
-		</constructor-arg>
 	</bean>
-	<bean id="decryptionParams" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl" p:oldConfigPairs-ref="oldConfigParis">
+	<bean id="decryptionParams" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
 		<constructor-arg value="decr-params" />
-		<constructor-arg>
-			<bean class="org.pgptool.gui.configpairs.impl.DecryptionSettingsMigrationPredicate" />
-		</constructor-arg>
 	</bean>
-	<bean id="monitoredDecrypted" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl" p:oldConfigPairs-ref="oldConfigParis">
+	<bean id="monitoredDecrypted" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
 		<constructor-arg value="mon-decr" />
-		<constructor-arg>
-			<bean class="org.pgptool.gui.configpairs.impl.MonitoredDecryptedMigrationPredicate" />
-		</constructor-arg>
 	</bean>
 
 	<bean class="org.pgptool.gui.tempfolderfordecrypted.impl.DecryptedTempFolderImpl" />
 	<bean class="org.pgptool.gui.encryptionparams.impl.EncryptionParamsStorageImpl" />
 
 	<bean id="keyFilesOperations" class="org.pgptool.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
-	<bean id="keyRingService" class="org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl" p:oldConfigRepository-ref="oldConfigRepository" />
+	<bean id="keyRingService" class="org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl" />
 	<bean id="encryptionService" class="org.pgptool.gui.encryption.implpgp.EncryptionServicePgpImpl" />
 	<bean id="keyGeneratorService" class="org.pgptool.gui.encryption.implpgp.KeyGeneratorServicePgpImpl" />
 
-	<bean class="org.pgptool.gui.decryptedlist.impl.MonitoringDecryptedFilesServiceImpl" p:oldConfigPairs-ref="oldConfigParis" />
+	<bean class="org.pgptool.gui.decryptedlist.impl.MonitoringDecryptedFilesServiceImpl" />
 
 	<!-- Views -->
 	<bean class="org.pgptool.gui.ui.root.RootPm" scope="singleton" />

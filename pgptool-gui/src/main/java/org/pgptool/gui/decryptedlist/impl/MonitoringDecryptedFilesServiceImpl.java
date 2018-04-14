@@ -35,7 +35,6 @@ import org.pgptool.gui.tools.fileswatcher.MultipleFilesWatcher;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Required;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 
 import com.google.common.base.Preconditions;
@@ -51,7 +50,6 @@ public class MonitoringDecryptedFilesServiceImpl
 
 	public static final String PREFIX = "decrhist:";
 
-	private ConfigPairs oldConfigPairs;
 	@Autowired
 	private ConfigPairs monitoredDecrypted;
 
@@ -168,14 +166,5 @@ public class MonitoringDecryptedFilesServiceImpl
 	public DecryptedFile findByEncryptedFile(String encryptedFile, Predicate<DecryptedFile> filter) {
 		return getDecryptedFiles().stream().filter(x -> x.getEncryptedFile().equals(encryptedFile) && filter.test(x))
 				.findFirst().orElse(null);
-	}
-
-	public ConfigPairs getOldConfigPairs() {
-		return oldConfigPairs;
-	}
-
-	@Required
-	public void setOldConfigPairs(ConfigPairs oldConfigPairs) {
-		this.oldConfigPairs = oldConfigPairs;
 	}
 }

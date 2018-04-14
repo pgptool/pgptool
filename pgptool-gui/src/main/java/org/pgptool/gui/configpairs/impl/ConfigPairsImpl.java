@@ -22,12 +22,9 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Required;
 
 /**
  * This is VERY simple map-based impl of this storage. It uses config repo and
@@ -36,89 +33,44 @@ import org.springframework.beans.factory.annotation.Required;
  * @author Sergey Karpushin
  *
  */
-public class ConfigPairsImpl implements ConfigPairs, InitializingBean {
-	private static Logger log = Logger.getLogger(ConfigPairsImpl.class);
-
+public class ConfigPairsImpl implements ConfigPairs {
 	@Autowired
 	private ConfigRepository configRepository;
-	private ConfigPairs oldConfigPairs;
 
 	private ConfigPairsEnvelop configPairsEnvelop;
 
 	private String clarification;
-	private ConfigPairMigrator configPairMigrator;
 
-	// TODO: Remove this whole Predicate idea after migration is completed
-	public ConfigPairsImpl(String clarification, ConfigPairMigrator configPairMigrator) {
+	public ConfigPairsImpl(String clarification) {
 		this.clarification = clarification;
-		this.configPairMigrator = configPairMigrator;
-	}
-
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		// TODO: Remove after Migration is completed -- we don't need to eagerly load
-		// things here
-		ensureLoadded();
 	}
 
 	@Override
 	public synchronized void put(String key, Object value) {
-		ensureLoadded();
 		if (value == null) {
-			configPairsEnvelop.remove(key);
+			getConfigPairsEnvelop().remove(key);
 		} else {
-			configPairsEnvelop.put(key, value);
+			getConfigPairsEnvelop().put(key, value);
 		}
 		save();
 	}
 
 	private void save() {
-		configRepository.persist(configPairsEnvelop, clarification);
-	}
-
-	private void ensureLoadded() {
-		if (configPairsEnvelop != null) {
-			return;
-		}
-
-		configPairsEnvelop = configRepository.read(ConfigPairsEnvelop.class, clarification);
-		if (configPairsEnvelop != null) {
-			return;
-		}
-
-		configPairsEnvelop = new ConfigPairsEnvelop();
-		// TODO: CLean-up this Migration logic
-		Set<Entry<String, Object>> old = oldConfigPairs.getAll();
-		if (old == null) {
-			return;
-		}
-
-		for (Entry<String, Object> e : old) {
-			if (!configPairMigrator.test(e)) {
-				continue;
-			}
-			Entry<String, Object> migrated = configPairMigrator.apply(e);
-			log.info("Migrated into config pairs `" + clarification + "` key: " + migrated.getKey());
-			configPairsEnvelop.put(migrated.getKey(), migrated.getValue());
-		}
-		log.info("Migrated config pairs " + clarification + " count: " + configPairsEnvelop.size());
-		save();
+		configRepository.persist(getConfigPairsEnvelop(), clarification);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public synchronized <T> T find(String key, T defaultValue) {
-		ensureLoadded();
-		T ret = (T) configPairsEnvelop.get(key);
+		T ret = (T) getConfigPairsEnvelop().get(key);
 		return ret != null ? ret : defaultValue;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> List<T> findAllWithPrefixedKey(String keyPrefix) {
-		ensureLoadded();
 		List<T> ret = new ArrayList<>();
-		for (Entry<String, Object> entry : configPairsEnvelop.entrySet()) {
+		for (Entry<String, Object> entry : getConfigPairsEnvelop().entrySet()) {
 			if (entry.getKey().startsWith(keyPrefix)) {
 				ret.add((T) entry.getValue());
 			}
@@ -126,17 +78,15 @@ public class ConfigPairsImpl implements ConfigPairs, InitializingBean {
 		return ret;
 	}
 
-	public ConfigPairs getOldConfigPairs() {
-		return oldConfigPairs;
-	}
-
-	@Required
-	public void setOldConfigPairs(ConfigPairs oldConfigPairs) {
-		this.oldConfigPairs = oldConfigPairs;
-	}
-
 	@Override
 	public Set<Entry<String, Object>> getAll() {
-		return configPairsEnvelop.entrySet();
+		return getConfigPairsEnvelop().entrySet();
+	}
+
+	public ConfigPairsEnvelop getConfigPairsEnvelop() {
+		if (configPairsEnvelop == null) {
+			configPairsEnvelop = configRepository.readOrConstruct(ConfigPairsEnvelop.class, clarification);
+		}
+		return configPairsEnvelop;
 	}
 }

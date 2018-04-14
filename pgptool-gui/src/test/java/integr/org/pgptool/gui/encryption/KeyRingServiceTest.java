@@ -59,8 +59,6 @@ public class KeyRingServiceTest {
 	@Autowired
 	private ConfigRepository configRepository;
 	@Autowired
-	private ConfigRepository oldConfigRepository;
-	@Autowired
 	private EventBus eventBus;
 
 	@Test
@@ -86,7 +84,6 @@ public class KeyRingServiceTest {
 		keyRingService1.setConfigRepository(configRepository);
 		keyRingService1.setEventBus(eventBus);
 		keyRingService1.setKeyGeneratorService(Mockito.mock(KeyGeneratorService.class));
-		keyRingService1.setOldConfigRepository(oldConfigRepository);
 		return (KeyRingService) keyRingService1;
 	}
 

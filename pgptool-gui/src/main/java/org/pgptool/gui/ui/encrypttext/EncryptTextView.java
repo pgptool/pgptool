@@ -37,6 +37,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
 import org.pgptool.gui.app.Messages;
@@ -95,6 +96,7 @@ public class EncryptTextView extends DialogViewBaseCustom<EncryptTextPm> {
 		// source text
 		ret.add(new JLabel(text("term.textToEncrypt")), sgl.cs(1, 0));
 		ret.add(new JScrollPane(edSourceText = new JTextArea()), sgl.cs(1, 1));
+		edSourceText.setFont(new JTextField().getFont());
 		edSourceText.setMargin(new Insets(5, 5, 5, 5));
 		edSourceText.setWrapStyleWord(true);
 		edSourceText.setLineWrap(true);
@@ -108,6 +110,7 @@ public class EncryptTextView extends DialogViewBaseCustom<EncryptTextPm> {
 		// target text
 		ret.add(new JLabel(text("term.encryptedText")), sgl.cs(2, 0));
 		ret.add(new JScrollPane(edTargetText = new JTextArea()), sgl.cs(2, 1));
+		edTargetText.setFont(new JTextField().getFont());
 		edTargetText.setMargin(new Insets(5, 5, 5, 5));
 		TextEditUxUtils.setCommonTextEditorActions(edTargetText);
 		ret.add(btnCopyTargetToClipboard = new JButton(), sgl.cs(2, 2));

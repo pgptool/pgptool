@@ -114,6 +114,7 @@ public class FeedbackFormView extends DialogViewBaseCustom<FeedbackFormPm> {
 		ret.add(new JLabel(text("term.feedback")), sgl.cs(0, row));
 		row++;
 		ret.add(new JScrollPane(edFeedback = new JTextArea()), sgl.cs(0, row));
+		edFeedback.setFont(new JTextField().getFont());
 		edFeedback.setLineWrap(true);
 		edFeedback.setMargin(new Insets(5, 5, 5, 5));
 		row++;

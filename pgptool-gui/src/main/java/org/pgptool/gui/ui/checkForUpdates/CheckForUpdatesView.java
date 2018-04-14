@@ -38,6 +38,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
@@ -89,6 +90,7 @@ public class CheckForUpdatesView extends DialogViewBaseCustom<CheckForUpdatesPm>
 		lblNewVersionReleaseNotes.setWrapStyleWord(true);
 		lblNewVersionReleaseNotes.setMargin(new Insets(5, 5, 5, 5));
 		lblNewVersionReleaseNotes.setEditable(false);
+		lblNewVersionReleaseNotes.setFont(new JTextField().getFont());
 		row++;
 
 		// buttons

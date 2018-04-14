@@ -36,6 +36,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.UIManager;
 
 import org.pgptool.gui.app.Messages;
@@ -80,12 +81,14 @@ public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
 		// source text
 		ret.add(new JLabel(text("term.textToDecrypt")), sgl.cs(0, 0));
 		ret.add(new JScrollPane(edSourceText = new JTextArea()), sgl.cs(0, 1));
+		edSourceText.setFont(new JTextField().getFont());
 		edSourceText.setMargin(new Insets(5, 5, 5, 5));
 		TextEditUxUtils.setCommonTextEditorActions(edSourceText);
 
 		// recipients
 		ret.add(new JLabel(text("term.encryptedFor")), sgl.cs(0, 2));
 		ret.add(new JScrollPane(edRecipients = new JTextArea()), sgl.cs(0, 3));
+		edRecipients.setFont(new JTextField().getFont());
 		edRecipients.setEditable(false);
 		edRecipients.setBackground(UIManager.getColor("Panel.background"));
 		edRecipients.setMargin(new Insets(5, 5, 5, 5));
@@ -100,6 +103,7 @@ public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
 		// target text
 		ret.add(new JLabel(text("term.decryptedText")), sgl.cs(1, 0));
 		ret.add(new JScrollPane(edTargetText = new JTextArea()), sgl.cs(1, 1, 1, 3));
+		edTargetText.setFont(new JTextField().getFont());
 		edTargetText.setMargin(new Insets(5, 5, 5, 5));
 		edTargetText.setWrapStyleWord(true);
 		edTargetText.setLineWrap(true);

@@ -1,7 +1,10 @@
 package org.pgptool.gui.ui.historyquicksearch;
 
+import static org.pgptool.gui.app.Messages.text;
+
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -35,7 +38,6 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 import org.jdesktop.swingx.JXLabel;
-import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.ui.decryptone.DecryptionDialogParameters;
 import org.pgptool.gui.ui.tools.UiUtils;
 
@@ -67,15 +69,15 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 	protected void internalInitComponents() {
 		SgLayout sgl = new SgLayout(2, 5, 0, 0);
 		sgl.setColSize(0, UiUtils.getFontRelativeSize(40), SgLayout.SIZE_TYPE_CONSTANT);
-		sgl.setColSize(1, UiUtils.getFontRelativeSize(10), SgLayout.SIZE_TYPE_CONSTANT);
-		sgl.setRowSize(3, UiUtils.getFontRelativeSize(26), SgLayout.SIZE_TYPE_CONSTANT);
+		sgl.setColSize(1, UiUtils.getFontRelativeSize(10), SgLayout.SIZE_TYPE_WEIGHTED);
+		sgl.setRowSize(3, UiUtils.getFontRelativeSize(26), SgLayout.SIZE_TYPE_WEIGHTED);
 		panelRoot = new JPanel(sgl);
 
 		CompoundBorder panelBorder = BorderFactory.createCompoundBorder(BorderFactory.createRaisedBevelBorder(),
 				BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		panelRoot.setBorder(panelBorder);
 
-		panelRoot.add(new JLabel(Messages.get("term.quickSearch")), sgl.cs(0, 0, 2, 1));
+		panelRoot.add(new JLabel(text("phrase.typeFilenameToFilter")), sgl.cs(0, 0, 2, 1));
 		edQuickSearch = new JTextField();
 		edQuickSearch.addKeyListener(quickSearchKeyListener);
 		JPanel pnlEditQuickSearch = new JPanel(new BorderLayout());
@@ -89,7 +91,7 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 		panelTablePlaceholder = new JPanel(new BorderLayout());
 		panelRoot.add(panelTablePlaceholder, sgl.cs(0, 3, 2, 1));
 
-		JXLabel hintLbl = new JXLabel(Messages.get("quicksearch.navigationHint"));
+		JXLabel hintLbl = new JXLabel(text("quicksearch.navigationHint"));
 		hintLbl.setLineWrap(true);
 		panelRoot.add(hintLbl, sgl.cs(0, 4));
 
@@ -99,7 +101,7 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 
 		initTableComponent();
 
-		lblNoDataToDisplay = new JLabel(Messages.get("term.noDataToDisplay"));
+		lblNoDataToDisplay = new JLabel(text("term.noDataToDisplay"));
 		lblNoDataToDisplay.setHorizontalAlignment(JLabel.CENTER);
 	}
 
@@ -248,14 +250,14 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 		Preconditions.checkState(pm != null, "PM is required for this view");
 
 		if (window == null) {
-			window = new JFrame();
+			window = new JFrame(text("term.quickSearch"));
 			window.setLayout(new BorderLayout());
 			window.add(panelRoot, BorderLayout.CENTER);
-			window.setUndecorated(true);
+			window.setResizable(true);
+			window.setMinimumSize(new Dimension(UiUtils.getFontRelativeSize(50), UiUtils.getFontRelativeSize(25)));
 			window.pack();
 			window.addComponentListener(componentAdapter);
 			window.addWindowListener(windowAdapter);
-			UiUtils.centerWindow(window);
 		}
 
 		Point currentMousePosition = MouseInfo.getPointerInfo().getLocation();

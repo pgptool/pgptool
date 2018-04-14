@@ -32,7 +32,6 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.Icon;
@@ -72,6 +71,7 @@ import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
 public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private static final String DELETE = "Delete";
+	private static final String CHOOSE = "Choose";
 
 	private JFrame frame;
 
@@ -267,17 +267,27 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 	@SuppressWarnings("serial")
 	private void initTableKeyListener() {
-		int condition = JComponent.WHEN_IN_FOCUSED_WINDOW;
-		InputMap inputMap = table.getInputMap(condition);
-		ActionMap actionMap = table.getActionMap();
+		InputMap inputMap = table.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
 		inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), DELETE);
-		actionMap.put(DELETE, new AbstractAction() {
+		table.getActionMap().put(DELETE, new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (pm == null) {
 					return;
 				}
 				pm.actionDelete.actionPerformed(e);
+			}
+		});
+
+		InputMap inputMap2 = table.getInputMap(JTable.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+		inputMap2.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), CHOOSE);
+		table.getActionMap().put(CHOOSE, new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (pm == null) {
+					return;
+				}
+				pm.actionOpen.actionPerformed(e);
 			}
 		});
 	}

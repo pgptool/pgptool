@@ -17,6 +17,8 @@
  *******************************************************************************/
 package org.pgptool.gui.ui.tools;
 
+import static org.pgptool.gui.app.Messages.text;
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -24,9 +26,13 @@ import java.awt.Font;
 import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Set;
 
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
@@ -35,6 +41,7 @@ import javax.swing.JTextField;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.jdesktop.swingx.JXLabel;
@@ -212,13 +219,55 @@ public class UiUtils {
 	 *            WARNING_MESSAGE, QUESTION_MESSAGE, or PLAIN_MESSAGE
 	 */
 	public static void messageBox(Component parent, String msg, String title, int messageType) {
-		if (msg.length() > 300) {
-			JOptionPane.showMessageDialog(parent, getScrollableMessage(msg), title, messageType);
-		} else if (msg.length() > 100) {
-			JOptionPane.showMessageDialog(parent, getMultilineMessage(msg), title, messageType);
-		} else {
-			JOptionPane.showMessageDialog(parent, msg, title, messageType);
+		Object content = buildMessageContentDependingOnLength(msg);
+
+		if (messageType != JOptionPane.ERROR_MESSAGE) {
+			JOptionPane.showMessageDialog(parent, content, title, messageType);
+			return;
 		}
+
+		Object[] options = { text("action.ok"), text("phrase.saveMsgToFile") };
+		if ("action.ok".equals(options[0])) {
+			// if app context wasn't started MessageSource wont be available
+			options = new String[] { "OK", "Save message to file" };
+		}
+
+		int result = JOptionPane.showOptionDialog(parent, content, title, JOptionPane.YES_NO_OPTION, messageType, null,
+				options, JOptionPane.YES_OPTION);
+		if (result == JOptionPane.YES_OPTION || result == JOptionPane.CLOSED_OPTION) {
+			return;
+		}
+
+		// Save to file
+		saveMessageToFile(parent, msg);
+	}
+
+	private static void saveMessageToFile(Component parent, String msg) {
+		JFileChooser fileChooser = new JFileChooser();
+		if (fileChooser.showSaveDialog(parent) != JFileChooser.APPROVE_OPTION) {
+			return;
+		}
+
+		File file = fileChooser.getSelectedFile();
+		try {
+			FileUtils.write(file, msg, Charset.forName("UTF-8"), false);
+		} catch (IOException e) {
+			log.error("Failed to save error message to file: " + file, e);
+			JOptionPane.showMessageDialog(parent, "Failed to save message to file", "Error", JOptionPane.ERROR_MESSAGE);
+			// come on !!!
+		}
+	}
+
+	private static Object buildMessageContentDependingOnLength(String msg) {
+		Object content = "";
+		if (msg.length() > 300) {
+			content = getScrollableMessage(msg);
+		} else if (msg.length() > 100) {
+			content = getMultilineMessage(msg);
+		} else {
+			content = msg;
+		}
+		return content;
 	}
 
 	private static JScrollPane getScrollableMessage(String msg) {

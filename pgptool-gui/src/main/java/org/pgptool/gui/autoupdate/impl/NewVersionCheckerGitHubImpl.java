@@ -125,6 +125,21 @@ public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
 		}
 	}
 
+	public static String getVerisonsInfo() {
+		NewVersionChecker newVersionChecker = new NewVersionCheckerGitHubImpl();
+		String pgpVersion = newVersionChecker.getCurrentVersion();
+		if (NewVersionChecker.VERSION_UNRESOLVED.equals(pgpVersion)) {
+			pgpVersion = "0.0.0.0";
+		}
+
+		String javaVersion = System.getProperty("java.version");
+		if (javaVersion == null) {
+			javaVersion = "unresolved";
+		}
+
+		return String.format(" [ PGP Tool v" + pgpVersion + ", Java v" + javaVersion + " ]");
+	}
+
 	public String getConfiguredVersion() {
 		return configuredVersion;
 	}

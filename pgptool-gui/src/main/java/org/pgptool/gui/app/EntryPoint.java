@@ -30,7 +30,6 @@ import javax.swing.JOptionPane;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
-import org.pgptool.gui.autoupdate.api.NewVersionChecker;
 import org.pgptool.gui.autoupdate.impl.NewVersionCheckerGitHubImpl;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
@@ -201,7 +200,7 @@ public class EntryPoint {
 	}
 
 	private static void reportAppInitFailureMessageToUser(Throwable t) {
-		String versionInfo = getVerisonsInfo();
+		String versionInfo = NewVersionCheckerGitHubImpl.getVerisonsInfo();
 		String msg = ConsoleExceptionUtils.getAllMessages(t);
 		msg += "\r\n" + versionInfo;
 		UiUtils.messageBox(null, msg, "PGP Tool startup failed" + versionInfo, JOptionPane.ERROR_MESSAGE);
@@ -209,25 +208,10 @@ public class EntryPoint {
 
 	public static void reportExceptionToUser(String errorMessageCode, Throwable cause, Object... messageArgs) {
 		GenericException exc = new GenericException(errorMessageCode, cause, messageArgs);
-		String versionInfo = getVerisonsInfo();
+		String versionInfo = NewVersionCheckerGitHubImpl.getVerisonsInfo();
 		String msgs = ConsoleExceptionUtils.getAllMessages(exc);
 		msgs += "\r\n" + versionInfo;
 		UiUtils.messageBox(null, msgs, Messages.get("term.error") + versionInfo, JOptionPane.ERROR_MESSAGE);
-	}
-
-	public static String getVerisonsInfo() {
-		NewVersionChecker newVersionChecker = new NewVersionCheckerGitHubImpl();
-		String pgpVersion = newVersionChecker.getCurrentVersion();
-		if (NewVersionChecker.VERSION_UNRESOLVED.equals(pgpVersion)) {
-			pgpVersion = "0.0.0.0";
-		}
-
-		String javaVersion = System.getProperty("java.version");
-		if (javaVersion == null) {
-			javaVersion = "unresolved2";
-		}
-
-		return String.format(" [ PGP Tool v" + pgpVersion + ", Java v" + javaVersion + " ]");
 	}
 
 	public ApplicationContext getApplicationContext() {

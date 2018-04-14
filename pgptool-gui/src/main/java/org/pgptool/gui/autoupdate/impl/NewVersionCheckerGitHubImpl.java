@@ -22,7 +22,6 @@ import com.google.gson.GsonBuilder;
 
 public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
 	private static Logger log = Logger.getLogger(NewVersionCheckerGitHubImpl.class);
-	public static String VERSION_UNRESOLVED = "unresolved";
 
 	private String configuredVersion = null;
 

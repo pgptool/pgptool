@@ -714,7 +714,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					openWindow();
+					try {
+						openWindow();
+					} catch (Throwable t) {
+						UiUtils.reportExceptionToUser("failed.toOpenWindow", t, pmClass.getSimpleName());
+					}
 				}
 			};
 		}

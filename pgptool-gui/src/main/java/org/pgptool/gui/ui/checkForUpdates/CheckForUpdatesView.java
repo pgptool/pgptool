@@ -153,6 +153,8 @@ public class CheckForUpdatesView extends DialogViewBaseCustom<CheckForUpdatesPm>
 
 		bindingContext.setupBinding(pm.getNewVersionTitle(), lblNewVersionTitle);
 		bindingContext.registerOnChangeHandler(pm.getNewVersionReleaseNotes(), onReleaseNotesChanged);
+		onReleaseNotesChanged.handlePropertyChanged(pm, pm.getNewVersionReleaseNotes().getPropertyName(), "",
+				pm.getNewVersionReleaseNotes().getValue());
 
 		bindingContext.setupBinding(pm.actionDownloadNewVersion, btnDownload);
 		bindingContext.setupBinding(pm.actionSnoozeVersion, btnSnoozeVersion);

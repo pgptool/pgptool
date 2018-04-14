@@ -40,6 +40,7 @@ import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.bkgoperation.Progress;
 import org.pgptool.gui.bkgoperation.ProgressHandler;
 import org.pgptool.gui.bkgoperation.UserRequestedCancellationException;
+import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
 import org.pgptool.gui.encryption.api.EncryptionService;
@@ -57,6 +58,7 @@ import org.pgptool.gui.filecomparison.MessageDigestFactory;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.utils.DeepCopy;
@@ -75,11 +77,11 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 public class EncryptBackMultiplePm extends PresentationModelBase implements InitializingBean {
 	private static Logger log = Logger.getLogger(EncryptBackMultiplePm.class);
 
-	public static final String CONFIG_PAIR_BASE = "Encrypt:";
-
 	@Autowired
 	private EncryptionParamsStorage encryptionParamsStorage;
 
+	@Autowired
+	private ConfigPairs appProps;
 	@Autowired
 	@Resource(name = "keyRingService")
 	private KeyRingService<KeyData> keyRingService;
@@ -145,12 +147,15 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 	}
 
 	private void initModelProperties() {
-		isDeleteSourceAfter = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(true), "isDeleteUnencryptedAfter");
+		isDeleteSourceAfter = new ModelProperty<>(this, new ValueAdapterPersistentPropertyImpl<>(appProps,
+				"EncryptBackMultiplePm.isDeleteUnencryptedAfter", true), "isDeleteUnencryptedAfter");
 		isHasMissingRecipients = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false),
 				"isHasMissingRecipients");
 		isIgnoreMissingRecipientsWarning = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false),
 				"isIgnoreMissingRecipientsWarning");
-		isEncryptOnlyChanged = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(true), "isEncryptOnlyChanged");
+		isEncryptOnlyChanged = new ModelProperty<>(this,
+				new ValueAdapterPersistentPropertyImpl<>(appProps, "EncryptBackMultiplePm.isEncryptOnlyChanged", true),
+				"isEncryptOnlyChanged");
 
 		sourceFilesSummary = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(buildOperationTitle()),
 				"sourceFilesSummary");

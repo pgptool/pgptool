@@ -717,6 +717,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 					try {
 						openWindow();
 					} catch (Throwable t) {
+						log.error("Failed to open dialog " + pmClass.getSimpleName(), t);
 						UiUtils.reportExceptionToUser("failed.toOpenWindow", t, pmClass.getSimpleName());
 					}
 				}

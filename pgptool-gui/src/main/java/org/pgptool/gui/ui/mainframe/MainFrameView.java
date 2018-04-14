@@ -409,9 +409,9 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 		JMenu menuActions = new JMenu(Messages.get("term.actions"));
 		menuActions.add(miEncrypt = new JMenuItem());
-		menuActions.add(miDecrypt = new JMenuItem());
-		menuActions.addSeparator();
 		menuActions.add(miEncryptText = new JMenuItem());
+		menuActions.addSeparator();
+		menuActions.add(miDecrypt = new JMenuItem());
 		menuActions.add(miDecryptText = new JMenuItem());
 		menuActions.addSeparator();
 		menuActions.add(miEncryptBackAll = new JMenuItem());

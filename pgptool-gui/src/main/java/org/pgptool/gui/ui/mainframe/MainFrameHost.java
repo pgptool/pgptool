@@ -43,7 +43,7 @@ public interface MainFrameHost {
 	Action getActionCheckForUpdates();
 
 	void openEncryptDialogFor(String decryptedFile);
-	
+
 	void openDecryptDialogFor(String encryptedFile);
 
 	Action getActionCreateKey();

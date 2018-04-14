@@ -59,6 +59,7 @@
 		<constructor-arg value="mon-decr" />
 	</bean>
 
+	<bean class="org.pgptool.gui.filecomparison.MessageDigestFactoryImpl" />
 	<bean class="org.pgptool.gui.tempfolderfordecrypted.impl.DecryptedTempFolderImpl" />
 	<bean class="org.pgptool.gui.encryptionparams.impl.EncryptionParamsStorageImpl" />
 

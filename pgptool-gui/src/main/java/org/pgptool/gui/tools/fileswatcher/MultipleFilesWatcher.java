@@ -38,6 +38,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.summerb.utils.threads.RecurringBackgroundTask;
 
+// NOTE: Consider migrating to org.apache.commons.io.monitor.FileAlterationObserver, it appears we introduced bycle here
+
 public class MultipleFilesWatcher {
 	private static Logger log = Logger.getLogger(MultipleFilesWatcher.class);
 

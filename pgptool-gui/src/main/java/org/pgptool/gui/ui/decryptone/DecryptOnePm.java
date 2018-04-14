@@ -26,6 +26,8 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import javax.annotation.Resource;
 import javax.swing.Action;
@@ -38,7 +40,7 @@ import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
-import org.pgptool.gui.bkgoperation.UserReqeustedCancellationException;
+import org.pgptool.gui.bkgoperation.UserRequestedCancellationException;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
@@ -47,6 +49,11 @@ import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
+import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamFactory;
+import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamFactoryImpl;
+import org.pgptool.gui.filecomparison.ChecksumCalculationTask;
+import org.pgptool.gui.filecomparison.Fingerprint;
+import org.pgptool.gui.filecomparison.MessageDigestFactory;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
 import org.pgptool.gui.ui.encryptone.EncryptOnePm;
@@ -56,6 +63,7 @@ import org.pgptool.gui.ui.tools.ProgressHandlerPmMixinImpl;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.summerb.approaches.validation.ValidationError;
@@ -72,7 +80,7 @@ import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
-public class DecryptOnePm extends PresentationModelBase {
+public class DecryptOnePm extends PresentationModelBase implements InitializingBean {
 	private static final String FN_SOURCE_FILE = "sourceFile";
 	private static final String FN_TARGET_FILE = "targetFile";
 
@@ -87,6 +95,8 @@ public class DecryptOnePm extends PresentationModelBase {
 	private ConfigPairs appProps;
 	@Autowired
 	private ConfigPairs decryptionParams;
+	@Autowired
+	private ExecutorService executorService;
 
 	@Autowired
 	private EncryptionParamsStorage encryptionParamsStorage;
@@ -104,6 +114,10 @@ public class DecryptOnePm extends PresentationModelBase {
 	private KeyFilesOperations<KeyData> keyFilesOperations;
 	@Autowired
 	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
+	@Autowired
+	private MessageDigestFactory messageDigestFactory;
+
+	private ChecksumCalcOutputStreamFactory outputStreamFactory;
 
 	private DecryptOneHost<KeyData> host;
 
@@ -132,6 +146,13 @@ public class DecryptOnePm extends PresentationModelBase {
 	private ModelProperty<Boolean> isDisableControls;
 	private ProgressHandlerPmMixinImpl progressHandler;
 	private Thread operationThread;
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		// NOTE: We're not injecting this as a bean because we don't want to store
+		// Fingerprint information in memory
+		outputStreamFactory = new ChecksumCalcOutputStreamFactoryImpl(messageDigestFactory);
+	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean init(DecryptOneHost host, String optionalSource) {
@@ -463,13 +484,40 @@ public class DecryptOnePm extends PresentationModelBase {
 			}
 
 			String sourceFileStr = sourceFile.getValue();
+			Fingerprint sourceFileFingerprint = null;
+			Fingerprint targetFileFingerprint = null;
+			Future<Fingerprint> sourceFileFingerprintFuture = null;
 			try {
-				encryptionService.decrypt(sourceFileStr, targetFileName, keyAndPassword, progressHandler);
-			} catch (UserReqeustedCancellationException ce) {
+				// NOTE: In parallel we'll calculate checksum of the source. I hope IO caching
+				// layer will handle 2 reading process for same file nicely and we won't have to
+				// report progress on source checksum separately
+				sourceFileFingerprintFuture = executorService
+						.submit(new ChecksumCalculationTask(sourceFileStr, messageDigestFactory.createNew()));
+
+				// and here is an actual decryption process
+				encryptionService.decrypt(sourceFileStr, targetFileName, keyAndPassword, progressHandler,
+						outputStreamFactory);
+				log.debug("Decryption completed: " + targetFileName);
+
+				// NOTE: We can calculate checksum for target file becasue we write it in full,
+				// but input fiile is not really being read in full so we'll have to calcualte
+				// checksum of source file separately
+				targetFileFingerprint = outputStreamFactory.getFingerprint(targetFileName);
+
+				// Calculate source file CRC
+				sourceFileFingerprint = sourceFileFingerprintFuture.get();
+
+			} catch (UserRequestedCancellationException ce) {
+				if (sourceFileFingerprintFuture != null) {
+					sourceFileFingerprintFuture.cancel(true);
+				}
 				host.handleClose();
 				return;
 			} catch (Throwable t) {
 				log.error("Failed to decrypt", t);
+				if (sourceFileFingerprintFuture != null) {
+					sourceFileFingerprintFuture.cancel(true);
+				}
 				EntryPoint.reportExceptionToUser("error.failedToDecryptFile", t);
 				actionDoOperation.setEnabled(true);
 				isDisableControls.setValueByOwner(false);
@@ -479,7 +527,7 @@ public class DecryptOnePm extends PresentationModelBase {
 			// Remember parameters
 			persistDecryptionDialogParametersForCurrentInputs(targetFileName);
 			persistEncryptionDialogParameters(targetFileName);
-			monitoringDecryptedFilesService.add(new DecryptedFile(sourceFileStr, targetFileName));
+			addToMonitoredDecrypted(sourceFileStr, targetFileName, sourceFileFingerprint, targetFileFingerprint);
 
 			// Delete source if asked
 			if (isDeleteSourceAfter.getValue()) {
@@ -510,6 +558,14 @@ public class DecryptOnePm extends PresentationModelBase {
 
 			// close window
 			host.handleClose();
+		}
+
+		private void addToMonitoredDecrypted(String sourceFileStr, String targetFileName,
+				Fingerprint sourceFileFingerprint, Fingerprint targetFileFingerprint) {
+			DecryptedFile decryptedFile = new DecryptedFile(sourceFileStr, targetFileName);
+			decryptedFile.setEncryptedFileFingerprint(sourceFileFingerprint);
+			decryptedFile.setDecryptedFileFingerprint(targetFileFingerprint);
+			monitoringDecryptedFilesService.addOrUpdate(decryptedFile);
 		}
 
 		private void openAssociatedApp(String targetFileName) {
@@ -639,7 +695,10 @@ public class DecryptOnePm extends PresentationModelBase {
 			String ext = FilenameUtils.getExtension(requestedTargetFile);
 			while (new File(ret).exists()) {
 				idx++;
-				ret = basePathName + "-" + idx + "." + ext;
+				ret = basePathName + "-" + idx;
+				if (StringUtils.hasText(ext)) {
+					ret += "." + ext;
+				}
 			}
 			return ret;
 		}
@@ -742,4 +801,5 @@ public class DecryptOnePm extends PresentationModelBase {
 	public ModelPropertyAccessor<Boolean> getIsDisableControls() {
 		return isDisableControls.getModelPropertyAccessor();
 	}
+
 }

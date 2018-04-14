@@ -21,10 +21,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public interface MonitoringDecryptedFilesService {
-	/**
-	 * Register decrypted file for history
-	 */
-	void add(DecryptedFile decryptedFile);
+	void addOrUpdate(DecryptedFile decryptedFile);
 
 	/**
 	 * Forget about decrypted file. does NOT remove file from disk

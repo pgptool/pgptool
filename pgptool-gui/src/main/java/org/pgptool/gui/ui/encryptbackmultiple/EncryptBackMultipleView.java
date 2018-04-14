@@ -49,6 +49,7 @@ public class EncryptBackMultipleView extends DialogViewBaseCustom<EncryptBackMul
 
 	private JXLabel lblSourceFilesSummaru;
 	private JXLabel lblRecipientsSummary;
+	private JCheckBox chkEncryptOnlyChanged;
 	private JCheckBox chkIgnoreMissingRecipients;
 	private JCheckBox chkDeleteSourceAfter;
 
@@ -71,7 +72,7 @@ public class EncryptBackMultipleView extends DialogViewBaseCustom<EncryptBackMul
 	}
 
 	private JPanel buildControllsPanel() {
-		SgLayout sgl = new SgLayout(2, 6, spacing(1), 2);
+		SgLayout sgl = new SgLayout(2, 7, spacing(1), 2);
 		sgl.setColSize(0, 1, SgLayout.SIZE_TYPE_ASKCOMPONENT);
 		sgl.setColSize(1, spacing(30), SgLayout.SIZE_TYPE_CONSTANT);
 
@@ -86,6 +87,8 @@ public class EncryptBackMultipleView extends DialogViewBaseCustom<EncryptBackMul
 		ret.add(pnlTemp, sgl.cs(0, row));
 		ret.add(lblSourceFilesSummaru = new JXLabel(), sgl.cs(1, row));
 		lblSourceFilesSummaru.setLineWrap(true);
+		row++;
+		ret.add(chkEncryptOnlyChanged = new JCheckBox(), sgl.cs(1, row));
 
 		// spacing
 		row++;
@@ -145,6 +148,8 @@ public class EncryptBackMultipleView extends DialogViewBaseCustom<EncryptBackMul
 		bindingContext.setupBinding(pm.getIsDeleteSourceAfter(), chkDeleteSourceAfter);
 
 		bindingContext.setupBinding(pm.getSourceFilesSummary(), lblSourceFilesSummaru);
+		bindingContext.setupBinding(pm.getIsEncryptOnlyChanged(), chkEncryptOnlyChanged);
+
 		bindingContext.setupBinding(pm.getRecipientsSummary(), lblRecipientsSummary);
 		bindingContext.setupBinding(pm.getIsIgnoreMissingRecipientsWarning(), chkIgnoreMissingRecipients);
 		bindingContext.registerPropertyValuePropagation(pm.getIsHasMissingRecipients(), chkIgnoreMissingRecipients,

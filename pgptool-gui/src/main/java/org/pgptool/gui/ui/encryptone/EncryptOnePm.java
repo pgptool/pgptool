@@ -45,13 +45,20 @@ import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.bkgoperation.ProgressHandler;
-import org.pgptool.gui.bkgoperation.UserReqeustedCancellationException;
+import org.pgptool.gui.bkgoperation.UserRequestedCancellationException;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
+import org.pgptool.gui.decryptedlist.api.DecryptedFile;
+import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
 import org.pgptool.gui.encryption.api.EncryptionService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
+import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamFactory;
+import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamFactoryImpl;
+import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamFactory;
+import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamFactoryImpl;
+import org.pgptool.gui.filecomparison.MessageDigestFactory;
 import org.pgptool.gui.ui.decryptone.DecryptOnePm;
 import org.pgptool.gui.ui.keyslist.ComparatorKeyByNameImpl;
 import org.pgptool.gui.ui.tools.ListChangeListenerAnyEventImpl;
@@ -59,9 +66,11 @@ import org.pgptool.gui.ui.tools.ProgressHandlerPmMixinImpl;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.summerb.utils.DeepCopy;
 
 import com.google.common.base.Preconditions;
 
@@ -75,7 +84,7 @@ import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
-public class EncryptOnePm extends PresentationModelBase {
+public class EncryptOnePm extends PresentationModelBase implements InitializingBean {
 	private static Logger log = Logger.getLogger(EncryptOnePm.class);
 
 	private static final String ENCRYPTED_FILE_EXTENSION = "pgp";
@@ -85,6 +94,10 @@ public class EncryptOnePm extends PresentationModelBase {
 	private ConfigPairs appProps;
 	@Autowired
 	private EncryptionParamsStorage encryptionParamsStorage;
+	@Autowired
+	private MessageDigestFactory messageDigestFactory;
+	@Autowired
+	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
 
 	@Autowired
 	@Resource(name = "keyRingService")
@@ -92,6 +105,9 @@ public class EncryptOnePm extends PresentationModelBase {
 	@Autowired
 	@Resource(name = "encryptionService")
 	private EncryptionService<KeyData> encryptionService;
+
+	private ChecksumCalcInputStreamFactory inputStreamFactory = null;
+	private ChecksumCalcOutputStreamFactory outputStreamFactory = null;
 
 	private EncryptOneHost host;
 
@@ -114,6 +130,12 @@ public class EncryptOnePm extends PresentationModelBase {
 	private ModelProperty<Boolean> isDisableControls;
 	private ProgressHandler progressHandler;
 	private Thread operationThread;
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		inputStreamFactory = new ChecksumCalcInputStreamFactoryImpl(messageDigestFactory);
+		outputStreamFactory = new ChecksumCalcOutputStreamFactoryImpl(messageDigestFactory);
+	}
 
 	public boolean init(EncryptOneHost host, String optionalSource) {
 		Preconditions.checkArgument(host != null);
@@ -420,8 +442,9 @@ public class EncryptOnePm extends PresentationModelBase {
 
 			try {
 				encryptionService.encrypt(sourceFile.getValue(), targetFileName, selectedRecipients.getList(),
-						progressHandler);
-			} catch (UserReqeustedCancellationException ce) {
+						progressHandler, inputStreamFactory, outputStreamFactory);
+				log.debug("Encryption completed: " + targetFileName);
+			} catch (UserRequestedCancellationException ce) {
 				host.handleClose();
 				return;
 			} catch (Throwable t) {
@@ -439,6 +462,8 @@ public class EncryptOnePm extends PresentationModelBase {
 				} catch (Throwable t) {
 					EntryPoint.reportExceptionToUser("error.encryptOkButCantDeleteSource", t);
 				}
+			} else {
+				updateBaselineFingerprintsIfApplicable(sourceFile.getValue(), targetFileName);
 			}
 
 			// Open target folder
@@ -454,6 +479,18 @@ public class EncryptOnePm extends PresentationModelBase {
 
 			// close window
 			host.handleClose();
+		}
+
+		private void updateBaselineFingerprintsIfApplicable(String decryptedFileName, String encryptedFileName) {
+			DecryptedFile decryptedMonitored = monitoringDecryptedFilesService.findByDecryptedFile(decryptedFileName);
+			if (decryptedMonitored == null) {
+				return;
+			}
+
+			DecryptedFile newDecryptedFile = DeepCopy.copy(decryptedMonitored);
+			newDecryptedFile.setDecryptedFileFingerprint(inputStreamFactory.getFingerprint(decryptedFileName));
+			newDecryptedFile.setEncryptedFileFingerprint(outputStreamFactory.getFingerprint(encryptedFileName));
+			monitoringDecryptedFilesService.addOrUpdate(newDecryptedFile);
 		}
 
 		private void askOperSystemToBrowseForFolder(String targetFileName) {

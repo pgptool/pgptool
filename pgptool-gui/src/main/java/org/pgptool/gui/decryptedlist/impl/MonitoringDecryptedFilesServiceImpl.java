@@ -89,24 +89,26 @@ public class MonitoringDecryptedFilesServiceImpl
 
 	private FilesWatcherHandler dirWatcherHandler = new FilesWatcherHandler() {
 		@Override
-		public void handleFileChanged(Kind<?> entryDelete, String fileAbsolutePathname) {
-			if (StandardWatchEventKinds.ENTRY_CREATE.equals(entryDelete)) {
+		public void handleFileChanged(Kind<?> operation, String fileAbsolutePathname) {
+			if (StandardWatchEventKinds.ENTRY_CREATE.equals(operation)) {
 				DecryptedFile recentlyRemovedEntry = recentlyRemoved.getIfPresent(fileAbsolutePathname);
 				if (recentlyRemovedEntry != null) {
-					add(recentlyRemovedEntry);
-					return;
+					addOrUpdate(recentlyRemovedEntry);
 				}
-			}
-
-			if (!StandardWatchEventKinds.ENTRY_DELETE.equals(entryDelete)) {
 				return;
 			}
-			remove(fileAbsolutePathname);
+
+			if (StandardWatchEventKinds.ENTRY_DELETE.equals(operation)) {
+				remove(fileAbsolutePathname);
+				return;
+			}
+
+			// Other cases not supported -- not needed
 		}
 	};
 
 	@Override
-	public synchronized void add(DecryptedFile decryptedFile) {
+	public synchronized void addOrUpdate(DecryptedFile decryptedFile) {
 		try {
 			Preconditions.checkArgument(decryptedFile != null, "decryptedFile is NULL");
 			Preconditions.checkArgument(decryptedFile.getDecryptedFile() != null,
@@ -114,11 +116,17 @@ public class MonitoringDecryptedFilesServiceImpl
 			Preconditions.checkArgument(decryptedFile.getEncryptedFile() != null,
 					"decryptedFile.EncryptedFile is NULL");
 
-			monitoredDecrypted.put(buildKey(decryptedFile.getDecryptedFile()), decryptedFile);
-			eventBus.post(EntityChangedEvent.added(decryptedFile));
+			String key = buildKey(decryptedFile.getDecryptedFile());
+			DecryptedFile existing = monitoredDecrypted.find(key, null);
+			monitoredDecrypted.put(key, decryptedFile);
+			if (existing != null) {
+				eventBus.post(EntityChangedEvent.updated(decryptedFile));
+			} else {
+				eventBus.post(EntityChangedEvent.added(decryptedFile));
+			}
 			multipleFilesWatcher.watchForFileChanges(decryptedFile.getDecryptedFile());
 		} catch (Throwable t) {
-			throw new RuntimeException("Failed to register decrypted file for monitoring", t);
+			throw new RuntimeException("Failed to update decrypted file for monitoring", t);
 		}
 	}
 

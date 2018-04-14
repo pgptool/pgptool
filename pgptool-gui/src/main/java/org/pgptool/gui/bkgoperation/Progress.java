@@ -98,7 +98,7 @@ public class Progress {
 
 	/**
 	 * Calling this method will set a flag that must be handled by executor. And
-	 * once it's handled {@link UserReqeustedCancellationException} will be thrown
+	 * once it's handled {@link UserRequestedCancellationException} will be thrown
 	 */
 	public void requestCancelation() {
 		isCancelationRequested = true;

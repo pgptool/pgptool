@@ -39,19 +39,32 @@ import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.bkgoperation.Progress;
 import org.pgptool.gui.bkgoperation.ProgressHandler;
-import org.pgptool.gui.bkgoperation.UserReqeustedCancellationException;
+import org.pgptool.gui.bkgoperation.UserRequestedCancellationException;
+import org.pgptool.gui.decryptedlist.api.DecryptedFile;
+import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
 import org.pgptool.gui.encryption.api.EncryptionService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
+import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamFactory;
+import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamFactoryImpl;
+import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamFactory;
+import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamFactoryImpl;
+import org.pgptool.gui.filecomparison.ChecksumCalculationTask;
+import org.pgptool.gui.filecomparison.Fingerprint;
+import org.pgptool.gui.filecomparison.MessageDigestFactory;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.summerb.utils.DeepCopy;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
@@ -59,7 +72,7 @@ import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
-public class EncryptBackMultiplePm extends PresentationModelBase {
+public class EncryptBackMultiplePm extends PresentationModelBase implements InitializingBean {
 	private static Logger log = Logger.getLogger(EncryptBackMultiplePm.class);
 
 	public static final String CONFIG_PAIR_BASE = "Encrypt:";
@@ -73,6 +86,13 @@ public class EncryptBackMultiplePm extends PresentationModelBase {
 	@Autowired
 	@Resource(name = "encryptionService")
 	private EncryptionService<KeyData> encryptionService;
+	@Autowired
+	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
+	@Autowired
+	private MessageDigestFactory messageDigestFactory;
+
+	private ChecksumCalcInputStreamFactory inputStreamFactory;
+	private ChecksumCalcOutputStreamFactory outputStreamFactory;
 
 	private EncryptBackMultipleHost host;
 	private Set<String> decryptedFiles;
@@ -82,12 +102,19 @@ public class EncryptBackMultiplePm extends PresentationModelBase {
 	private ModelProperty<String> recipientsSummary;
 	private ModelProperty<Boolean> isHasMissingRecipients;
 	private ModelProperty<Boolean> isIgnoreMissingRecipientsWarning;
+	private ModelProperty<Boolean> isEncryptOnlyChanged;
 	private ModelProperty<Boolean> isDeleteSourceAfter;
 
 	private ModelProperty<Boolean> isProgressVisible;
 	private ModelProperty<Integer> progressValue;
 	private ModelProperty<String> progressNote;
 	private ModelProperty<Boolean> isDisableControls;
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		inputStreamFactory = new ChecksumCalcInputStreamFactoryImpl(messageDigestFactory);
+		outputStreamFactory = new ChecksumCalcOutputStreamFactoryImpl(messageDigestFactory);
+	}
 
 	public boolean init(EncryptBackMultipleHost host, Set<String> decryptedFiles) {
 		Preconditions.checkArgument(host != null, "host required");
@@ -123,6 +150,7 @@ public class EncryptBackMultiplePm extends PresentationModelBase {
 				"isHasMissingRecipients");
 		isIgnoreMissingRecipientsWarning = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false),
 				"isIgnoreMissingRecipientsWarning");
+		isEncryptOnlyChanged = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(true), "isEncryptOnlyChanged");
 
 		sourceFilesSummary = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(buildOperationTitle()),
 				"sourceFilesSummary");
@@ -192,32 +220,43 @@ public class EncryptBackMultiplePm extends PresentationModelBase {
 		}
 	};
 
+	private static class BatchEncryptionResult {
+		Map<String, Throwable> errors = new HashMap<>();
+		Map<String, Throwable> warnings = new HashMap<>();
+		Multimap<EncryptBackResult, String> categories = ArrayListMultimap.create();
+	}
+
 	private Thread encryptionThread = new Thread("BkgOpEncryptBackAll") {
+		private int totalFiles = 0;
+		private int filesProcessed = 0;
+
 		@Override
 		public void run() {
-			Map<String, Throwable> errors = new HashMap<>();
-			Map<String, Throwable> warnings = new HashMap<>();
-			int encrypted = 0;
-
+			BatchEncryptionResult ret = null;
 			try {
-				encrypted = encryptFiles(errors, warnings, encrypted);
+				ret = encryptFiles();
 			} catch (Throwable t) {
 				log.error("Encrypt all failed", t);
-				errors.put("OPERATION", t);
+				if (ret == null) {
+					ret = new BatchEncryptionResult();
+				}
+				ret.errors.put("OPERATION", t);
 			} finally {
 				isDisableControls.setValueByOwner(false);
+				if (ret == null) {
+					ret = new BatchEncryptionResult();
+				}
 
 				// summary
-				String msg = buildSummaryMessage(encrypted, errors, warnings);
-				showSummaryMessage(errors, warnings, msg);
+				String msg = buildSummaryMessage(ret);
+				int severity = ret.errors.size() + ret.warnings.size() == 0 ? JOptionPane.INFORMATION_MESSAGE
+						: JOptionPane.WARNING_MESSAGE;
+				UiUtils.messageBox(null, msg, Messages.get("encrypBackMany.action"), severity);
 
 				// close window
 				host.handleClose();
 			}
 		}
-
-		private int totalFiles = 0;
-		private int filesProcessed = 0;
 
 		private ProgressHandler progressHandler = new ProgressHandler() {
 			@Override
@@ -242,85 +281,145 @@ public class EncryptBackMultiplePm extends PresentationModelBase {
 			}
 		};
 
-		private int encryptFiles(Map<String, Throwable> errors, Map<String, Throwable> warnings, int encrypted) {
-			boolean isShouldSkipIfissingRecipients = !isIgnoreMissingRecipientsWarning.getValue();
-			filesProcessed = 0;
+		private BatchEncryptionResult encryptFiles() {
+			BatchEncryptionResult ret = new BatchEncryptionResult();
+
+			boolean skipIfissingRecipients = !isIgnoreMissingRecipientsWarning.getValue();
 			totalFiles = decryptedFiles.size();
 			for (String decryptedFile : decryptedFiles) {
 				filesProcessed++;
-
 				// Main operation
 				File file = new File(decryptedFile);
+				EncryptBackResult oneResult = null;
 				try {
-					if (!encryptBackOne(isShouldSkipIfissingRecipients, decryptedFile, file, errors, warnings)) {
-						continue;
-					}
-				} catch (UserReqeustedCancellationException urc) {
-					return encrypted;
+					oneResult = encryptBackOne(skipIfissingRecipients, decryptedFile, file, ret);
+					ret.categories.put(oneResult, decryptedFile);
+				} catch (UserRequestedCancellationException urc) {
+					return ret;
 				}
-				encrypted++;
 
 				// Post actions
-				if (isDeleteSourceAfter.getValue()) {
+				boolean fileClearedForDeletion = oneResult == EncryptBackResult.Encrypted
+						|| oneResult == EncryptBackResult.TargetNotChanged;
+				if (isDeleteSourceAfter.getValue() && fileClearedForDeletion) {
 					try {
-						Preconditions.checkState(!file.exists() || file.delete(), "Failed to delete file");
+						Preconditions.checkState(!file.exists() || file.delete(), "Failed to delete file: ",
+								decryptedFile);
 					} catch (Throwable t) {
-						warnings.put(decryptedFile, t);
+						ret.warnings.put(decryptedFile, t);
 					}
 				}
 			}
-			return encrypted;
+			return ret;
 		}
 
-		private boolean encryptBackOne(boolean isShouldSkipIfissingRecipients, String decryptedFile, File file,
-				Map<String, Throwable> errors, Map<String, Throwable> warnings)
-				throws UserReqeustedCancellationException {
+		private EncryptBackResult encryptBackOne(boolean isShouldSkipIfissingRecipients, String decryptedFile,
+				File file, BatchEncryptionResult ret) throws UserRequestedCancellationException {
 			try {
 				Preconditions.checkState(file.exists(), text("error.fileNotFound"));
 				EncryptionDialogParameters encryptionParams = mapFileToEncryptionParams.get(decryptedFile);
+
+				// Check recipients
 				Collection<Key<KeyData>> recipients = keyRingService
 						.findMatchingKeys(new HashSet<>(encryptionParams.getRecipientsKeysIds()));
 				Preconditions.checkState(recipients.size() > 0, text("error.noRecipientsFound"));
 				boolean isMissingRecipients = recipients.size() < encryptionParams.getRecipientsKeysIds().size();
 				if (isMissingRecipients && isShouldSkipIfissingRecipients) {
-					warnings.put(decryptedFile, new GenericException("error.someKeysAreMissing"));
-					return false;
+					ret.warnings.put(decryptedFile, new GenericException("error.someKeysAreMissing"));
+					return EncryptBackResult.MissingRecipients;
 				}
 
-				encryptionService.encrypt(decryptedFile, encryptionParams.getTargetFile(), recipients, progressHandler);
-				return true;
+				// Check if changed
+				DecryptedFile decryptedFileDto = monitoringDecryptedFilesService.findByDecryptedFile(decryptedFile);
+				boolean targetFileExists = new File(encryptionParams.getTargetFile()).exists();
+				boolean proceedOnlyIfChanged = Boolean.TRUE.equals(isEncryptOnlyChanged.getValue());
+				boolean hasFingerprintOfDecrypted = decryptedFileDto != null
+						&& decryptedFileDto.getDecryptedFileFingerprint() != null;
+				if (targetFileExists && proceedOnlyIfChanged && hasFingerprintOfDecrypted) {
+					Fingerprint decryptedFileFingerprint = calculateFingerprintSync(decryptedFile);
+					if (decryptedFileDto.getDecryptedFileFingerprint().equals(decryptedFileFingerprint)) {
+						return EncryptBackResult.TargetNotChanged;
+					}
+
+					// now let's check source file to make sure no concurrent changes
+					if (decryptedFileDto.getEncryptedFileFingerprint() != null) {
+						Fingerprint encryptedFileFingerprint = calculateFingerprintSync(
+								encryptionParams.getTargetFile());
+						if (!decryptedFileDto.getEncryptedFileFingerprint().equals(encryptedFileFingerprint)) {
+							ret.warnings.put(decryptedFile,
+									new GenericException("error.concurrentChangeOfEncryptedFile"));
+							return EncryptBackResult.ConcurrentChangeDetected;
+						}
+					}
+				}
+
+				// Actually encrypt
+				encryptionService.encrypt(decryptedFile, encryptionParams.getTargetFile(), recipients, progressHandler,
+						inputStreamFactory, outputStreamFactory);
+
+				// Update fingerprints in relevant DecriptedFile dto
+				updateBaselineFingerprintsIfApplicable(decryptedFileDto, decryptedFile, encryptionParams);
+
+				return EncryptBackResult.Encrypted;
 			} catch (Throwable t) {
-				Throwables.propagateIfInstanceOf(t, UserReqeustedCancellationException.class);
-				errors.put(decryptedFile, t);
-				return false;
+				Throwables.throwIfInstanceOf(t, UserRequestedCancellationException.class);
+				ret.errors.put(decryptedFile, t);
+				return EncryptBackResult.Exception;
 			}
 		}
 
-		private void showSummaryMessage(Map<String, Throwable> errors, Map<String, Throwable> warnings, String msg) {
-			int severity = (errors.size() + warnings.size() == 0) ? JOptionPane.INFORMATION_MESSAGE
-					: JOptionPane.WARNING_MESSAGE;
-			UiUtils.messageBox(null, msg, Messages.get("encrypBackMany.action"), severity);
-		};
+		private void updateBaselineFingerprintsIfApplicable(DecryptedFile decryptedFileDto, String decryptedFile,
+				EncryptionDialogParameters encryptionParams) {
+			if (decryptedFileDto == null) {
+				return;
+			}
 
-		private String buildSummaryMessage(int successCount, Map<String, Throwable> errors,
-				Map<String, Throwable> warnings) {
+			DecryptedFile newDecryptedFile = DeepCopy.copy(decryptedFileDto);
+			newDecryptedFile.setDecryptedFileFingerprint(inputStreamFactory.getFingerprint(decryptedFile));
+			newDecryptedFile
+					.setEncryptedFileFingerprint(outputStreamFactory.getFingerprint(encryptionParams.getTargetFile()));
+			monitoringDecryptedFilesService.addOrUpdate(newDecryptedFile);
+		}
 
+		private Fingerprint calculateFingerprintSync(String filePathname) throws Exception {
+			return new ChecksumCalculationTask(filePathname, messageDigestFactory.createNew()).call();
+		}
+
+		private String buildSummaryMessage(BatchEncryptionResult ret) {
 			StringBuilder sb = new StringBuilder();
-			sb.append(text("encrypBackMany.summary", successCount, warnings.size(), errors.size()));
+			if (ret.errors.size() + ret.warnings.size() == 0) {
+				sb.append(text("phrase.operationCompletedWithSuccess"));
+			} else {
+				sb.append(text("phrase.operationCompletedWithErrors"));
+			}
 			sb.append("\n");
 
-			if (warnings.size() > 0) {
+			boolean first = true;
+			for (EncryptBackResult resultType : ret.categories.keySet()) {
+				if (!first) {
+					sb.append("\r\n");
+				}
+				first = false;
+
+				sb.append(" - ");
+				sb.append(text("encrBackAll." + resultType.name()));
+				sb.append(": ");
+				sb.append(ret.categories.get(resultType).size());
+			}
+			sb.append("\n");
+
+			if (ret.warnings.size() > 0) {
 				sb.append("\n");
 				sb.append(text("term.warnings").toUpperCase());
 				sb.append("\n");
-				listExceptions(warnings, sb);
+				listExceptions(ret.warnings, sb);
 			}
 
-			if (errors.size() > 0) {
+			if (ret.errors.size() > 0) {
 				sb.append("\n");
 				sb.append(text("term.errors").toUpperCase());
 				sb.append("\n");
-				listExceptions(errors, sb);
+				listExceptions(ret.errors, sb);
 			}
 
 			return sb.toString();
@@ -371,5 +470,9 @@ public class EncryptBackMultiplePm extends PresentationModelBase {
 
 	public ModelPropertyAccessor<Boolean> getIsDisableControls() {
 		return isDisableControls.getModelPropertyAccessor();
+	}
+
+	public ModelPropertyAccessor<Boolean> getIsEncryptOnlyChanged() {
+		return isEncryptOnlyChanged.getModelPropertyAccessor();
 	}
 }

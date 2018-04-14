@@ -101,11 +101,11 @@ public class EncryptionDecryptionTests {
 	@Test
 	public void testWeCanDecryptTheProductOfEncryption() throws Exception {
 		String targetFilename = tempDirPath + File.separator + FilenameUtils.getBaseName(testSubjectFilename) + ".pgp";
-		encryptionService.encrypt(testSubjectFilename, targetFilename, keys.values(), null);
+		encryptionService.encrypt(testSubjectFilename, targetFilename, keys.values(), null, null, null);
 
 		PasswordDeterminedForKey keyAndPassword = buildPasswordDeterminedForKey(targetFilename, "Alice.asc", "pass");
 
-		encryptionService.decrypt(targetFilename, targetFilename + ".test", keyAndPassword, null);
+		encryptionService.decrypt(targetFilename, targetFilename + ".test", keyAndPassword, null, null);
 		String result = TextFile.read(targetFilename + ".test");
 		assertEquals(testSubjectContents, result);
 	}
@@ -126,12 +126,12 @@ public class EncryptionDecryptionTests {
 		List keys = Arrays.asList(key);
 
 		String targetFilename = tempDirPath + File.separator + FilenameUtils.getBaseName(testSubjectFilename) + ".pgp";
-		encryptionService.encrypt(testSubjectFilename, targetFilename, keys, null);
+		encryptionService.encrypt(testSubjectFilename, targetFilename, keys, null, null, null);
 
 		String decryptionKeyId = (String) encryptionService.findKeyIdsForDecryption(targetFilename).iterator().next();
 		PasswordDeterminedForKey keyAndPassword = new PasswordDeterminedForKey<>(decryptionKeyId, key, "pass");
 
-		encryptionService.decrypt(targetFilename, targetFilename + ".test", keyAndPassword, null);
+		encryptionService.decrypt(targetFilename, targetFilename + ".test", keyAndPassword, null, null);
 		String result = TextFile.read(targetFilename + ".test");
 		assertEquals(testSubjectContents, result);
 	}
@@ -166,7 +166,7 @@ public class EncryptionDecryptionTests {
 
 		String encryptedFile = TestTools.getFileNameForResource("encrypted/" + sourceFile);
 		PasswordDeterminedForKey keyAndPassword = buildPasswordDeterminedForKey(encryptedFile, "Alice.asc", "pass");
-		encryptionService.decrypt(encryptedFile, targetFilename, keyAndPassword, null);
+		encryptionService.decrypt(encryptedFile, targetFilename, keyAndPassword, null, null);
 		assertTrue(new File(targetFilename).exists());
 	}
 }

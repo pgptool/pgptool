@@ -135,8 +135,12 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 		if (e.getChangeType() == ChangeType.ADDED) {
 			list.add(e.getValue());
 		} else if (e.getChangeType() == ChangeType.UPDATED) {
-			throw new IllegalStateException(
-					"Files in this table are not really supposed to be modified. They either added or removed");
+			int index = list.indexOf(e.getValue());
+			if (index < 0) {
+				list.add(e.getValue());
+			} else {
+				list.set(index, e.getValue());
+			}
 		} else {
 			int prevSelIndex = list.indexOf(event.getValue());
 			list.remove(prevSelIndex);

@@ -260,7 +260,7 @@ public class UiUtils {
 
 	private static Object buildMessageContentDependingOnLength(String msg) {
 		Object content = "";
-		if (msg.length() > 300) {
+		if (msg.length() > 300 || msg.split("\n").length > 2) {
 			content = getScrollableMessage(msg);
 		} else if (msg.length() > 100) {
 			content = getMultilineMessage(msg);

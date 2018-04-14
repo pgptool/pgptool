@@ -17,6 +17,7 @@
  *******************************************************************************/
 package org.pgptool.gui.decryptedlist.api;
 
+import org.pgptool.gui.filecomparison.Fingerprint;
 import org.summerb.approaches.jdbccrud.common.DtoBase;
 
 public class DecryptedFile implements DtoBase {
@@ -24,6 +25,9 @@ public class DecryptedFile implements DtoBase {
 
 	private String encryptedFile;
 	private String decryptedFile;
+
+	private Fingerprint encryptedFileFingerprint;
+	private Fingerprint decryptedFileFingerprint;
 
 	public DecryptedFile() {
 	}
@@ -58,6 +62,8 @@ public class DecryptedFile implements DtoBase {
 		return result;
 	}
 
+	// NOTE: This functionality is not using baseline CRC info because it's used to
+	// locate file in a monitored decrypted. See MainFramePm::onRowChangedEvent
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -78,5 +84,21 @@ public class DecryptedFile implements DtoBase {
 		} else if (!encryptedFile.equals(other.encryptedFile))
 			return false;
 		return true;
+	}
+
+	public Fingerprint getEncryptedFileFingerprint() {
+		return encryptedFileFingerprint;
+	}
+
+	public void setEncryptedFileFingerprint(Fingerprint encryptedFileState) {
+		this.encryptedFileFingerprint = encryptedFileState;
+	}
+
+	public Fingerprint getDecryptedFileFingerprint() {
+		return decryptedFileFingerprint;
+	}
+
+	public void setDecryptedFileFingerprint(Fingerprint decryptedFileState) {
+		this.decryptedFileFingerprint = decryptedFileState;
 	}
 }

@@ -25,10 +25,10 @@ import org.summerb.approaches.i18n.HasMessageCode;
  * @author sergeyk
  *
  */
-public class UserReqeustedCancellationException extends Exception implements HasMessageCode {
+public class UserRequestedCancellationException extends Exception implements HasMessageCode {
 	private static final long serialVersionUID = 1290562826825044541L;
 
-	public UserReqeustedCancellationException() {
+	public UserRequestedCancellationException() {
 		super("Operation canceled by user");
 	}
 

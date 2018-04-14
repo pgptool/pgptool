@@ -42,7 +42,7 @@ public class DecryptionDialogParameters implements Serializable {
 	private boolean isOpenAssociatedApplication;
 
 	private long createdAt;
-	
+
 	public String getSourceFile() {
 		return sourceFile;
 	}

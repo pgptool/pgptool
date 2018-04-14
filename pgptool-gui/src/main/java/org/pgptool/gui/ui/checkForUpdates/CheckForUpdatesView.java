@@ -86,6 +86,7 @@ public class CheckForUpdatesView extends DialogViewBaseCustom<CheckForUpdatesPm>
 		row++;
 		pnl.add(new JScrollPane(lblNewVersionReleaseNotes = new JTextArea()), sgl.cs(0, row, 2, 1));
 		lblNewVersionReleaseNotes.setLineWrap(true);
+		lblNewVersionReleaseNotes.setWrapStyleWord(true);
 		lblNewVersionReleaseNotes.setMargin(new Insets(5, 5, 5, 5));
 		lblNewVersionReleaseNotes.setEditable(false);
 		row++;

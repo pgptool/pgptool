@@ -26,6 +26,10 @@
 		<priority value="DEBUG" />
 	</category>
 	   
+	<category name="ru.skarpushin.swingpm.tools.sglayout">
+		<priority value="ERROR" />
+	</category>
+	   
 	<root>
 		<level value="INFO" />
 		<appender-ref ref="FILE" />

@@ -35,6 +35,8 @@ import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
+import org.pgptool.gui.hintsforusage.api.HintsHolder;
+import org.pgptool.gui.hintsforusage.ui.HintPm;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.ui.checkForUpdates.UpdatesPolicy;
 import org.pgptool.gui.ui.decryptone.DecryptionDialogParameters;
@@ -62,7 +64,7 @@ import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
 import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
-public class MainFramePm extends PresentationModelBase implements ApplicationContextAware {
+public class MainFramePm extends PresentationModelBase implements ApplicationContextAware, HintsHolder {
 	// private static Logger log = Logger.getLogger(MainFramePm.class);
 
 	@Autowired
@@ -80,6 +82,8 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 	private ModelTableProperty<DecryptedFile> rows;
 	private ModelProperty<Boolean> hasData;
 	private UpdatesPolicy updatesPolicy;
+
+	private ModelProperty<HintPm> hint = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "hint");
 
 	public void init(MainFrameHost host, UpdatesPolicy updatesPolicy) {
 		this.updatesPolicy = updatesPolicy;
@@ -412,5 +416,19 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 	@Autowired
 	public void setHistoryQuickSearchPm(HistoryQuickSearchPm historyQuickSearchPm) {
 		this.historyQuickSearchPm = historyQuickSearchPm;
+	}
+
+	public ModelPropertyAccessor<HintPm> getHintPm() {
+		return hint.getModelPropertyAccessor();
+	}
+
+	@Override
+	public HintPm getHint() {
+		return hint.getValue();
+	}
+
+	@Override
+	public void setHint(HintPm hint) {
+		this.hint.setValueByOwner(hint);
 	}
 }

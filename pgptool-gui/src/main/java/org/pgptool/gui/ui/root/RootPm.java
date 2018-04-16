@@ -33,7 +33,9 @@ import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
+import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
+import org.pgptool.gui.hintsforusage.api.HintsCoordinator;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.about.AboutHost;
 import org.pgptool.gui.ui.about.AboutPm;
@@ -71,6 +73,7 @@ import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogView;
 import org.pgptool.gui.ui.importkey.KeyImporterHost;
 import org.pgptool.gui.ui.importkey.KeyImporterPm;
 import org.pgptool.gui.ui.importkey.KeyImporterView;
+import org.pgptool.gui.ui.keyslist.KeysExporterUi;
 import org.pgptool.gui.ui.keyslist.KeysListHost;
 import org.pgptool.gui.ui.keyslist.KeysListPm;
 import org.pgptool.gui.ui.keyslist.KeysListView;
@@ -99,7 +102,7 @@ import ru.skarpushin.swingpm.tools.edt.Edt;
  * @author Sergey Karpushin
  * 
  */
-public class RootPm implements ApplicationContextAware, InitializingBean {
+public class RootPm implements ApplicationContextAware, InitializingBean, GlobalAppActions {
 	private static Logger log = Logger.getLogger(RootPm.class);
 
 	@Autowired
@@ -110,6 +113,10 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 
 	private MainFramePm mainFramePm;
 	private MainFrameView mainFrameView;
+	@Autowired
+	private HintsCoordinator hintsCoordinator;
+	@Autowired
+	private KeysExporterUi keysExporterUi;
 
 	private TempFolderChooserPm tempFolderChooserPm;
 
@@ -324,6 +331,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 		MainFrameView view = getMainFrameView();
 		view.setPm(mainFramePm);
 		view.renderTo(null);
+
+		hintsCoordinator.setHintsHolder(mainFramePm);
 	}
 
 	@SuppressWarnings("serial")
@@ -782,5 +791,21 @@ public class RootPm implements ApplicationContextAware, InitializingBean {
 	@Autowired
 	public void setUpdatesPolicy(UpdatesPolicy updatesPolicy) {
 		this.updatesPolicy = updatesPolicy;
+	}
+
+	@Override
+	public Action getActionImportKey() {
+		return importKeyWindowHost.actionToOpenWindow;
+	}
+
+	@Override
+	public Action getActionCreateKey() {
+		return createKeyWindowHost.actionToOpenWindow;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void triggerPrivateKeyExport(Key<? extends KeyData> key) {
+		keysExporterUi.exportPrivateKey((Key<KeyData>) key, mainFrameView.getWindow());
 	}
 }

@@ -58,8 +58,11 @@ import javax.swing.table.DefaultTableModel;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
+import org.pgptool.gui.hintsforusage.ui.HintPm;
+import org.pgptool.gui.hintsforusage.ui.HintView;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.WindowIcon;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Preconditions;
 
@@ -72,6 +75,9 @@ import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private static final String DELETE = "Delete";
 	private static final String CHOOSE = "Choose";
+
+	@Autowired
+	private HintView hintView;
 
 	private JFrame frame;
 
@@ -105,6 +111,8 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 	private JToolBar toolbar;
 
+	private JPanel hintsPanel;
+
 	@Override
 	protected void internalInitComponents() {
 		initMenuBar();
@@ -118,7 +126,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		lblNoDataToDisplay = new JLabel(Messages.get("phrase.noDecryptedFilesAreMonitoredAtTheMoment"));
 		lblNoDataToDisplay.setHorizontalAlignment(JLabel.CENTER);
 
-		SgLayout sgl = new SgLayout(1, 2, 0, 0);
+		SgLayout sgl = new SgLayout(1, 3, 0, 0);
 		sgl.setColSize(0, 100, SgLayout.SIZE_TYPE_WEIGHTED);
 		sgl.setRowSize(1, 100, SgLayout.SIZE_TYPE_WEIGHTED);
 		panelRoot = new JPanel(sgl);
@@ -134,7 +142,27 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		panelTablePlaceholder = new JPanel(new BorderLayout());
 		panelTablePlaceholder.add(initTableComponent(), BorderLayout.CENTER);
 		panelRoot.add(panelTablePlaceholder, sgl.cs(0, row));
+
+		// add message panel
+		row++;
+		hintsPanel = new JPanel(new BorderLayout());
+		panelRoot.add(hintsPanel, sgl.cs(0, row));
+		// hintView.renderTo(hintsPanel, BorderLayout.CENTER);
 	}
+
+	private TypedPropertyChangeListener<HintPm> onHintPmChanged = new TypedPropertyChangeListener<HintPm>() {
+		@Override
+		public void handlePropertyChanged(Object source, String propertyName, HintPm oldValue, HintPm newValue) {
+			hintView.setPm(newValue);
+
+			if (oldValue == null && newValue != null) {
+				hintView.renderTo(hintsPanel, BorderLayout.CENTER);
+			} else if (oldValue != null && newValue == null) {
+				hintView.unrender();
+			}
+			panelRoot.validate();
+		}
+	};
 
 	private void initToolBar() {
 		toolbar = new JToolBar("Main actions");
@@ -148,41 +176,6 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		toolbar.addSeparator();
 		toolbar.add(new JButton(actionKeyring));
 	}
-
-	// I'll leave this code for a while here in case I'll decide to revert to this
-	// UX design decision
-	// private JPanel buildQUickSearchPanel() {
-	// // And no goes painful procedure of setting up quick search controls
-	// JPanel quickSearch = new JPanel();
-	// int charWidth = UiUtils.getFontRelativeSize(1);
-	// quickSearch.setBorder(BorderFactory.createEmptyBorder(0, charWidth / 2, 0,
-	// charWidth / 2));
-	// quickSearch.setLayout(new BoxLayout(quickSearch, BoxLayout.Y_AXIS));
-	//
-	// quickSearch.add(Box.createVerticalGlue());
-	//
-	// JLabel qsLabel = new JLabel(text("term.quickSearch"));
-	// qsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-	// quickSearch.add(qsLabel);
-	//
-	// quickSearch.add(Box.createRigidArea(new Dimension(0, charWidth / 4)));
-	//
-	// JTextField qsEdit = new JTextField();
-	// Dimension size = new Dimension(UiUtils.getFontRelativeSize(10), (int)
-	// qsEdit.getPreferredSize().getHeight());
-	// qsEdit.setMaximumSize(size);
-	// qsEdit.setPreferredSize(size);
-	// qsEdit.setAlignmentX(Component.LEFT_ALIGNMENT);
-	// quickSearch.add(qsEdit);
-	//
-	// quickSearch.add(Box.createVerticalGlue());
-	//
-	// JPanel quickSearchWrappignPanel = new JPanel();
-	// quickSearchWrappignPanel.setLayout(new BoxLayout(quickSearchWrappignPanel,
-	// BoxLayout.Y_AXIS));
-	// quickSearchWrappignPanel.add(quickSearch);
-	// return quickSearchWrappignPanel;
-	// }
 
 	@SuppressWarnings("serial")
 	private Action actionEncrypt = new ToolbarAction("action.encryptFile", "/icons/encrypt.png") {
@@ -429,6 +422,20 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		bindToActions();
 		bindTable();
 		bindContextMenu();
+
+		bindingContext.registerOnChangeHandler(pm.getHintPm(), onHintPmChanged);
+		onHintPmChanged.handlePropertyChanged(pm, pm.getHintPm().getPropertyName(), null, pm.getHintPm().getValue());
+	}
+
+	@Override
+	protected void internalUnbindFromPm() {
+		super.internalUnbindFromPm();
+
+		updateWindowTitle();
+
+		table.setModel(new DefaultTableModel());
+		ctxMenu.removeAll();
+		hintView.setPm(null);
 	}
 
 	private void bindTable() {
@@ -502,16 +509,6 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		}
 	}
 
-	@Override
-	protected void internalUnbindFromPm() {
-		super.internalUnbindFromPm();
-
-		updateWindowTitle();
-
-		table.setModel(new DefaultTableModel());
-		ctxMenu.removeAll();
-	}
-
 	private void adjustColumnsWidths() {
 		DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
 		leftRenderer.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
@@ -540,10 +537,13 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 		if (frame == null) {
 			frame = new JFrame();
-			frame.setSize(new Dimension(UiUtils.getFontRelativeSize(90), UiUtils.getFontRelativeSize(50)));
+			// frame.setSize(new Dimension(UiUtils.getFontRelativeSize(90),
+			// UiUtils.getFontRelativeSize(50)));
 			frame.setLayout(new BorderLayout());
 			frame.setResizable(true);
-			frame.setMinimumSize(new Dimension(UiUtils.getFontRelativeSize(60), UiUtils.getFontRelativeSize(35)));
+			frame.setMinimumSize(
+					new Dimension((int) (toolbar.getPreferredSize().getWidth() + UiUtils.getFontRelativeSize(2)),
+							UiUtils.getFontRelativeSize(35)));
 			frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 			updateWindowTitle();
 			frame.add(panelRoot, BorderLayout.CENTER);

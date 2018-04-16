@@ -58,6 +58,9 @@
 	<bean id="monitoredDecrypted" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
 		<constructor-arg value="mon-decr" />
 	</bean>
+	<bean id="hintsProps" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
+		<constructor-arg value="hints" />
+	</bean>
 
 	<bean class="org.pgptool.gui.filecomparison.MessageDigestFactoryImpl" />
 	<bean class="org.pgptool.gui.tempfolderfordecrypted.impl.DecryptedTempFolderImpl" />
@@ -75,6 +78,12 @@
 
 	<bean class="org.pgptool.gui.ui.mainframe.MainFramePm" scope="prototype" />
 	<bean class="org.pgptool.gui.ui.mainframe.MainFrameView" scope="prototype" />
+	<bean class="org.pgptool.gui.hintsforusage.ui.HintView" scope="prototype" />
+
+	<bean class="org.pgptool.gui.hintsforusage.impl.HintsCoordinatorImpl" />
+	<bean class="org.pgptool.gui.hintsforusage.hints.CreateOrImportPrivateKeyHint" />
+	<bean class="org.pgptool.gui.hintsforusage.hints.MightNeedPublicKeysHint" />
+	<bean class="org.pgptool.gui.hintsforusage.hints.PrivateKeyBackupHint" />
 
 	<bean class="org.pgptool.gui.ui.about.AboutView" lazy-init="true" scope="singleton" />
 	<bean class="org.pgptool.gui.ui.about.AboutPm" scope="prototype" />
@@ -84,6 +93,7 @@
 
 	<bean class="org.pgptool.gui.ui.keyslist.KeysListView" lazy-init="true" scope="singleton" />
 	<bean class="org.pgptool.gui.ui.keyslist.KeysListPm" scope="prototype" />
+	<bean class="org.pgptool.gui.ui.keyslist.KeysExporterUiImpl" />
 
 	<bean class="org.pgptool.gui.ui.encryptone.EncryptOnePm" lazy-init="true" scope="prototype" />
 	<bean class="org.pgptool.gui.ui.encryptone.EncryptOneView" lazy-init="true" scope="prototype" />

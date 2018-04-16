@@ -31,11 +31,14 @@ import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
+import org.pgptool.gui.hintsforusage.hints.PrivateKeyBackupHint.KeyCreatedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 import org.summerb.approaches.validation.FieldValidationException;
 import org.summerb.approaches.validation.ValidationError;
 
 import com.google.common.base.Preconditions;
+import com.google.common.eventbus.EventBus;
 
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.collections.ListEx;
@@ -59,6 +62,8 @@ public class CreateKeyPm extends PresentationModelBase {
 	private KeyGeneratorService<KeyData> keyGeneratorService;
 	@Autowired
 	private ExecutorService executorService;
+	@Autowired
+	private EventBus eventBus;
 
 	private CreateKeyHost host;
 
@@ -118,6 +123,7 @@ public class CreateKeyPm extends PresentationModelBase {
 					return;
 				}
 				keyRingService.addKey(key);
+				eventBus.post(EntityChangedEvent.added(new KeyCreatedEvent(key)));
 				host.handleClose();
 			} catch (FieldValidationException fve) {
 				validationErrors.addAll(fve.getErrors());
@@ -137,7 +143,9 @@ public class CreateKeyPm extends PresentationModelBase {
 		public void actionPerformed(ActionEvent e) {
 			Future<?> tmp = keyGenerationFuture;
 			keyGenerationFuture = null;
-			tmp.cancel(true);
+			if (tmp != null) {
+				tmp.cancel(true);
+			}
 
 			host.handleClose();
 		}

@@ -73,9 +73,9 @@ public class DecryptedFilesModel implements LightweightTableModel<DecryptedFile>
 
 		switch (columnIndex) {
 		case COLUMN_ENCRYPTED_FILE:
-			return buildStringForEncryptedFile(r);
+			return " " + buildStringForEncryptedFile(r);
 		case COLUMN_DECRYPTED_FILE:
-			return getTargetFileName(r);
+			return " " + getTargetFileName(r);
 		default:
 			throw new IllegalArgumentException("Wrong column index: " + columnIndex);
 		}

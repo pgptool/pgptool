@@ -25,7 +25,7 @@ public class ChecksumCalcOutputStream extends FilterOutputStream {
 		this.messageDigest = messageDigest;
 		this.fileName = fileName;
 		this.result = result;
-		
+
 		log.debug("Opened for " + fileName);
 	}
 

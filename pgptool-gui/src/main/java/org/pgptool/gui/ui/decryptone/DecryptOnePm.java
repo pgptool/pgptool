@@ -420,12 +420,18 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 				}
 			}
 			// NOTE: MAGIC: We need to set it AFTER we set targetFolder. Because
-			// then isUseSameFolder onChange handler will not open folder selection dialog
+			// then isUseBrowseFolder onChange handler will not open folder selection dialog
 			if (params.isUseSameFolder()) {
+				isUseTempFolder.setValueByOwner(false);
+				isUseBrowseFolder.setValueByOwner(false);
 				isUseSameFolder.setValueByOwner(true);
 			} else if (params.isUseTempFolder()) {
+				isUseBrowseFolder.setValueByOwner(false);
+				isUseSameFolder.setValueByOwner(false);
 				isUseTempFolder.setValueByOwner(true);
 			} else {
+				isUseSameFolder.setValueByOwner(false);
+				isUseTempFolder.setValueByOwner(false);
 				isUseBrowseFolder.setValueByOwner(true);
 			}
 

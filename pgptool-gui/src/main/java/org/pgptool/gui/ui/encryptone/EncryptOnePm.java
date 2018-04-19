@@ -116,6 +116,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 	private ModelProperty<Boolean> targetFileEnabled;
 	private ModelMultSelInListProperty<Key<KeyData>> selectedRecipients;
 	private ModelListProperty<Key<KeyData>> availabileRecipients;
+	private ModelProperty<Boolean> isNoPrivateKeysSelected;
 	private ModelProperty<Boolean> isDeleteSourceAfter;
 	private ModelProperty<Boolean> isOpenTargetFolderAfter;
 
@@ -247,6 +248,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 				new ValueAdapterHolderImpl<List<Key<KeyData>>>(new ArrayList<Key<KeyData>>()), "projects",
 				availabileRecipients);
 		selectedRecipients.getModelMultSelInListPropertyAccessor().addListExEventListener(onRecipientsSelectionChanged);
+		isNoPrivateKeysSelected = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "isNoPrivateKeysSelected");
 		onRecipientsSelectionChanged.onListChanged();
 
 		isDeleteSourceAfter = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "deleteSourceAfter");
@@ -420,6 +422,9 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		@Override
 		public void onListChanged() {
 			refreshPrimaryOperationAvailability();
+
+			isNoPrivateKeysSelected.setValueByOwner(selectedRecipients.getList().size() == 0 || selectedRecipients
+					.getList().stream().filter(x -> x.getKeyData().isCanBeUsedForDecryption()).count() == 0);
 		}
 	};
 
@@ -618,5 +623,9 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 
 	public ModelPropertyAccessor<Boolean> getIsDisableControls() {
 		return isDisableControls.getModelPropertyAccessor();
+	}
+
+	public ModelPropertyAccessor<Boolean> getIsNoPrivateKeysSelected() {
+		return isNoPrivateKeysSelected.getModelPropertyAccessor();
 	}
 }

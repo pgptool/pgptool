@@ -30,6 +30,7 @@ import java.awt.Window;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -38,6 +39,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
+import org.jdesktop.swingx.JXLabel;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
@@ -72,6 +74,10 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 
 	private JButton btnPerformOperation;
 	private JButton btnCancel;
+
+	private JPanel panelNoPrivateKeysSelectedWarning;
+
+	private JPanel recipientsBlock;
 
 	@Override
 	protected void internalInitComponents() {
@@ -123,7 +129,15 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 		ret.add(new JLabel(text("term.recipients")), sgl.cs(0, row));
 		recipients = new JCheckList<>();
 		recipientsScroller = new JScrollPane(recipients);
-		ret.add(recipientsScroller, sgl.cs(1, row, 1, 2));
+		recipientsBlock = new JPanel(new BorderLayout());
+		recipientsBlock.add(recipientsScroller, BorderLayout.CENTER);
+
+		JXLabel lblNoPrivateKeysSelectedWarning = new JXLabel(text("encryption.warningNoPrivateKeysSelected"));
+		lblNoPrivateKeysSelectedWarning.setLineWrap(true);
+		panelNoPrivateKeysSelectedWarning = wrapIntoMessagePanel(lblNoPrivateKeysSelectedWarning);
+		// NOTE: Not adding it now. It'll be handled by onNoPrivateKeysSelected
+
+		ret.add(recipientsBlock, sgl.cs(1, row, 1, 2));
 		row++;
 		sgl.setRowSize(row, 30, SgLayout.SIZE_TYPE_WEIGHTED);
 
@@ -142,6 +156,20 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 
 		// x. ret
 		return ret;
+	}
+
+	private JPanel wrapIntoMessagePanel(JComponent comp) {
+		JPanel pnlPadding = new JPanel(new BorderLayout());
+		pnlPadding.setBorder(BorderFactory.createLineBorder(Color.yellow.darker(), 1, true));
+		JPanel pnlMsg = new JPanel(new BorderLayout());
+		pnlMsg.setOpaque(false);
+		pnlPadding.add(pnlMsg);
+		int charHalfWidth = UiUtils.getFontRelativeSize(1) / 2;
+		pnlMsg.setBorder(BorderFactory.createEmptyBorder(charHalfWidth / 2, 5, charHalfWidth / 2, 5));
+		comp.setOpaque(false);
+		pnlMsg.add(comp);
+		pnlPadding.setBackground(new Color(221, 253, 191));
+		return pnlPadding;
 	}
 
 	private Component buildEmptyLine() {
@@ -194,7 +222,25 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 
 		bindingContext.registerOnChangeHandler(pm.getIsDisableControls(), isDisableControlsChanged);
 		isDisableControlsChanged.handlePropertyChanged(this, null, false, pm.getIsDisableControls().getValue());
+
+		bindingContext.registerPropertyValuePropagation(pm.getProgressValue(), pbar, "value");
+
+		bindingContext.registerOnChangeHandler(pm.getIsNoPrivateKeysSelected(), onNoPrivateKeysSelected);
+		onNoPrivateKeysSelected.handlePropertyChanged(pm, pm.getIsNoPrivateKeysSelected().getPropertyName(), null,
+				pm.getIsNoPrivateKeysSelected().getValue());
 	}
+
+	private TypedPropertyChangeListener<Boolean> onNoPrivateKeysSelected = new TypedPropertyChangeListener<Boolean>() {
+		@Override
+		public void handlePropertyChanged(Object source, String propertyName, Boolean oldValue, Boolean newValue) {
+			if (newValue) {
+				recipientsBlock.add(panelNoPrivateKeysSelectedWarning, BorderLayout.SOUTH);
+			} else {
+				recipientsBlock.remove(panelNoPrivateKeysSelectedWarning);
+			}
+			recipientsBlock.validate();
+		}
+	};
 
 	@Override
 	protected JDialog initDialog(Window owner, Object constraints) {

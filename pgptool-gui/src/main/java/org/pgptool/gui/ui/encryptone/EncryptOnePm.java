@@ -54,11 +54,13 @@ import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
-import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamFactory;
-import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamFactoryImpl;
-import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamFactory;
-import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamFactoryImpl;
+import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamSupervisor;
+import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamSupervisorImpl;
+import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamSupervisor;
+import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamSupervisorImpl;
+import org.pgptool.gui.filecomparison.Fingerprint;
 import org.pgptool.gui.filecomparison.MessageDigestFactory;
+import org.pgptool.gui.tools.FileUtilsEx;
 import org.pgptool.gui.ui.decryptone.DecryptOnePm;
 import org.pgptool.gui.ui.keyslist.ComparatorKeyByNameImpl;
 import org.pgptool.gui.ui.tools.ListChangeListenerAnyEventImpl;
@@ -105,9 +107,6 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 	@Resource(name = "encryptionService")
 	private EncryptionService<KeyData> encryptionService;
 
-	private ChecksumCalcInputStreamFactory inputStreamFactory = null;
-	private ChecksumCalcOutputStreamFactory outputStreamFactory = null;
-
 	private EncryptOneHost host;
 
 	private ModelProperty<String> sourceFile;
@@ -133,8 +132,6 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		inputStreamFactory = new ChecksumCalcInputStreamFactoryImpl(messageDigestFactory);
-		outputStreamFactory = new ChecksumCalcOutputStreamFactoryImpl(messageDigestFactory);
 	}
 
 	public boolean init(EncryptOneHost host, String optionalSource) {
@@ -444,9 +441,21 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		public void run() {
 			String targetFileName = getEffectiveTargetFileName();
 
+			Fingerprint source;
+			Fingerprint target;
+
 			try {
-				encryptionService.encrypt(sourceFile.getValue(), targetFileName, selectedRecipients.getList(),
-						progressHandler, inputStreamFactory, outputStreamFactory);
+				ChecksumCalcInputStreamSupervisor inputStreamSupervisor = new ChecksumCalcInputStreamSupervisorImpl(
+						messageDigestFactory);
+				ChecksumCalcOutputStreamSupervisor outputStreamSupervisor = new ChecksumCalcOutputStreamSupervisorImpl(
+						messageDigestFactory);
+
+				FileUtilsEx.baitAndSwitch(targetFileName, x -> encryptionService.encrypt(sourceFile.getValue(), x,
+						selectedRecipients.getList(), progressHandler, inputStreamSupervisor, outputStreamSupervisor));
+
+				source = inputStreamSupervisor.getFingerprint();
+				target = outputStreamSupervisor.getFingerprint();
+
 				log.debug("Encryption completed: " + targetFileName);
 			} catch (UserRequestedCancellationException ce) {
 				host.handleClose();
@@ -467,7 +476,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 					EntryPoint.reportExceptionToUser("error.encryptOkButCantDeleteSource", t);
 				}
 			} else {
-				updateBaselineFingerprintsIfApplicable(sourceFile.getValue(), targetFileName);
+				updateBaselineFingerprintsIfApplicable(sourceFile.getValue(), targetFileName, source, target);
 			}
 
 			// Open target folder
@@ -485,15 +494,16 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 			host.handleClose();
 		}
 
-		private void updateBaselineFingerprintsIfApplicable(String decryptedFileName, String encryptedFileName) {
+		private void updateBaselineFingerprintsIfApplicable(String decryptedFileName, String encryptedFileName,
+				Fingerprint source, Fingerprint target) {
 			DecryptedFile decryptedMonitored = monitoringDecryptedFilesService.findByDecryptedFile(decryptedFileName);
 			if (decryptedMonitored == null) {
 				return;
 			}
 
 			DecryptedFile newDecryptedFile = DeepCopy.copy(decryptedMonitored);
-			newDecryptedFile.setDecryptedFileFingerprint(inputStreamFactory.getFingerprint(decryptedFileName));
-			newDecryptedFile.setEncryptedFileFingerprint(outputStreamFactory.getFingerprint(encryptedFileName));
+			newDecryptedFile.setDecryptedFileFingerprint(source);
+			newDecryptedFile.setEncryptedFileFingerprint(target);
 			monitoringDecryptedFilesService.addOrUpdate(newDecryptedFile);
 		}
 

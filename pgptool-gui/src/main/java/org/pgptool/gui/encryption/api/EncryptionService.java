@@ -30,13 +30,13 @@ import org.summerb.approaches.security.api.exceptions.InvalidPasswordException;
 
 public interface EncryptionService<TKeyData extends KeyData> {
 	void encrypt(String sourceFile, String targetFile, Collection<Key<TKeyData>> recipients,
-			ProgressHandler optionalProgressHandler, InputStreamFactory optionalInputStreamFactory,
-			OutputStreamFactory optionalOutputStreamFactory) throws UserRequestedCancellationException;
+			ProgressHandler optionalProgressHandler, InputStreamSupervisor optionalInputStreamSupervisor,
+			OutputStreamSupervisor optionalOutputStreamSupervisor) throws UserRequestedCancellationException;
 
 	String encryptText(String sourceText, Collection<Key<TKeyData>> recipients);
 
 	void decrypt(String sourceFile, String targetFile, PasswordDeterminedForKey<TKeyData> keyAndPassword,
-			ProgressHandler optionalProgressHandler, OutputStreamFactory optionalOutputStreamFactory)
+			ProgressHandler optionalProgressHandler, OutputStreamSupervisor optionalOutputStreamSupervisor)
 			throws InvalidPasswordException, UserRequestedCancellationException;
 
 	String decryptText(String encryptedText, PasswordDeterminedForKey<TKeyData> keyAndPassword)

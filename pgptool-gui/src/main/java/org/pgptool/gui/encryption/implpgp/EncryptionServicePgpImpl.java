@@ -69,10 +69,10 @@ import org.pgptool.gui.bkgoperation.Progress.Updater;
 import org.pgptool.gui.bkgoperation.ProgressHandler;
 import org.pgptool.gui.bkgoperation.UserRequestedCancellationException;
 import org.pgptool.gui.encryption.api.EncryptionService;
-import org.pgptool.gui.encryption.api.InputStreamFactory;
-import org.pgptool.gui.encryption.api.InputStreamFactoryImpl;
-import org.pgptool.gui.encryption.api.OutputStreamFactory;
-import org.pgptool.gui.encryption.api.OutputStreamFactoryImpl;
+import org.pgptool.gui.encryption.api.InputStreamSupervisor;
+import org.pgptool.gui.encryption.api.InputStreamSupervisorImpl;
+import org.pgptool.gui.encryption.api.OutputStreamSupervisor;
+import org.pgptool.gui.encryption.api.OutputStreamSupervisorImpl;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.tools.IoStreamUtils;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
@@ -118,13 +118,15 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 
 	@Override
 	public void encrypt(String sourceFile, String targetFile, Collection<Key<KeyDataPgp>> recipients,
-			ProgressHandler optionalProgressHandler, InputStreamFactory optionalInputStreamFactory,
-			OutputStreamFactory optionalOutputStreamFactory) throws UserRequestedCancellationException {
+			ProgressHandler optionalProgressHandler, InputStreamSupervisor optionalInputStreamSupervisor,
+			OutputStreamSupervisor optionalOutputStreamSupervisor) throws UserRequestedCancellationException {
 		try {
-			InputStreamFactory inputStreamFactory = optionalInputStreamFactory != null ? optionalInputStreamFactory
-					: new InputStreamFactoryImpl();
-			OutputStreamFactory outputStreamFactory = optionalOutputStreamFactory != null ? optionalOutputStreamFactory
-					: new OutputStreamFactoryImpl();
+			InputStreamSupervisor inputStreamSupervisor = optionalInputStreamSupervisor != null
+					? optionalInputStreamSupervisor
+					: new InputStreamSupervisorImpl();
+			OutputStreamSupervisor outputStreamSupervisor = optionalOutputStreamSupervisor != null
+					? optionalOutputStreamSupervisor
+					: new OutputStreamSupervisorImpl();
 
 			Updater progress = null;
 			if (optionalProgressHandler != null) {
@@ -135,8 +137,8 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 			PGPEncryptedDataGenerator dataGenerator = buildEncryptedDataGenerator(
 					buildKeysListForEncryption(recipients));
 
-			OutputStream out = new BufferedOutputStream(outputStreamFactory.create(targetFile));
-			InputStream in = inputStreamFactory.create(sourceFile);
+			OutputStream out = new BufferedOutputStream(outputStreamSupervisor.get(targetFile));
+			InputStream in = inputStreamSupervisor.get(sourceFile);
 			doEncryptFile(in, SourceInfo.fromFile(sourceFile), out, dataGenerator, progress, PGPLiteralData.BINARY);
 			out.close();
 			in.close();
@@ -321,11 +323,12 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 
 	@Override
 	public void decrypt(String sourceFile, String targetFile, PasswordDeterminedForKey<KeyDataPgp> keyAndPassword,
-			ProgressHandler optionalProgressHandler, OutputStreamFactory optionalOutputStreamFactory)
+			ProgressHandler optionalProgressHandler, OutputStreamSupervisor optionalOutputStreamSupervisor)
 			throws InvalidPasswordException, UserRequestedCancellationException {
 
-		OutputStreamFactory outputStreamFactory = optionalOutputStreamFactory != null ? optionalOutputStreamFactory
-				: new OutputStreamFactoryImpl();
+		OutputStreamSupervisor outputStreamSupervisor = optionalOutputStreamSupervisor != null
+				? optionalOutputStreamSupervisor
+				: new OutputStreamSupervisorImpl();
 
 		log.debug("Decrypting " + sourceFile);
 
@@ -354,7 +357,7 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 			CountingInputStream countingStream = new CountingInputStream(new FileInputStream(sourceFile));
 			in = new BufferedInputStream(countingStream);
 			PGPPublicKeyEncryptedData publicKeyEncryptedData = getPublicKeyEncryptedDataByKeyId(in, secretKey);
-			OutputStream outputStream = outputStreamFactory.create(targetFile);
+			OutputStream outputStream = outputStreamSupervisor.get(targetFile);
 			decryptStream(publicKeyEncryptedData, privateKey, outputStream, progress, countingStream);
 
 			if (optionalProgressHandler != null) {

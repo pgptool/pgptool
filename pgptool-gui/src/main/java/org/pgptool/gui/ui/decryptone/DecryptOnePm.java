@@ -49,12 +49,13 @@ import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
-import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamFactory;
-import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamFactoryImpl;
+import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamSupervisor;
+import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamSupervisorImpl;
 import org.pgptool.gui.filecomparison.ChecksumCalculationTask;
 import org.pgptool.gui.filecomparison.Fingerprint;
 import org.pgptool.gui.filecomparison.MessageDigestFactory;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
+import org.pgptool.gui.tools.FileUtilsEx;
 import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
 import org.pgptool.gui.ui.encryptone.EncryptOnePm;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
@@ -117,8 +118,6 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 	@Autowired
 	private MessageDigestFactory messageDigestFactory;
 
-	private ChecksumCalcOutputStreamFactory outputStreamFactory;
-
 	private DecryptOneHost<KeyData> host;
 
 	private ModelProperty<String> sourceFile;
@@ -149,9 +148,6 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		// NOTE: We're not injecting this as a bean because we don't want to store
-		// Fingerprint information in memory
-		outputStreamFactory = new ChecksumCalcOutputStreamFactoryImpl(messageDigestFactory);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -501,14 +497,16 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 						.submit(new ChecksumCalculationTask(sourceFileStr, messageDigestFactory.createNew()));
 
 				// and here is an actual decryption process
-				encryptionService.decrypt(sourceFileStr, targetFileName, keyAndPassword, progressHandler,
-						outputStreamFactory);
+				ChecksumCalcOutputStreamSupervisor outputStreamSupervisor = new ChecksumCalcOutputStreamSupervisorImpl(
+						messageDigestFactory);
+				FileUtilsEx.baitAndSwitch(targetFileName, x -> encryptionService.decrypt(sourceFileStr, x,
+						keyAndPassword, progressHandler, outputStreamSupervisor));
 				log.debug("Decryption completed: " + targetFileName);
 
-				// NOTE: We can calculate checksum for target file becasue we write it in full,
-				// but input fiile is not really being read in full so we'll have to calcualte
+				// NOTE: We can calculate checksum for target file because we write it in full,
+				// but input file is not really being read in full so we'll have to calculate
 				// checksum of source file separately
-				targetFileFingerprint = outputStreamFactory.getFingerprint(targetFileName);
+				targetFileFingerprint = outputStreamSupervisor.getFingerprint();
 
 				// Calculate source file CRC
 				sourceFileFingerprint = sourceFileFingerprintFuture.get();
@@ -614,7 +612,7 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 					x -> x.getDecryptedFile().startsWith(decryptedTempFolder.getTempFolderBasePath()));
 			if (dfm == null) {
 				String ret = madeUpTargetFileName(decryptedTempFolder.getTempFolderBasePath());
-				return ensureFileNameVacant(ret);
+				return FileUtilsEx.ensureFileNameVacant(ret);
 			}
 
 			// Suggest to open instead of overwrite
@@ -686,26 +684,6 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 			ret.setOpenTargetFolder(isOpenTargetFolderAfter.getValue());
 			ret.setOpenAssociatedApplication(isOpenAssociatedApplication.getValue());
 			ret.setCreatedAt(System.currentTimeMillis());
-			return ret;
-		}
-
-		/**
-		 * bruteforce filename adding index to base filename until vacant filename
-		 * found.
-		 */
-		private String ensureFileNameVacant(String requestedTargetFile) {
-			String ret = requestedTargetFile;
-			int idx = 0;
-			String basePathName = FilenameUtils.getFullPath(requestedTargetFile)
-					+ FilenameUtils.getBaseName(requestedTargetFile);
-			String ext = FilenameUtils.getExtension(requestedTargetFile);
-			while (new File(ret).exists()) {
-				idx++;
-				ret = basePathName + "-" + idx;
-				if (StringUtils.hasText(ext)) {
-					ret += "." + ext;
-				}
-			}
 			return ret;
 		}
 	};

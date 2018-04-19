@@ -55,7 +55,7 @@ public class MightNeedPublicKeysHint extends HintPm implements InitializingBean 
 		eventBus.register(this);
 		executorService.execute(think);
 	}
-	
+
 	private Runnable think = () -> {
 		if (isHintApplicable() && !hintsCoordinator.isHintScheduled(CreateOrImportPrivateKeyHint.class)) {
 			hintsCoordinator.scheduleHint(this);

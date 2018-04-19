@@ -48,14 +48,15 @@ import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
-import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamFactory;
-import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamFactoryImpl;
-import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamFactory;
-import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamFactoryImpl;
+import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamSupervisor;
+import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamSupervisorImpl;
+import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamSupervisor;
+import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamSupervisorImpl;
 import org.pgptool.gui.filecomparison.ChecksumCalculationTask;
 import org.pgptool.gui.filecomparison.Fingerprint;
 import org.pgptool.gui.filecomparison.MessageDigestFactory;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
+import org.pgptool.gui.tools.FileUtilsEx;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
@@ -93,9 +94,6 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 	@Autowired
 	private MessageDigestFactory messageDigestFactory;
 
-	private ChecksumCalcInputStreamFactory inputStreamFactory;
-	private ChecksumCalcOutputStreamFactory outputStreamFactory;
-
 	private EncryptBackMultipleHost host;
 	private Set<String> decryptedFiles;
 	private Map<String, EncryptionDialogParameters> mapFileToEncryptionParams = new HashMap<>();
@@ -114,8 +112,6 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		inputStreamFactory = new ChecksumCalcInputStreamFactoryImpl(messageDigestFactory);
-		outputStreamFactory = new ChecksumCalcOutputStreamFactoryImpl(messageDigestFactory);
 	}
 
 	public boolean init(EncryptBackMultipleHost host, Set<String> decryptedFiles) {
@@ -340,6 +336,8 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 				boolean proceedOnlyIfChanged = Boolean.TRUE.equals(isEncryptOnlyChanged.getValue());
 				boolean hasFingerprintOfDecrypted = decryptedFileDto != null
 						&& decryptedFileDto.getDecryptedFileFingerprint() != null;
+				// TODO: We could just compare size first and only if it matches go through
+				// expensive checksum calculation
 				if (targetFileExists && proceedOnlyIfChanged && hasFingerprintOfDecrypted) {
 					Fingerprint decryptedFileFingerprint = calculateFingerprintSync(decryptedFile);
 					if (decryptedFileDto.getDecryptedFileFingerprint().equals(decryptedFileFingerprint)) {
@@ -359,14 +357,23 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 				}
 
 				// Actually encrypt
-				encryptionService.encrypt(decryptedFile, encryptionParams.getTargetFile(), recipients, progressHandler,
-						inputStreamFactory, outputStreamFactory);
+				ChecksumCalcInputStreamSupervisor inputStreamSupervisor = new ChecksumCalcInputStreamSupervisorImpl(
+						messageDigestFactory);
+				ChecksumCalcOutputStreamSupervisor outputStreamSupervisor = new ChecksumCalcOutputStreamSupervisorImpl(
+						messageDigestFactory);
+
+				FileUtilsEx.baitAndSwitch(encryptionParams.getTargetFile(),
+						x -> encryptionService.encrypt(decryptedFile, x, recipients, progressHandler,
+								inputStreamSupervisor, outputStreamSupervisor));
 
 				// Update fingerprints in relevant DecriptedFile dto
-				updateBaselineFingerprintsIfApplicable(decryptedFileDto, decryptedFile, encryptionParams);
+				updateBaselineFingerprintsIfApplicable(decryptedFileDto, decryptedFile, encryptionParams,
+						inputStreamSupervisor.getFingerprint(), outputStreamSupervisor.getFingerprint());
 
 				return EncryptBackResult.Encrypted;
 			} catch (Throwable t) {
+				log.error("Encryption failed: " + decryptedFile, t);
+
 				Throwables.throwIfInstanceOf(t, UserRequestedCancellationException.class);
 				ret.errors.put(decryptedFile, t);
 				return EncryptBackResult.Exception;
@@ -374,15 +381,15 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 		}
 
 		private void updateBaselineFingerprintsIfApplicable(DecryptedFile decryptedFileDto, String decryptedFile,
-				EncryptionDialogParameters encryptionParams) {
+				EncryptionDialogParameters encryptionParams, Fingerprint sourceFingerprint,
+				Fingerprint targetFingerprint) {
 			if (decryptedFileDto == null) {
 				return;
 			}
 
 			DecryptedFile newDecryptedFile = DeepCopy.copy(decryptedFileDto);
-			newDecryptedFile.setDecryptedFileFingerprint(inputStreamFactory.getFingerprint(decryptedFile));
-			newDecryptedFile
-					.setEncryptedFileFingerprint(outputStreamFactory.getFingerprint(encryptionParams.getTargetFile()));
+			newDecryptedFile.setDecryptedFileFingerprint(sourceFingerprint);
+			newDecryptedFile.setEncryptedFileFingerprint(targetFingerprint);
 			monitoringDecryptedFilesService.addOrUpdate(newDecryptedFile);
 		}
 

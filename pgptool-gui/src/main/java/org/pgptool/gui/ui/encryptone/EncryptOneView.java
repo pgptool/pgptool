@@ -33,12 +33,10 @@ import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
 
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.encryption.api.dto.Key;
@@ -46,6 +44,8 @@ import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.ui.tools.checklistbox.JCheckList;
+import org.pgptool.gui.ui.tools.checklistbox.ModelMultSelInCheckListBinding;
 
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
@@ -64,7 +64,7 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 	private JTextField edTargetFile;
 	private JButton btnBrowseTarget;
 
-	private JList<Key<KeyData>> recipients;
+	private JCheckList<Key<KeyData>> recipients;
 	private JScrollPane recipientsScroller;
 
 	private JCheckBox chkDeleteSourceAfter;
@@ -121,8 +121,7 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 		// recipients
 		row++;
 		ret.add(new JLabel(text("term.recipients")), sgl.cs(0, row));
-		recipients = new JList<>();
-		recipients.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		recipients = new JCheckList<>();
 		recipientsScroller = new JScrollPane(recipients);
 		ret.add(recipientsScroller, sgl.cs(1, row, 1, 2));
 		row++;
@@ -179,7 +178,8 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 		bindingContext.registerPropertyValuePropagation(pm.getTargetFileEnabled(), edTargetFile, "enabled");
 		bindingContext.setupBinding(pm.actionBrowseTarget, btnBrowseTarget);
 
-		bindingContext.setupBinding(pm.getSelectedRecipients(), recipients);
+		bindingContext
+				.add(new ModelMultSelInCheckListBinding<>(bindingContext, pm.getSelectedRecipients(), recipients));
 
 		bindingContext.setupBinding(pm.getIsDeleteSourceAfter(), chkDeleteSourceAfter);
 		bindingContext.setupBinding(pm.getIsOpenTargetFolderAfter(), chkOpenTargetFolderAfter);

@@ -79,7 +79,6 @@ import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.lists.ModelListProperty;
 import ru.skarpushin.swingpm.modelprops.lists.ModelMultSelInListProperty;
-import ru.skarpushin.swingpm.modelprops.lists.ModelMultSelInListPropertyAccessor;
 import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
@@ -577,8 +576,13 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		return isUseSameFolder.getModelPropertyAccessor();
 	}
 
-	public ModelMultSelInListPropertyAccessor<Key<KeyData>> getSelectedRecipients() {
-		return selectedRecipients.getModelMultSelInListPropertyAccessor();
+	public ModelMultSelInListProperty<Key<KeyData>> getSelectedRecipients() {
+		// NOTE: I did sort of exception here. Instead of providing accessor I'm
+		// prvoding model property itself so that JCheckList can bind directly to list
+		// of checked recipients
+		// TODO: This doesn't look right actually, I'd say it's better to refactor it
+		// and incorporate changes into swingpm if possible
+		return selectedRecipients;
 	}
 
 	public ModelPropertyAccessor<String> getSourceFile() {

@@ -155,10 +155,8 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 	@Subscribe
 	public void handleRecordChanged(EntityChangedEvent<?> evt) {
 		try {
-			if (evt != null) {
-				if (!evt.isTypeOf(DecryptionDialogParameters.class)) {
-					return;
-				}
+			if (evt != null && !evt.isTypeOf(DecryptionDialogParameters.class)) {
+				return;
 			}
 
 			if (refreshRecentlyUsedBkgFuture != null && !refreshRecentlyUsedBkgFuture.isDone()) {

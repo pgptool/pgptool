@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
+import org.summerb.approaches.jdbccrud.common.DtoBase;
 
 /**
  * This class is used to reflect dialog parameters. It's used to help suggest
@@ -34,7 +35,7 @@ import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
  *         settings!!
  *
  */
-public class EncryptionDialogParameters implements Serializable {
+public class EncryptionDialogParameters implements Serializable, DtoBase {
 	private static final long serialVersionUID = -8793919231868733870L;
 
 	private String sourceFile;

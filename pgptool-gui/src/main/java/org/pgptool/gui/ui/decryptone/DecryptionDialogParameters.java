@@ -19,6 +19,8 @@ package org.pgptool.gui.ui.decryptone;
 
 import java.io.Serializable;
 
+import org.summerb.approaches.jdbccrud.common.DtoBase;
+
 /**
  * This class is used to reflect dialog parameters. It's used to help suggest
  * user with processing parameters based on input parameter(s)
@@ -26,7 +28,7 @@ import java.io.Serializable;
  * @author Sergey Karpushin
  *
  */
-public class DecryptionDialogParameters implements Serializable {
+public class DecryptionDialogParameters implements Serializable, DtoBase {
 	private static final long serialVersionUID = 1090348970039260219L;
 
 	private String sourceFile;

@@ -35,12 +35,10 @@ import org.pgptool.gui.tools.fileswatcher.MultipleFilesWatcher;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.eventbus.EventBus;
 
 public class MonitoringDecryptedFilesServiceImpl
 		implements MonitoringDecryptedFilesService, InitializingBean, DisposableBean {
@@ -52,9 +50,6 @@ public class MonitoringDecryptedFilesServiceImpl
 
 	@Autowired
 	private ConfigPairs monitoredDecrypted;
-
-	@Autowired
-	private EventBus eventBus;
 
 	private MultipleFilesWatcher multipleFilesWatcher;
 
@@ -117,13 +112,7 @@ public class MonitoringDecryptedFilesServiceImpl
 					"decryptedFile.EncryptedFile is NULL");
 
 			String key = buildKey(decryptedFile.getDecryptedFile());
-			DecryptedFile existing = monitoredDecrypted.find(key, null);
 			monitoredDecrypted.put(key, decryptedFile);
-			if (existing != null) {
-				eventBus.post(EntityChangedEvent.updated(decryptedFile));
-			} else {
-				eventBus.post(EntityChangedEvent.added(decryptedFile));
-			}
 			multipleFilesWatcher.watchForFileChanges(decryptedFile.getDecryptedFile());
 		} catch (Throwable t) {
 			throw new RuntimeException("Failed to update decrypted file for monitoring", t);
@@ -147,7 +136,6 @@ public class MonitoringDecryptedFilesServiceImpl
 
 			monitoredDecrypted.put(key, null);
 
-			eventBus.post(EntityChangedEvent.removedObject(existing));
 			multipleFilesWatcher.stopWatchingFile(depcryptedFilePathname);
 		} catch (Throwable t) {
 			throw new RuntimeException("Failed to unregister decrypted file from monitoring", t);

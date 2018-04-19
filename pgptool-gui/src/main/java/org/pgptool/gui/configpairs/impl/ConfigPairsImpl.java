@@ -18,6 +18,7 @@
 package org.pgptool.gui.configpairs.impl;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -25,6 +26,10 @@ import java.util.Set;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
+import org.summerb.approaches.jdbccrud.common.DtoBase;
+
+import com.google.common.eventbus.EventBus;
 
 /**
  * This is VERY simple map-based impl of this storage. It uses config repo and
@@ -36,6 +41,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class ConfigPairsImpl implements ConfigPairs {
 	@Autowired
 	private ConfigRepository configRepository;
+	@Autowired
+	private EventBus eventBus;
 
 	private ConfigPairsEnvelop configPairsEnvelop;
 
@@ -48,9 +55,18 @@ public class ConfigPairsImpl implements ConfigPairs {
 	@Override
 	public synchronized void put(String key, Object value) {
 		if (value == null) {
-			getConfigPairsEnvelop().remove(key);
+			Object removed = getConfigPairsEnvelop().remove(key);
+			if (removed != null & removed instanceof DtoBase) {
+				eventBus.post(EntityChangedEvent.removedObject((DtoBase) removed));
+			}
 		} else {
-			getConfigPairsEnvelop().put(key, value);
+			Object previous = getConfigPairsEnvelop().put(key, value);
+
+			if (previous != null & value instanceof DtoBase) {
+				eventBus.post(EntityChangedEvent.updated((DtoBase) value));
+			} else if (value != null & value instanceof DtoBase) {
+				eventBus.post(EntityChangedEvent.added((DtoBase) value));
+			}
 		}
 		save();
 	}
@@ -79,8 +95,8 @@ public class ConfigPairsImpl implements ConfigPairs {
 	}
 
 	@Override
-	public Set<Entry<String, Object>> getAll() {
-		return getConfigPairsEnvelop().entrySet();
+	public synchronized Set<Entry<String, Object>> getAll() {
+		return new HashSet<>(getConfigPairsEnvelop().entrySet());
 	}
 
 	public ConfigPairsEnvelop getConfigPairsEnvelop() {

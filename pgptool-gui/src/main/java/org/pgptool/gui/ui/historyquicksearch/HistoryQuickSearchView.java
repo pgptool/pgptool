@@ -325,17 +325,20 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 
 		final int w = window.getWidth();
 		final int h = window.getHeight();
+		if (screenBounds.width < w || screenBounds.height < h) {
+			return pt;
+		}
 		int x = pt.x;
 		int y = pt.y;
 
 		int xboundary = screenBounds.x + screenBounds.width;
 		if (x + w > xboundary) {
-			x = pt.x - w;
+			x = pt.x - (x + w - xboundary);
 		}
 
 		int yboundary = screenBounds.y + screenBounds.height;
 		if (y + h > yboundary) {
-			y = pt.y - h;
+			y = pt.y - (y + h - yboundary);
 		}
 
 		return new Point(x, y);

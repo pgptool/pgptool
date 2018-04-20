@@ -16,7 +16,7 @@ import com.google.common.base.Preconditions;
 public class WindowGeometryPersisterImpl extends ComponentAdapter implements WindowGeometryPersister {
 	static final int MINIMUM_SANE_SIZE_VALUE = 10;
 
-	private static final long DELAY = 700;
+	private static final long DELAY = 500;
 	private static final TimeUnit DELAY_TIME_UNIT = TimeUnit.MILLISECONDS;
 
 	private ConfigPairs configPairs;

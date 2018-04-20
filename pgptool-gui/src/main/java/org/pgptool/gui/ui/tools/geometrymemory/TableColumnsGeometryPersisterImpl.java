@@ -23,7 +23,7 @@ import com.google.common.base.Preconditions;
 public class TableColumnsGeometryPersisterImpl implements TableColumnModelListener, TableColumnsGeometryPersister {
 	private static Logger log = Logger.getLogger(TableColumnsGeometryPersisterImpl.class);
 
-	private static final long DELAY = 700;
+	private static final long DELAY = 500;
 	private static final TimeUnit DELAY_TIME_UNIT = TimeUnit.MILLISECONDS;
 
 	private ConfigPairs configPairs;
@@ -112,15 +112,18 @@ public class TableColumnsGeometryPersisterImpl implements TableColumnModelListen
 	}
 
 	private void onColsConfigChanged() {
+		if (!table.isVisible()) {
+			return;
+		}
+
 		if (persistFuture != null) {
 			persistFuture.cancel(true);
 		}
-		persistFuture = scheduledExecutorService.schedule(() -> doPersistColumnsConfig(), DELAY, DELAY_TIME_UNIT);
+		persistFuture = scheduledExecutorService.schedule(() -> doPersistColumnsConfig(buildCurConfig()), DELAY,
+				DELAY_TIME_UNIT);
 	}
 
-	private void doPersistColumnsConfig() {
-		TableColumnModel cm = table.getColumnModel();
-		ArrayList<Pair<Integer, Integer>> columnsConfig = buildCurConfig(cm);
+	private void doPersistColumnsConfig(ArrayList<Pair<Integer, Integer>> columnsConfig) {
 		if (columnsConfig.equals(prevColumnsConfig)) {
 			return;
 		}
@@ -129,7 +132,8 @@ public class TableColumnsGeometryPersisterImpl implements TableColumnModelListen
 		log.debug(keyId + ": " + columnsConfig.toString());
 	}
 
-	private ArrayList<Pair<Integer, Integer>> buildCurConfig(TableColumnModel cm) {
+	private ArrayList<Pair<Integer, Integer>> buildCurConfig() {
+		TableColumnModel cm = table.getColumnModel();
 		ArrayList<Pair<Integer, Integer>> columnsConfig = new ArrayList<>(cm.getColumnCount());
 		for (int i = 0; i < cm.getColumnCount(); i++) {
 			TableColumn c = cm.getColumn(i);

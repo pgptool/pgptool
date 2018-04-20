@@ -147,13 +147,11 @@ public class EncryptTextView extends DialogViewBaseCustom<EncryptTextPm> {
 		JDialog ret = new JDialog(owner, ModalityType.MODELESS);
 		ret.setLayout(new BorderLayout());
 		ret.setResizable(true);
-		ret.setSize(new Dimension(UiUtils.getFontRelativeSize(90), UiUtils.getFontRelativeSize(50)));
 		ret.setMinimumSize(new Dimension(UiUtils.getFontRelativeSize(80), UiUtils.getFontRelativeSize(40)));
 		ret.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		ret.setTitle(Messages.get("action.encryptText"));
 		ret.add(pnl, BorderLayout.CENTER);
-		ret.pack();
-		UiUtils.centerWindow(ret);
+		initWindowGeometryPersister(ret, "encrText");
 		return ret;
 	}
 

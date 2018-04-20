@@ -31,7 +31,6 @@ import javax.swing.JPanel;
 
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
-import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
@@ -50,6 +49,7 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 	protected void internalInitComponents() {
 		panelRoot = new JPanel(new BorderLayout());
 		initMenuBar();
+		keysTableView.setPersistenceCode("keyRing");
 		keysTableView.renderTo(panelRoot, BorderLayout.CENTER);
 	}
 
@@ -85,7 +85,6 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 	@Override
 	protected JDialog initDialog(Window owner, Object constraints) {
 		JDialog ret = new JDialog(owner, ModalityType.APPLICATION_MODAL);
-		ret.setSize(new Dimension(spacing(75), spacing(30)));
 		ret.setMinimumSize(new Dimension(spacing(50), spacing(25)));
 		ret.setLayout(new BorderLayout());
 		ret.setResizable(true);
@@ -93,7 +92,7 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 		ret.setTitle(Messages.get("term.keysList"));
 		ret.add(panelRoot, BorderLayout.CENTER);
 		ret.setJMenuBar(menuBar);
-		UiUtils.centerWindow(ret);
+		initWindowGeometryPersister(ret, "keysList");
 		return ret;
 	}
 

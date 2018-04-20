@@ -25,6 +25,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -45,14 +46,23 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import org.pgptool.gui.app.Messages;
+import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
+import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersister;
+import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersisterImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 
 public class KeysTableView extends ViewBase<KeysTablePm> {
 	private static final String DELETE = "Delete";
+
+	@Autowired
+	private ScheduledExecutorService scheduledExecutorService;
+	@Autowired
+	private ConfigPairs uiGeom;
 
 	private JPanel panelRoot;
 
@@ -62,8 +72,14 @@ public class KeysTableView extends ViewBase<KeysTablePm> {
 	private JScrollPane scrollPane;
 	private DefaultListSelectionModel selectionModel;
 	private JPopupMenu ctxMenu;
+	protected TableColumnsGeometryPersister tableColumnsGeometryPersister;
 
 	private JLabel lblNoDataToDisplay;
+
+	/**
+	 * Code used to store and retrieve table layout
+	 */
+	private String persistenceCode = "keyList";
 
 	@Override
 	protected void internalInitComponents() {
@@ -262,8 +278,16 @@ public class KeysTableView extends ViewBase<KeysTablePm> {
 				return;
 			}
 
+			if (tableColumnsGeometryPersister != null) {
+				tableColumnsGeometryPersister.detach();
+				tableColumnsGeometryPersister = null;
+			}
 			table.setModel(pm.getKeys());
 			adjustColumnsWidths();
+			tableColumnsGeometryPersister = new TableColumnsGeometryPersisterImpl(table, persistenceCode, uiGeom,
+					scheduledExecutorService);
+			tableColumnsGeometryPersister.restoreColumnsConfig();
+
 			table.repaint();
 			panelTablePlaceholder.removeAll();
 			panelTablePlaceholder.add(scrollPane, BorderLayout.CENTER);
@@ -313,6 +337,14 @@ public class KeysTableView extends ViewBase<KeysTablePm> {
 	@Override
 	protected void internalUnrender() {
 		panelRoot.getParent().remove(panelRoot);
+	}
+
+	public String getPersistenceCode() {
+		return persistenceCode;
+	}
+
+	public void setPersistenceCode(String persistenceCode) {
+		this.persistenceCode = persistenceCode;
 	}
 
 }

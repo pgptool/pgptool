@@ -174,16 +174,15 @@ public class FeedbackFormView extends DialogViewBaseCustom<FeedbackFormPm> {
 		ret.setLayout(new BorderLayout());
 
 		ret.setResizable(true);
-		ret.setSize(new Dimension(UiUtils.getFontRelativeSize(50), UiUtils.getFontRelativeSize(30)));
 		ret.setMinimumSize(new Dimension(UiUtils.getFontRelativeSize(50), UiUtils.getFontRelativeSize(30)));
 
 		ret.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		ret.setTitle(text("action.leaveFeedback"));
 		ret.add(root, BorderLayout.CENTER);
-		ret.pack();
 		ret.getRootPane().setDefaultButton(btnSubmit);
 
-		UiUtils.centerWindow(ret);
+		initWindowGeometryPersister(ret, "fbackFrm");
+
 		return ret;
 	}
 

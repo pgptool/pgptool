@@ -21,6 +21,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -38,8 +39,14 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 import org.jdesktop.swingx.JXLabel;
+import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.ui.decryptone.DecryptionDialogParameters;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersister;
+import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersisterImpl;
+import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersister;
+import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersisterImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Preconditions;
 
@@ -48,7 +55,13 @@ import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
 public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
+	@Autowired
+	private ScheduledExecutorService scheduledExecutorService;
+	@Autowired
+	private ConfigPairs uiGeom;
+
 	private JFrame window;
+	private WindowGeometryPersister windowGeometryPersister;
 
 	private JPanel panelRoot;
 	private JPanel panelTablePlaceholder;
@@ -56,6 +69,7 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 
 	private JScrollPane scrollPane;
 	private JTable table;
+	protected TableColumnsGeometryPersister tableColumnsGeometryPersister;
 
 	private DefaultListSelectionModel selectionModel;
 
@@ -226,7 +240,15 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 				return;
 			}
 
+			if (tableColumnsGeometryPersister != null) {
+				tableColumnsGeometryPersister.detach();
+				tableColumnsGeometryPersister = null;
+			}
 			table.setModel(newValue);
+			tableColumnsGeometryPersister = new TableColumnsGeometryPersisterImpl(table, "tblHstQSrch", uiGeom,
+					scheduledExecutorService);
+			tableColumnsGeometryPersister.restoreColumnsConfig();
+
 			table.repaint();
 			panelTablePlaceholder.removeAll();
 			panelTablePlaceholder.add(scrollPane, BorderLayout.CENTER);
@@ -255,7 +277,13 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 			window.add(panelRoot, BorderLayout.CENTER);
 			window.setResizable(true);
 			window.setMinimumSize(new Dimension(UiUtils.getFontRelativeSize(50), UiUtils.getFontRelativeSize(25)));
-			window.pack();
+
+			windowGeometryPersister = new WindowGeometryPersisterImpl(window, "histQSrch", uiGeom,
+					scheduledExecutorService);
+			if (!windowGeometryPersister.restoreSize()) {
+				window.pack();
+			}
+
 			window.addComponentListener(componentAdapter);
 			window.addWindowListener(windowAdapter);
 		}

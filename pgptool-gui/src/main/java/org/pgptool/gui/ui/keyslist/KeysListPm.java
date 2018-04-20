@@ -27,8 +27,6 @@ import java.util.List;
 import javax.annotation.Resource;
 import javax.swing.Action;
 
-import org.apache.log4j.Logger;
-import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
@@ -50,15 +48,13 @@ import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class KeysListPm extends PresentationModelBase {
-	private static Logger log = Logger.getLogger(KeysListPm.class);
+	// private static Logger log = Logger.getLogger(KeysListPm.class);
 
 	@Autowired
 	private EventBus eventBus;
 	@Autowired
 	@Resource(name = "keyRingService")
 	private KeyRingService<KeyData> keyRingService;
-	@Autowired
-	private ConfigPairs appProps;
 	@Autowired
 	@Resource(name = "keyFilesOperations")
 	private KeyFilesOperations<KeyData> keyFilesOperations;

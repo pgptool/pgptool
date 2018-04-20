@@ -73,7 +73,7 @@ public class KeysTableModel implements LightweightTableModel<Key<KeyData>> {
 
 		switch (columnIndex) {
 		case COLUMN_USER:
-			return info.getUser();
+			return " " + info.getUser();
 		case COLUMN_KEY_ID:
 			return info.getKeyId();
 		case COLUMN_KEY_TYPE:

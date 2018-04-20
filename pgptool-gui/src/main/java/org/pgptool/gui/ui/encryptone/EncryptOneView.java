@@ -247,13 +247,11 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 		JDialog ret = new JDialog(owner, ModalityType.MODELESS);
 		ret.setLayout(new BorderLayout());
 		ret.setResizable(true);
-		ret.setSize(new Dimension(UiUtils.getFontRelativeSize(60), UiUtils.getFontRelativeSize(50)));
 		ret.setMinimumSize(new Dimension(UiUtils.getFontRelativeSize(50), UiUtils.getFontRelativeSize(40)));
 		ret.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		ret.setTitle(Messages.get("action.encrypt"));
 		ret.add(pnl, BorderLayout.CENTER);
-		ret.pack();
-		UiUtils.centerWindow(ret);
+		initWindowGeometryPersister(ret, "encrOne");
 		return ret;
 	}
 

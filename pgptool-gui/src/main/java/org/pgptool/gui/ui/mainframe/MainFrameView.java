@@ -29,6 +29,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -57,11 +58,15 @@ import javax.swing.table.DefaultTableModel;
 
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Messages;
+import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.hintsforusage.ui.HintPm;
 import org.pgptool.gui.hintsforusage.ui.HintView;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.WindowIcon;
+import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersisterImpl;
+import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersister;
+import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersisterImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Preconditions;
@@ -78,8 +83,13 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 	@Autowired
 	private HintView hintView;
+	@Autowired
+	private ScheduledExecutorService scheduledExecutorService;
+	@Autowired
+	private ConfigPairs uiGeom;
 
 	private JFrame frame;
+	private WindowGeometryPersister windowGeometryPersister;
 
 	private JPanel panelRoot;
 
@@ -108,6 +118,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private DefaultListSelectionModel selectionModel;
 	private JPopupMenu ctxMenu;
 	private JLabel lblNoDataToDisplay;
+	private TableColumnsGeometryPersisterImpl tableColumnsGeometryPersister;
 
 	private JToolBar toolbar;
 
@@ -469,8 +480,16 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 				return;
 			}
 
+			if (tableColumnsGeometryPersister != null) {
+				tableColumnsGeometryPersister.detach();
+				tableColumnsGeometryPersister = null;
+			}
 			table.setModel(pm.getRows());
 			adjustColumnsWidths();
+			tableColumnsGeometryPersister = new TableColumnsGeometryPersisterImpl(table, "mfrmDecrMon", uiGeom,
+					scheduledExecutorService);
+			tableColumnsGeometryPersister.restoreColumnsConfig();
+
 			table.repaint();
 			panelTablePlaceholder.removeAll();
 			panelTablePlaceholder.add(scrollPane, BorderLayout.CENTER);
@@ -551,7 +570,13 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 			frame.addWindowListener(windowAdapter);
 			frame.setJMenuBar(menuBar);
 
+			windowGeometryPersister = new WindowGeometryPersisterImpl(frame, "mainFrame", uiGeom,
+					scheduledExecutorService);
+			windowGeometryPersister.restoreSize();
+			// if (!windowGeometryPersister.restoreLocation()) {
 			UiUtils.centerWindow(frame);
+			// }
+
 			WindowIcon.setWindowIcon(frame);
 		}
 
@@ -570,6 +595,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 
 	@Override
 	protected void internalUnrender() {
+		windowGeometryPersister.detach();
 		frame.setVisible(false);
 	}
 

@@ -32,7 +32,6 @@ import javax.swing.JPanel;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.ui.keyslist.KeysTableView;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
-import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class KeyImporterView extends DialogViewBaseCustom<KeyImporterPm> {
@@ -49,6 +48,7 @@ public class KeyImporterView extends DialogViewBaseCustom<KeyImporterPm> {
 		pnl = new JPanel(new BorderLayout());
 		pnl.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
+		keysTableView.setPersistenceCode("keyImprt");
 		keysTableView.renderTo(pnl, BorderLayout.CENTER);
 
 		pnl.add(buildPanelButtons(), BorderLayout.SOUTH);
@@ -88,7 +88,8 @@ public class KeyImporterView extends DialogViewBaseCustom<KeyImporterPm> {
 		ret.add(pnl, BorderLayout.CENTER);
 		ret.setMinimumSize(new Dimension(spacing(60), spacing(30)));
 
-		UiUtils.centerWindow(ret);
+		initWindowGeometryPersister(ret, "keyImprt");
+
 		return ret;
 	}
 

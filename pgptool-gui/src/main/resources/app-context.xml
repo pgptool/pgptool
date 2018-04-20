@@ -33,7 +33,9 @@
 		<property name="fallbackToSystemLocale" value="true" />
 	</bean>
 
-	<bean id="executorService" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" destroy-method="shutdownNow" />
+	<bean id="executorService" class="java.util.concurrent.Executors" factory-method="newScheduledThreadPool" destroy-method="shutdownNow">
+		<constructor-arg value="4" />
+	</bean>
 
 	<context:annotation-config />
 
@@ -60,6 +62,13 @@
 	</bean>
 	<bean id="hintsProps" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
 		<constructor-arg value="hints" />
+	</bean>
+	<bean id="uiGeom" class="org.pgptool.gui.ui.tools.geometrymemory.ConfigPairsMonitorsDependentImpl">
+		<constructor-arg>
+			<bean class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
+				<constructor-arg value="uipos" />
+			</bean>
+		</constructor-arg>
 	</bean>
 
 	<bean class="org.pgptool.gui.filecomparison.MessageDigestFactoryImpl" />

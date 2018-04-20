@@ -119,7 +119,8 @@ public class TableColumnsGeometryPersisterImpl implements TableColumnModelListen
 		if (persistFuture != null) {
 			persistFuture.cancel(true);
 		}
-		persistFuture = scheduledExecutorService.schedule(() -> doPersistColumnsConfig(buildCurConfig()), DELAY,
+		ArrayList<Pair<Integer, Integer>> newConfig = buildCurConfig();
+		persistFuture = scheduledExecutorService.schedule(() -> doPersistColumnsConfig(newConfig), DELAY,
 				DELAY_TIME_UNIT);
 	}
 

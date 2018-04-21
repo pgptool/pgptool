@@ -91,12 +91,12 @@ import com.google.common.io.CountingInputStream;
  * @author Sergey Karpushin
  *
  */
-public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
+public class EncryptionServicePgpImpl implements EncryptionService {
 	private static Logger log = Logger.getLogger(EncryptionServicePgpImpl.class);
 	private static final int BUFFER_SIZE = 1 << 16;
 
 	@Override
-	public String encryptText(String sourceText, Collection<Key<KeyDataPgp>> recipients) {
+	public String encryptText(String sourceText, Collection<Key> recipients) {
 		try {
 			PGPEncryptedDataGenerator dataGenerator = buildEncryptedDataGenerator(
 					buildKeysListForEncryption(recipients));
@@ -117,7 +117,7 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 	}
 
 	@Override
-	public void encrypt(String sourceFile, String targetFile, Collection<Key<KeyDataPgp>> recipients,
+	public void encrypt(String sourceFile, String targetFile, Collection<Key> recipients,
 			ProgressHandler optionalProgressHandler, InputStreamSupervisor optionalInputStreamSupervisor,
 			OutputStreamSupervisor optionalOutputStreamSupervisor) throws UserRequestedCancellationException {
 		try {
@@ -218,10 +218,10 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 		}
 	}
 
-	private Collection<PGPPublicKey> buildKeysListForEncryption(Collection<Key<KeyDataPgp>> recipients) {
+	private Collection<PGPPublicKey> buildKeysListForEncryption(Collection<Key> recipients) {
 		Collection<PGPPublicKey> ret = new ArrayList<>(recipients.size());
-		for (Key<KeyDataPgp> key : recipients) {
-			PGPPublicKey encryptionKey = key.getKeyData().findKeyForEncryption();
+		for (Key key : recipients) {
+			PGPPublicKey encryptionKey = KeyDataPgp.get(key).findKeyForEncryption();
 			Preconditions.checkState(encryptionKey != null,
 					"Wasn't able to find encryption key for recipient " + key.getKeyInfo().getUser());
 			ret.add(encryptionKey);
@@ -291,11 +291,11 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 	}
 
 	@Override
-	public String decryptText(String encryptedText, PasswordDeterminedForKey<KeyDataPgp> keyAndPassword)
+	public String decryptText(String encryptedText, PasswordDeterminedForKey keyAndPassword)
 			throws InvalidPasswordException {
 		log.debug("Decrytping text");
 
-		Key<KeyDataPgp> decryptionKey = keyAndPassword.getMatchedKey();
+		Key decryptionKey = keyAndPassword.getMatchedKey();
 		String passphrase = keyAndPassword.getPassword();
 
 		Preconditions.checkArgument(StringUtils.hasText(encryptedText), "encryptedText required");
@@ -304,7 +304,8 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 
 		InputStream in = null;
 		try {
-			PGPSecretKey secretKey = decryptionKey.getKeyData().findSecretKeyById(keyAndPassword.getDecryptionKeyId());
+			PGPSecretKey secretKey = KeyDataPgp.get(decryptionKey)
+					.findSecretKeyById(keyAndPassword.getDecryptionKeyId());
 			PGPPrivateKey privateKey = getPrivateKey(passphrase, secretKey);
 
 			in = new ByteArrayInputStream(encryptedText.getBytes("UTF-8"));
@@ -322,7 +323,7 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 	}
 
 	@Override
-	public void decrypt(String sourceFile, String targetFile, PasswordDeterminedForKey<KeyDataPgp> keyAndPassword,
+	public void decrypt(String sourceFile, String targetFile, PasswordDeterminedForKey keyAndPassword,
 			ProgressHandler optionalProgressHandler, OutputStreamSupervisor optionalOutputStreamSupervisor)
 			throws InvalidPasswordException, UserRequestedCancellationException {
 
@@ -340,7 +341,7 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 			progress.updateTotalSteps(sourceSize);
 		}
 
-		Key<KeyDataPgp> decryptionKey = keyAndPassword.getMatchedKey();
+		Key decryptionKey = keyAndPassword.getMatchedKey();
 		String passphrase = keyAndPassword.getPassword();
 
 		Preconditions.checkArgument(StringUtils.hasText(sourceFile) && new File(sourceFile).exists(),
@@ -351,7 +352,8 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 
 		InputStream in = null;
 		try {
-			PGPSecretKey secretKey = decryptionKey.getKeyData().findSecretKeyById(keyAndPassword.getDecryptionKeyId());
+			PGPSecretKey secretKey = KeyDataPgp.get(decryptionKey)
+					.findSecretKeyById(keyAndPassword.getDecryptionKeyId());
 			PGPPrivateKey privateKey = getPrivateKey(passphrase, secretKey);
 
 			CountingInputStream countingStream = new CountingInputStream(new FileInputStream(sourceFile));
@@ -499,11 +501,11 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 	}
 
 	@Override
-	public String getNameOfFileEncrypted(String encryptedFile, PasswordDeterminedForKey<KeyDataPgp> keyAndPassword)
+	public String getNameOfFileEncrypted(String encryptedFile, PasswordDeterminedForKey keyAndPassword)
 			throws InvalidPasswordException {
 		log.debug("Pre-Decrytping to get initial file name from " + encryptedFile);
 
-		Key<KeyDataPgp> decryptionKey = keyAndPassword.getMatchedKey();
+		Key decryptionKey = keyAndPassword.getMatchedKey();
 		String passphrase = keyAndPassword.getPassword();
 
 		Preconditions.checkArgument(StringUtils.hasText(encryptedFile) && new File(encryptedFile).exists(),
@@ -513,7 +515,8 @@ public class EncryptionServicePgpImpl implements EncryptionService<KeyDataPgp> {
 
 		InputStream in = null;
 		try {
-			PGPSecretKey secretKey = decryptionKey.getKeyData().findSecretKeyById(keyAndPassword.getDecryptionKeyId());
+			PGPSecretKey secretKey = KeyDataPgp.get(decryptionKey)
+					.findSecretKeyById(keyAndPassword.getDecryptionKeyId());
 			PGPPrivateKey privateKey = getPrivateKey(passphrase, secretKey);
 
 			in = new BufferedInputStream(new FileInputStream(encryptedFile));

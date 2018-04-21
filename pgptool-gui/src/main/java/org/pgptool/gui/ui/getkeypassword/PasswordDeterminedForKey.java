@@ -1,25 +1,24 @@
 package org.pgptool.gui.ui.getkeypassword;
 
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 
-public class PasswordDeterminedForKey<TKeyData extends KeyData> {
+public class PasswordDeterminedForKey {
 	private String decryptionKeyId;
-	private Key<TKeyData> matchedKey;
+	private Key matchedKey;
 	private String password;
 
-	public PasswordDeterminedForKey(String decryptionKeyId, Key<TKeyData> matchedKey, String password) {
+	public PasswordDeterminedForKey(String decryptionKeyId, Key matchedKey, String password) {
 		super();
 		this.decryptionKeyId = decryptionKeyId;
 		this.matchedKey = matchedKey;
 		this.password = password;
 	}
 
-	public Key<TKeyData> getMatchedKey() {
+	public Key getMatchedKey() {
 		return matchedKey;
 	}
 
-	public void setMatchedKey(Key<TKeyData> key) {
+	public void setMatchedKey(Key key) {
 		this.matchedKey = key;
 	}
 

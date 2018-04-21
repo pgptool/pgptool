@@ -52,7 +52,6 @@ import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
 import org.pgptool.gui.encryption.api.EncryptionService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
 import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamSupervisor;
 import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamSupervisorImpl;
@@ -102,10 +101,10 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 
 	@Autowired
 	@Resource(name = "keyRingService")
-	private KeyRingService<KeyData> keyRingService;
+	private KeyRingService keyRingService;
 	@Autowired
 	@Resource(name = "encryptionService")
-	private EncryptionService<KeyData> encryptionService;
+	private EncryptionService encryptionService;
 
 	private EncryptOneHost host;
 
@@ -113,8 +112,8 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 	private ModelProperty<Boolean> isUseSameFolder;
 	private ModelProperty<String> targetFile;
 	private ModelProperty<Boolean> targetFileEnabled;
-	private ModelMultSelInListProperty<Key<KeyData>> selectedRecipients;
-	private ModelListProperty<Key<KeyData>> availabileRecipients;
+	private ModelMultSelInListProperty<Key> selectedRecipients;
+	private ModelListProperty<Key> availabileRecipients;
 	private ModelProperty<Boolean> isNoPrivateKeysSelected;
 	private ModelProperty<Boolean> isDeleteSourceAfter;
 	private ModelProperty<Boolean> isOpenTargetFolderAfter;
@@ -237,13 +236,12 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		targetFile.getModelPropertyAccessor().addPropertyChangeListener(onTargetFileChanged);
 		targetFileEnabled = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "targetFile");
 
-		List<Key<KeyData>> allKeys = keyRingService.readKeys();
-		allKeys.sort(new ComparatorKeyByNameImpl<>());
-		availabileRecipients = new ModelListProperty<Key<KeyData>>(this,
-				new ValueAdapterReadonlyImpl<List<Key<KeyData>>>(allKeys), "availabileRecipients");
-		selectedRecipients = new ModelMultSelInListProperty<Key<KeyData>>(this,
-				new ValueAdapterHolderImpl<List<Key<KeyData>>>(new ArrayList<Key<KeyData>>()), "projects",
-				availabileRecipients);
+		List<Key> allKeys = keyRingService.readKeys();
+		allKeys.sort(new ComparatorKeyByNameImpl());
+		availabileRecipients = new ModelListProperty<Key>(this, new ValueAdapterReadonlyImpl<List<Key>>(allKeys),
+				"availabileRecipients");
+		selectedRecipients = new ModelMultSelInListProperty<Key>(this,
+				new ValueAdapterHolderImpl<List<Key>>(new ArrayList<Key>()), "projects", availabileRecipients);
 		selectedRecipients.getModelMultSelInListPropertyAccessor().addListExEventListener(onRecipientsSelectionChanged);
 		isNoPrivateKeysSelected = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "isNoPrivateKeysSelected");
 		onRecipientsSelectionChanged.onListChanged();
@@ -319,8 +317,8 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 
 		private void selectSelfAsRecipient() {
 			selectedRecipients.getList().clear();
-			for (Key<KeyData> key : availabileRecipients.getList()) {
-				if (!key.getKeyData().isCanBeUsedForDecryption()) {
+			for (Key key : availabileRecipients.getList()) {
+				if (!key.geKeyData().isCanBeUsedForDecryption()) {
 					continue;
 				}
 				selectedRecipients.getList().add(key);
@@ -361,8 +359,8 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 			selectedRecipients.getList().clear();
 			Set<String> missedKeys = new HashSet<>();
 			for (String keyId : recipientsKeysIds) {
-				Optional<Key<KeyData>> key = availabileRecipients.getList().stream()
-						.filter(x -> x.getKeyData().isHasAlternativeId(keyId)).findFirst();
+				Optional<Key> key = availabileRecipients.getList().stream()
+						.filter(x -> x.geKeyData().isHasAlternativeId(keyId)).findFirst();
 				if (key.isPresent()) {
 					selectedRecipients.getList().add(key.get());
 				} else {
@@ -415,13 +413,13 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		actionDoOperation.setEnabled(result);
 	}
 
-	private ListChangeListenerAnyEventImpl<Key<KeyData>> onRecipientsSelectionChanged = new ListChangeListenerAnyEventImpl<Key<KeyData>>() {
+	private ListChangeListenerAnyEventImpl<Key> onRecipientsSelectionChanged = new ListChangeListenerAnyEventImpl<Key>() {
 		@Override
 		public void onListChanged() {
 			refreshPrimaryOperationAvailability();
 
 			isNoPrivateKeysSelected.setValueByOwner(selectedRecipients.getList().size() == 0 || selectedRecipients
-					.getList().stream().filter(x -> x.getKeyData().isCanBeUsedForDecryption()).count() == 0);
+					.getList().stream().filter(x -> x.geKeyData().isCanBeUsedForDecryption()).count() == 0);
 		}
 	};
 
@@ -537,7 +535,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 			ret.setDeleteSourceFile(isDeleteSourceAfter.getValue());
 			ret.setOpenTargetFolder(isOpenTargetFolderAfter.getValue());
 			ret.setRecipientsKeysIds(new ArrayList<>(selectedRecipients.getList().size()));
-			for (Key<KeyData> key : selectedRecipients.getList()) {
+			for (Key key : selectedRecipients.getList()) {
 				ret.getRecipientsKeysIds().add(key.getKeyInfo().getKeyId());
 			}
 			return ret;
@@ -591,7 +589,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		return isUseSameFolder.getModelPropertyAccessor();
 	}
 
-	public ModelMultSelInListProperty<Key<KeyData>> getSelectedRecipients() {
+	public ModelMultSelInListProperty<Key> getSelectedRecipients() {
 		// NOTE: I did sort of exception here. Instead of providing accessor I'm
 		// prvoding model property itself so that JCheckList can bind directly to list
 		// of checked recipients

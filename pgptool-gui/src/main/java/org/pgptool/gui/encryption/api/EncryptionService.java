@@ -24,23 +24,21 @@ import java.util.Set;
 import org.pgptool.gui.bkgoperation.ProgressHandler;
 import org.pgptool.gui.bkgoperation.UserRequestedCancellationException;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.summerb.approaches.security.api.exceptions.InvalidPasswordException;
 
-public interface EncryptionService<TKeyData extends KeyData> {
-	void encrypt(String sourceFile, String targetFile, Collection<Key<TKeyData>> recipients,
+public interface EncryptionService {
+	void encrypt(String sourceFile, String targetFile, Collection<Key> recipients,
 			ProgressHandler optionalProgressHandler, InputStreamSupervisor optionalInputStreamSupervisor,
 			OutputStreamSupervisor optionalOutputStreamSupervisor) throws UserRequestedCancellationException;
 
-	String encryptText(String sourceText, Collection<Key<TKeyData>> recipients);
+	String encryptText(String sourceText, Collection<Key> recipients);
 
-	void decrypt(String sourceFile, String targetFile, PasswordDeterminedForKey<TKeyData> keyAndPassword,
+	void decrypt(String sourceFile, String targetFile, PasswordDeterminedForKey keyAndPassword,
 			ProgressHandler optionalProgressHandler, OutputStreamSupervisor optionalOutputStreamSupervisor)
 			throws InvalidPasswordException, UserRequestedCancellationException;
 
-	String decryptText(String encryptedText, PasswordDeterminedForKey<TKeyData> keyAndPassword)
-			throws InvalidPasswordException;
+	String decryptText(String encryptedText, PasswordDeterminedForKey keyAndPassword) throws InvalidPasswordException;
 
 	/**
 	 * Discover all key ids which can be used for decryption
@@ -63,6 +61,6 @@ public interface EncryptionService<TKeyData extends KeyData> {
 	 *            key and password to use for decryption
 	 * @return initial file name that was encrypted (name only, no path)
 	 */
-	String getNameOfFileEncrypted(String encryptedFile, PasswordDeterminedForKey<TKeyData> keyAndPassword)
+	String getNameOfFileEncrypted(String encryptedFile, PasswordDeterminedForKey keyAndPassword)
 			throws InvalidPasswordException;
 }

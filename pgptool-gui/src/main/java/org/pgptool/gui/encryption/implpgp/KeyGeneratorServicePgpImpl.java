@@ -53,7 +53,7 @@ import org.summerb.approaches.validation.ValidationContext;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
-public class KeyGeneratorServicePgpImpl implements KeyGeneratorService<KeyDataPgp> {
+public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 	private static Logger log = Logger.getLogger(KeyGeneratorServicePgpImpl.class);
 
 	@Autowired
@@ -75,7 +75,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService<KeyDataPg
 	}
 
 	@Override
-	public Key<KeyDataPgp> createNewKey(CreateKeyParams params) throws FieldValidationException {
+	public Key createNewKey(CreateKeyParams params) throws FieldValidationException {
 		try {
 			Preconditions.checkArgument(params != null, "params must not be null");
 			assertParamsValid(params);
@@ -141,7 +141,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService<KeyDataPg
 
 			keyRingGen.addSubKey(elgKeyPair);
 			// building ret
-			Key<KeyDataPgp> ret = buildKey(keyRingGen);
+			Key ret = buildKey(keyRingGen);
 			return ret;
 		} catch (Throwable t) {
 			Throwables.propagateIfInstanceOf(t, FieldValidationException.class);
@@ -150,12 +150,12 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService<KeyDataPg
 	}
 
 	@SuppressWarnings("deprecation")
-	private Key<KeyDataPgp> buildKey(PGPKeyRingGenerator keyRingGen) throws PGPException {
-		Key<KeyDataPgp> ret = new Key<>();
+	private Key buildKey(PGPKeyRingGenerator keyRingGen) throws PGPException {
+		Key ret = new Key();
 		KeyDataPgp keyData = new KeyDataPgp();
 		keyData.setPublicKeyRing(keyRingGen.generatePublicKeyRing());
 		keyData.setSecretKeyRing(keyRingGen.generateSecretKeyRing());
-		ret.setKeyData(keyData);
+		ret.seKeyData(keyData);
 		ret.setKeyInfo(KeyFilesOperationsPgpImpl.buildKeyInfoFromSecret(keyData.getSecretKeyRing()));
 		return ret;
 	}

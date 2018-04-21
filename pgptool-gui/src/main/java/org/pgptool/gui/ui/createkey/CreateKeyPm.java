@@ -30,7 +30,6 @@ import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.hintsforusage.hints.PrivateKeyBackupHint.KeyCreatedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
@@ -56,10 +55,10 @@ public class CreateKeyPm extends PresentationModelBase {
 
 	@Autowired
 	@Resource(name = "keyRingService")
-	private KeyRingService<KeyData> keyRingService;
+	private KeyRingService keyRingService;
 	@Autowired
 	@Resource(name = "keyGeneratorService")
-	private KeyGeneratorService<KeyData> keyGeneratorService;
+	private KeyGeneratorService keyGeneratorService;
 	@Autowired
 	private ExecutorService executorService;
 	@Autowired
@@ -118,7 +117,7 @@ public class CreateKeyPm extends PresentationModelBase {
 		public void run() {
 			validationErrors.clear();
 			try {
-				Key<KeyData> key = keyGeneratorService.createNewKey(createKeyParams);
+				Key key = keyGeneratorService.createNewKey(createKeyParams);
 				if (keyGenerationFuture == null) {
 					return;
 				}

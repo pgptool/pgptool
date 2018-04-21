@@ -46,7 +46,6 @@ import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
 import org.pgptool.gui.encryption.api.EncryptionService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
 import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamSupervisor;
 import org.pgptool.gui.filecomparison.ChecksumCalcInputStreamSupervisorImpl;
@@ -85,10 +84,10 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 	private ConfigPairs appProps;
 	@Autowired
 	@Resource(name = "keyRingService")
-	private KeyRingService<KeyData> keyRingService;
+	private KeyRingService keyRingService;
 	@Autowired
 	@Resource(name = "encryptionService")
-	private EncryptionService<KeyData> encryptionService;
+	private EncryptionService encryptionService;
 	@Autowired
 	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
 	@Autowired
@@ -179,7 +178,7 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 	private boolean discoverIsHasMissingRecipients() {
 		log.debug("Discovering missing recipients");
 		Set<String> allRecipients = enumerateAllRecipientsIds();
-		List<Key<KeyData>> keys = keyRingService.findMatchingKeys(allRecipients);
+		List<Key> keys = keyRingService.findMatchingKeys(allRecipients);
 		boolean result = allRecipients.size() > keys.size();
 		log.debug("Discovering missing recipients finished. HasMissingRecipients = " + result);
 		return result;
@@ -321,7 +320,7 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 				EncryptionDialogParameters encryptionParams = mapFileToEncryptionParams.get(decryptedFile);
 
 				// Check recipients
-				Collection<Key<KeyData>> recipients = keyRingService
+				Collection<Key> recipients = keyRingService
 						.findMatchingKeys(new HashSet<>(encryptionParams.getRecipientsKeysIds()));
 				Preconditions.checkState(recipients.size() > 0, text("error.noRecipientsFound"));
 				boolean isMissingRecipients = recipients.size() < encryptionParams.getRecipientsKeysIds().size();

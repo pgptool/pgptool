@@ -18,7 +18,6 @@ import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.hintsforusage.hints.PrivateKeyBackupHint.PrivateKeyExportedEvent;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.FolderChooserDialog;
@@ -35,7 +34,7 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 
 	@Autowired
 	@Resource(name = "keyFilesOperations")
-	private KeyFilesOperations<KeyData> keyFilesOperations;
+	private KeyFilesOperations keyFilesOperations;
 	@Autowired
 	private EventBus eventBus;
 	@Autowired
@@ -44,7 +43,7 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 	private FolderChooserDialog folderChooserDialog;
 
 	@Override
-	public void exportPublicKey(Key<KeyData> key, Window parentWindow) {
+	public void exportPublicKey(Key key, Window parentWindow) {
 		String targetFile = buildPublicKeyTargetChooser(key, parentWindow).askUserForFile();
 		if (targetFile == null) {
 			return;
@@ -61,7 +60,7 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 		browseForFolder(FilenameUtils.getFullPath(targetFile));
 	}
 
-	public SaveFileChooserDialog buildPublicKeyTargetChooser(Key<KeyData> key, Window parentWindow) {
+	public SaveFileChooserDialog buildPublicKeyTargetChooser(Key key, Window parentWindow) {
 		return new SaveFileChooserDialog(parentWindow, "action.exportPublicKey", "action.export", appProps,
 				"ExportKeyDialog") {
 			@Override
@@ -84,7 +83,7 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 	}
 
 	@Override
-	public void exportPrivateKey(Key<KeyData> key, Window parentWindow) {
+	public void exportPrivateKey(Key key, Window parentWindow) {
 		String targetFile = buildPrivateKeyTargetChooser(key, parentWindow).askUserForFile();
 		if (targetFile == null) {
 			return;
@@ -104,7 +103,7 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 		browseForFolder(FilenameUtils.getFullPath(targetFile));
 	}
 
-	public SaveFileChooserDialog buildPrivateKeyTargetChooser(final Key<KeyData> key, Window parentWindow) {
+	public SaveFileChooserDialog buildPrivateKeyTargetChooser(final Key key, Window parentWindow) {
 		return new SaveFileChooserDialog(parentWindow, "action.exportPrivateKey", "action.export", appProps,
 				"ExportKeyDialog") {
 			@Override
@@ -127,8 +126,8 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 		};
 	}
 
-	private File suggestFileNameForKey(Key<KeyData> key, String basePathNoSlash, String optionalSuffix,
-			boolean isAddExtension, boolean isMitigateOverwrite) {
+	private File suggestFileNameForKey(Key key, String basePathNoSlash, String optionalSuffix, boolean isAddExtension,
+			boolean isMitigateOverwrite) {
 		String userName = key.getKeyInfo().buildUserNameOnly();
 		String fileName = basePathNoSlash + File.separator + userName;
 		String fileNameWithoutExt = fileName;
@@ -144,7 +143,7 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 		return new File(fileName);
 	}
 
-	private String addKeyIdIfFileAlreadyExists(Key<KeyData> key, boolean isAddExtension, String fileName,
+	private String addKeyIdIfFileAlreadyExists(Key key, boolean isAddExtension, String fileName,
 			String fileNameWithoutExt) {
 		if (!new File(fileName).exists()) {
 			return fileName;
@@ -158,7 +157,7 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 	}
 
 	@Override
-	public void exportPublicKeys(ArrayList<Key<KeyData>> keys, Window parentWindow) {
+	public void exportPublicKeys(ArrayList<Key> keys, Window parentWindow) {
 		String newFolder = getFolderChooserDialog().askUserForFolder(parentWindow);
 		if (newFolder == null) {
 			return;
@@ -171,7 +170,7 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 			Preconditions.checkArgument(folder.exists() || folder.mkdirs(),
 					"Failed to verify target folder existance " + newFolder);
 			for (int i = 0; i < keys.size(); i++) {
-				Key<KeyData> key = keys.get(i);
+				Key key = keys.get(i);
 				File targetFile = suggestFileNameForKey(key, newFolder, null, true, true);
 				keyFilesOperations.exportPublicKey(key, targetFile.getAbsolutePath());
 				keysExported++;

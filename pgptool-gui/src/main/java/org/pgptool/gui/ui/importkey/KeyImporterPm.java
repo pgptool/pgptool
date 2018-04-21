@@ -42,7 +42,6 @@ import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.keyslist.ComparatorKeyByNameImpl;
 import org.pgptool.gui.ui.keyslist.KeysTableModel;
@@ -70,15 +69,15 @@ public class KeyImporterPm extends PresentationModelBase {
 
 	@Autowired
 	@Resource(name = "keyFilesOperations")
-	private KeyFilesOperations<KeyData> keyFilesOperations;
+	private KeyFilesOperations keyFilesOperations;
 	@Autowired
 	@Resource(name = "keyRingService")
-	private KeyRingService<KeyData> keyRingService;
+	private KeyRingService keyRingService;
 	private KeyImporterHost host;
 
-	private ModelTableProperty<Key<KeyData>> keys;
+	private ModelTableProperty<Key> keys;
 	private MultipleFilesChooserDialog sourceFileChooser;
-	private Comparator<Key<KeyData>> keySorterByNameAsc = new ComparatorKeyByNameImpl<KeyData>();
+	private Comparator<Key> keySorterByNameAsc = new ComparatorKeyByNameImpl();
 
 	public boolean init(KeyImporterHost host) {
 		Preconditions.checkArgument(host != null);
@@ -139,15 +138,15 @@ public class KeyImporterPm extends PresentationModelBase {
 						// key files it shouldn't be a problem. Non-key files
 						// with same xtensions will not take a long time to fail
 						try {
-							Key<KeyData> readKey = keyFilesOperations.readKeyFromFile(f.getAbsolutePath());
+							Key readKey = keyFilesOperations.readKeyFromFile(f.getAbsolutePath());
 							Preconditions.checkState(readKey != null, "Key wasn't parsed");
 
-							Key<KeyData> existingKey = keyRingService.findKeyById(readKey.getKeyInfo().getKeyId());
+							Key existingKey = keyRingService.findKeyById(readKey.getKeyInfo().getKeyId());
 							if (existingKey == null) {
 								return true;
 							}
-							if (!existingKey.getKeyData().isCanBeUsedForDecryption()
-									&& readKey.getKeyData().isCanBeUsedForDecryption()) {
+							if (!existingKey.geKeyData().isCanBeUsedForDecryption()
+									&& readKey.geKeyData().isCanBeUsedForDecryption()) {
 								return true;
 							}
 							return false;
@@ -188,7 +187,7 @@ public class KeyImporterPm extends PresentationModelBase {
 	private boolean loadKey(File[] filesToLoad) {
 		try {
 			Map<String, Throwable> exceptions = new HashMap<>();
-			List<Key<KeyData>> loadedKeys = loadKeysSafe(filesToLoad, exceptions);
+			List<Key> loadedKeys = loadKeysSafe(filesToLoad, exceptions);
 
 			if (exceptions.size() > 0) {
 				String msg = buildSummaryMessage("error.keysLoadedStatistics", loadedKeys.size(), exceptions);
@@ -207,11 +206,11 @@ public class KeyImporterPm extends PresentationModelBase {
 		return false;
 	}
 
-	private List<Key<KeyData>> loadKeysSafe(File[] filesToLoad, Map<String, Throwable> exceptions) {
-		List<Key<KeyData>> ret = new ArrayList<>(filesToLoad.length);
+	private List<Key> loadKeysSafe(File[] filesToLoad, Map<String, Throwable> exceptions) {
+		List<Key> ret = new ArrayList<>(filesToLoad.length);
 		for (File keyFile : filesToLoad) {
 			try {
-				Key<KeyData> key = keyFilesOperations.readKeyFromFile(keyFile.getAbsolutePath());
+				Key key = keyFilesOperations.readKeyFromFile(keyFile.getAbsolutePath());
 				ret.add(key);
 			} catch (Throwable t) {
 				log.warn("Failed to read key file", t);
@@ -261,7 +260,7 @@ public class KeyImporterPm extends PresentationModelBase {
 
 		private int importKeysSafe(Map<String, Throwable> exceptions) {
 			int loadedCount = 0;
-			for (Key<KeyData> key : keys.getList()) {
+			for (Key key : keys.getList()) {
 				try {
 					keyRingService.addKey(key);
 					loadedCount++;
@@ -284,7 +283,7 @@ public class KeyImporterPm extends PresentationModelBase {
 
 	private KeysTablePm keysTablePm = new KeysTablePm() {
 		@Override
-		public ModelTablePropertyAccessor<Key<KeyData>> getKeys() {
+		public ModelTablePropertyAccessor<Key> getKeys() {
 			return keys.getModelTablePropertyAccessor();
 		}
 	};

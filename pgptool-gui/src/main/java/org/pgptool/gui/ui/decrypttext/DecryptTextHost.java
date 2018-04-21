@@ -23,10 +23,9 @@ import java.util.Set;
 import javax.swing.Action;
 
 import org.pgptool.gui.app.Message;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
 
-public interface DecryptTextHost<TKeyData extends KeyData> {
+public interface DecryptTextHost {
 	void handleClose();
 
 	Action getActionToOpenCertificatesList();
@@ -38,8 +37,8 @@ public interface DecryptTextHost<TKeyData extends KeyData> {
 	 * 
 	 * @param window
 	 */
-	void askUserForKeyAndPassword(Set<String> keysIds, Message purpose,
-			KeyAndPasswordCallback<TKeyData> keyAndPasswordCallback, Window parentWindow);
+	void askUserForKeyAndPassword(Set<String> keysIds, Message purpose, KeyAndPasswordCallback keyAndPasswordCallback,
+			Window parentWindow);
 
 	void openEncryptText(Set<String> recipientsList);
 }

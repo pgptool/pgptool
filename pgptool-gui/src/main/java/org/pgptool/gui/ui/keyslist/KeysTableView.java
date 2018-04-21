@@ -48,7 +48,6 @@ import javax.swing.table.DefaultTableModel;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersister;
 import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersisterImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -194,7 +193,7 @@ public class KeysTableView extends ViewBase<KeysTablePm> {
 				return;
 			}
 
-			Key<KeyData> selectedRow = getSelectedRow();
+			Key selectedRow = getSelectedRow();
 			if (selectedRow == null) {
 				table.clearSelection();
 			}
@@ -204,7 +203,7 @@ public class KeysTableView extends ViewBase<KeysTablePm> {
 		}
 	};
 
-	private Key<KeyData> getSelectedRow() {
+	private Key getSelectedRow() {
 		int row = table.getSelectedRow();
 		if (row < 0) {
 			return null;
@@ -212,10 +211,9 @@ public class KeysTableView extends ViewBase<KeysTablePm> {
 		return pm.getKeys().findRowByIdx(row);
 	}
 
-	private TypedPropertyChangeListener<Key<KeyData>> rowPmSelectionListener = new TypedPropertyChangeListener<Key<KeyData>>() {
+	private TypedPropertyChangeListener<Key> rowPmSelectionListener = new TypedPropertyChangeListener<Key>() {
 		@Override
-		public void handlePropertyChanged(Object source, String propertyName, Key<KeyData> oldValue,
-				Key<KeyData> newValue) {
+		public void handlePropertyChanged(Object source, String propertyName, Key oldValue, Key newValue) {
 			if (newValue == getSelectedRow()) {
 				return;
 			}

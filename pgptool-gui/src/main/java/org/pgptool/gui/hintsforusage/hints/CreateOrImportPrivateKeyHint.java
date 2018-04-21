@@ -14,9 +14,7 @@ import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryption.api.dto.KeyTypeEnum;
-import org.pgptool.gui.encryption.implpgp.KeyDataPgp;
 import org.pgptool.gui.hintsforusage.api.HintsCoordinator;
 import org.pgptool.gui.hintsforusage.ui.HintPm;
 import org.pgptool.gui.ui.root.GlobalAppActions;
@@ -42,7 +40,7 @@ public class CreateOrImportPrivateKeyHint extends HintPm implements Initializing
 	private EventBus eventBus;
 	@Autowired
 	@Resource(name = "keyRingService")
-	private KeyRingService<KeyData> keyRingService;
+	private KeyRingService keyRingService;
 	@Autowired
 	private GlobalAppActions globalAppActions;
 	@Autowired
@@ -64,7 +62,7 @@ public class CreateOrImportPrivateKeyHint extends HintPm implements Initializing
 	};
 
 	@Subscribe
-	public void onKeyAdded(EntityChangedEvent<Key<KeyDataPgp>> e) {
+	public void onKeyAdded(EntityChangedEvent<Key> e) {
 		if (!e.isTypeOf(Key.class)) {
 			return;
 		}

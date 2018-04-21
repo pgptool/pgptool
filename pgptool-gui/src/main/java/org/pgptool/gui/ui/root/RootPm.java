@@ -34,7 +34,6 @@ import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.hintsforusage.api.HintsCoordinator;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.about.AboutHost;
@@ -449,11 +448,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	private class GetKeyPasswordDialogOpener extends DialogOpener<GetKeyPasswordDialogPm, GetKeyPasswordDialogView> {
 		private Set<String> keysIds;
 		private Message purpose;
-		private KeyAndPasswordCallback<?> keyAndPasswordCallback;
+		private KeyAndPasswordCallback keyAndPasswordCallback;
 		private Window parentWindow;
 
 		public GetKeyPasswordDialogOpener(Set<String> keysIds, Message purpose,
-				KeyAndPasswordCallback<?> keyAndPasswordCallback, Window parentWindow) {
+				KeyAndPasswordCallback keyAndPasswordCallback, Window parentWindow) {
 			super(GetKeyPasswordDialogPm.class, GetKeyPasswordDialogView.class, "action.providePasswordForTheKey");
 			this.keysIds = keysIds;
 			this.purpose = purpose;
@@ -486,7 +485,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	private DialogOpener<DecryptTextPm, DecryptTextView> decryptTextHost = new DialogOpener<DecryptTextPm, DecryptTextView>(
 			DecryptTextPm.class, DecryptTextView.class, "action.decryptText") {
 
-		class DecryptTextHostImpl<TKeyData extends KeyData> implements DecryptTextHost<TKeyData> {
+		class DecryptTextHostImpl implements DecryptTextHost {
 			@Override
 			public void handleClose() {
 				view.unrender();
@@ -501,7 +500,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 
 			@Override
 			public void askUserForKeyAndPassword(Set<String> keysIds, Message purpose,
-					KeyAndPasswordCallback<TKeyData> keyAndPasswordCallback, Window parentWindow) {
+					KeyAndPasswordCallback keyAndPasswordCallback, Window parentWindow) {
 				new GetKeyPasswordDialogOpener(keysIds, purpose, keyAndPasswordCallback,
 						parentWindow).actionToOpenWindow.actionPerformed(null);
 			}
@@ -512,7 +511,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 			}
 		};
 
-		private DecryptTextHostImpl<KeyData> host = new DecryptTextHostImpl<KeyData>();
+		private DecryptTextHostImpl host = new DecryptTextHostImpl();
 
 		@Override
 		protected boolean postConstructPm() {
@@ -803,9 +802,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		return createKeyWindowHost.actionToOpenWindow;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public void triggerPrivateKeyExport(Key<? extends KeyData> key) {
-		keysExporterUi.exportPrivateKey((Key<KeyData>) key, mainFrameView.getWindow());
+	public void triggerPrivateKeyExport(Key key) {
+		keysExporterUi.exportPrivateKey((Key) key, mainFrameView.getWindow());
 	}
 }

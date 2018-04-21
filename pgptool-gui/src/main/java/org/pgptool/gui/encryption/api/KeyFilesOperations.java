@@ -18,18 +18,16 @@
 package org.pgptool.gui.encryption.api;
 
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.summerb.approaches.validation.FieldValidationException;
 
-public interface KeyFilesOperations<TKeyData extends KeyData> {
+public interface KeyFilesOperations {
 	final String FN_PASSWORD = "password";
 
-	Key<TKeyData> readKeyFromFile(String filePathName) throws FieldValidationException;
+	Key readKeyFromFile(String filePathName) throws FieldValidationException;
 
-	void exportPublicKey(Key<TKeyData> key, String targetFilePathname);
+	void exportPublicKey(Key key, String targetFilePathname);
 
-	void exportPrivateKey(Key<TKeyData> key, String targetFilePathname);
+	void exportPrivateKey(Key key, String targetFilePathname);
 
-	void validateDecryptionKeyPassword(String requestedKeyId, Key<TKeyData> key, String password)
-			throws FieldValidationException;
+	void validateDecryptionKeyPassword(String requestedKeyId, Key key, String password) throws FieldValidationException;
 }

@@ -30,7 +30,6 @@ import javax.swing.Action;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
@@ -54,25 +53,25 @@ public class KeysListPm extends PresentationModelBase {
 	private EventBus eventBus;
 	@Autowired
 	@Resource(name = "keyRingService")
-	private KeyRingService<KeyData> keyRingService;
+	private KeyRingService keyRingService;
 	@Autowired
 	@Resource(name = "keyFilesOperations")
-	private KeyFilesOperations<KeyData> keyFilesOperations;
+	private KeyFilesOperations keyFilesOperations;
 	@Autowired
 	private KeysExporterUi keysExporterUi;
 
 	private KeysListHost host;
 
-	private ModelTableProperty<Key<KeyData>> tableModelProp;
+	private ModelTableProperty<Key> tableModelProp;
 	private ModelProperty<Boolean> hasData;
 
-	private Comparator<Key<KeyData>> keySorterByNameAsc = new ComparatorKeyByNameImpl<KeyData>();
+	private Comparator<Key> keySorterByNameAsc = new ComparatorKeyByNameImpl();
 
 	public void init(KeysListHost host) {
 		Preconditions.checkArgument(host != null);
 		this.host = host;
 
-		List<Key<KeyData>> initialKeys = keyRingService.readKeys();
+		List<Key> initialKeys = keyRingService.readKeys();
 		initialKeys.sort(keySorterByNameAsc);
 		tableModelProp = new ModelTableProperty<>(this, initialKeys, "keys", new KeysTableModel());
 		hasData = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(!initialKeys.isEmpty()), "hasData");
@@ -87,7 +86,7 @@ public class KeysListPm extends PresentationModelBase {
 	private PropertyChangeListener onSelectionChangedHandler = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			Key<KeyData> key = tableModelProp.getValue();
+			Key key = tableModelProp.getValue();
 			boolean hasSelection = key != null;
 			for (int i = 0; i < contextMenuActions.length; i++) {
 				Action action = contextMenuActions[i];
@@ -96,7 +95,7 @@ public class KeysListPm extends PresentationModelBase {
 				}
 				((Action) action).setEnabled(hasSelection);
 			}
-			actionExportPrivateKey.setEnabled(key != null && key.getKeyData().isCanBeUsedForDecryption());
+			actionExportPrivateKey.setEnabled(key != null && key.geKeyData().isCanBeUsedForDecryption());
 		}
 	};
 
@@ -106,7 +105,7 @@ public class KeysListPm extends PresentationModelBase {
 			return;
 		}
 
-		List<Key<KeyData>> newKeysList = keyRingService.readKeys();
+		List<Key> newKeysList = keyRingService.readKeys();
 		newKeysList.sort(keySorterByNameAsc);
 		tableModelProp.getList().clear();
 		tableModelProp.getList().addAll(newKeysList);
@@ -148,7 +147,7 @@ public class KeysListPm extends PresentationModelBase {
 				return;
 			}
 
-			Key<KeyData> key = tableModelProp.getValue();
+			Key key = tableModelProp.getValue();
 			if (!UiUtils.confirm("phrase.areYouSureToDeleteKey", new Object[] { key.getKeyInfo().getUser() },
 					findRegisteredWindowIfAny())) {
 				return;
@@ -165,7 +164,7 @@ public class KeysListPm extends PresentationModelBase {
 			if (!tableModelProp.hasValue()) {
 				return;
 			}
-			Key<KeyData> key = tableModelProp.getValue();
+			Key key = tableModelProp.getValue();
 			keysExporterUi.exportPublicKey(key, findRegisteredWindowIfAny());
 		}
 	};
@@ -177,7 +176,7 @@ public class KeysListPm extends PresentationModelBase {
 			if (!tableModelProp.hasValue()) {
 				return;
 			}
-			Key<KeyData> key = tableModelProp.getValue();
+			Key key = tableModelProp.getValue();
 			keysExporterUi.exportPrivateKey(key, findRegisteredWindowIfAny());
 		}
 	};
@@ -186,7 +185,7 @@ public class KeysListPm extends PresentationModelBase {
 	public Action actionExportAllPublicKeys = new LocalizedAction("keys.exportAllPublic") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			ArrayList<Key<KeyData>> keys = new ArrayList<>(tableModelProp.getList());
+			ArrayList<Key> keys = new ArrayList<>(tableModelProp.getList());
 			Preconditions.checkState(keys.size() > 0,
 					"Export all public keys action was triggered while there is no keys to export");
 
@@ -204,12 +203,12 @@ public class KeysListPm extends PresentationModelBase {
 		}
 
 		@Override
-		public ModelTablePropertyAccessor<Key<KeyData>> getKeys() {
+		public ModelTablePropertyAccessor<Key> getKeys() {
 			return tableModelProp.getModelTablePropertyAccessor();
 		}
 
 		@Override
-		public ModelPropertyAccessor<Key<KeyData>> getSelectedRow() {
+		public ModelPropertyAccessor<Key> getSelectedRow() {
 			return tableModelProp.getModelPropertyAccessor();
 		}
 

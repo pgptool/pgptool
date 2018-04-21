@@ -53,7 +53,7 @@ public class KeyFilesOperationsPgpImplTest {
 	@Test
 	public void testReadKeyFromFileExpectCanReadPrivateKey() throws Exception {
 		KeyFilesOperationsPgpImpl fixture = buildFixture();
-		Key<KeyDataPgp> key = fixture.readKeyFromFile(TestTools.getFileNameForResource("keys/Alice.asc"));
+		Key key = fixture.readKeyFromFile(TestTools.getFileNameForResource("keys/Alice.asc"));
 		assertNotNull(key);
 		assertNotNull(key.getKeyInfo());
 		assertEquals("Alice <alice@email.com>", key.getKeyInfo().getUser());
@@ -62,10 +62,10 @@ public class KeyFilesOperationsPgpImplTest {
 	@Test
 	public void testCanExportAndImportSameKeyAsc() throws Exception {
 		KeyFilesOperationsPgpImpl fixture = buildFixture();
-		Key<KeyDataPgp> _key = fixture.readKeyFromFile(TestTools.getFileNameForResource("keys/Alice.asc"));
+		Key _key = fixture.readKeyFromFile(TestTools.getFileNameForResource("keys/Alice.asc"));
 		String fileName = tempFolder + File.separator + "alice.asc";
 		fixture.exportPrivateKey(_key, fileName);
-		Key<KeyDataPgp> key = fixture.readKeyFromFile(fileName);
+		Key key = fixture.readKeyFromFile(fileName);
 		assertNotNull(key);
 		assertNotNull(key.getKeyInfo());
 		assertEquals("Alice <alice@email.com>", key.getKeyInfo().getUser());
@@ -75,7 +75,7 @@ public class KeyFilesOperationsPgpImplTest {
 	public void testCanExportPublicFromPrivateKey() throws Exception {
 		KeyFilesOperationsPgpImpl fixture = buildFixture();
 
-		Key<KeyDataPgp> key = fixture.readKeyFromFile(TestTools.getFileNameForResource("keys/Bob.asc"));
+		Key key = fixture.readKeyFromFile(TestTools.getFileNameForResource("keys/Bob.asc"));
 
 		// now export private key
 		File privateKey1 = new File(tempFolder + File.separator + "bob-private1.asc");
@@ -92,17 +92,17 @@ public class KeyFilesOperationsPgpImplTest {
 		assertTrue(publicKey1.length() > 0);
 
 		// now read public key
-		Key<KeyDataPgp> publicKey = fixture.readKeyFromFile(publicKey1.getAbsolutePath());
+		Key publicKey = fixture.readKeyFromFile(publicKey1.getAbsolutePath());
 		assertEquals(key.getKeyInfo().getUser(), publicKey.getKeyInfo().getUser());
 	}
 
 	@Test
 	public void testCanExportAndImportSameKeyBpg() throws Exception {
 		KeyFilesOperationsPgpImpl fixture = buildFixture();
-		Key<KeyDataPgp> _key = fixture.readKeyFromFile(TestTools.getFileNameForResource("keys/Alice.asc"));
+		Key _key = fixture.readKeyFromFile(TestTools.getFileNameForResource("keys/Alice.asc"));
 		String fileName = tempFolder + File.separator + "alice.bpg";
 		fixture.exportPrivateKey(_key, fileName);
-		Key<KeyDataPgp> key = fixture.readKeyFromFile(fileName);
+		Key key = fixture.readKeyFromFile(fileName);
 		assertNotNull(key);
 		assertNotNull(key.getKeyInfo());
 		assertEquals("Alice <alice@email.com>", key.getKeyInfo().getUser());
@@ -111,7 +111,7 @@ public class KeyFilesOperationsPgpImplTest {
 	@Test
 	public void testReadKeyFromFileExpectCanReadPublicKey() throws Exception {
 		KeyFilesOperationsPgpImpl fixture = buildFixture();
-		Key<KeyDataPgp> key = fixture.readKeyFromFile(TestTools.getFileNameForResource("keys/Paul.asc"));
+		Key key = fixture.readKeyFromFile(TestTools.getFileNameForResource("keys/Paul.asc"));
 		assertNotNull(key);
 		assertNotNull(key.getKeyInfo());
 		assertEquals("Paul <paul@email.com>", key.getKeyInfo().getUser());

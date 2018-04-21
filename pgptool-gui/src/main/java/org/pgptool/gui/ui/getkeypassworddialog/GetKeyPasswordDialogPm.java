@@ -3,7 +3,6 @@ package org.pgptool.gui.ui.getkeypassworddialog;
 import java.util.Set;
 
 import org.pgptool.gui.app.Message;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordHost;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPm;
@@ -26,11 +25,10 @@ public class GetKeyPasswordDialogPm extends PresentationModelBase implements App
 	private GetKeyPasswordPm getKeyPasswordPm;
 
 	private GetKeyPasswordDialogHost host;
-	@SuppressWarnings("rawtypes")
 	private KeyAndPasswordCallback keyAndPasswordCallback;
 
 	public boolean init(GetKeyPasswordDialogHost host, Set<String> keysIds, Message purpose,
-			KeyAndPasswordCallback<?> keyAndPasswordCallback) {
+			KeyAndPasswordCallback keyAndPasswordCallback) {
 		this.host = host;
 		this.keyAndPasswordCallback = keyAndPasswordCallback;
 
@@ -49,14 +47,12 @@ public class GetKeyPasswordDialogPm extends PresentationModelBase implements App
 	}
 
 	private GetKeyPasswordHost getPasswordHost = new GetKeyPasswordHost() {
-		@SuppressWarnings("unchecked")
 		@Override
-		public <T extends KeyData> void onPasswordDeterminedForKey(PasswordDeterminedForKey<T> result) {
+		public void onPasswordDeterminedForKey(PasswordDeterminedForKey result) {
 			host.handleClose();
 			keyAndPasswordCallback.onKeyPasswordResult(result);
 		}
 
-		@SuppressWarnings("unchecked")
 		@Override
 		public void onCancel() {
 			host.handleClose();

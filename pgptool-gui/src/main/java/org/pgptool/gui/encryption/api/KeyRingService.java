@@ -21,15 +21,14 @@ import java.util.List;
 import java.util.Set;
 
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryption.api.dto.MatchedKey;
 
-public interface KeyRingService<TKeyData extends KeyData> {
-	List<Key<TKeyData>> readKeys();
+public interface KeyRingService {
+	List<Key> readKeys();
 
-	void addKey(Key<TKeyData> key);
+	void addKey(Key key);
 
-	void removeKey(Key<TKeyData> key);
+	void removeKey(Key key);
 
 	/**
 	 * This method will find all keys that are compatible with IDs provided and
@@ -41,10 +40,10 @@ public interface KeyRingService<TKeyData extends KeyData> {
 	 *            list of ids needs to be found.
 	 * @return list of keys or empty array if none found
 	 */
-	List<MatchedKey<TKeyData>> findMatchingDecryptionKeys(Set<String> keysIds);
+	List<MatchedKey> findMatchingDecryptionKeys(Set<String> keysIds);
 
-	List<Key<TKeyData>> findMatchingKeys(Set<String> keysIds);
+	List<Key> findMatchingKeys(Set<String> keysIds);
 
-	Key<TKeyData> findKeyById(String keyId);
+	Key findKeyById(String keyId);
 
 }

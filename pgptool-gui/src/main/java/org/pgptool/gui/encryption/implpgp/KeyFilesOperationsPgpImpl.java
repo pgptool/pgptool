@@ -54,7 +54,7 @@ import org.summerb.approaches.validation.ValidationError;
 
 import com.google.common.base.Preconditions;
 
-public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp> {
+public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 	private static Logger log = Logger.getLogger(KeyFilesOperationsPgpImpl.class);
 
 	/**
@@ -65,12 +65,12 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 
 	@SuppressWarnings("deprecation")
 	@Override
-	public Key<KeyDataPgp> readKeyFromFile(String filePathName) {
+	public Key readKeyFromFile(String filePathName) {
 		try {
 			KeyDataPgp keyData = readKeyData(filePathName);
 
-			Key<KeyDataPgp> key = new Key<>();
-			key.setKeyData(keyData);
+			Key key = new Key();
+			key.seKeyData(keyData);
 			if (keyData.getSecretKeyRing() != null) {
 				key.setKeyInfo(buildKeyInfoFromSecret(keyData.getSecretKeyRing()));
 			} else {
@@ -168,8 +168,8 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 	}
 
 	@Override
-	public void exportPublicKey(Key<KeyDataPgp> key, String targetFilePathname) {
-		Preconditions.checkArgument(key != null && key.getKeyData() != null && key.getKeyInfo() != null,
+	public void exportPublicKey(Key key, String targetFilePathname) {
+		Preconditions.checkArgument(key != null && key.geKeyData() != null && key.getKeyInfo() != null,
 				"Key must be providedand fully described");
 		Preconditions.checkArgument(StringUtils.hasText(targetFilePathname), "targetFilePathname must be provided");
 		Stack<OutputStream> os = new Stack<>();
@@ -178,10 +178,11 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 			if ("asc".equalsIgnoreCase(FilenameUtils.getExtension(targetFilePathname))) {
 				os.push(new ArmoredOutputStream(os.peek()));
 			}
-			if (key.getKeyData().getPublicKeyRing() != null) {
-				key.getKeyData().getPublicKeyRing().encode(os.peek());
+			KeyDataPgp keyDataPgp = KeyDataPgp.get(key);
+			if (keyDataPgp.getPublicKeyRing() != null) {
+				keyDataPgp.getPublicKeyRing().encode(os.peek());
 			} else {
-				key.getKeyData().getSecretKeyRing().getPublicKey().encode(os.peek());
+				keyDataPgp.getSecretKeyRing().getPublicKey().encode(os.peek());
 			}
 		} catch (Throwable t) {
 			throw new RuntimeException(
@@ -194,10 +195,11 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 	}
 
 	@Override
-	public void exportPrivateKey(Key<KeyDataPgp> key, String targetFilePathname) {
-		Preconditions.checkArgument(key != null && key.getKeyData() != null && key.getKeyInfo() != null,
+	public void exportPrivateKey(Key key, String targetFilePathname) {
+		Preconditions.checkArgument(key != null && key.geKeyData() != null && key.getKeyInfo() != null,
 				"Key must be providedand fully described");
-		Preconditions.checkArgument(key.getKeyData().getSecretKeyRing() != null, "KeyPair key wasn't provided");
+		KeyDataPgp keyDataPgp = KeyDataPgp.get(key);
+		Preconditions.checkArgument(keyDataPgp.getSecretKeyRing() != null, "KeyPair key wasn't provided");
 		Preconditions.checkArgument(StringUtils.hasText(targetFilePathname), "targetFilePathname must be provided");
 		Stack<OutputStream> os = new Stack<>();
 		try {
@@ -205,9 +207,9 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 			if ("asc".equalsIgnoreCase(FilenameUtils.getExtension(targetFilePathname))) {
 				os.push(new ArmoredOutputStream(os.peek()));
 			}
-			key.getKeyData().getSecretKeyRing().encode(os.peek());
-			if (key.getKeyData().getPublicKeyRing() != null) {
-				key.getKeyData().getPublicKeyRing().encode(os.peek());
+			keyDataPgp.getSecretKeyRing().encode(os.peek());
+			if (keyDataPgp.getPublicKeyRing() != null) {
+				keyDataPgp.getPublicKeyRing().encode(os.peek());
 			}
 		} catch (Throwable t) {
 			throw new RuntimeException(
@@ -221,10 +223,10 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 
 	@SuppressWarnings("deprecation")
 	@Override
-	public void validateDecryptionKeyPassword(String requestedKeyId, Key<KeyDataPgp> key, String password)
+	public void validateDecryptionKeyPassword(String requestedKeyId, Key key, String password)
 			throws FieldValidationException {
 		try {
-			PGPSecretKey secretKey = key.getKeyData().findSecretKeyById(requestedKeyId);
+			PGPSecretKey secretKey = KeyDataPgp.get(key).findSecretKeyById(requestedKeyId);
 			Preconditions.checkArgument(secretKey != null, "Matching secret key wasn't found");
 			PGPPrivateKey privateKey = getPrivateKey(password, secretKey);
 			Preconditions.checkArgument(privateKey != null, "Failed to extract private key");

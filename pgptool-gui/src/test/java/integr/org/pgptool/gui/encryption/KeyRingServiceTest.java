@@ -31,7 +31,6 @@ import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
@@ -49,7 +48,6 @@ import integr.org.pgptool.gui.TestTools;
 @ContextConfiguration("classpath:integr-test-context.xml")
 @ProfileValueSourceConfiguration(SystemProfileValueSource.class)
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
-@SuppressWarnings({ "rawtypes", "unchecked" })
 public class KeyRingServiceTest {
 	@Autowired
 	private KeyFilesOperations keyFilesOperations;
@@ -63,23 +61,23 @@ public class KeyRingServiceTest {
 
 	@Test
 	public void testKeyRingServiceExpectCanFindKeyAfterSerialization() throws Exception {
-		Key<KeyData> key = keyFilesOperations.readKeyFromFile(TestTools.getFileNameForResource("keys/Alice.asc"));
+		Key key = keyFilesOperations.readKeyFromFile(TestTools.getFileNameForResource("keys/Alice.asc"));
 
-		KeyRingService<KeyData> keyRingService1 = buildAnotherKeyRingService();
+		KeyRingService keyRingService1 = buildAnotherKeyRingService();
 		keyRingService1.addKey(key);
-		List<Key<KeyData>> keys = keyRingService1.readKeys();
+		List<Key> keys = keyRingService1.readKeys();
 		assertNotNull(keys);
 		assertEquals(1, keys.size());
 		assertEquals("Alice <alice@email.com>", keys.get(0).getKeyInfo().getUser());
 
-		KeyRingService<KeyData> keyRingService2 = buildAnotherKeyRingService();
+		KeyRingService keyRingService2 = buildAnotherKeyRingService();
 		keys = keyRingService2.readKeys();
 		assertNotNull(keys);
 		assertEquals(1, keys.size());
 		assertEquals("Alice <alice@email.com>", keys.get(0).getKeyInfo().getUser());
 	}
 
-	private KeyRingService<KeyData> buildAnotherKeyRingService() {
+	private KeyRingService buildAnotherKeyRingService() {
 		KeyRingServicePgpImpl keyRingService1 = new KeyRingServicePgpImpl();
 		keyRingService1.setConfigRepository(configRepository);
 		keyRingService1.setEventBus(eventBus);

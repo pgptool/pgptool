@@ -13,7 +13,6 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.pgptool.gui.app.Messages;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryption.api.dto.MatchedKey;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordManyKeysView;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordOneKeyView;
@@ -117,7 +116,7 @@ public class GetKeyPasswordDialogView extends DialogViewBaseCustom<GetKeyPasswor
 
 	public ViewBase<GetKeyPasswordPm> getPasswordView() {
 		if (passwordView == null) {
-			List<MatchedKey<KeyData>> matchedKeys = pm.getGetKeyPasswordPm().getMatchedKeys();
+			List<MatchedKey> matchedKeys = pm.getGetKeyPasswordPm().getMatchedKeys();
 			if (matchedKeys != null && matchedKeys.size() == 1) {
 				passwordView = applicationContext.getBean(GetKeyPasswordOneKeyView.class);
 			} else {

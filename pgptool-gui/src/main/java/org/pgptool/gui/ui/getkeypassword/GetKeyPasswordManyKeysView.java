@@ -33,7 +33,6 @@ import javax.swing.JPasswordField;
 
 import org.jdesktop.swingx.JXLabel;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.ui.tools.UiUtils;
 
 import ru.skarpushin.swingpm.base.ViewBase;
@@ -43,7 +42,7 @@ public class GetKeyPasswordManyKeysView extends ViewBase<GetKeyPasswordPm> {
 	private JPanel pnl;
 
 	private JXLabel purpose;
-	private JComboBox<Key<KeyData>> decryptionKey;
+	private JComboBox<Key> decryptionKey;
 	public JPasswordField edPassword;
 
 	public JButton btnPerformOperation;

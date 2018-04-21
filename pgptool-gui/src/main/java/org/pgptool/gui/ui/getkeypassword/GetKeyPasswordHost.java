@@ -17,10 +17,8 @@
  *******************************************************************************/
 package org.pgptool.gui.ui.getkeypassword;
 
-import org.pgptool.gui.encryption.api.dto.KeyData;
-
 public interface GetKeyPasswordHost {
 	void onCancel();
 
-	<T extends KeyData> void onPasswordDeterminedForKey(PasswordDeterminedForKey<T> result);
+	void onPasswordDeterminedForKey(PasswordDeterminedForKey result);
 }

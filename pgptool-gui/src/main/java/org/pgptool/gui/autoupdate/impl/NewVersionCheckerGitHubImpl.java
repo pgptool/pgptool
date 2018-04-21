@@ -21,6 +21,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
+	public static final String DEV_CERSION = "0.0.0.0";
+
 	private static Logger log = Logger.getLogger(NewVersionCheckerGitHubImpl.class);
 
 	private String configuredVersion = null;
@@ -32,6 +34,11 @@ public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
 	@Override
 	public UpdatePackageInfo findNewUpdateIfAvailable() throws GenericException {
 		try {
+			if (DEV_CERSION.equals(getVerisonsInfo())) {
+				// not spamming github during development runs
+				return null;
+			}
+
 			String json = HttpTools.httpGet(latestVersionUrl, headers);
 			LatestRelease latestRelease = gson.fromJson(json, LatestRelease.class);
 			if (latestRelease.isDraft() || latestRelease.isPrerelease()) {
@@ -129,7 +136,7 @@ public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
 		NewVersionChecker newVersionChecker = new NewVersionCheckerGitHubImpl();
 		String pgpVersion = newVersionChecker.getCurrentVersion();
 		if (NewVersionChecker.VERSION_UNRESOLVED.equals(pgpVersion)) {
-			pgpVersion = "0.0.0.0";
+			pgpVersion = DEV_CERSION;
 		}
 
 		String javaVersion = System.getProperty("java.version");

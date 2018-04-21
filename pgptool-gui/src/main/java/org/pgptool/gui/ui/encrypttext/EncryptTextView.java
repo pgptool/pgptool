@@ -33,25 +33,25 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
 
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.TextEditUxUtils;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.ui.tools.checklistbox.JCheckList;
+import org.pgptool.gui.ui.tools.checklistbox.ModelMultSelInCheckListBinding;
 
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
 public class EncryptTextView extends DialogViewBaseCustom<EncryptTextPm> {
 	private JPanel pnl;
 
-	private JList<Key> recipients;
+	private JCheckList<Key> recipients;
 	private JScrollPane recipientsScroller;
 	private JButton btnSelectRecipientsFromClipboard;
 
@@ -85,8 +85,7 @@ public class EncryptTextView extends DialogViewBaseCustom<EncryptTextPm> {
 		// recipients
 		ret.add(new JLabel(text("term.recipients")), sgl.cs(0, 0));
 
-		recipients = new JList<>();
-		recipients.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		recipients = new JCheckList<>();
 		recipientsScroller = new JScrollPane(recipients);
 		ret.add(recipientsScroller, sgl.cs(0, 1));
 
@@ -129,7 +128,9 @@ public class EncryptTextView extends DialogViewBaseCustom<EncryptTextPm> {
 	protected void internalBindToPm() {
 		super.internalBindToPm();
 
-		bindingContext.setupBinding(pm.getSelectedRecipients(), recipients);
+		bindingContext
+				.add(new ModelMultSelInCheckListBinding<>(bindingContext, pm.getSelectedRecipients(), recipients));
+
 		bindingContext.setupBinding(pm.getSourceText(), edSourceText);
 		bindingContext.setupBinding(pm.getTargetText(), edTargetText);
 

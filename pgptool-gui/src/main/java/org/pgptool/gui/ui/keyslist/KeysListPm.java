@@ -94,7 +94,7 @@ public class KeysListPm extends PresentationModelBase {
 				}
 				((Action) action).setEnabled(hasSelection);
 			}
-			actionExportPrivateKey.setEnabled(key != null && key.geKeyData().isCanBeUsedForDecryption());
+			actionExportPrivateKey.setEnabled(key != null && key.getKeyData().isCanBeUsedForDecryption());
 		}
 	};
 

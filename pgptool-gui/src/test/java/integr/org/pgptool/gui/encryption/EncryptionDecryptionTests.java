@@ -113,7 +113,7 @@ public class EncryptionDecryptionTests {
 			String password) {
 		Set<String> decryptionKeys = encryptionService.findKeyIdsForDecryption(encryptedFile);
 		Key key = keys.get(keyName);
-		Optional<String> requestedKeyId = decryptionKeys.stream().filter(x -> key.geKeyData().isHasAlternativeId(x))
+		Optional<String> requestedKeyId = decryptionKeys.stream().filter(x -> key.getKeyData().isHasAlternativeId(x))
 				.findFirst();
 		assertTrue(requestedKeyId.isPresent());
 		return new PasswordDeterminedForKey(requestedKeyId.get(), key, password);

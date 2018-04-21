@@ -155,7 +155,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 		KeyDataPgp keyData = new KeyDataPgp();
 		keyData.setPublicKeyRing(keyRingGen.generatePublicKeyRing());
 		keyData.setSecretKeyRing(keyRingGen.generateSecretKeyRing());
-		ret.seKeyData(keyData);
+		ret.setKeyData(keyData);
 		ret.setKeyInfo(KeyFilesOperationsPgpImpl.buildKeyInfoFromSecret(keyData.getSecretKeyRing()));
 		return ret;
 	}

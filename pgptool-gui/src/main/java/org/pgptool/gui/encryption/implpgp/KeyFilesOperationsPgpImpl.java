@@ -70,7 +70,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 			KeyDataPgp keyData = readKeyData(filePathName);
 
 			Key key = new Key();
-			key.seKeyData(keyData);
+			key.setKeyData(keyData);
 			if (keyData.getSecretKeyRing() != null) {
 				key.setKeyInfo(buildKeyInfoFromSecret(keyData.getSecretKeyRing()));
 			} else {
@@ -169,7 +169,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 
 	@Override
 	public void exportPublicKey(Key key, String targetFilePathname) {
-		Preconditions.checkArgument(key != null && key.geKeyData() != null && key.getKeyInfo() != null,
+		Preconditions.checkArgument(key != null && key.getKeyData() != null && key.getKeyInfo() != null,
 				"Key must be providedand fully described");
 		Preconditions.checkArgument(StringUtils.hasText(targetFilePathname), "targetFilePathname must be provided");
 		Stack<OutputStream> os = new Stack<>();
@@ -196,7 +196,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 
 	@Override
 	public void exportPrivateKey(Key key, String targetFilePathname) {
-		Preconditions.checkArgument(key != null && key.geKeyData() != null && key.getKeyInfo() != null,
+		Preconditions.checkArgument(key != null && key.getKeyData() != null && key.getKeyInfo() != null,
 				"Key must be providedand fully described");
 		KeyDataPgp keyDataPgp = KeyDataPgp.get(key);
 		Preconditions.checkArgument(keyDataPgp.getSecretKeyRing() != null, "KeyPair key wasn't provided");

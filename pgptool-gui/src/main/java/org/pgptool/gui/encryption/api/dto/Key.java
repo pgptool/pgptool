@@ -41,11 +41,11 @@ public class Key implements DtoBase {
 		this.keyInfo = keyInfo;
 	}
 
-	public KeyData geKeyData() {
+	public KeyData getKeyData() {
 		return keyData;
 	}
 
-	public void seKeyData(KeyData keyData) {
+	public void setKeyData(KeyData keyData) {
 		this.keyData = keyData;
 	}
 

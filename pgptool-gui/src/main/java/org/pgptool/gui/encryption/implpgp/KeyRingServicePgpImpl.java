@@ -90,12 +90,12 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 	@Override
 	public synchronized void addKey(Key key) {
 		Preconditions.checkArgument(key != null, "key required");
-		Preconditions.checkArgument(key.geKeyData() != null, "key data required");
-		Preconditions.checkArgument(key.geKeyData() instanceof KeyDataPgp, "Wrong key data type");
+		Preconditions.checkArgument(key.getKeyData() != null, "key data required");
+		Preconditions.checkArgument(key.getKeyData() instanceof KeyDataPgp, "Wrong key data type");
 
 		Key existingKey = findKeyById(key.getKeyInfo().getKeyId());
 		if (existingKey != null) {
-			if (!existingKey.geKeyData().isCanBeUsedForDecryption() && key.geKeyData().isCanBeUsedForDecryption()) {
+			if (!existingKey.getKeyData().isCanBeUsedForDecryption() && key.getKeyData().isCanBeUsedForDecryption()) {
 				removeKey(existingKey);
 			} else {
 				throw new RuntimeException("This key was already added");
@@ -113,7 +113,7 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 		ensureRead();
 
 		for (Key cur : pgpKeysRing) {
-			if (cur.getKeyInfo().getKeyId().equals(keyId) || cur.geKeyData().isHasAlternativeId(keyId)) {
+			if (cur.getKeyInfo().getKeyId().equals(keyId) || cur.getKeyData().isHasAlternativeId(keyId)) {
 				return cur;
 			}
 		}
@@ -161,7 +161,7 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 
 		List<MatchedKey> ret = new ArrayList<>(keysIds.size());
 		List<Key> allKeys = readKeys();
-		List<Key> decryptionKeys = allKeys.stream().filter(x -> x.geKeyData().isCanBeUsedForDecryption())
+		List<Key> decryptionKeys = allKeys.stream().filter(x -> x.getKeyData().isCanBeUsedForDecryption())
 				.collect(Collectors.toList());
 
 		for (String neededKeyId : keysIds) {
@@ -169,7 +169,7 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 			for (Iterator<Key> iter = decryptionKeys.iterator(); iter.hasNext();) {
 				Key existingKey = iter.next();
 				String user = existingKey.getKeyInfo().getUser();
-				if (existingKey.geKeyData().isHasAlternativeId(neededKeyId)) {
+				if (existingKey.getKeyData().isHasAlternativeId(neededKeyId)) {
 					log.debug("Found matching key: " + user);
 					ret.add(new MatchedKey(neededKeyId, existingKey));
 					break;
@@ -191,7 +191,7 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 			for (Iterator<Key> iter = allKeys.iterator(); iter.hasNext();) {
 				Key existingKey = iter.next();
 				String user = existingKey.getKeyInfo().getUser();
-				if (existingKey.geKeyData().isHasAlternativeId(neededKeyId)) {
+				if (existingKey.getKeyData().isHasAlternativeId(neededKeyId)) {
 					log.debug("Found matching key: " + user);
 					ret.add(existingKey);
 					break;

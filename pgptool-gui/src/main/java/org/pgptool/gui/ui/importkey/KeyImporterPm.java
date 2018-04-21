@@ -144,8 +144,8 @@ public class KeyImporterPm extends PresentationModelBase {
 							if (existingKey == null) {
 								return true;
 							}
-							if (!existingKey.geKeyData().isCanBeUsedForDecryption()
-									&& readKey.geKeyData().isCanBeUsedForDecryption()) {
+							if (!existingKey.getKeyData().isCanBeUsedForDecryption()
+									&& readKey.getKeyData().isCanBeUsedForDecryption()) {
 								return true;
 							}
 							return false;

@@ -100,7 +100,7 @@ public class EncryptTextPm extends PresentationModelBase {
 		Set<String> missedKeys = new HashSet<>();
 		for (String keyId : recipientsKeysIds) {
 			Optional<Key> key = availabileRecipients.getList().stream()
-					.filter(x -> x.geKeyData().isHasAlternativeId(keyId)).findFirst();
+					.filter(x -> x.getKeyData().isHasAlternativeId(keyId)).findFirst();
 			if (key.isPresent()) {
 				selectedRecipients.getList().add(key.get());
 			} else {

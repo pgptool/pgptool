@@ -317,7 +317,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		private void selectSelfAsRecipient() {
 			selectedRecipients.getList().clear();
 			for (Key key : availabileRecipients.getList()) {
-				if (!key.geKeyData().isCanBeUsedForDecryption()) {
+				if (!key.getKeyData().isCanBeUsedForDecryption()) {
 					continue;
 				}
 				selectedRecipients.getList().add(key);
@@ -359,7 +359,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 			Set<String> missedKeys = new HashSet<>();
 			for (String keyId : recipientsKeysIds) {
 				Optional<Key> key = availabileRecipients.getList().stream()
-						.filter(x -> x.geKeyData().isHasAlternativeId(keyId)).findFirst();
+						.filter(x -> x.getKeyData().isHasAlternativeId(keyId)).findFirst();
 				if (key.isPresent()) {
 					selectedRecipients.getList().add(key.get());
 				} else {
@@ -418,7 +418,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 			refreshPrimaryOperationAvailability();
 
 			isNoPrivateKeysSelected.setValueByOwner(selectedRecipients.getList().size() == 0 || selectedRecipients
-					.getList().stream().filter(x -> x.geKeyData().isCanBeUsedForDecryption()).count() == 0);
+					.getList().stream().filter(x -> x.getKeyData().isCanBeUsedForDecryption()).count() == 0);
 		}
 	};
 

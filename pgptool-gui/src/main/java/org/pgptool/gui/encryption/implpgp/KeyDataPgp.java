@@ -58,7 +58,7 @@ public class KeyDataPgp extends KeyData {
 
 	public static KeyDataPgp get(Key key) {
 		Preconditions.checkArgument(key != null, "Key must not be null");
-		return cast(key.geKeyData());
+		return cast(key.getKeyData());
 	}
 
 	@Override

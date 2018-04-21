@@ -25,8 +25,6 @@ import java.sql.Date;
 import java.util.Iterator;
 import java.util.Stack;
 
-import javax.xml.bind.ValidationException;
-
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.log4j.Logger;
@@ -67,7 +65,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations<KeyDataPgp>
 
 	@SuppressWarnings("deprecation")
 	@Override
-	public Key<KeyDataPgp> readKeyFromFile(String filePathName) throws ValidationException {
+	public Key<KeyDataPgp> readKeyFromFile(String filePathName) {
 		try {
 			KeyDataPgp keyData = readKeyData(filePathName);
 

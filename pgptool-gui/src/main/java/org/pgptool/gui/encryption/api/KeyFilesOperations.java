@@ -17,8 +17,6 @@
  *******************************************************************************/
 package org.pgptool.gui.encryption.api;
 
-import javax.xml.bind.ValidationException;
-
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.summerb.approaches.validation.FieldValidationException;
@@ -26,7 +24,7 @@ import org.summerb.approaches.validation.FieldValidationException;
 public interface KeyFilesOperations<TKeyData extends KeyData> {
 	final String FN_PASSWORD = "password";
 
-	Key<TKeyData> readKeyFromFile(String filePathName) throws ValidationException;
+	Key<TKeyData> readKeyFromFile(String filePathName) throws FieldValidationException;
 
 	void exportPublicKey(Key<TKeyData> key, String targetFilePathname);
 

@@ -29,8 +29,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.xml.bind.ValidationException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.After;
@@ -51,6 +49,7 @@ import org.springframework.test.annotation.ProfileValueSourceConfiguration;
 import org.springframework.test.annotation.SystemProfileValueSource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.summerb.approaches.validation.FieldValidationException;
 
 import integr.org.pgptool.gui.TestTools;
 
@@ -91,7 +90,7 @@ public class EncryptionDecryptionTests {
 		FileUtils.deleteDirectory(new File(tempDirPath));
 	}
 
-	private Key importKeyFromResources(String keyFileName) throws ValidationException, URISyntaxException {
+	private Key importKeyFromResources(String keyFileName) throws URISyntaxException, FieldValidationException {
 		Key key = keyFilesOperations.readKeyFromFile(TestTools.getFileNameForResource("keys/" + keyFileName));
 		keyRingService.addKey(key);
 		keys.put(keyFileName, key);

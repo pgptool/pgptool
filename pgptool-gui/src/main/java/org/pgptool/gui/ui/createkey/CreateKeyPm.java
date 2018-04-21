@@ -21,7 +21,6 @@ import java.awt.event.ActionEvent;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 
 import org.apache.log4j.Logger;
@@ -30,7 +29,6 @@ import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.hintsforusage.hints.PrivateKeyBackupHint.KeyCreatedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
@@ -55,11 +53,11 @@ public class CreateKeyPm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(CreateKeyPm.class);
 
 	@Autowired
-	@Resource(name = "keyRingService")
-	private KeyRingService<KeyData> keyRingService;
+	// @Resource(name = "keyRingService")
+	private KeyRingService keyRingService;
 	@Autowired
-	@Resource(name = "keyGeneratorService")
-	private KeyGeneratorService<KeyData> keyGeneratorService;
+	// @Resource(name = "keyGeneratorService")
+	private KeyGeneratorService keyGeneratorService;
 	@Autowired
 	private ExecutorService executorService;
 	@Autowired
@@ -118,7 +116,7 @@ public class CreateKeyPm extends PresentationModelBase {
 		public void run() {
 			validationErrors.clear();
 			try {
-				Key<KeyData> key = keyGeneratorService.createNewKey(createKeyParams);
+				Key key = keyGeneratorService.createNewKey(createKeyParams);
 				if (keyGenerationFuture == null) {
 					return;
 				}

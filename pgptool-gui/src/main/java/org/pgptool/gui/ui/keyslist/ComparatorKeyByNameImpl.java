@@ -20,10 +20,8 @@ package org.pgptool.gui.ui.keyslist;
 import java.util.Comparator;
 
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 
-@SuppressWarnings("rawtypes")
-public class ComparatorKeyByNameImpl<T extends KeyData> implements Comparator<Key<T>> {
+public class ComparatorKeyByNameImpl implements Comparator<Key> {
 	@Override
 	public int compare(Key o1, Key o2) {
 		if (isNull(o1) && isNull(o2)) {

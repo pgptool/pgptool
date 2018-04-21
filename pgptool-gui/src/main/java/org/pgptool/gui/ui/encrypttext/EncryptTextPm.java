@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
@@ -39,7 +38,6 @@ import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.encryption.api.EncryptionService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.tools.ClipboardUtil;
 import org.pgptool.gui.ui.keyslist.ComparatorKeyByNameImpl;
 import org.pgptool.gui.ui.tools.ListChangeListenerAnyEventImpl;
@@ -65,16 +63,16 @@ public class EncryptTextPm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(EncryptTextPm.class);
 
 	@Autowired
-	@Resource(name = "keyRingService")
-	private KeyRingService<KeyData> keyRingService;
+	// @Resource(name = "keyRingService")
+	private KeyRingService keyRingService;
 	@Autowired
-	@Resource(name = "encryptionService")
-	private EncryptionService<KeyData> encryptionService;
+	// @Resource(name = "encryptionService")
+	private EncryptionService encryptionService;
 
 	private EncryptTextHost host;
 
-	private ModelMultSelInListProperty<Key<KeyData>> selectedRecipients;
-	private ModelListProperty<Key<KeyData>> availabileRecipients;
+	private ModelMultSelInListProperty<Key> selectedRecipients;
+	private ModelListProperty<Key> availabileRecipients;
 
 	private ModelProperty<String> sourceText;
 	private ModelProperty<String> targetText;
@@ -101,8 +99,8 @@ public class EncryptTextPm extends PresentationModelBase {
 		selectedRecipients.getList().clear();
 		Set<String> missedKeys = new HashSet<>();
 		for (String keyId : recipientsKeysIds) {
-			Optional<Key<KeyData>> key = availabileRecipients.getList().stream()
-					.filter(x -> x.getKeyData().isHasAlternativeId(keyId)).findFirst();
+			Optional<Key> key = availabileRecipients.getList().stream()
+					.filter(x -> x.geKeyData().isHasAlternativeId(keyId)).findFirst();
 			if (key.isPresent()) {
 				selectedRecipients.getList().add(key.get());
 			} else {
@@ -135,13 +133,12 @@ public class EncryptTextPm extends PresentationModelBase {
 	}
 
 	private void initModelProperties() {
-		List<Key<KeyData>> allKeys = keyRingService.readKeys();
-		allKeys.sort(new ComparatorKeyByNameImpl<>());
-		availabileRecipients = new ModelListProperty<Key<KeyData>>(this,
-				new ValueAdapterReadonlyImpl<List<Key<KeyData>>>(allKeys), "availabileRecipients");
-		selectedRecipients = new ModelMultSelInListProperty<Key<KeyData>>(this,
-				new ValueAdapterHolderImpl<List<Key<KeyData>>>(new ArrayList<Key<KeyData>>()), "projects",
-				availabileRecipients);
+		List<Key> allKeys = keyRingService.readKeys();
+		allKeys.sort(new ComparatorKeyByNameImpl());
+		availabileRecipients = new ModelListProperty<Key>(this, new ValueAdapterReadonlyImpl<List<Key>>(allKeys),
+				"availabileRecipients");
+		selectedRecipients = new ModelMultSelInListProperty<Key>(this,
+				new ValueAdapterHolderImpl<List<Key>>(new ArrayList<Key>()), "projects", availabileRecipients);
 		selectedRecipients.getModelMultSelInListPropertyAccessor().addListExEventListener(onRecipientsSelectionChanged);
 		onRecipientsSelectionChanged.onListChanged();
 
@@ -175,7 +172,7 @@ public class EncryptTextPm extends PresentationModelBase {
 		actionDoOperation.setEnabled(result);
 	}
 
-	private ListChangeListenerAnyEventImpl<Key<KeyData>> onRecipientsSelectionChanged = new ListChangeListenerAnyEventImpl<Key<KeyData>>() {
+	private ListChangeListenerAnyEventImpl<Key> onRecipientsSelectionChanged = new ListChangeListenerAnyEventImpl<Key>() {
 		@Override
 		public void onListChanged() {
 			refreshPrimaryOperationAvailability();
@@ -235,7 +232,7 @@ public class EncryptTextPm extends PresentationModelBase {
 				// TODO: Refactor to have a better way of handling emails. Current
 				// implementation is not 100% thorough. It's vulnerable to partial matches and
 				// depends on an assumption that email is a part of user name
-				Optional<Key<KeyData>> key = availabileRecipients.getList().stream()
+				Optional<Key> key = availabileRecipients.getList().stream()
 						.filter(x -> x.getKeyInfo().getUser().contains(email)).findFirst();
 				if (key.isPresent()) {
 					selectedRecipients.getList().add(key.get());
@@ -307,7 +304,7 @@ public class EncryptTextPm extends PresentationModelBase {
 		}
 	};
 
-	public ModelMultSelInListPropertyAccessor<Key<KeyData>> getSelectedRecipients() {
+	public ModelMultSelInListPropertyAccessor<Key> getSelectedRecipients() {
 		return selectedRecipients.getModelMultSelInListPropertyAccessor();
 	}
 

@@ -5,7 +5,6 @@ import java.util.Set;
 import javax.swing.Action;
 
 import org.pgptool.gui.app.Message;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.ui.decryptone.DecryptOneHost;
 import org.pgptool.gui.ui.decryptone.DecryptOnePm;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordHost;
@@ -39,8 +38,8 @@ public class DecryptOneDialogPm extends PresentationModelBase implements Applica
 	private DecryptOneDialogHost host;
 	private ModelProperty<Intent> intent;
 
-	private KeyAndPasswordCallback<KeyData> keyAndPasswordCallback;
-	private PasswordDeterminedForKey<KeyData> passwordDeterminedForKey;
+	private KeyAndPasswordCallback keyAndPasswordCallback;
+	private PasswordDeterminedForKey passwordDeterminedForKey;
 
 	public boolean init(DecryptOneDialogHost host, String optionalSource) {
 		this.host = host;
@@ -50,7 +49,7 @@ public class DecryptOneDialogPm extends PresentationModelBase implements Applica
 		return decryptOnePm.init(decryptOneHost, optionalSource);
 	}
 
-	private DecryptOneHost<KeyData> decryptOneHost = new DecryptOneHost<KeyData>() {
+	private DecryptOneHost decryptOneHost = new DecryptOneHost() {
 		@Override
 		public void handleClose() {
 			host.handleClose();
@@ -63,7 +62,7 @@ public class DecryptOneDialogPm extends PresentationModelBase implements Applica
 
 		@Override
 		public void askUserForKeyAndPassword(Set<String> sourceFileRecipientsKeysIds, Message purpose,
-				KeyAndPasswordCallback<KeyData> keyAndPasswordCallback) {
+				KeyAndPasswordCallback keyAndPasswordCallback) {
 			DecryptOneDialogPm.this.keyAndPasswordCallback = keyAndPasswordCallback;
 
 			getKeyPasswordPm = null; // force this PM to re-init
@@ -83,10 +82,9 @@ public class DecryptOneDialogPm extends PresentationModelBase implements Applica
 	};
 
 	private GetKeyPasswordHost getPasswordHost = new GetKeyPasswordHost() {
-		@SuppressWarnings("unchecked")
 		@Override
-		public <T extends KeyData> void onPasswordDeterminedForKey(PasswordDeterminedForKey<T> result) {
-			passwordDeterminedForKey = (PasswordDeterminedForKey<KeyData>) result;
+		public void onPasswordDeterminedForKey(PasswordDeterminedForKey result) {
+			passwordDeterminedForKey = (PasswordDeterminedForKey) result;
 			keyAndPasswordCallback.onKeyPasswordResult(passwordDeterminedForKey);
 			intent.setValueByOwner(Intent.Decrypt);
 		}

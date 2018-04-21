@@ -42,7 +42,6 @@ import javax.swing.ListSelectionModel;
 
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.TextEditUxUtils;
 import org.pgptool.gui.ui.tools.UiUtils;
@@ -52,7 +51,7 @@ import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 public class EncryptTextView extends DialogViewBaseCustom<EncryptTextPm> {
 	private JPanel pnl;
 
-	private JList<Key<KeyData>> recipients;
+	private JList<Key> recipients;
 	private JScrollPane recipientsScroller;
 	private JButton btnSelectRecipientsFromClipboard;
 

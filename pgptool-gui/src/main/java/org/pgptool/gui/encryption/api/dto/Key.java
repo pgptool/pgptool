@@ -19,7 +19,7 @@ package org.pgptool.gui.encryption.api.dto;
 
 import org.summerb.approaches.jdbccrud.common.DtoBase;
 
-public class Key<TKeyData extends KeyData> implements DtoBase {
+public class Key implements DtoBase {
 	private static final long serialVersionUID = 1614562515516152578L;
 
 	/**
@@ -27,7 +27,7 @@ public class Key<TKeyData extends KeyData> implements DtoBase {
 	 * use, do not change it manually
 	 */
 	private KeyInfo keyInfo;
-	private TKeyData keyData;
+	private KeyData keyData;
 
 	public KeyInfo getKeyInfo() {
 		return keyInfo;
@@ -41,11 +41,11 @@ public class Key<TKeyData extends KeyData> implements DtoBase {
 		this.keyInfo = keyInfo;
 	}
 
-	public TKeyData getKeyData() {
+	public KeyData geKeyData() {
 		return keyData;
 	}
 
-	public void setKeyData(TKeyData keyData) {
+	public void seKeyData(KeyData keyData) {
 		this.keyData = keyData;
 	}
 
@@ -58,7 +58,6 @@ public class Key<TKeyData extends KeyData> implements DtoBase {
 		return keyInfo.getUser();
 	}
 
-	@SuppressWarnings("rawtypes")
 	public static boolean isSameKeyId(Key o1, Key o2) {
 		if (o1 == null || o2 == null) {
 			return false;

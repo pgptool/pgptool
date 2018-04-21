@@ -27,7 +27,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
@@ -39,7 +38,6 @@ import org.pgptool.gui.encryption.api.EncryptionService;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.tools.ClipboardUtil;
 import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
@@ -59,26 +57,25 @@ public class DecryptTextPm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(DecryptTextPm.class);
 
 	@Autowired
-	@Resource(name = "keyRingService")
-	private KeyRingService<KeyData> keyRingService;
+	// @Resource(name = "keyRingService")
+	private KeyRingService keyRingService;
 	@Autowired
-	@Resource(name = "encryptionService")
-	private EncryptionService<KeyData> encryptionService;
+	// @Resource(name = "encryptionService")
+	private EncryptionService encryptionService;
 	@Autowired
-	@Resource(name = "keyFilesOperations")
-	private KeyFilesOperations<KeyData> keyFilesOperations;
+	// @Resource(name = "keyFilesOperations")
+	private KeyFilesOperations keyFilesOperations;
 
-	private DecryptTextHost<KeyData> host;
+	private DecryptTextHost host;
 
 	private Set<String> keysIds;
-	private PasswordDeterminedForKey<KeyData> keyAndPassword;
+	private PasswordDeterminedForKey keyAndPassword;
 
 	private ModelProperty<String> sourceText;
 	private ModelProperty<String> recipients;
 	protected Set<String> recipientsList;
 	private ModelProperty<String> targetText;
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean init(DecryptTextHost host) {
 		Preconditions.checkArgument(host != null);
 		this.host = host;
@@ -184,7 +181,7 @@ public class DecryptTextPm extends PresentationModelBase {
 			if (ret.length() > 0) {
 				ret.append(", ");
 			}
-			Key<KeyData> key = keyRingService.findKeyById(keyId);
+			Key key = keyRingService.findKeyById(keyId);
 			if (key == null) {
 				ret.append(keyId);
 			} else {
@@ -198,9 +195,9 @@ public class DecryptTextPm extends PresentationModelBase {
 		return recipients.getModelPropertyAccessor();
 	}
 
-	private KeyAndPasswordCallback<KeyData> keyAndPasswordCallback = new KeyAndPasswordCallback<KeyData>() {
+	private KeyAndPasswordCallback keyAndPasswordCallback = new KeyAndPasswordCallback() {
 		@Override
-		public void onKeyPasswordResult(PasswordDeterminedForKey<KeyData> keyAndPassword) {
+		public void onKeyPasswordResult(PasswordDeterminedForKey keyAndPassword) {
 			try {
 				DecryptTextPm.this.keyAndPassword = keyAndPassword;
 				if (keyAndPassword == null) {

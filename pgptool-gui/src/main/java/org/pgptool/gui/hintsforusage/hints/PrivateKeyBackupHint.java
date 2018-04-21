@@ -6,7 +6,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -14,7 +13,6 @@ import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.hintsforusage.api.HintsCoordinator;
 import org.pgptool.gui.hintsforusage.ui.HintPm;
 import org.pgptool.gui.ui.root.GlobalAppActions;
@@ -40,8 +38,8 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
 	@Autowired
 	private EventBus eventBus;
 	@Autowired
-	@Resource(name = "keyRingService")
-	private KeyRingService<KeyData> keyRingService;
+	// @Resource(name = "keyRingService")
+	private KeyRingService keyRingService;
 	@Autowired
 	private GlobalAppActions globalAppActions;
 	@Autowired
@@ -65,7 +63,7 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
 		}
 
 		lastHintForKeyId = keyToBeExported.keyId;
-		Key<KeyData> key = keyRingService.findKeyById(lastHintForKeyId);
+		Key key = keyRingService.findKeyById(lastHintForKeyId);
 		setMessage(Messages.text("hint.privateKeyBackup", key.getKeyInfo().getUser()));
 		hintsCoordinator.scheduleHint(this);
 	};
@@ -118,7 +116,7 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
 	}
 
 	@Subscribe
-	public void onKeyDeleted(EntityChangedEvent<Key<? extends KeyData>> e) {
+	public void onKeyDeleted(EntityChangedEvent<Key> e) {
 		if (!e.isTypeOf(Key.class) || e.getChangeType() != ChangeType.REMOVED) {
 			return;
 		}
@@ -138,7 +136,7 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
 		Action actionExport = new LocalizedAction("action.export") {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Key<KeyData> key = keyRingService.findKeyById(lastHintForKeyId);
+				Key key = keyRingService.findKeyById(lastHintForKeyId);
 				globalAppActions.triggerPrivateKeyExport(key);
 			}
 		};
@@ -161,18 +159,18 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
 	}
 
 	public static class KeyCreatedEvent implements DtoBase {
-		public Key<? extends KeyData> key;
+		public Key key;
 
-		public KeyCreatedEvent(Key<? extends KeyData> key) {
+		public KeyCreatedEvent(Key key) {
 			super();
 			this.key = key;
 		}
 	}
 
 	public static class PrivateKeyExportedEvent implements DtoBase {
-		public Key<? extends KeyData> key;
+		public Key key;
 
-		public PrivateKeyExportedEvent(Key<? extends KeyData> key) {
+		public PrivateKeyExportedEvent(Key key) {
 			super();
 			this.key = key;
 		}

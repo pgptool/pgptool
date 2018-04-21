@@ -19,13 +19,12 @@ package org.pgptool.gui.ui.keyslist;
 
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryption.api.dto.KeyInfo;
 import org.pgptool.gui.ui.tools.KeyInfoRendering;
 
 import ru.skarpushin.swingpm.modelprops.table.LightweightTableModel;
 
-public class KeysTableModel implements LightweightTableModel<Key<KeyData>> {
+public class KeysTableModel implements LightweightTableModel<Key> {
 	public static final int COLUMN_USER = 0;
 	public static final int COLUMN_KEY_ID = 1;
 	public static final int COLUMN_ALGORITHM = 2;
@@ -64,7 +63,7 @@ public class KeysTableModel implements LightweightTableModel<Key<KeyData>> {
 	}
 
 	@Override
-	public Object getValueAt(Key<KeyData> r, int columnIndex) {
+	public Object getValueAt(Key r, int columnIndex) {
 		if (r == null) {
 			return "";
 		}

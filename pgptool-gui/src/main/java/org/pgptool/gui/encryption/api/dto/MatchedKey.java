@@ -6,11 +6,11 @@ package org.pgptool.gui.encryption.api.dto;
  * 
  * @author Sergey Karpushin
  *
- * @param <TKeyData>
+ * @param
  */
-public class MatchedKey<TKeyData extends KeyData> {
+public class MatchedKey {
 	private String requestedKeyId;
-	private Key<TKeyData> matchedKey;
+	private Key matchedKey;
 
 	/**
 	 * 
@@ -20,7 +20,7 @@ public class MatchedKey<TKeyData extends KeyData> {
 	 *            this key was found as a matched key, the one that contains
 	 *            requested decryption key
 	 */
-	public MatchedKey(String requestedKeyId, Key<TKeyData> matchedKey) {
+	public MatchedKey(String requestedKeyId, Key matchedKey) {
 		super();
 		this.requestedKeyId = requestedKeyId;
 		this.matchedKey = matchedKey;
@@ -34,11 +34,11 @@ public class MatchedKey<TKeyData extends KeyData> {
 		this.requestedKeyId = requestedKeyId;
 	}
 
-	public Key<TKeyData> getMatchedKey() {
+	public Key getMatchedKey() {
 		return matchedKey;
 	}
 
-	public void setMatchedKey(Key<TKeyData> matchedKey) {
+	public void setMatchedKey(Key matchedKey) {
 		this.matchedKey = matchedKey;
 	}
 }

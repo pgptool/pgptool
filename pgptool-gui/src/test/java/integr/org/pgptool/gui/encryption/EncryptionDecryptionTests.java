@@ -29,8 +29,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.xml.bind.ValidationException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.After;
@@ -51,6 +49,7 @@ import org.springframework.test.annotation.ProfileValueSourceConfiguration;
 import org.springframework.test.annotation.SystemProfileValueSource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.summerb.approaches.validation.FieldValidationException;
 
 import integr.org.pgptool.gui.TestTools;
 
@@ -91,7 +90,7 @@ public class EncryptionDecryptionTests {
 		FileUtils.deleteDirectory(new File(tempDirPath));
 	}
 
-	private Key importKeyFromResources(String keyFileName) throws ValidationException, URISyntaxException {
+	private Key importKeyFromResources(String keyFileName) throws URISyntaxException, FieldValidationException {
 		Key key = keyFilesOperations.readKeyFromFile(TestTools.getFileNameForResource("keys/" + keyFileName));
 		keyRingService.addKey(key);
 		keys.put(keyFileName, key);
@@ -114,10 +113,10 @@ public class EncryptionDecryptionTests {
 			String password) {
 		Set<String> decryptionKeys = encryptionService.findKeyIdsForDecryption(encryptedFile);
 		Key key = keys.get(keyName);
-		Optional<String> requestedKeyId = decryptionKeys.stream().filter(x -> key.getKeyData().isHasAlternativeId(x))
+		Optional<String> requestedKeyId = decryptionKeys.stream().filter(x -> key.geKeyData().isHasAlternativeId(x))
 				.findFirst();
 		assertTrue(requestedKeyId.isPresent());
-		return new PasswordDeterminedForKey<>(requestedKeyId.get(), key, password);
+		return new PasswordDeterminedForKey(requestedKeyId.get(), key, password);
 	}
 
 	@Test
@@ -129,7 +128,7 @@ public class EncryptionDecryptionTests {
 		encryptionService.encrypt(testSubjectFilename, targetFilename, keys, null, null, null);
 
 		String decryptionKeyId = (String) encryptionService.findKeyIdsForDecryption(targetFilename).iterator().next();
-		PasswordDeterminedForKey keyAndPassword = new PasswordDeterminedForKey<>(decryptionKeyId, key, "pass");
+		PasswordDeterminedForKey keyAndPassword = new PasswordDeterminedForKey(decryptionKeyId, key, "pass");
 
 		encryptionService.decrypt(targetFilename, targetFilename + ".test", keyAndPassword, null, null);
 		String result = TextFile.read(targetFilename + ".test");

@@ -29,7 +29,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 
 import org.apache.log4j.Logger;
@@ -37,7 +36,6 @@ import org.pgptool.gui.app.Message;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryption.api.dto.MatchedKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -77,26 +75,26 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 public class GetKeyPasswordPm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(GetKeyPasswordPm.class);
 	private static final String FN_PASSWORD = "password";
-	private static final Map<String, PasswordDeterminedForKey<KeyData>> CACHE_KEYID_TO_PASSWORD = new HashMap<>();
+	private static final Map<String, PasswordDeterminedForKey> CACHE_KEYID_TO_PASSWORD = new HashMap<>();
 
 	@Autowired
-	@Resource(name = "keyRingService")
-	private KeyRingService<KeyData> keyRingService;
+	// @Resource(name = "keyRingService")
+	private KeyRingService keyRingService;
 	@Autowired
-	@Resource(name = "keyFilesOperations")
-	private KeyFilesOperations<KeyData> keyFilesOperations;
+	// @Resource(name = "keyFilesOperations")
+	private KeyFilesOperations keyFilesOperations;
 	@Autowired
 	private EventBus eventBus;
 
 	private GetKeyPasswordHost host;
 
-	private ModelSelInComboBoxProperty<Key<KeyData>> selectedKey;
-	private ModelListProperty<Key<KeyData>> decryptionKeys;
+	private ModelSelInComboBoxProperty<Key> selectedKey;
+	private ModelListProperty<Key> decryptionKeys;
 	private ModelProperty<String> password;
 	private ModelProperty<String> purpose;
 	private ListEx<ValidationError> validationErrors = new ListExImpl<ValidationError>();
 
-	private List<MatchedKey<KeyData>> matchedKeys;
+	private List<MatchedKey> matchedKeys;
 	private Message purposeMessage;
 
 	public GetKeyPasswordPmInitResult init(GetKeyPasswordHost host, Set<String> keyIdsToChooseFrom,
@@ -133,8 +131,8 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 		eventBus.unregister(this);
 	}
 
-	private boolean passwordWasCached(GetKeyPasswordHost host, List<MatchedKey<KeyData>> matchedKeys) {
-		for (MatchedKey<KeyData> k : matchedKeys) {
+	private boolean passwordWasCached(GetKeyPasswordHost host, List<MatchedKey> matchedKeys) {
+		for (MatchedKey k : matchedKeys) {
 			if (CACHE_KEYID_TO_PASSWORD.containsKey(k.getRequestedKeyId())) {
 				host.onPasswordDeterminedForKey(CACHE_KEYID_TO_PASSWORD.get(k.getRequestedKeyId()));
 				return true;
@@ -143,13 +141,13 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 		return false;
 	}
 
-	private void initModelProperties(List<Key<KeyData>> keys) {
+	private void initModelProperties(List<Key> keys) {
 		purpose = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(text(purposeMessage)), "purpose",
 				validationErrors);
-		decryptionKeys = new ModelListProperty<Key<KeyData>>(this,
-				new ValueAdapterReadonlyImpl<List<Key<KeyData>>>(keys), "decryptionKeys");
-		selectedKey = new ModelSelInComboBoxProperty<Key<KeyData>>(this,
-				new ValueAdapterHolderImpl<Key<KeyData>>(keys.get(0)), "selectedKey", decryptionKeys);
+		decryptionKeys = new ModelListProperty<Key>(this, new ValueAdapterReadonlyImpl<List<Key>>(keys),
+				"decryptionKeys");
+		selectedKey = new ModelSelInComboBoxProperty<Key>(this, new ValueAdapterHolderImpl<Key>(keys.get(0)),
+				"selectedKey", decryptionKeys);
 		password = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), FN_PASSWORD, validationErrors);
 		password.getModelPropertyAccessor().addPropertyChangeListener(onPasswordChanged);
 	}
@@ -186,11 +184,10 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 	protected final Action actionChooseKey = new LocalizedAction("action.choose") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			Key<KeyData> key = selectedKey.getValue();
+			Key key = selectedKey.getValue();
 			String passwordStr = password.getValue();
 
-			Optional<MatchedKey<KeyData>> matchedKey = matchedKeys.stream().filter(x -> x.getMatchedKey() == key)
-					.findFirst();
+			Optional<MatchedKey> matchedKey = matchedKeys.stream().filter(x -> x.getMatchedKey() == key).findFirst();
 			Preconditions.checkState(matchedKey.isPresent(), "Failed to find matching key to key selected in combobox");
 			String requestedKeyId = matchedKey.get().getRequestedKeyId();
 
@@ -208,7 +205,7 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 			}
 
 			// If everything is ok -- return
-			PasswordDeterminedForKey<KeyData> ret = new PasswordDeterminedForKey<>(requestedKeyId, key, passwordStr);
+			PasswordDeterminedForKey ret = new PasswordDeterminedForKey(requestedKeyId, key, passwordStr);
 			CACHE_KEYID_TO_PASSWORD.put(requestedKeyId, ret);
 			// host.onPasswordDeterminedForKey(ret);
 			eventBus.post(ret);
@@ -216,8 +213,8 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 	};
 
 	@Subscribe
-	public void onPasswordProvidedByOtherInstance(PasswordDeterminedForKey<KeyData> evt) {
-		for (MatchedKey<KeyData> mk : matchedKeys) {
+	public void onPasswordProvidedByOtherInstance(PasswordDeterminedForKey evt) {
+		for (MatchedKey mk : matchedKeys) {
 			if (mk.getRequestedKeyId().equals(evt.getDecryptionKeyId())) {
 				host.onPasswordDeterminedForKey(evt);
 				return;
@@ -225,7 +222,7 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 		}
 	}
 
-	public ModelSelInComboBoxPropertyAccessor<Key<KeyData>> getSelectedKey() {
+	public ModelSelInComboBoxPropertyAccessor<Key> getSelectedKey() {
 		return selectedKey.getModelSelInComboBoxPropertyAccessor();
 	}
 
@@ -233,7 +230,7 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 		return password.getModelPropertyAccessor();
 	}
 
-	public List<MatchedKey<KeyData>> getMatchedKeys() {
+	public List<MatchedKey> getMatchedKeys() {
 		return matchedKeys;
 	}
 

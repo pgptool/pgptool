@@ -30,7 +30,10 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Impl of key data which stores pgp key. For one key pair there will be "ring"
@@ -44,6 +47,19 @@ public class KeyDataPgp extends KeyData {
 
 	private transient PGPSecretKeyRing secretKeyRing;
 	private transient PGPPublicKeyRing publicKeyRing;
+
+	public static KeyDataPgp cast(KeyData keyData) {
+		if (keyData == null) {
+			return null;
+		}
+		Preconditions.checkArgument(keyData instanceof KeyDataPgp, "keyData is expected to be of type KeyDataPgp");
+		return (KeyDataPgp) keyData;
+	}
+
+	public static KeyDataPgp get(Key key) {
+		Preconditions.checkArgument(key != null, "Key must not be null");
+		return cast(key.geKeyData());
+	}
 
 	@Override
 	public boolean isCanBeUsedForDecryption() {

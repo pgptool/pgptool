@@ -42,7 +42,6 @@ import javax.swing.JTextField;
 import org.jdesktop.swingx.JXLabel;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
@@ -66,7 +65,7 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 	private JTextField edTargetFile;
 	private JButton btnBrowseTarget;
 
-	private JCheckList<Key<KeyData>> recipients;
+	private JCheckList<Key> recipients;
 	private JScrollPane recipientsScroller;
 
 	private JCheckBox chkDeleteSourceAfter;

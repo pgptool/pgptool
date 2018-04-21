@@ -5,7 +5,6 @@ import java.awt.event.ActionEvent;
 import java.net.URI;
 import java.util.concurrent.ExecutorService;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 
 import org.apache.log4j.Logger;
@@ -14,9 +13,7 @@ import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryption.api.dto.KeyTypeEnum;
-import org.pgptool.gui.encryption.implpgp.KeyDataPgp;
 import org.pgptool.gui.hintsforusage.api.HintsCoordinator;
 import org.pgptool.gui.hintsforusage.ui.HintPm;
 import org.pgptool.gui.ui.root.GlobalAppActions;
@@ -42,8 +39,8 @@ public class MightNeedPublicKeysHint extends HintPm implements InitializingBean 
 	@Autowired
 	private EventBus eventBus;
 	@Autowired
-	@Resource(name = "keyRingService")
-	private KeyRingService<KeyData> keyRingService;
+	// @Resource(name = "keyRingService")
+	private KeyRingService keyRingService;
 	@Autowired
 	private GlobalAppActions globalAppActions;
 	@Autowired
@@ -70,7 +67,7 @@ public class MightNeedPublicKeysHint extends HintPm implements InitializingBean 
 		int publicKeys = 0;
 		int privateKeys = 0;
 
-		for (Key<KeyData> key : keyRingService.readKeys()) {
+		for (Key key : keyRingService.readKeys()) {
 			if (key.getKeyInfo().getKeyType() == KeyTypeEnum.KeyPair) {
 				privateKeys++;
 			} else {
@@ -81,7 +78,7 @@ public class MightNeedPublicKeysHint extends HintPm implements InitializingBean 
 	}
 
 	@Subscribe
-	public void onKeyAdded(EntityChangedEvent<Key<KeyDataPgp>> e) {
+	public void onKeyAdded(EntityChangedEvent<Key> e) {
 		if (!e.isTypeOf(Key.class)) {
 			return;
 		}

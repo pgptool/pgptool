@@ -22,10 +22,9 @@ import java.util.Set;
 import javax.swing.Action;
 
 import org.pgptool.gui.app.Message;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
 
-public interface DecryptOneHost<TKeyData extends KeyData> {
+public interface DecryptOneHost {
 	void handleClose();
 
 	Action getActionToOpenCertificatesList();
@@ -36,5 +35,5 @@ public interface DecryptOneHost<TKeyData extends KeyData> {
 	 * will return null and call callback when user will provide password.
 	 */
 	void askUserForKeyAndPassword(Set<String> sourceFileRecipientsKeysIds, Message purpose,
-			KeyAndPasswordCallback<TKeyData> keyAndPasswordCallback);
+			KeyAndPasswordCallback keyAndPasswordCallback);
 }

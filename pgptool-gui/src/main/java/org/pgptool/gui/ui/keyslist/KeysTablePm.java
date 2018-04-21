@@ -20,20 +20,19 @@ package org.pgptool.gui.ui.keyslist;
 import javax.swing.Action;
 
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
 
 public abstract class KeysTablePm extends PresentationModelBase {
-	abstract public ModelTablePropertyAccessor<Key<KeyData>> getKeys();
+	abstract public ModelTablePropertyAccessor<Key> getKeys();
 
 	public ModelPropertyAccessor<Boolean> getHasData() {
 		return null;
 	}
 
-	public ModelPropertyAccessor<Key<KeyData>> getSelectedRow() {
+	public ModelPropertyAccessor<Key> getSelectedRow() {
 		return null;
 	}
 

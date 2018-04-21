@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -45,9 +44,7 @@ import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
 import org.pgptool.gui.encryption.api.EncryptionService;
-import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
-import org.pgptool.gui.encryption.api.dto.KeyData;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
 import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamSupervisor;
 import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamSupervisorImpl;
@@ -105,20 +102,17 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 	@Autowired
 	private DecryptedTempFolder decryptedTempFolder;
 	@Autowired
-	@Resource(name = "keyRingService")
-	private KeyRingService<KeyData> keyRingService;
+	// @Resource(name = "keyRingService")
+	private KeyRingService keyRingService;
 	@Autowired
-	@Resource(name = "encryptionService")
-	private EncryptionService<KeyData> encryptionService;
-	@Autowired
-	@Resource(name = "keyFilesOperations")
-	private KeyFilesOperations<KeyData> keyFilesOperations;
+	// @Resource(name = "encryptionService")
+	private EncryptionService encryptionService;
 	@Autowired
 	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
 	@Autowired
 	private MessageDigestFactory messageDigestFactory;
 
-	private DecryptOneHost<KeyData> host;
+	private DecryptOneHost host;
 
 	private ModelProperty<String> sourceFile;
 	private ModelProperty<Boolean> isUseSameFolder;
@@ -135,7 +129,7 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 	private SaveFileChooserDialog targetFileChooser;
 
 	private Set<String> sourceFileRecipientsKeysIds;
-	private PasswordDeterminedForKey<KeyData> keyAndPassword;
+	private PasswordDeterminedForKey keyAndPassword;
 	private String anticipatedTargetFileName;
 	private DecryptionDialogParameters decryptionDialogParameters;
 
@@ -150,7 +144,6 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 	public void afterPropertiesSet() throws Exception {
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean init(DecryptOneHost host, String optionalSource) {
 		Preconditions.checkArgument(host != null);
 		this.host = host;
@@ -349,8 +342,7 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 			}
 		}
 
-		private KeyAndPasswordCallback<KeyData> keyAndPasswordCallback = (
-				PasswordDeterminedForKey<KeyData> keyAndPassword) -> {
+		private KeyAndPasswordCallback keyAndPasswordCallback = (PasswordDeterminedForKey keyAndPassword) -> {
 			try {
 				DecryptOnePm.this.keyAndPassword = keyAndPassword;
 				if (keyAndPassword == null) {

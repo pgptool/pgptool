@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -68,10 +67,10 @@ public class KeyImporterPm extends PresentationModelBase {
 	private ConfigPairs appProps;
 
 	@Autowired
-	@Resource(name = "keyFilesOperations")
+	// @Resource(name = "keyFilesOperations")
 	private KeyFilesOperations keyFilesOperations;
 	@Autowired
-	@Resource(name = "keyRingService")
+	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	private KeyImporterHost host;
 

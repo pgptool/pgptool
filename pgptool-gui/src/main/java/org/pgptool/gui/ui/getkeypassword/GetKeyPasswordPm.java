@@ -29,7 +29,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 
 import org.apache.log4j.Logger;
@@ -79,10 +78,10 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 	private static final Map<String, PasswordDeterminedForKey> CACHE_KEYID_TO_PASSWORD = new HashMap<>();
 
 	@Autowired
-	@Resource(name = "keyRingService")
+	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
-	@Resource(name = "keyFilesOperations")
+	// @Resource(name = "keyFilesOperations")
 	private KeyFilesOperations keyFilesOperations;
 	@Autowired
 	private EventBus eventBus;

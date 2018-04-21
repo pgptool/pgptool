@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -45,7 +44,6 @@ import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
 import org.pgptool.gui.encryption.api.EncryptionService;
-import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
 import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamSupervisor;
@@ -104,14 +102,11 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 	@Autowired
 	private DecryptedTempFolder decryptedTempFolder;
 	@Autowired
-	@Resource(name = "keyRingService")
+	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
-	@Resource(name = "encryptionService")
+	// @Resource(name = "encryptionService")
 	private EncryptionService encryptionService;
-	@Autowired
-	@Resource(name = "keyFilesOperations")
-	private KeyFilesOperations keyFilesOperations;
 	@Autowired
 	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
 	@Autowired

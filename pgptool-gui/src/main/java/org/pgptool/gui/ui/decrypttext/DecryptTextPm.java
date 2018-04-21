@@ -27,7 +27,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
@@ -58,13 +57,13 @@ public class DecryptTextPm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(DecryptTextPm.class);
 
 	@Autowired
-	@Resource(name = "keyRingService")
+	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
-	@Resource(name = "encryptionService")
+	// @Resource(name = "encryptionService")
 	private EncryptionService encryptionService;
 	@Autowired
-	@Resource(name = "keyFilesOperations")
+	// @Resource(name = "keyFilesOperations")
 	private KeyFilesOperations keyFilesOperations;
 
 	private DecryptTextHost host;

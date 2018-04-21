@@ -6,7 +6,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -39,7 +38,7 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
 	@Autowired
 	private EventBus eventBus;
 	@Autowired
-	@Resource(name = "keyRingService")
+	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
 	private GlobalAppActions globalAppActions;

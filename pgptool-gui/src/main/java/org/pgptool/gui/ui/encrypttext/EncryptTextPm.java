@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
@@ -64,10 +63,10 @@ public class EncryptTextPm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(EncryptTextPm.class);
 
 	@Autowired
-	@Resource(name = "keyRingService")
+	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
-	@Resource(name = "encryptionService")
+	// @Resource(name = "encryptionService")
 	private EncryptionService encryptionService;
 
 	private EncryptTextHost host;

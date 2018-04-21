@@ -21,7 +21,6 @@ import java.awt.event.ActionEvent;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 
 import org.apache.log4j.Logger;
@@ -54,10 +53,10 @@ public class CreateKeyPm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(CreateKeyPm.class);
 
 	@Autowired
-	@Resource(name = "keyRingService")
+	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
-	@Resource(name = "keyGeneratorService")
+	// @Resource(name = "keyGeneratorService")
 	private KeyGeneratorService keyGeneratorService;
 	@Autowired
 	private ExecutorService executorService;

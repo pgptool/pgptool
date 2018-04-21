@@ -7,7 +7,6 @@ import java.awt.Window;
 import java.io.File;
 import java.util.ArrayList;
 
-import javax.annotation.Resource;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -33,7 +32,7 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 	private static Logger log = Logger.getLogger(KeysExporterUiImpl.class);
 
 	@Autowired
-	@Resource(name = "keyFilesOperations")
+	// @Resource(name = "keyFilesOperations")
 	private KeyFilesOperations keyFilesOperations;
 	@Autowired
 	private EventBus eventBus;

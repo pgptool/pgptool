@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
@@ -52,10 +51,10 @@ public class KeysListPm extends PresentationModelBase {
 	@Autowired
 	private EventBus eventBus;
 	@Autowired
-	@Resource(name = "keyRingService")
+	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
-	@Resource(name = "keyFilesOperations")
+	// @Resource(name = "keyFilesOperations")
 	private KeyFilesOperations keyFilesOperations;
 	@Autowired
 	private KeysExporterUi keysExporterUi;

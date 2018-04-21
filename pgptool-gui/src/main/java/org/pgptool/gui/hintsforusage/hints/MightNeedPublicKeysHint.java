@@ -5,7 +5,6 @@ import java.awt.event.ActionEvent;
 import java.net.URI;
 import java.util.concurrent.ExecutorService;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 
 import org.apache.log4j.Logger;
@@ -40,7 +39,7 @@ public class MightNeedPublicKeysHint extends HintPm implements InitializingBean 
 	@Autowired
 	private EventBus eventBus;
 	@Autowired
-	@Resource(name = "keyRingService")
+	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
 	private GlobalAppActions globalAppActions;

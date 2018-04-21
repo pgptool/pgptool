@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
@@ -83,10 +82,10 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 	@Autowired
 	private ConfigPairs appProps;
 	@Autowired
-	@Resource(name = "keyRingService")
+	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
-	@Resource(name = "encryptionService")
+	// @Resource(name = "encryptionService")
 	private EncryptionService encryptionService;
 	@Autowired
 	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;

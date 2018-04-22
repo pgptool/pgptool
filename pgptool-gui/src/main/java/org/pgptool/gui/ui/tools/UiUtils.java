@@ -143,6 +143,12 @@ public class UiUtils {
 			}
 
 			private void fixFontSize() {
+				if (isJreHandlesScaling()) {
+					log.info("JRE handles font scaling, won't change it");
+					return;
+				}
+				log.info("JRE doesnt't seem to support font scaling");
+
 				Toolkit toolkit = Toolkit.getDefaultToolkit();
 				int dpi = toolkit.getScreenResolution();
 				if (dpi == 96) {
@@ -158,6 +164,25 @@ public class UiUtils {
 				int targetFontSize = 12 * dpi / 96;
 				log.debug("Screen dpi = " + dpi + ", decided to change font size to " + targetFontSize);
 				setDefaultSize(targetFontSize);
+			}
+
+			private boolean isJreHandlesScaling() {
+				try {
+					JreVersion noNeedToScaleForVer = JreVersion.parseString("9");
+					String jreVersionStr = System.getProperty("java.version");
+					if (jreVersionStr != null) {
+						JreVersion curVersion = JreVersion.parseString(jreVersionStr);
+						if (noNeedToScaleForVer.compareTo(curVersion) <= 0) {
+							return true;
+						}
+					}
+
+					return false;
+				} catch (Throwable t) {
+					log.warn("Failed to see oif JRE can handle font scaling. Will assume it does. JRE version: "
+							+ System.getProperty("java.version"), t);
+					return true;
+				}
 			}
 
 			public void setDefaultSize(int size) {

@@ -22,6 +22,7 @@ import static org.pgptool.gui.app.Messages.text;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -151,9 +152,9 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		JLabel lblPrevDecryptedFiles = new JLabel(text("phrase.previouslyDecrpytedFiles"));
 		Border topPadding = BorderFactory.createEmptyBorder(14, 0, 0, 0);
 		lblPrevDecryptedFiles.setBorder(topPadding);
-		JPanel pnlTableLabels = new JPanel(new BorderLayout());
-		pnlTableLabels.add(lblPrevDecryptedFiles, BorderLayout.CENTER);
-		pnlTableLabels.add(linkEncryptBackAll = new LinkButton(), BorderLayout.EAST);
+		JPanel pnlTableLabels = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		pnlTableLabels.add(lblPrevDecryptedFiles);
+		pnlTableLabels.add(linkEncryptBackAll = new LinkButton());
 		linkEncryptBackAll.setEnabledBehavior(LinkButton.VISIBLE_OR_INVISIBLE);
 		linkEncryptBackAll.setBorder(topPadding);
 		panelRoot.add(pnlTableLabels, sgl.cs(0, row));
@@ -268,6 +269,8 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		selectionModel.addListSelectionListener(rowSelectionListener);
 		table.setSelectionModel(selectionModel);
 		table.addMouseListener(listMouseListener);
+		table.setDefaultRenderer(EncryptBackAction.class, new EncryptBackActionCellRenderer());
+		table.addMouseListener(encrBackClickHandler);
 		initTableKeyListener();
 
 		// Envelope in scrollpane
@@ -276,6 +279,24 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		scrollPane.setViewportView(table);
 		return scrollPane;
 	}
+
+	private MouseAdapter encrBackClickHandler = new MouseAdapter() {
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			int row = table.getSelectedRow();
+			int col = table.getSelectedColumn();
+			col = table.convertColumnIndexToModel(col);
+
+			if (col != DecryptedFilesModel.COLUMN_ENCRYPT_BACK_ACTION) {
+				return;
+			}
+			if (row < 0) {
+				return;
+			}
+
+			pm.actionEncryptBack.actionPerformed(null);
+		}
+	};
 
 	@SuppressWarnings("serial")
 	private void initTableKeyListener() {

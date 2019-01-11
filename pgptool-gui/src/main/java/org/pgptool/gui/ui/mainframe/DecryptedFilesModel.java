@@ -31,6 +31,7 @@ import ru.skarpushin.swingpm.modelprops.table.LightweightTableModel;
 public class DecryptedFilesModel implements LightweightTableModel<DecryptedFile> {
 	public static final int COLUMN_ENCRYPTED_FILE = 0;
 	public static final int COLUMN_DECRYPTED_FILE = 1;
+	public static final int COLUMN_ENCRYPT_BACK_ACTION = 2;
 
 	private DecryptedTempFolder decryptedTempFolder;
 
@@ -45,7 +46,7 @@ public class DecryptedFilesModel implements LightweightTableModel<DecryptedFile>
 
 	@Override
 	public int getColumnCount() {
-		return 2;
+		return 3;
 	}
 
 	@Override
@@ -55,6 +56,8 @@ public class DecryptedFilesModel implements LightweightTableModel<DecryptedFile>
 			return Messages.get("term.encryptedFile");
 		case COLUMN_DECRYPTED_FILE:
 			return Messages.get("term.decryptedFile");
+		case COLUMN_ENCRYPT_BACK_ACTION:
+			return Messages.get("term.quickActions");
 		default:
 			throw new IllegalArgumentException("Wrong column index: " + columnIndex);
 		}
@@ -62,7 +65,11 @@ public class DecryptedFilesModel implements LightweightTableModel<DecryptedFile>
 
 	@Override
 	public Class<?> getColumnClass(int columnIndex) {
-		return String.class;
+		if (columnIndex == COLUMN_ENCRYPT_BACK_ACTION) {
+			return EncryptBackAction.class;
+		} else {
+			return String.class;
+		}
 	}
 
 	@Override
@@ -76,6 +83,8 @@ public class DecryptedFilesModel implements LightweightTableModel<DecryptedFile>
 			return " " + buildStringForEncryptedFile(r);
 		case COLUMN_DECRYPTED_FILE:
 			return " " + getTargetFileName(r);
+		case COLUMN_ENCRYPT_BACK_ACTION:
+			return new EncryptBackAction(r);
 		default:
 			throw new IllegalArgumentException("Wrong column index: " + columnIndex);
 		}

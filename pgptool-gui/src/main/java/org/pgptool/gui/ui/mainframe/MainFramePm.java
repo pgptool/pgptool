@@ -364,10 +364,6 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 		return updatesPolicy.getIsAutoUpdatesEnabled();
 	}
 
-	public Action getActionShowFeedbackForm() {
-		return host.getActionShowFeedbackForm();
-	}
-
 	private HistoryQuickSearchHost historyQuickSearchHost = new HistoryQuickSearchHost() {
 		@Override
 		public void handleChosen(DecryptionDialogParameters optionalTsRecordSubject) {

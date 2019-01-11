@@ -148,13 +148,4 @@
 
 	<bean class="org.pgptool.gui.ui.checkForUpdates.UpdatesPolicy" />
 
-	<bean class="org.pgptool.gui.ui.feedbackForm.FeedbackFormView" scope="prototype" />
-	<bean class="org.pgptool.gui.ui.feedbackForm.FeedbackFormPm" scope="prototype">
-		<property name="formUrlForBrowser" value="${feedback.formUrlForBrowser}" />
-	</bean>
-
-	<bean class="org.pgptool.gui.feedback.impl.UserFeedbackServiceImpl">
-		<property name="endpoint" value="${feedback.formUrlForApi}" />
-	</bean>
-
 </beans>

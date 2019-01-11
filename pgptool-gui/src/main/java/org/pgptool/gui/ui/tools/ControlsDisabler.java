@@ -17,7 +17,7 @@ import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
  */
 public class ControlsDisabler implements TypedPropertyChangeListener<Boolean> {
 	private static Logger log = Logger.getLogger(ControlsDisabler.class);
-	
+
 	private List<Component> disabledComponents = new ArrayList<>();
 	private JPanel rootPanelToDisable;
 

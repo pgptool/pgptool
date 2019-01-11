@@ -108,7 +108,6 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private JMenuItem miAbout;
 	private JMenuItem miCheckForUpdates;
 	private JCheckBoxMenuItem miAutoCheckForUpdates;
-	private JMenuItem miWriteFeedback;
 	private JMenuItem miConfigExit;
 	private JMenuItem miEncrypt;
 	private JMenuItem miDecrypt;
@@ -423,14 +422,13 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		JMenu menuFile = new JMenu(Messages.get("term.appTitle"));
 		menuFile.add(miChangeTempFolderForDecrypted = new JMenuItem());
 		menuFile.addSeparator();
-		menuFile.add(miBmc = new JMenuItem());
-		menuFile.add(miWriteFeedback = new JMenuItem());
-		menuFile.add(miFaq = new JMenuItem());
-		menuFile.add(miHelp = new JMenuItem());
-		menuFile.addSeparator();
 		menuFile.add(miAbout = new JMenuItem());
 		menuFile.add(miCheckForUpdates = new JMenuItem());
 		menuFile.add(miAutoCheckForUpdates = new JCheckBoxMenuItem());
+		menuFile.addSeparator();
+		menuFile.add(miFaq = new JMenuItem());
+		menuFile.add(miHelp = new JMenuItem());
+		menuFile.add(miBmc = new JMenuItem());
 		menuFile.addSeparator();
 		menuFile.add(miConfigExit = new JMenuItem());
 
@@ -537,7 +535,6 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		bindingContext.setupBinding(pm.getActionAbout(), miAbout);
 		bindingContext.setupBinding(pm.getActionCheckForUpdates(), miCheckForUpdates);
 		bindingContext.setupBinding(pm.getActionAutoCheckForUpdates(), miAutoCheckForUpdates);
-		bindingContext.setupBinding(pm.getActionShowFeedbackForm(), miWriteFeedback);
 		bindingContext.registerPropertyValuePropagation(pm.getIsAutoUpdatesEnabled(), miAutoCheckForUpdates, "state");
 
 		bindingContext.setupBinding(pm.getActionImportKey(), miPgpImportKey);

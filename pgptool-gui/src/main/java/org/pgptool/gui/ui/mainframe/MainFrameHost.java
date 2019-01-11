@@ -50,8 +50,6 @@ public interface MainFrameHost {
 
 	void openEncryptBackMultipleFor(Set<String> decryptedFiles);
 
-	Action getActionShowFeedbackForm();
-
 	Action getActionBuyMeCoffee();
 
 	Action getActionFaq();

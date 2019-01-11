@@ -1,5 +1,6 @@
 package org.pgptool.gui.ui.historyquicksearch;
 
+import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.Comparator;
@@ -14,11 +15,13 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.table.TableModel;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
+import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.ui.decryptone.DecryptionDialogParameters;
@@ -57,6 +60,7 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 	private HistoryQuickSearchHost host;
 
 	private boolean listenerRegistered;
+	private DecryptionDialogParameters selectedRow;
 
 	public void init(HistoryQuickSearchHost host) {
 		Preconditions.checkArgument(host != null);
@@ -241,10 +245,16 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 		}
 	}
 
-	protected void handleDoubleClick(DecryptionDialogParameters row) {
-		host.handleChosen(row);
-		quickSearch.setValueByOwner("");
-	}
+	protected final Action actionOpen = new LocalizedAction("action.open") {
+		private static final long serialVersionUID = -6923195112372446340L;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			Preconditions.checkState(selectedRow != null, "No selected row");
+			host.handleChosen(selectedRow);
+			quickSearch.setValueByOwner("");
+		}
+	};
 
 	@SuppressWarnings("serial")
 	private final Action actionCancel = new LocalizedAction("action.cancel") {
@@ -254,6 +264,22 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 			quickSearch.setValueByOwner("");
 		}
 	};
+
+	private Action actionOpenLocation = new LocalizedAction("action.openLocation") {
+		private static final long serialVersionUID = -3192304131437449088L;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			Preconditions.checkState(selectedRow != null, "No selected row");
+			try {
+				Desktop.getDesktop().open(new File(selectedRow.getSourceFile()).getParentFile());
+			} catch (Throwable t) {
+				EntryPoint.reportExceptionToUser("error.cannotOpenFolder", t);
+			}
+		}
+	};
+
+	protected Action[] contextMenuActions = new Action[] { actionOpenLocation };
 
 	public EventBus getEventBus() {
 		return eventBus;
@@ -287,5 +313,13 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 
 	protected Action getActionCancel() {
 		return actionCancel;
+	}
+
+	protected void setSelected(DecryptionDialogParameters selectedRow) {
+		// NOTE: This is not really "the right" way to do things in Presentation Model
+		// design pattern. But still I decided to do it because otherwise feature
+		// https://github.com/pgptool/pgptool/issues/150 will inflict too many changes
+		// to this simple component. So that's kinda compromise
+		this.selectedRow = selectedRow;
 	}
 }

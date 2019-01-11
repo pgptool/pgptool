@@ -24,12 +24,14 @@ import java.awt.event.WindowAdapter;
 import java.util.concurrent.ScheduledExecutorService;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -70,13 +72,12 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 	private JScrollPane scrollPane;
 	private JTable table;
 	protected TableColumnsGeometryPersister tableColumnsGeometryPersister;
-
 	private DefaultListSelectionModel selectionModel;
 
+	private JPopupMenu ctxMenu;
+
 	private JLabel tblLabel;
-
 	private JTextField edQuickSearch;
-
 	private JButton btnCancel;
 
 	@Override
@@ -113,6 +114,7 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 		panelRoot.add(tmpPanel, sgl.cs(1, 4));
 		tmpPanel.add(btnCancel = new JButton());
 
+		ctxMenu = new JPopupMenu();
 		initTableComponent();
 
 		lblNoDataToDisplay = new JLabel(text("term.noDataToDisplay"));
@@ -147,7 +149,7 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 				}
 			} else if (e.getKeyCode() == KeyEvent.VK_ENTER && table.getSelectedRow() >= 0) {
 				e.consume();
-				pm.handleDoubleClick(getSelectedRow());
+				pm.actionOpen.actionPerformed(null);
 			} else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
 				pm.getActionCancel().actionPerformed(null);
 			}
@@ -155,10 +157,10 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 	};
 
 	@SuppressWarnings("serial")
-	private AbstractAction enterAction = new AbstractAction() {
+	private Action enterAction = new AbstractAction() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			pm.handleDoubleClick(getSelectedRow());
+			pm.actionOpen.actionPerformed(e);
 		}
 	};
 
@@ -172,6 +174,7 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 		// Add listeners
 		selectionModel = new DefaultListSelectionModel();
 		selectionModel.setSelectionMode(DefaultListSelectionModel.SINGLE_SELECTION);
+		selectionModel.addListSelectionListener((evt) -> pm.setSelected(getSelectedRow()));
 		table.setSelectionModel(selectionModel);
 		table.addMouseListener(listMouseListener);
 
@@ -193,7 +196,42 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 			}
 
 			if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() == 2) {
-				pm.handleDoubleClick(getSelectedRow());
+				pm.actionOpen.actionPerformed(null);
+				return;
+			}
+		}
+
+		private void myPopupEvent(MouseEvent e) {
+			updateTableSelection(e);
+			if (ctxMenu.getComponentCount() > 0) {
+				ctxMenu.show(e.getComponent(), e.getX(), e.getY());
+			}
+		}
+
+		private void updateTableSelection(MouseEvent e) {
+			if (e.getComponent() == table) {
+				int r = table.rowAtPoint(e.getPoint());
+				if (r >= 0 && r < table.getRowCount()) {
+					table.setRowSelectionInterval(r, r);
+				} else {
+					table.clearSelection();
+				}
+			} else {
+				table.clearSelection();
+			}
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			if (e.isPopupTrigger()) {
+				myPopupEvent(e);
+			}
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			if (e.isPopupTrigger()) {
+				myPopupEvent(e);
 			}
 		}
 	};
@@ -206,11 +244,11 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 
 		// NOTE: This is a internal convention that by columnIndex -1 we mean
 		// object itself
-		TableModel table = pm.getRowsTableModel().getValue();
-		if (table == null) {
+		TableModel tableModel = pm.getRowsTableModel().getValue();
+		if (tableModel == null) {
 			return null;
 		}
-		return (DecryptionDialogParameters) table.getValueAt(row, -1);
+		return (DecryptionDialogParameters) tableModel.getValueAt(row, -1);
 	}
 
 	@Override
@@ -225,6 +263,20 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 		bindingContext.setupBinding(pm.getQuickSearch(), edQuickSearch);
 
 		bindingContext.setupBinding(pm.getActionCancel(), btnCancel);
+
+		bindContextMenu();
+	}
+
+	private void bindContextMenu() {
+		if (pm.contextMenuActions != null) {
+			for (Action action : pm.contextMenuActions) {
+				if (action == null) {
+					ctxMenu.addSeparator();
+				} else {
+					ctxMenu.add(action);
+				}
+			}
+		}
 	}
 
 	private TypedPropertyChangeListener<TableModel> tableModelChangeHandler = new TypedPropertyChangeListener<TableModel>() {
@@ -245,6 +297,7 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 				tableColumnsGeometryPersister = null;
 			}
 			table.setModel(newValue);
+			table.setRowSelectionInterval(0, 0);
 			tableColumnsGeometryPersister = new TableColumnsGeometryPersisterImpl(table, "tblHstQSrch", uiGeom,
 					scheduledExecutorService);
 			tableColumnsGeometryPersister.restoreColumnsConfig();
@@ -262,6 +315,7 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 		super.internalUnbindFromPm();
 		table.setModel(new DefaultTableModel());
 		table.repaint();
+		ctxMenu.removeAll();
 	}
 
 	@Override

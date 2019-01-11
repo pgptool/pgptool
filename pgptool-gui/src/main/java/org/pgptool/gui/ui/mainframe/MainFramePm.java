@@ -262,12 +262,8 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 			Preconditions.checkState(files.size() > 0,
 					"This action supposed to be available only when ther is at least one decrypted file monitored");
 
-			if (files.size() == 1) {
-				host.openEncryptDialogFor(files.get(0).getDecryptedFile());
-			} else {
-				Set<String> fileNames = files.stream().map(x -> x.getDecryptedFile()).collect(Collectors.toSet());
-				host.openEncryptBackMultipleFor(fileNames);
-			}
+			Set<String> fileNames = files.stream().map(x -> x.getDecryptedFile()).collect(Collectors.toSet());
+			host.openEncryptBackMultipleFor(fileNames);
 		}
 	};
 	private ApplicationContext applicationContext;

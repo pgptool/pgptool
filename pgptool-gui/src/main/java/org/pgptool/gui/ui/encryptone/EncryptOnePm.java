@@ -543,7 +543,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 
 	private String madeUpTargetFileName(String sourceFileName, String targetBasedPath) {
 		File fileSource = new File(sourceFileName);
-		String fileNameOnlyWoPathAndExtension = fileSource.getName();
+		String fileNameOnlyWoPathAndExtension = FilenameUtils.getBaseName(fileSource.getAbsolutePath());
 		return targetBasedPath + File.separator + fileNameOnlyWoPathAndExtension + "." + ENCRYPTED_FILE_EXTENSION;
 	}
 

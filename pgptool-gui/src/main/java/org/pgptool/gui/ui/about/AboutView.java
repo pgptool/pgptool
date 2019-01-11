@@ -68,12 +68,12 @@ public class AboutView extends DialogViewBaseCustom<AboutPm> {
 		pnlFlow.add(lblVersion = new JLabel());
 		pnlFlow.add(lblVersionStatus = new JLabel());
 		pnlFlow.add(lblNewVersionLink = new JLabel());
-		initSiteLink(lblNewVersionLink, newVersionLinkClickListener);
+		initLinkAction(lblNewVersionLink, newVersionLinkClickListener);
 		pnl.add(pnlFlow, sgl.cs(1, 1));
 
 		pnl.add(new JLabel(UiUtils.plainToBoldHtmlString(Messages.get("term.linkToSite"))), sgl.cs(1, 2));
 		pnl.add(lblLinkToSite = new JLabel(), sgl.cs(1, 3));
-		initSiteLink(lblLinkToSite, siteLinkClickListener);
+		initLinkAction(lblLinkToSite, siteLinkClickListener);
 
 		JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
 		pnlButtons.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
@@ -81,7 +81,8 @@ public class AboutView extends DialogViewBaseCustom<AboutPm> {
 		pnlButtons.add(btnClose = new JButton());
 	}
 
-	private void initSiteLink(JLabel label, MouseListener mouseListener) {
+	// TODO: Adopt LinkButton instead of this ridiculous construct
+	private void initLinkAction(JLabel label, MouseListener mouseListener) {
 		if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 			return;
 		}

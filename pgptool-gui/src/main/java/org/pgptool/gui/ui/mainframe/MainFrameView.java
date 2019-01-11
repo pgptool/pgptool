@@ -51,6 +51,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
+import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -67,6 +68,7 @@ import org.pgptool.gui.ui.tools.WindowIcon;
 import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersisterImpl;
 import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersister;
 import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersisterImpl;
+import org.pgptool.gui.ui.tools.linkbutton.LinkButton;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Preconditions;
@@ -74,6 +76,7 @@ import com.google.common.base.Preconditions;
 import ru.skarpushin.swingpm.base.HasWindow;
 import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
+import ru.skarpushin.swingpm.modelprops.EXPORT.HasActionBinding;
 import ru.skarpushin.swingpm.tools.SwingPmSettings;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
@@ -113,6 +116,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 	private JMenuItem miEncryptBackAll;
 
 	private JPanel panelTablePlaceholder;
+	private LinkButton linkEncryptBackAll;
 	private JTable table;
 	private JScrollPane scrollPane;
 	private DefaultListSelectionModel selectionModel;
@@ -144,10 +148,15 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		panelRoot.setBorder(BorderFactory.createEmptyBorder(7, 7, 7, 7));
 
 		int row = 0;
-		JLabel lblPrevDecryptedFiles = new JLabel(
-				UiUtils.plainToBoldHtmlString(text("phrase.previouslyDecrpytedFiles")));
-		panelRoot.add(lblPrevDecryptedFiles, sgl.cs(0, row));
-		lblPrevDecryptedFiles.setBorder(BorderFactory.createEmptyBorder(14, 0, 0, 0));
+		JLabel lblPrevDecryptedFiles = new JLabel(text("phrase.previouslyDecrpytedFiles"));
+		Border topPadding = BorderFactory.createEmptyBorder(14, 0, 0, 0);
+		lblPrevDecryptedFiles.setBorder(topPadding);
+		JPanel pnlTableLabels = new JPanel(new BorderLayout());
+		pnlTableLabels.add(lblPrevDecryptedFiles, BorderLayout.CENTER);
+		pnlTableLabels.add(linkEncryptBackAll = new LinkButton(), BorderLayout.EAST);
+		linkEncryptBackAll.setEnabledBehavior(LinkButton.VISIBLE_OR_INVISIBLE);
+		linkEncryptBackAll.setBorder(topPadding);
+		panelRoot.add(pnlTableLabels, sgl.cs(0, row));
 
 		row++;
 		panelTablePlaceholder = new JPanel(new BorderLayout());
@@ -158,7 +167,6 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		row++;
 		hintsPanel = new JPanel(new BorderLayout());
 		panelRoot.add(hintsPanel, sgl.cs(0, row));
-		// hintView.renderTo(hintsPanel, BorderLayout.CENTER);
 	}
 
 	private TypedPropertyChangeListener<HintPm> onHintPmChanged = new TypedPropertyChangeListener<HintPm>() {
@@ -519,6 +527,8 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		bindingContext.setupBinding(pm.getActionEncryptText(), miEncryptText);
 		bindingContext.setupBinding(pm.getActionDecryptText(), miDecryptText);
 		bindingContext.setupBinding(pm.actionEncryptBackAll, miEncryptBackAll);
+		bindingContext.add(new HasActionBinding(pm.actionEncryptBackAll, linkEncryptBackAll));
+
 		bindingContext.setupBinding(pm.getActionDecrypt(), miDecrypt);
 	}
 

@@ -24,21 +24,39 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.function.BiConsumer;
 
 import javax.swing.Action;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 
-public class LinkButton extends JLabel {
+public class LinkButton extends JLabel implements HasAction {
 	private static final long serialVersionUID = 9012537495123322302L;
+
+	public static final BiConsumer<JComponent, Boolean> ENABLED_OR_DISABLED = new BiConsumer<JComponent, Boolean>() {
+		@Override
+		public void accept(JComponent t, Boolean u) {
+			t.setEnabled(u);
+		}
+	};
+
+	public static final BiConsumer<JComponent, Boolean> VISIBLE_OR_INVISIBLE = new BiConsumer<JComponent, Boolean>() {
+		@Override
+		public void accept(JComponent t, Boolean u) {
+			t.setVisible(u);
+		}
+	};
 
 	private Action action;
 	private Cursor prevCursor;
+	private BiConsumer<JComponent, Boolean> enabledBehavior = ENABLED_OR_DISABLED;
 
 	public LinkButton() {
 		super();
 		addMouseListener(filterClickListener);
 	}
 
+	@Override
 	public void setAction(Action newAction) {
 		if (action != null) {
 			action.removePropertyChangeListener(listener);
@@ -51,7 +69,7 @@ public class LinkButton extends JLabel {
 			newAction.addPropertyChangeListener(listener);
 			setText((String) action.getValue(Action.NAME));
 		} else {
-			setEnabled(false);
+			enabledBehavior.accept(this, false);
 		}
 	}
 
@@ -59,7 +77,7 @@ public class LinkButton extends JLabel {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			if ("enabled".equals(evt.getPropertyName())) {
-				LinkButton.this.setEnabled((Boolean) evt.getNewValue());
+				enabledBehavior.accept(LinkButton.this, (Boolean) evt.getNewValue());
 			}
 		}
 	};
@@ -90,5 +108,13 @@ public class LinkButton extends JLabel {
 			setCursor(prevCursor);
 			setForeground(Color.gray);
 		}
+	}
+
+	public BiConsumer<JComponent, Boolean> getEnabledBehavior() {
+		return enabledBehavior;
+	}
+
+	public void setEnabledBehavior(BiConsumer<JComponent, Boolean> enabledBehavior) {
+		this.enabledBehavior = enabledBehavior;
 	};
 }

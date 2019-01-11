@@ -57,9 +57,13 @@ public class CheckListCellRenderer<E> extends JPanel implements ListCellRenderer
 		}
 
 		setEnabled(list.isEnabled());
+		
 		check.setSelected(checkStateSupplier.apply(value));
+		check.setEnabled(list.isEnabled());
+		
 		label.setFont(list.getFont());
 		label.setText(value.toString());
+		label.setEnabled(list.isEnabled());
 
 		boolean isChecked = check.isSelected();
 		if (isChecked) {

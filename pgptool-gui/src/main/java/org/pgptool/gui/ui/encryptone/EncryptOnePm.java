@@ -462,6 +462,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 				EntryPoint.reportExceptionToUser("error.failedToEncryptFile", t);
 				actionDoOperation.setEnabled(true);
 				isDisableControls.setValueByOwner(false);
+				isProgressVisible.setValueByOwner(false);
 				return;
 			}
 

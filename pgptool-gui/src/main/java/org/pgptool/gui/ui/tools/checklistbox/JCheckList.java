@@ -104,6 +104,10 @@ public class JCheckList<E> extends JList<E> {
 	protected MouseAdapter mouseListener = new MouseAdapter() {
 		@Override
 		public void mouseClicked(MouseEvent e) {
+			if (!isEnabled()) {
+				return;
+			}
+			
 			int index = locationToIndex(e.getPoint());
 			if (index < 0) {
 				return;

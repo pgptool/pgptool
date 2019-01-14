@@ -40,6 +40,7 @@ import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
+import org.pgptool.gui.encryption.implpgp.SymmetricEncryptionIsNotSupportedException;
 import org.pgptool.gui.tools.TextFile;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,7 +111,7 @@ public class EncryptionDecryptionTests {
 	}
 
 	private PasswordDeterminedForKey buildPasswordDeterminedForKey(String encryptedFile, String keyName,
-			String password) {
+			String password) throws SymmetricEncryptionIsNotSupportedException {
 		Set<String> decryptionKeys = encryptionService.findKeyIdsForDecryption(encryptedFile);
 		Key key = keys.get(keyName);
 		Optional<String> requestedKeyId = decryptionKeys.stream().filter(x -> key.getKeyData().isHasAlternativeId(x))

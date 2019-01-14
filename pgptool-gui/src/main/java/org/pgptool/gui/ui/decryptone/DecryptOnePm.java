@@ -45,6 +45,7 @@ import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
 import org.pgptool.gui.encryption.api.EncryptionService;
 import org.pgptool.gui.encryption.api.KeyRingService;
+import org.pgptool.gui.encryption.implpgp.SymmetricEncryptionIsNotSupportedException;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
 import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamSupervisor;
 import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamSupervisorImpl;
@@ -333,6 +334,9 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 					// needs to be requested then new window will appear and
 					// callback will be called later upon user input event
 				}
+			} catch (SymmetricEncryptionIsNotSupportedException sense) {
+				log.warn("Got SymmetricEncryptionIsNotSupportedException", sense);
+				validationErrors.add(new ValidationError(sense.getMessageCode(), FN_SOURCE_FILE));
 			} catch (Throwable t) {
 				log.error("Failed to find decryption keys", t);
 				validationErrors.add(

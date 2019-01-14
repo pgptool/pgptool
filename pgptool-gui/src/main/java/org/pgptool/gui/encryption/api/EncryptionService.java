@@ -24,6 +24,7 @@ import java.util.Set;
 import org.pgptool.gui.bkgoperation.ProgressHandler;
 import org.pgptool.gui.bkgoperation.UserRequestedCancellationException;
 import org.pgptool.gui.encryption.api.dto.Key;
+import org.pgptool.gui.encryption.implpgp.SymmetricEncryptionIsNotSupportedException;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.summerb.approaches.security.api.exceptions.InvalidPasswordException;
 
@@ -42,14 +43,19 @@ public interface EncryptionService {
 
 	/**
 	 * Discover all key ids which can be used for decryption
+	 * 
+	 * @throws SymmetricEncryptionIsNotSupportedException
+	 *             will be thrown if file was encrypted using symmetric encryption
 	 */
-	Set<String> findKeyIdsForDecryption(String filePathName);
+	Set<String> findKeyIdsForDecryption(String filePathName) throws SymmetricEncryptionIsNotSupportedException;
 
 	/**
 	 * @param inputStream
 	 *            input stream for encrypted text
+	 * @throws SymmetricEncryptionIsNotSupportedException
+	 *             will be thrown if file was encrypted using symmetric encryption
 	 */
-	Set<String> findKeyIdsForDecryption(InputStream inputStream);
+	Set<String> findKeyIdsForDecryption(InputStream inputStream) throws SymmetricEncryptionIsNotSupportedException;
 
 	/**
 	 * This method "pre-decrypts" file only to get initial file name that was

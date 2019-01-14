@@ -35,9 +35,9 @@ import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.encryption.api.EncryptionService;
-import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
+import org.pgptool.gui.encryption.implpgp.SymmetricEncryptionIsNotSupportedException;
 import org.pgptool.gui.tools.ClipboardUtil;
 import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
@@ -63,8 +63,6 @@ public class DecryptTextPm extends PresentationModelBase {
 	// @Resource(name = "encryptionService")
 	private EncryptionService encryptionService;
 	@Autowired
-	// @Resource(name = "keyFilesOperations")
-	private KeyFilesOperations keyFilesOperations;
 
 	private DecryptTextHost host;
 
@@ -146,7 +144,7 @@ public class DecryptTextPm extends PresentationModelBase {
 		return targetText.getModelPropertyAccessor();
 	}
 
-	private void decrypt() throws UnsupportedEncodingException {
+	private void decrypt() throws UnsupportedEncodingException, SymmetricEncryptionIsNotSupportedException {
 		// Discover possible keys
 		ByteArrayInputStream inputStream = new ByteArrayInputStream(sourceText.getValue().getBytes("UTF-8"));
 		keysIds = encryptionService.findKeyIdsForDecryption(inputStream);

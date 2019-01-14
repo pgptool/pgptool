@@ -51,6 +51,7 @@ import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
 import org.bouncycastle.openpgp.PGPMarker;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPOnePassSignatureList;
+import org.bouncycastle.openpgp.PGPPBEEncryptedData;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
@@ -241,7 +242,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 	}
 
 	@Override
-	public Set<String> findKeyIdsForDecryption(String filePathName) {
+	public Set<String> findKeyIdsForDecryption(String filePathName) throws SymmetricEncryptionIsNotSupportedException {
 		Preconditions.checkArgument(StringUtils.hasText(filePathName) && new File(filePathName).exists(),
 				"filePathName has to point to existing file");
 		log.debug("Looking for decryption keys for file " + filePathName);
@@ -262,7 +263,8 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Set<String> findKeyIdsForDecryption(InputStream inputStream) {
+	public Set<String> findKeyIdsForDecryption(InputStream inputStream)
+			throws SymmetricEncryptionIsNotSupportedException {
 		Preconditions.checkArgument(inputStream != null, "Input stream must not be null");
 
 		try {
@@ -277,7 +279,12 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 					PGPEncryptedDataList d = (PGPEncryptedDataList) section;
 					HashSet<String> ret = new HashSet<>();
 					for (Iterator dataIter = d.getEncryptedDataObjects(); dataIter.hasNext();) {
-						PGPPublicKeyEncryptedData data = (PGPPublicKeyEncryptedData) dataIter.next();
+						Object next = dataIter.next();
+						if (next instanceof PGPPBEEncryptedData) {
+							throw new SymmetricEncryptionIsNotSupportedException();
+						}
+
+						PGPPublicKeyEncryptedData data = (PGPPublicKeyEncryptedData) next;
 						ret.add(KeyDataPgp.buildKeyIdStr(data.getKeyID()));
 					}
 					log.debug("Possible decryption with IDS: " + Arrays.toString(ret.toArray()));
@@ -286,6 +293,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 			}
 			throw new RuntimeException("Information about decryption methods was not found");
 		} catch (Throwable t) {
+			Throwables.throwIfInstanceOf(t, SymmetricEncryptionIsNotSupportedException.class);
 			throw new RuntimeException("This file doesn't look like encrypted file OR format is not supported", t);
 		}
 	}

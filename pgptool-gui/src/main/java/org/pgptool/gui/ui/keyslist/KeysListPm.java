@@ -133,7 +133,7 @@ public class KeysListPm extends PresentationModelBase {
 	private Action actionActivate = new LocalizedAction("action.activate") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			// TODO: Impl
+			// TBD: Impl
 		}
 	};
 

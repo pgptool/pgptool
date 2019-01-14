@@ -334,7 +334,7 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 				boolean proceedOnlyIfChanged = Boolean.TRUE.equals(isEncryptOnlyChanged.getValue());
 				boolean hasFingerprintOfDecrypted = decryptedFileDto != null
 						&& decryptedFileDto.getDecryptedFileFingerprint() != null;
-				// TODO: We could just compare size first and only if it matches go through
+				// TBD: We could just compare size first and only if it matches go through
 				// expensive checksum calculation
 				if (targetFileExists && proceedOnlyIfChanged && hasFingerprintOfDecrypted) {
 					Fingerprint decryptedFileFingerprint = calculateFingerprintSync(decryptedFile);

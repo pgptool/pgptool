@@ -228,7 +228,7 @@ public class EncryptTextPm extends PresentationModelBase {
 			selectedRecipients.getList().clear();
 			Set<String> missedEmails = new HashSet<>();
 			for (String email : emails) {
-				// TODO: Refactor to have a better way of handling emails. Current
+				// TBD: Refactor to have a better way of handling emails. Current
 				// implementation is not 100% thorough. It's vulnerable to partial matches and
 				// depends on an assumption that email is a part of user name
 				Optional<Key> key = availabileRecipients.getList().stream()

@@ -15,7 +15,7 @@ import javax.swing.UIManager;
 import javax.swing.border.Border;
 
 /**
- * TODO: This impl is not even close to the capabilities of
+ * TBD: This impl is not even close to the capabilities of
  * {@link DefaultListCellRenderer}, but it's ok for now
  * 
  * @author sergeyk

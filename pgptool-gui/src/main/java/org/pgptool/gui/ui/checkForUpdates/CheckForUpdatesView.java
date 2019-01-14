@@ -141,7 +141,7 @@ public class CheckForUpdatesView extends DialogViewBaseCustom<CheckForUpdatesPm>
 		@Override
 		public void handlePropertyChanged(Object source, String propertyName, String oldValue, String newValue) {
 			lblNewVersionReleaseNotes.setText(newValue == null ? "" : newValue);
-			// TODO: Move this line into PropertyBinder into SwingPM
+			// TBD: Move this line into PropertyBinder into SwingPM
 			lblNewVersionReleaseNotes.select(0, 0);
 		}
 	};

@@ -29,7 +29,7 @@ import org.summerb.approaches.jdbccrud.common.DtoBase;
  * 
  * @author Sergey Karpushin
  * 
- *         TODO: Move this DTO to appropriate package near
+ *         TBD: Move this DTO to appropriate package near
  *         {@link EncryptionParamsStorage} BUT !!!!!!! This must be performed as
  *         a part of upgrade procedure to avoid screwing up peoples current
  *         settings!!

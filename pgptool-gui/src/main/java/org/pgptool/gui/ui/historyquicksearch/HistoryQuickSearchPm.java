@@ -123,7 +123,7 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 				List<DecryptionDialogParameters> results = all.stream()
 						.map(x -> (DecryptionDialogParameters) x.getValue())
 						/*
-						 * TODO: Some weird thing happening here, records are getting duplicated, would
+						 * TBD: Some weird thing happening here, records are getting duplicated, would
 						 * be great to understand WHY ???. In a mean time we'll just de-duplicate them.
 						 */
 						.filter(distinctByKey(x -> x.getSourceFile()))

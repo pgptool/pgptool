@@ -97,7 +97,7 @@ public class GetKeyPasswordOneKeyView extends ViewBase<GetKeyPasswordPm> {
 		bindingContext.setupBinding(pm.actionCancel, btnCancel);
 	}
 
-	// TODO: On window show edPassword.requestFocusInWindow();
+	// TBD: On window show edPassword.requestFocusInWindow();
 
 	@Override
 	protected void internalRenderTo(Container owner, Object constraints) {

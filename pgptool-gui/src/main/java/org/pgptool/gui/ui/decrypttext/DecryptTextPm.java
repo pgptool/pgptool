@@ -84,7 +84,7 @@ public class DecryptTextPm extends PresentationModelBase {
 
 		initModelProperties();
 
-		// TODO: See if there is already text in clipboard that we can decrypt
+		// TBD: See if there is already text in clipboard that we can decrypt
 		// if (StringUtils.hasText(ClipboardUtil.tryGetClipboardText())) {
 		// if (!pasteFromCLipboardAndTryDecrypt()) {
 		// return false;

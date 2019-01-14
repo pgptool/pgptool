@@ -190,7 +190,7 @@ public class DecryptOneView extends ViewBase<DecryptOnePm> {
 		return UiUtils.getFontRelativeSize(lettersCount);
 	}
 
-	// TODO: dialog.getRootPane().setDefaultButton(btnPerformOperation);
+	// TBD: dialog.getRootPane().setDefaultButton(btnPerformOperation);
 
 	@Override
 	protected void internalRenderTo(Container owner, Object constraints) {

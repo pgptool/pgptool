@@ -81,7 +81,7 @@ public class AboutView extends DialogViewBaseCustom<AboutPm> {
 		pnlButtons.add(btnClose = new JButton());
 	}
 
-	// TODO: Adopt LinkButton instead of this ridiculous construct
+	// TBD: Adopt LinkButton instead of this ridiculous construct
 	private void initLinkAction(JLabel label, MouseListener mouseListener) {
 		if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 			return;

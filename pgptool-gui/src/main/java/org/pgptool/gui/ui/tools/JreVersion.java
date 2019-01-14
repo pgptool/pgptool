@@ -23,13 +23,13 @@ public class JreVersion implements Comparable<JreVersion> {
 			return ret;
 		}
 		if (!versionStr.matches(VERSION_PATTERN)) {
-			// TODO: Move to message to messages file and use Validator.checkTrue or
+			// TBD: Move to message to messages file and use Validator.checkTrue or
 			// something like that used throughout the rest of application
 			throw new IllegalArgumentException(
 					"JRE version is of a wrong format. It should be either x.x.x[_xx] or x.x.x");
 		}
 
-		// TODO: Add full support to all crazy possible version formats. Official regex:
+		// TBD: Add full support to all crazy possible version formats. Official regex:
 		// [1-9][0-9]*((\.0)*\.[1-9][0-9]*)*
 		// see: http://openjdk.java.net/jeps/223
 

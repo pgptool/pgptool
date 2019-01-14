@@ -59,7 +59,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 	@Autowired
 	private ExecutorService executorService;
 
-	// TODO: Shouldn't I generate it each time. Is it safe to have it hardcoded?
+	// TBD: Shouldn't I generate it each time. Is it safe to have it hardcoded?
 	BigInteger g = new BigInteger(
 			"153d5d6172adb43045b68ae8e1de1070b6137005686d29d3d73a7749199681ee5b212c9b96bfdcfa5b20cd5e3fd2044895d609cf9b410b7a0f12ca1cb9a428cc",
 			16);

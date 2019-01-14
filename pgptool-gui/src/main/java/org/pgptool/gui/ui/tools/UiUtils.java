@@ -125,7 +125,7 @@ public class UiUtils {
 				Color foreground = defaults.getColor("CheckBoxMenuItem.foreground");
 				Color background = defaults.getColor("CheckBoxMenuItem.background");
 				if (colorsDiffPercentage(selectionForeground, background) < 10) {
-					// TODO: That doesn't actually affect defaults. Need to find out how to fix it
+					// TBD: That doesn't actually affect defaults. Need to find out how to fix it
 					defaults.put("CheckBoxMenuItem.selectionForeground", foreground);
 				}
 			}

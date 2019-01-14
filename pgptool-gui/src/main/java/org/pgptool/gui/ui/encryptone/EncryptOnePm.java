@@ -644,7 +644,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		// NOTE: I did sort of exception here. Instead of providing accessor I'm
 		// prvoding model property itself so that JCheckList can bind directly to list
 		// of checked recipients
-		// TODO: This doesn't look right actually, I'd say it's better to refactor it
+		// TBD: This doesn't look right actually, I'd say it's better to refactor it
 		// and incorporate changes into swingpm if possible
 		return selectedRecipients;
 	}

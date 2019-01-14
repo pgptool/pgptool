@@ -41,7 +41,7 @@ public class JCheckList<E> extends JList<E> {
 	 * collection used to track selections in list. Not the most elegant way, but
 	 * getting things done.
 	 * 
-	 * TODO: Maybe refactor it someday
+	 * TBD: Maybe refactor it someday
 	 */
 	private List<Integer> recentSelection = new ArrayList<>();
 
@@ -54,7 +54,7 @@ public class JCheckList<E> extends JList<E> {
 		addMouseListener(mouseListener);
 		addSpaceActionhandler(this);
 
-		// TODO: Add support for "dragging functionality" AND shift + key up+down
+		// TBD: Add support for "dragging functionality" AND shift + key up+down
 
 		// NOTE: ALthough this is multi check list box, for Swing it's a single check
 		// listbox

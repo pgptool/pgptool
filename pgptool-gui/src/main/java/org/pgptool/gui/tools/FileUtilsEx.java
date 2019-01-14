@@ -31,8 +31,8 @@ public class FileUtilsEx {
 	}
 
 	/**
-	 * This method will pick OTHER vacant file name to write data to and whe
-	 * operation is completed old file will be removed and new file will be renamed
+	 * This method will pick OTHER vacant file name to write data to and when
+	 * operation is completed, old file will be removed and new file will be renamed
 	 * to target name.
 	 * 
 	 * See https://github.com/pgptool/pgptool/issues/131 "Improvement: when

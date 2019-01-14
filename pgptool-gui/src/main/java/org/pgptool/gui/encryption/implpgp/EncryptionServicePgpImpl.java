@@ -37,7 +37,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPCompressedData;
@@ -132,7 +131,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 			Updater progress = null;
 			if (optionalProgressHandler != null) {
 				progress = Progress.create("action.encrypt", optionalProgressHandler);
-				progress.updateStepInfo("progress.preparingKeys", FilenameUtils.getName(sourceFile));
+				progress.updateStepInfo("progress.preparingKeys");
 			}
 
 			PGPEncryptedDataGenerator dataGenerator = buildEncryptedDataGenerator(
@@ -179,7 +178,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 		OutputStream pOut = lData.open(out, fileType, encryptionSourceInfo.getName(),
 				new Date(encryptionSourceInfo.getModifiedAt()), buffer);
 		if (progress != null) {
-			progress.updateStepInfo("encryption.progress.encrypting", encryptionSourceInfo.getName());
+			progress.updateStepInfo("encryption.progress.encrypting");
 		}
 		pipeStream(pIn, pOut, buffer.length, progress, null);
 		pOut.close();
@@ -345,7 +344,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 		BigInteger sourceSize = BigInteger.valueOf(new File(sourceFile).length());
 		if (optionalProgressHandler != null) {
 			progress = Progress.create("action.decrypt", optionalProgressHandler);
-			progress.updateStepInfo("progress.preparingKeys", FilenameUtils.getName(sourceFile));
+			progress.updateStepInfo("progress.preparingKeys");
 			progress.updateTotalSteps(sourceSize);
 		}
 

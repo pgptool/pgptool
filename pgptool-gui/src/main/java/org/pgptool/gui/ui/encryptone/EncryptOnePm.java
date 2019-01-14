@@ -24,6 +24,9 @@ import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -43,6 +46,8 @@ import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
+import org.pgptool.gui.bkgoperation.Progress;
+import org.pgptool.gui.bkgoperation.Progress.Updater;
 import org.pgptool.gui.bkgoperation.ProgressHandler;
 import org.pgptool.gui.bkgoperation.UserRequestedCancellationException;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
@@ -99,10 +104,8 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
 
 	@Autowired
-	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
-	// @Resource(name = "encryptionService")
 	private EncryptionService encryptionService;
 
 	private EncryptOneHost host;
@@ -447,6 +450,11 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 				ChecksumCalcOutputStreamSupervisor outputStreamSupervisor = new ChecksumCalcOutputStreamSupervisorImpl(
 						messageDigestFactory);
 
+				if (isEncryptedFileChangedAfterDecryption(targetFileName, sourceFile.getValue(), progressHandler)
+						&& !promptUserToOverwriteConcurrentChanges(targetFileName)) {
+					throw new UserRequestedCancellationException();
+				}
+
 				FileUtilsEx.baitAndSwitch(targetFileName, x -> encryptionService.encrypt(sourceFile.getValue(), x,
 						selectedRecipients.getList(), progressHandler, inputStreamSupervisor, outputStreamSupervisor));
 
@@ -490,6 +498,49 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 
 			// close window
 			host.handleClose();
+		}
+
+		private boolean promptUserToOverwriteConcurrentChanges(String targetFileName) {
+			return UiUtils.confirm("confirm.doYouWantToOverwriteConcurrentChanges", new String[] { targetFileName },
+					findRegisteredWindowIfAny());
+		}
+
+		private boolean isEncryptedFileChangedAfterDecryption(String encryptedFileName, String decryptedFilename,
+				ProgressHandler progressHandler) throws IOException, UserRequestedCancellationException {
+			File targetFileObj = new File(encryptedFileName);
+			if (!targetFileObj.exists()) {
+				return false;
+			}
+
+			DecryptedFile decryptedMonitored = monitoringDecryptedFilesService.findByDecryptedFile(decryptedFilename);
+			if (decryptedMonitored == null) {
+				return false;
+			}
+
+			if (decryptedMonitored.getEncryptedFileFingerprint() == null) {
+				return false;
+			}
+
+			ChecksumCalcInputStreamSupervisor inputStreamSupervisor = new ChecksumCalcInputStreamSupervisorImpl(
+					messageDigestFactory);
+			try (InputStream inputStream = inputStreamSupervisor.get(encryptedFileName)) {
+				Updater progress = Progress.create("operation.calculatingChecksum", progressHandler);
+				BigInteger fileSize = BigInteger.valueOf(targetFileObj.length());
+				progress.updateTotalSteps(fileSize);
+				byte[] buf = new byte[4096];
+				int read, totalRead = 0;
+				while ((read = inputStream.read(buf)) > 0) {
+					totalRead += read;
+					if (progress.isCancelationRequested()) {
+						throw new UserRequestedCancellationException();
+					}
+					progress.updateStepsTaken(BigInteger.valueOf(totalRead));
+				}
+			}
+
+			Fingerprint initialFingerprint = decryptedMonitored.getEncryptedFileFingerprint();
+			Fingerprint currentFingerprint = inputStreamSupervisor.getFingerprint();
+			return !initialFingerprint.equals(currentFingerprint);
 		}
 
 		private void updateBaselineFingerprintsIfApplicable(String decryptedFileName, String encryptedFileName,

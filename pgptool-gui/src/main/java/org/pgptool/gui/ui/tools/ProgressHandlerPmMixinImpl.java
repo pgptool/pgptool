@@ -1,5 +1,6 @@
 package org.pgptool.gui.ui.tools;
 
+import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.bkgoperation.Progress;
 import org.pgptool.gui.bkgoperation.ProgressHandler;
 
@@ -31,10 +32,12 @@ public class ProgressHandlerPmMixinImpl implements ProgressHandler {
 		} else {
 			int percentage = progress.getPercentage() == null ? 0 : progress.getPercentage();
 			progressValue.setValueByOwner(percentage);
-			progressNote.setValueByOwner("" + percentage + "%");
-			// progressNote.setValueByOwner(
-			// "" + percentage + "% " + Messages.text(progress.getStepCode(),
-			// progress.getStepArgs()));
+			if (progress.getStepCode() == null) {
+				progressNote.setValueByOwner(Messages.text(progress.getOperationCode()) + " (" + percentage + "%)");
+			} else {
+				progressNote.setValueByOwner(
+						Messages.text(progress.getStepCode(), progress.getStepArgs()) + " (" + percentage + "%)");
+			}
 		}
 
 		if (progress.isCompleted()) {

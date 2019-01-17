@@ -296,6 +296,10 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 		return host.getActionImportKey();
 	}
 
+	protected Action getActionImportKeyFromText() {
+		return host.getActionImportKeyFromText();
+	}
+
 	protected Action getActionCreateKey() {
 		return host.getActionCreateKey();
 	}

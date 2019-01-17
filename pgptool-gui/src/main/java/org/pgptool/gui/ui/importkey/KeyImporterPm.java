@@ -48,6 +48,7 @@ import org.pgptool.gui.ui.keyslist.KeysTablePm;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.MultipleFilesChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.google.common.base.Preconditions;
@@ -67,10 +68,8 @@ public class KeyImporterPm extends PresentationModelBase {
 	private ConfigPairs appProps;
 
 	@Autowired
-	// @Resource(name = "keyFilesOperations")
 	private KeyFilesOperations keyFilesOperations;
 	@Autowired
-	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	private KeyImporterHost host;
 
@@ -93,6 +92,14 @@ public class KeyImporterPm extends PresentationModelBase {
 		}
 
 		return true;
+	}
+
+	public void init(KeyImporterHost host, List<Key> keys) {
+		Preconditions.checkArgument(host != null);
+		Preconditions.checkArgument(!CollectionUtils.isEmpty(keys));
+		this.host = host;
+		initModelProperties();
+		initLoadedKeys(keys);
 	}
 
 	private void initModelProperties() {
@@ -194,15 +201,19 @@ public class KeyImporterPm extends PresentationModelBase {
 			}
 
 			if (loadedKeys.size() > 0) {
-				loadedKeys.sort(keySorterByNameAsc);
-				keys.getList().addAll(loadedKeys);
-				actionDoImport.setEnabled(true);
+				initLoadedKeys(loadedKeys);
 				return true;
 			}
 		} catch (Throwable t) {
 			EntryPoint.reportExceptionToUser("exception.failedToReadKey", t);
 		}
 		return false;
+	}
+
+	private void initLoadedKeys(List<Key> loadedKeys) {
+		loadedKeys.sort(keySorterByNameAsc);
+		keys.getList().addAll(loadedKeys);
+		actionDoImport.setEnabled(true);
 	}
 
 	private List<Key> loadKeysSafe(File[] filesToLoad, Map<String, Throwable> exceptions) {

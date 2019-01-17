@@ -23,6 +23,8 @@ public interface KeysListHost {
 	void handleClose();
 
 	Action getActionImportKey();
+	
+	Action getActionImportKeyFromText();
 
 	Action getActionCreateKey();
 }

@@ -17,9 +17,12 @@
  *******************************************************************************/
 package org.pgptool.gui.encryption.implpgp;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Date;
 import java.util.Iterator;
@@ -82,6 +85,25 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
+	@Override
+	public Key readKeyFromText(String keyAsArmoredText) throws FieldValidationException {
+		try {
+			KeyDataPgp keyData = readKeyDataFromString(keyAsArmoredText);
+
+			Key key = new Key();
+			key.setKeyData(keyData);
+			if (keyData.getSecretKeyRing() != null) {
+				key.setKeyInfo(buildKeyInfoFromSecret(keyData.getSecretKeyRing()));
+			} else {
+				key.setKeyInfo(buildKeyInfoFromPublic(keyData.getPublicKeyRing()));
+			}
+			return key;
+		} catch (Throwable t) {
+			throw new RuntimeException("Can't read key from text", t);
+		}
+	}
+
 	private KeyInfo buildKeyInfoFromPublic(PGPPublicKeyRing publicKeyRing) throws PGPException {
 		KeyInfo ret = new KeyInfo();
 		ret.setKeyType(KeyTypeEnum.Public);
@@ -138,26 +160,13 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 		return (String) ret;
 	}
 
-	@SuppressWarnings("rawtypes")
 	public static KeyDataPgp readKeyData(String filePathName) {
 		KeyDataPgp data = new KeyDataPgp();
 
-		try (FileInputStream stream = new FileInputStream(new File(filePathName))) {
-			PGPObjectFactory factory = new PGPObjectFactory(PGPUtil.getDecoderStream(stream), fingerprintCalculator);
-			for (Iterator iter = factory.iterator(); iter.hasNext();) {
-				Object section = iter.next();
-				log.debug("Section found: " + section);
-
-				if (section instanceof PGPSecretKeyRing) {
-					data.setSecretKeyRing((PGPSecretKeyRing) section);
-				} else if (section instanceof PGPPublicKeyRing) {
-					data.setPublicKeyRing((PGPPublicKeyRing) section);
-				} else {
-					log.error("Unknown section enountered in a key file: " + section);
-				}
-			}
+		try (InputStream stream = new FileInputStream(new File(filePathName))) {
+			readKeyFromStream(data, stream);
 		} catch (Throwable t) {
-			throw new RuntimeException("Error happenedd while parsing key file", t);
+			throw new RuntimeException("Error happened while parsing key file", t);
 		}
 
 		if (data.getPublicKeyRing() == null && data.getSecretKeyRing() == null) {
@@ -165,6 +174,39 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 		}
 
 		return data;
+	}
+
+	public static KeyDataPgp readKeyDataFromString(String keyStr) {
+		KeyDataPgp data = new KeyDataPgp();
+
+		try (InputStream stream = new ByteArrayInputStream(keyStr.getBytes())) {
+			readKeyFromStream(data, stream);
+		} catch (Throwable t) {
+			throw new RuntimeException("Error happened while parsing key text", t);
+		}
+
+		if (data.getPublicKeyRing() == null && data.getSecretKeyRing() == null) {
+			throw new RuntimeException("Neither Secret nor Public keys were found in the input text");
+		}
+
+		return data;
+	}
+
+	@SuppressWarnings("rawtypes")
+	private static void readKeyFromStream(KeyDataPgp data, InputStream stream) throws IOException {
+		PGPObjectFactory factory = new PGPObjectFactory(PGPUtil.getDecoderStream(stream), fingerprintCalculator);
+		for (Iterator iter = factory.iterator(); iter.hasNext();) {
+			Object section = iter.next();
+			log.debug("Section found: " + section);
+
+			if (section instanceof PGPSecretKeyRing) {
+				data.setSecretKeyRing((PGPSecretKeyRing) section);
+			} else if (section instanceof PGPPublicKeyRing) {
+				data.setPublicKeyRing((PGPPublicKeyRing) section);
+			} else {
+				log.error("Unknown section enountered in a key file: " + section);
+			}
+		}
 	}
 
 	@Override

@@ -28,6 +28,8 @@ public interface MainFrameHost {
 
 	Action getActionImportKey();
 
+	Action getActionImportKeyFromText();
+
 	Action getActionShowKeysList();
 
 	Action getActionForEncrypt();

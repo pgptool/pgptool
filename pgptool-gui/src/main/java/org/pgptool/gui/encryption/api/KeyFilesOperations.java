@@ -25,6 +25,8 @@ public interface KeyFilesOperations {
 
 	Key readKeyFromFile(String filePathName) throws FieldValidationException;
 
+	Key readKeyFromText(String keyAsArmoredText) throws FieldValidationException;
+
 	void exportPublicKey(Key key, String targetFilePathname);
 
 	void exportPrivateKey(Key key, String targetFilePathname);

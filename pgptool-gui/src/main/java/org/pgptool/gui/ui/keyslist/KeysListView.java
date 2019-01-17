@@ -38,6 +38,7 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 
 	private JMenuBar menuBar;
 	private JMenuItem miImport;
+	private JMenuItem miImportFromText;
 	private JMenuItem miCreate;
 	private JMenuItem miExportPublicKeys;
 	private JMenuItem miClose;
@@ -57,6 +58,7 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 		menuBar = new JMenuBar();
 		JMenu menuTs = new JMenu(Messages.get("term.actions"));
 		menuTs.add(miImport = new JMenuItem());
+		menuTs.add(miImportFromText = new JMenuItem());
 		menuTs.add(miCreate = new JMenuItem());
 		menuTs.addSeparator();
 		menuTs.add(miExportPublicKeys = new JMenuItem());
@@ -70,6 +72,7 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 		super.internalBindToPm();
 		keysTableView.setPm(pm.getKeysTablePm());
 		bindingContext.setupBinding(pm.getActionImport(), miImport);
+		bindingContext.setupBinding(pm.getActionImportFromText(), miImportFromText);
 		bindingContext.setupBinding(pm.getActionCreate(), miCreate);
 		bindingContext.setupBinding(pm.actionExportAllPublicKeys, miExportPublicKeys);
 

@@ -26,7 +26,6 @@ import java.util.List;
 
 import javax.swing.Action;
 
-import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.ui.tools.UiUtils;
@@ -51,11 +50,7 @@ public class KeysListPm extends PresentationModelBase {
 	@Autowired
 	private EventBus eventBus;
 	@Autowired
-	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
-	@Autowired
-	// @Resource(name = "keyFilesOperations")
-	private KeyFilesOperations keyFilesOperations;
 	@Autowired
 	private KeysExporterUi keysExporterUi;
 
@@ -235,6 +230,10 @@ public class KeysListPm extends PresentationModelBase {
 		return host.getActionImportKey();
 	}
 
+	public Action getActionImportFromText() {
+		return host.getActionImportKeyFromText();
+	}
+
 	protected Action getActionCreate() {
 		return host.getActionCreateKey();
 	}
@@ -242,4 +241,5 @@ public class KeysListPm extends PresentationModelBase {
 	public KeysTablePm getKeysTablePm() {
 		return keysTablePm;
 	}
+
 }

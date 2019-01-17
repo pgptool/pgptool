@@ -23,18 +23,24 @@ import java.awt.Desktop;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.swing.Action;
+import javax.swing.JOptionPane;
 
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
+import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.hintsforusage.api.HintsCoordinator;
+import org.pgptool.gui.tools.ClipboardUtil;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.about.AboutHost;
 import org.pgptool.gui.ui.about.AboutPm;
@@ -113,6 +119,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	private HintsCoordinator hintsCoordinator;
 	@Autowired
 	private KeysExporterUi keysExporterUi;
+	@Autowired
+	private KeyFilesOperations keyFilesOperations;
 
 	private TempFolderChooserPm tempFolderChooserPm;
 
@@ -314,6 +322,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		public Action getActionHelp() {
 			return openHelp;
 		}
+
+		@Override
+		public Action getActionImportKeyFromText() {
+			return importKeyFromClipboard;
+		}
 	};
 
 	private void openMainFrameWindow() {
@@ -356,10 +369,19 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		return mainFrameView;
 	}
 
-	private DialogOpener<KeyImporterPm, KeyImporterView> importKeyWindowHost = new DialogOpener<KeyImporterPm, KeyImporterView>(
-			KeyImporterPm.class, KeyImporterView.class, "action.importKey") {
+	private class ImportKeyDialogOpener extends DialogOpener<KeyImporterPm, KeyImporterView> {
+		private List<Key> keys;
 
-		KeyImporterHost host = new KeyImporterHost() {
+		public ImportKeyDialogOpener() {
+			super(KeyImporterPm.class, KeyImporterView.class, "action.importKey");
+		}
+
+		public ImportKeyDialogOpener(List<Key> keys) {
+			super(KeyImporterPm.class, KeyImporterView.class, "action.importKey");
+			this.keys = keys;
+		}
+
+		protected KeyImporterHost host = new KeyImporterHost() {
 			@Override
 			public void handleImporterFinished() {
 				view.unrender();
@@ -370,16 +392,20 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 
 		@Override
 		protected boolean postConstructPm() {
+			if (keys != null) {
+				pm.init(host, keys);
+				return true;
+			}
 			if (!pm.init(host)) {
-				// This happens if user clicked cancel during first render of
-				// "Browse dialog"
 				pm.detach();
 				pm = null;
 				return false;
 			}
 			return true;
 		};
-	};
+	}
+
+	private DialogOpener<KeyImporterPm, KeyImporterView> importKeyWindowHost = new ImportKeyDialogOpener();
 
 	protected EncryptTextDialogOpener encryptTextHost = new EncryptTextDialogOpener(new HashSet<>());
 
@@ -625,9 +651,40 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 				public Action getActionCreateKey() {
 					return createKeyWindowHost.actionToOpenWindow;
 				}
+
+				@Override
+				public Action getActionImportKeyFromText() {
+					return importKeyFromClipboard;
+				}
 			});
 			return true;
 		};
+	};
+
+	private Action importKeyFromClipboard = new LocalizedAction("action.importKeyFromText") {
+		private static final long serialVersionUID = -3347918300952342578L;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String clipboard = ClipboardUtil.tryGetClipboardText();
+			if (clipboard == null) {
+				UiUtils.messageBox(mainFrameView.getWindow(), text("warning.noTextInClipboard"), text("term.attention"),
+						JOptionPane.INFORMATION_MESSAGE);
+				return;
+			}
+
+			Key key;
+			try {
+				key = keyFilesOperations.readKeyFromText(clipboard);
+			} catch (Throwable t) {
+				UiUtils.messageBox(mainFrameView.getWindow(), text("warning.textDoesNotRepresentAKey"),
+						text("term.attention"), JOptionPane.INFORMATION_MESSAGE);
+				return;
+			}
+
+			// Open list of processed keys
+			new ImportKeyDialogOpener(new ArrayList<>(Arrays.asList(key))).actionToOpenWindow.actionPerformed(e);
+		}
 	};
 
 	public class CheckForUpdatesDialog extends DialogOpener<CheckForUpdatesPm, CheckForUpdatesView> {

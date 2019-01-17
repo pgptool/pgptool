@@ -27,33 +27,42 @@ import java.beans.PropertyChangeListener;
 import java.util.function.BiConsumer;
 
 import javax.swing.Action;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 
 public class LinkButton extends JLabel implements HasAction {
 	private static final long serialVersionUID = 9012537495123322302L;
 
-	public static final BiConsumer<JComponent, Boolean> ENABLED_OR_DISABLED = new BiConsumer<JComponent, Boolean>() {
+	public static final BiConsumer<LinkButton, Boolean> ENABLED_OR_DISABLED = new BiConsumer<LinkButton, Boolean>() {
 		@Override
-		public void accept(JComponent t, Boolean u) {
-			t.setEnabled(u);
+		public void accept(LinkButton t, Boolean enabled) {
+			if (enabled) {
+				t.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+				t.setForeground(Color.blue);
+			} else {
+				t.setCursor(t.defaultCursor);
+				t.setForeground(Color.gray);
+			}
+			t.superSetEnabled(enabled);
 		}
 	};
 
-	public static final BiConsumer<JComponent, Boolean> VISIBLE_OR_INVISIBLE = new BiConsumer<JComponent, Boolean>() {
+	public static final BiConsumer<LinkButton, Boolean> VISIBLE_OR_INVISIBLE = new BiConsumer<LinkButton, Boolean>() {
 		@Override
-		public void accept(JComponent t, Boolean u) {
+		public void accept(LinkButton t, Boolean u) {
 			t.setVisible(u);
 		}
 	};
 
 	private Action action;
-	private Cursor prevCursor;
-	private BiConsumer<JComponent, Boolean> enabledBehavior = ENABLED_OR_DISABLED;
+	private BiConsumer<LinkButton, Boolean> enabledBehavior = ENABLED_OR_DISABLED;
+	private Cursor defaultCursor;
 
 	public LinkButton() {
 		super();
 		addMouseListener(filterClickListener);
+		defaultCursor = getCursor();
+		setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+		setForeground(Color.blue);
 	}
 
 	@Override
@@ -69,7 +78,7 @@ public class LinkButton extends JLabel implements HasAction {
 			newAction.addPropertyChangeListener(listener);
 			setText((String) action.getValue(Action.NAME));
 		} else {
-			enabledBehavior.accept(this, false);
+			setEnabled(false);
 		}
 	}
 
@@ -77,7 +86,7 @@ public class LinkButton extends JLabel implements HasAction {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			if ("enabled".equals(evt.getPropertyName())) {
-				enabledBehavior.accept(LinkButton.this, (Boolean) evt.getNewValue());
+				setEnabled((Boolean) evt.getNewValue());
 			}
 		}
 	};
@@ -98,23 +107,18 @@ public class LinkButton extends JLabel implements HasAction {
 
 	@Override
 	public void setEnabled(boolean enabled) {
-		super.setEnabled(enabled);
-		if (enabled) {
-			prevCursor = getCursor();
-			setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-			setForeground(Color.blue);
-		} else {
-			prevCursor = getCursor();
-			setCursor(prevCursor);
-			setForeground(Color.gray);
-		}
+		enabledBehavior.accept(LinkButton.this, enabled);
 	}
 
-	public BiConsumer<JComponent, Boolean> getEnabledBehavior() {
+	private void superSetEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+	}
+
+	public BiConsumer<LinkButton, Boolean> getEnabledBehavior() {
 		return enabledBehavior;
 	}
 
-	public void setEnabledBehavior(BiConsumer<JComponent, Boolean> enabledBehavior) {
+	public void setEnabledBehavior(BiConsumer<LinkButton, Boolean> enabledBehavior) {
 		this.enabledBehavior = enabledBehavior;
 	};
 }

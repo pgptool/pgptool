@@ -16,7 +16,6 @@ public class HasActionBinding implements Binding {
 	public HasActionBinding(Action action, HasAction actionTrigger) {
 		this.action = action;
 		this.actionTrigger = actionTrigger;
-
 		actionTrigger.setAction(action);
 	}
 

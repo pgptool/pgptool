@@ -25,7 +25,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Stack;
 
 import org.apache.commons.io.FilenameUtils;
@@ -66,42 +68,60 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 	 */
 	protected final static BcKeyFingerprintCalculator fingerprintCalculator = new BcKeyFingerprintCalculator();
 
-	@SuppressWarnings("deprecation")
 	@Override
-	public Key readKeyFromFile(String filePathName) {
-		try {
-			KeyDataPgp keyData = readKeyData(filePathName);
-
-			Key key = new Key();
-			key.setKeyData(keyData);
-			if (keyData.getSecretKeyRing() != null) {
-				key.setKeyInfo(buildKeyInfoFromSecret(keyData.getSecretKeyRing()));
+	public List<Key> readKeysFromFile(File file) {
+		try (FileInputStream fis = new FileInputStream(file)) {
+			List<Key> ret = new ArrayList<>();
+			if (file.getName().endsWith(".asc")) {
+				ArmoredInputSubStream subStream = new ArmoredInputSubStream(fis);
+				while (subStream.hasNextSubStream()) {
+					ret.add(readFromStream(subStream));
+				}
+				Preconditions.checkArgument(ret.size() > 0, "No keys found");
 			} else {
-				key.setKeyInfo(buildKeyInfoFromPublic(keyData.getPublicKeyRing()));
+				ret.add(readFromStream(fis));
 			}
-			return key;
+			return ret;
+		} catch (Throwable t) {
+			throw new RuntimeException("Can't read key file", t);
+		}
+	}
+
+	@Override
+	public List<Key> readKeysFromText(String text) {
+		try {
+			ArmoredInputSubStream subStream = new ArmoredInputSubStream(new ByteArrayInputStream(text.getBytes()));
+			List<Key> ret = new ArrayList<>();
+			while (subStream.hasNextSubStream()) {
+				ret.add(readFromStream(subStream));
+			}
+			Preconditions.checkArgument(ret.size() > 0, "No keys found");
+			return ret;
 		} catch (Throwable t) {
 			throw new RuntimeException("Can't read key file", t);
 		}
 	}
 
 	@SuppressWarnings("deprecation")
-	@Override
-	public Key readKeyFromText(String keyAsArmoredText) throws FieldValidationException {
+	private Key readFromStream(InputStream stream) throws PGPException {
+		KeyDataPgp data = new KeyDataPgp();
 		try {
-			KeyDataPgp keyData = readKeyDataFromString(keyAsArmoredText);
-
-			Key key = new Key();
-			key.setKeyData(keyData);
-			if (keyData.getSecretKeyRing() != null) {
-				key.setKeyInfo(buildKeyInfoFromSecret(keyData.getSecretKeyRing()));
-			} else {
-				key.setKeyInfo(buildKeyInfoFromPublic(keyData.getPublicKeyRing()));
-			}
-			return key;
+			readKeyFromStream(data, stream);
 		} catch (Throwable t) {
-			throw new RuntimeException("Can't read key from text", t);
+			throw new RuntimeException("Error happened while parsing key", t);
 		}
+		if (data.getPublicKeyRing() == null && data.getSecretKeyRing() == null) {
+			throw new RuntimeException("Neither Secret nor Public keys were found in the input text");
+		}
+
+		Key key = new Key();
+		key.setKeyData(data);
+		if (data.getSecretKeyRing() != null) {
+			key.setKeyInfo(buildKeyInfoFromSecret(data.getSecretKeyRing()));
+		} else {
+			key.setKeyInfo(buildKeyInfoFromPublic(data.getPublicKeyRing()));
+		}
+		return key;
 	}
 
 	private KeyInfo buildKeyInfoFromPublic(PGPPublicKeyRing publicKeyRing) throws PGPException {
@@ -158,38 +178,6 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 	private static String buildUser(Iterator userIDs) {
 		Object ret = userIDs.next();
 		return (String) ret;
-	}
-
-	public static KeyDataPgp readKeyData(String filePathName) {
-		KeyDataPgp data = new KeyDataPgp();
-
-		try (InputStream stream = new FileInputStream(new File(filePathName))) {
-			readKeyFromStream(data, stream);
-		} catch (Throwable t) {
-			throw new RuntimeException("Error happened while parsing key file", t);
-		}
-
-		if (data.getPublicKeyRing() == null && data.getSecretKeyRing() == null) {
-			throw new RuntimeException("Neither Secret nor Public keys were found in the input file");
-		}
-
-		return data;
-	}
-
-	public static KeyDataPgp readKeyDataFromString(String keyStr) {
-		KeyDataPgp data = new KeyDataPgp();
-
-		try (InputStream stream = new ByteArrayInputStream(keyStr.getBytes())) {
-			readKeyFromStream(data, stream);
-		} catch (Throwable t) {
-			throw new RuntimeException("Error happened while parsing key text", t);
-		}
-
-		if (data.getPublicKeyRing() == null && data.getSecretKeyRing() == null) {
-			throw new RuntimeException("Neither Secret nor Public keys were found in the input text");
-		}
-
-		return data;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -291,4 +279,14 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 		}
 	}
 
+	@Override
+	public Key readKeyFromFile(String fileName) {
+		try {
+			List<Key> ret = readKeysFromFile(new File(fileName));
+			Preconditions.checkArgument(ret.size() == 1, "Exactly one key is expected");
+			return ret.get(0);
+		} catch (Throwable t) {
+			throw new RuntimeException("Failed to read key", t);
+		}
+	}
 }

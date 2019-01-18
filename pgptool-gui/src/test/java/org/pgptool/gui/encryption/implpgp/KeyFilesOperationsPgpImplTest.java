@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
@@ -115,6 +116,13 @@ public class KeyFilesOperationsPgpImplTest {
 		assertNotNull(key);
 		assertNotNull(key.getKeyInfo());
 		assertEquals("Paul <paul@email.com>", key.getKeyInfo().getUser());
+	}
+
+	@Test
+	public void testCanReadMultipleKeysFrom1File() throws Exception {
+		KeyFilesOperationsPgpImpl fixture = buildFixture();
+		List<Key> keys = fixture.readKeysFromFile(new File(TestTools.getFileNameForResource("keys/2keysIn1.asc")));
+		assertEquals(2, keys.size());
 	}
 
 }

@@ -144,16 +144,16 @@ public class KeyImporterPm extends PresentationModelBase {
 						// key files it shouldn't be a problem. Non-key files
 						// with same xtensions will not take a long time to fail
 						try {
-							Key readKey = keyFilesOperations.readKeyFromFile(f.getAbsolutePath());
-							Preconditions.checkState(readKey != null, "Key wasn't parsed");
-
-							Key existingKey = keyRingService.findKeyById(readKey.getKeyInfo().getKeyId());
-							if (existingKey == null) {
-								return true;
-							}
-							if (!existingKey.getKeyData().isCanBeUsedForDecryption()
-									&& readKey.getKeyData().isCanBeUsedForDecryption()) {
-								return true;
+							List<Key> readKeys = keyFilesOperations.readKeysFromFile(f);
+							for (Key readKey : readKeys) {
+								Key existingKey = keyRingService.findKeyById(readKey.getKeyInfo().getKeyId());
+								if (existingKey == null) {
+									return true;
+								}
+								if (!existingKey.getKeyData().isCanBeUsedForDecryption()
+										&& readKey.getKeyData().isCanBeUsedForDecryption()) {
+									return true;
+								}
 							}
 							return false;
 						} catch (Throwable t) {
@@ -220,8 +220,8 @@ public class KeyImporterPm extends PresentationModelBase {
 		List<Key> ret = new ArrayList<>(filesToLoad.length);
 		for (File keyFile : filesToLoad) {
 			try {
-				Key key = keyFilesOperations.readKeyFromFile(keyFile.getAbsolutePath());
-				ret.add(key);
+				List<Key> readKeys = keyFilesOperations.readKeysFromFile(keyFile);
+				ret.addAll(readKeys);
 			} catch (Throwable t) {
 				log.warn("Failed to read key file", t);
 				exceptions.put(keyFile.toString(), t);

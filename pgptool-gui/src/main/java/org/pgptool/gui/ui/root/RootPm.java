@@ -24,7 +24,6 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -673,9 +672,9 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 				return;
 			}
 
-			Key key;
+			List<Key> keys;
 			try {
-				key = keyFilesOperations.readKeyFromText(clipboard);
+				keys = keyFilesOperations.readKeysFromText(clipboard);
 			} catch (Throwable t) {
 				UiUtils.messageBox(mainFrameView.getWindow(), text("warning.textDoesNotRepresentAKey"),
 						text("term.attention"), JOptionPane.INFORMATION_MESSAGE);
@@ -683,7 +682,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 			}
 
 			// Open list of processed keys
-			new ImportKeyDialogOpener(new ArrayList<>(Arrays.asList(key))).actionToOpenWindow.actionPerformed(e);
+			new ImportKeyDialogOpener(new ArrayList<>(keys)).actionToOpenWindow.actionPerformed(e);
 		}
 	};
 

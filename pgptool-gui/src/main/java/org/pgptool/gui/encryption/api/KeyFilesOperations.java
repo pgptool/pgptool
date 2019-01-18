@@ -17,19 +17,24 @@
  *******************************************************************************/
 package org.pgptool.gui.encryption.api;
 
+import java.io.File;
+import java.util.List;
+
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.summerb.approaches.validation.FieldValidationException;
 
 public interface KeyFilesOperations {
 	final String FN_PASSWORD = "password";
 
-	Key readKeyFromFile(String filePathName) throws FieldValidationException;
+	List<Key> readKeysFromFile(File file);
 
-	Key readKeyFromText(String keyAsArmoredText) throws FieldValidationException;
+	List<Key> readKeysFromText(String text);
 
 	void exportPublicKey(Key key, String targetFilePathname);
 
 	void exportPrivateKey(Key key, String targetFilePathname);
 
 	void validateDecryptionKeyPassword(String requestedKeyId, Key key, String password) throws FieldValidationException;
+
+	Key readKeyFromFile(String fileName);
 }

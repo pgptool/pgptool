@@ -78,6 +78,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 					ret.add(readFromStream(subStream));
 				}
 				Preconditions.checkArgument(ret.size() > 0, "No keys found");
+				ret = combinePrivateAndPublicIfAny(ret);
 			} else {
 				ret.add(readFromStream(fis));
 			}
@@ -85,6 +86,34 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 		} catch (Throwable t) {
 			throw new RuntimeException("Can't read key file", t);
 		}
+	}
+
+	private List<Key> combinePrivateAndPublicIfAny(List<Key> keys) {
+		if (keys.size() == 1) {
+			return keys;
+		}
+
+		List<Key> ret = new ArrayList<>();
+		for (Key key : keys) {
+			String keyId = key.getKeyInfo().getKeyId();
+			Key existingKey = ret.stream()
+					.filter(x -> keyId.equals(x.getKeyInfo().getKeyId()) || x.getKeyData().isHasAlternativeId(keyId))
+					.findFirst().orElse(null);
+
+			if (existingKey == null) {
+				ret.add(key);
+			} else {
+				if (!existingKey.getKeyData().isCanBeUsedForDecryption()
+						&& key.getKeyData().isCanBeUsedForDecryption()) {
+					ret.remove(existingKey);
+					ret.add(key);
+				} else {
+					// looks like a duplciate, ignore it
+				}
+			}
+		}
+
+		return ret;
 	}
 
 	@Override
@@ -96,6 +125,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 				ret.add(readFromStream(subStream));
 			}
 			Preconditions.checkArgument(ret.size() > 0, "No keys found");
+			ret = combinePrivateAndPublicIfAny(ret);
 			return ret;
 		} catch (Throwable t) {
 			throw new RuntimeException("Can't read key file", t);

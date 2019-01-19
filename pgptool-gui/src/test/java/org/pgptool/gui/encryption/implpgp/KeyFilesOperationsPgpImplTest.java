@@ -125,4 +125,13 @@ public class KeyFilesOperationsPgpImplTest {
 		assertEquals(2, keys.size());
 	}
 
+	@Test
+	public void testWhenReadinPublicAndPrivateWillResultIn1Key() throws Exception {
+		KeyFilesOperationsPgpImpl fixture = buildFixture();
+		List<Key> keys = fixture
+				.readKeysFromFile(new File(TestTools.getFileNameForResource("keys/public-and-private.asc")));
+		assertEquals(1, keys.size());
+		assertEquals(true, keys.get(0).getKeyData().isCanBeUsedForDecryption());
+	}
+
 }

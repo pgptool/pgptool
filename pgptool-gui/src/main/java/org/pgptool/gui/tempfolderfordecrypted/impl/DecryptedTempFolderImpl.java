@@ -1,20 +1,20 @@
 /*******************************************************************************
  * PGPTool is a desktop application for pgp encryption/decryption
- * Copyright (C) 2017 Sergey Karpushin
- *
+ * Copyright (C) 2019 Sergey Karpushin
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *******************************************************************************/
+ ******************************************************************************/
 package org.pgptool.gui.tempfolderfordecrypted.impl;
 
 import java.io.File;
@@ -107,7 +107,7 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
 			ensureDirExists(newValue);
 			ensureWeCanCreateFilesThere(newValue);
 		} catch (Throwable t) {
-			Throwables.propagateIfInstanceOf(t, FieldValidationException.class);
+			Throwables.throwIfInstanceOf(t, FieldValidationException.class);
 			log.error("Exception during validation of target folder for temp decrypted files " + newValue, t);
 			throw new FieldValidationException(new ValidationError("error.temporaryFolderCannotbeUsed",
 					CONFIG_DECRYPTED_TEMP_FOLDER, I18nUtils.buildMessagesChain(t, applicationContext)));

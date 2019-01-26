@@ -53,10 +53,8 @@ public class CreateKeyPm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(CreateKeyPm.class);
 
 	@Autowired
-	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
-	// @Resource(name = "keyGeneratorService")
 	private KeyGeneratorService keyGeneratorService;
 	@Autowired
 	private ExecutorService executorService;

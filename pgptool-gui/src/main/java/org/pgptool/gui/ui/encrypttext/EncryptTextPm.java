@@ -62,10 +62,8 @@ public class EncryptTextPm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(EncryptTextPm.class);
 
 	@Autowired
-	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
-	// @Resource(name = "encryptionService")
 	private EncryptionService encryptionService;
 
 	private EncryptTextHost host;

@@ -78,14 +78,11 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 
 	@Autowired
 	private EncryptionParamsStorage encryptionParamsStorage;
-
 	@Autowired
 	private ConfigPairs appProps;
 	@Autowired
-	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
-	// @Resource(name = "encryptionService")
 	private EncryptionService encryptionService;
 	@Autowired
 	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;

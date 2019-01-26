@@ -57,13 +57,9 @@ public class DecryptTextPm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(DecryptTextPm.class);
 
 	@Autowired
-	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
-	// @Resource(name = "encryptionService")
 	private EncryptionService encryptionService;
-	@Autowired
-
 	private DecryptTextHost host;
 
 	private Set<String> keysIds;

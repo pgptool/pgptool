@@ -55,7 +55,6 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
 	@Autowired
 	private EventBus eventBus;
 	@Autowired
-	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
 	private GlobalAppActions globalAppActions;

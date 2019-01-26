@@ -96,17 +96,13 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 	private ConfigPairs decryptionParams;
 	@Autowired
 	private ExecutorService executorService;
-
 	@Autowired
 	private EncryptionParamsStorage encryptionParamsStorage;
-
 	@Autowired
 	private DecryptedTempFolder decryptedTempFolder;
 	@Autowired
-	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
-	// @Resource(name = "encryptionService")
 	private EncryptionService encryptionService;
 	@Autowired
 	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;

@@ -102,7 +102,6 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 	private MessageDigestFactory messageDigestFactory;
 	@Autowired
 	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
-
 	@Autowired
 	private KeyRingService keyRingService;
 	@Autowired

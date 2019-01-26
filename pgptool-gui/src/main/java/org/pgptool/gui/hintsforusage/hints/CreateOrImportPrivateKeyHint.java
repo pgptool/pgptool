@@ -55,7 +55,6 @@ public class CreateOrImportPrivateKeyHint extends HintPm implements Initializing
 	@Autowired
 	private EventBus eventBus;
 	@Autowired
-	// @Resource(name = "keyRingService")
 	private KeyRingService keyRingService;
 	@Autowired
 	private GlobalAppActions globalAppActions;

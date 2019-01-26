@@ -66,7 +66,6 @@ public class KeyImporterPm extends PresentationModelBase {
 
 	@Autowired
 	private ConfigPairs appProps;
-
 	@Autowired
 	private KeyFilesOperations keyFilesOperations;
 	@Autowired

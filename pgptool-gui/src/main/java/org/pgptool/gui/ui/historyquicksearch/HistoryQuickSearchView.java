@@ -20,6 +20,7 @@ package org.pgptool.gui.ui.historyquicksearch;
 import static org.pgptool.gui.app.Messages.text;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -101,8 +102,8 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 	@Override
 	protected void internalInitComponents() {
 		SgLayout sgl = new SgLayout(2, 5, 0, 0);
-		sgl.setColSize(0, UiUtils.getFontRelativeSize(40), SgLayout.SIZE_TYPE_CONSTANT);
-		sgl.setColSize(1, UiUtils.getFontRelativeSize(10), SgLayout.SIZE_TYPE_WEIGHTED);
+		sgl.setColSize(0, 100, SgLayout.SIZE_TYPE_WEIGHTED);
+		sgl.setColSize(1, UiUtils.getFontRelativeSize(text("action.cancel").length()), SgLayout.SIZE_TYPE_ASKCOMPONENT);
 		sgl.setRowSize(3, UiUtils.getFontRelativeSize(26), SgLayout.SIZE_TYPE_WEIGHTED);
 		panelRoot = new JPanel(sgl);
 

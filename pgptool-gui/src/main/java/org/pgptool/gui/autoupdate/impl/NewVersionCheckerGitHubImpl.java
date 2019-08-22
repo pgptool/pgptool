@@ -27,7 +27,7 @@ import org.apache.log4j.Logger;
 import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.autoupdate.api.NewVersionChecker;
 import org.pgptool.gui.autoupdate.api.UpdatePackageInfo;
-import org.pgptool.gui.github.api.LatestRelease;
+import org.pgptool.gui.autoupdate.impl.dto.LatestRelease;
 import org.pgptool.gui.tools.HttpTools;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;

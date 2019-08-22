@@ -389,7 +389,7 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 		}
 
 		private Fingerprint calculateFingerprintSync(String filePathname) throws Exception {
-			return new ChecksumCalculationTask(filePathname, messageDigestFactory.createNew()).call();
+			return new ChecksumCalculationTask(filePathname, messageDigestFactory.createNew(), progressHandler).call();
 		}
 
 		private String buildSummaryMessage(BatchEncryptionResult ret) {

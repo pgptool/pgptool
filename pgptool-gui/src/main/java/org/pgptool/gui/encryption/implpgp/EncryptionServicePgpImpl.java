@@ -178,7 +178,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 		OutputStream pOut = lData.open(out, fileType, encryptionSourceInfo.getName(),
 				new Date(encryptionSourceInfo.getModifiedAt()), buffer);
 		if (progress != null) {
-			progress.updateStepInfo("encryption.progress.encrypting");
+			progress.updateStepInfo("encryption.progress.encryptingFile", encryptionSourceInfo.getName());
 		}
 		pipeStream(pIn, pOut, buffer.length, progress, null);
 		pOut.close();

@@ -17,10 +17,19 @@
  ******************************************************************************/
 package org.pgptool.gui.filecomparison;
 
+import java.io.File;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+
+import org.apache.commons.io.FilenameUtils;
+import org.pgptool.gui.bkgoperation.Progress;
+import org.pgptool.gui.bkgoperation.Progress.Updater;
+import org.pgptool.gui.bkgoperation.ProgressHandler;
+import org.pgptool.gui.bkgoperation.ProgressHandlerNoOpImpl;
+import org.pgptool.gui.bkgoperation.UserRequestedCancellationException;
 
 import com.google.common.base.Preconditions;
 
@@ -29,19 +38,41 @@ public class ChecksumCalculationTask implements Callable<Fingerprint> {
 
 	private String filePathName;
 	private MessageDigest messageDigest;
+	private ProgressHandler progressHandler;
 
 	public ChecksumCalculationTask(String filePathName, MessageDigest messageDigest) {
+		this(filePathName, messageDigest, null);
+	}
+
+	public ChecksumCalculationTask(String filePathName, MessageDigest messageDigest,
+			ProgressHandler optionalProgressHandler) {
 		this.filePathName = filePathName;
 		this.messageDigest = messageDigest;
+		this.progressHandler = optionalProgressHandler;
+		if (progressHandler == null) {
+			progressHandler = new ProgressHandlerNoOpImpl();
+		}
 	}
 
 	@Override
 	public Fingerprint call() throws Exception {
 		byte[] buf = new byte[READ_BUF_SIZE];
 		CompletableFuture<Fingerprint> future = new CompletableFuture<>();
+
+		Updater progress = Progress.create("encrBackAll.CheckingForChanges", progressHandler);
+		progress.updateStepInfo("encrBackAll.CheckingForChangesFile", FilenameUtils.getName(filePathName));
+		progress.updateTotalSteps(BigInteger.valueOf(new File(filePathName).length()));
+
 		try (InputStream is = new ChecksumCalcInputStream(messageDigest, filePathName, future)) {
-			while (is.read(buf) > 0) {
+			int readCount = 0;
+			int totalReadCount = 0;
+			while ((readCount = is.read(buf)) > 0) {
+				totalReadCount += readCount;
 				// continue reading
+				if (progress.isCancelationRequested()) {
+					throw new UserRequestedCancellationException();
+				}
+				progress.updateStepsTaken(BigInteger.valueOf(totalReadCount));
 			}
 		}
 		Preconditions.checkState(future.isDone(), "Fingerprint should be available by now");

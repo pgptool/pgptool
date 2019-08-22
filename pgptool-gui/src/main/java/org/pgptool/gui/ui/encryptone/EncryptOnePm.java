@@ -500,7 +500,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		}
 
 		private boolean promptUserToOverwriteConcurrentChanges(String targetFileName) {
-			return UiUtils.confirm("confirm.doYouWantToOverwriteConcurrentChanges", new String[] { targetFileName },
+			return UiUtils.confirmRegular("confirm.doYouWantToOverwriteConcurrentChanges", new String[] { targetFileName },
 					findRegisteredWindowIfAny());
 		}
 

@@ -69,16 +69,24 @@ public class UiUtils {
 		return "<html><body>" + StringEscapeUtils.escapeXml(text) + "</body></html>";
 	}
 
-	public static boolean confirm(String userPromptMessageCode, Object[] messageArgs, Window parent) {
+	public static boolean confirmRegular(String userPromptMessageCode, Object[] messageArgs, Window parent) {
+		return confirm(userPromptMessageCode, messageArgs, parent, JOptionPane.QUESTION_MESSAGE);
+	}
+
+	public static boolean confirmWarning(String userPromptMessageCode, Object[] messageArgs, Window parent) {
+		return confirm(userPromptMessageCode, messageArgs, parent, JOptionPane.WARNING_MESSAGE);
+	}
+
+	private static boolean confirm(String userPromptMessageCode, Object[] messageArgs, Window parent, int severity) {
 		int response = JOptionPane.OK_OPTION;
 
 		String msg = Messages.get(userPromptMessageCode, messageArgs);
 		if (msg.length() > 70) {
 			response = JOptionPane.showConfirmDialog(parent, getMultilineMessage(msg),
-					Messages.get("term.confirmation"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+					Messages.get("term.confirmation"), JOptionPane.OK_CANCEL_OPTION, severity);
 		} else {
 			response = JOptionPane.showConfirmDialog(parent, msg, Messages.get("term.confirmation"),
-					JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+					JOptionPane.OK_CANCEL_OPTION, severity);
 		}
 		return response == JOptionPane.OK_OPTION;
 	}

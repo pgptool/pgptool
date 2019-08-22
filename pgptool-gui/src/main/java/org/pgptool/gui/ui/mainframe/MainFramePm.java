@@ -217,9 +217,17 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 	protected Action actionDelete = new RowContextAction("action.deleteUnencryptedFile") {
 		@Override
 		public void onActionPerformed(DecryptedFile row) {
-			if (!UiUtils.confirm("confirmation.areUserSureToDeletDecryptedFile",
-					new Object[] { FilenameUtils.getName(row.getDecryptedFile()) }, findRegisteredWindowIfAny())) {
-				return;
+			if (!new File(row.getEncryptedFile()).exists()) {
+				if (!UiUtils.confirmWarning("confirmation.areUserSureToDeletDecryptedFileWhileSourceIsNotFound",
+						new Object[] { FilenameUtils.getName(row.getDecryptedFile()), row.getEncryptedFile() },
+						findRegisteredWindowIfAny())) {
+					return;
+				}
+			} else {
+				if (!UiUtils.confirmRegular("confirmation.areUserSureToDeletDecryptedFile",
+						new Object[] { FilenameUtils.getName(row.getDecryptedFile()) }, findRegisteredWindowIfAny())) {
+					return;
+				}
 			}
 
 			File file = new File(row.getDecryptedFile());

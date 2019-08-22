@@ -142,7 +142,7 @@ public class KeysListPm extends PresentationModelBase {
 			}
 
 			Key key = tableModelProp.getValue();
-			if (!UiUtils.confirm("phrase.areYouSureToDeleteKey", new Object[] { key.getKeyInfo().getUser() },
+			if (!UiUtils.confirmRegular("phrase.areYouSureToDeleteKey", new Object[] { key.getKeyInfo().getUser() },
 					findRegisteredWindowIfAny())) {
 				return;
 			}

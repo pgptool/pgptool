@@ -59,7 +59,7 @@ public class UpdatesPolicy implements ApplicationContextAware {
 		isAutoUpdatesEnabled = new ModelProperty<>(this,
 				new ValueAdapterPersistentPropertyImpl<Boolean>(appProps, PROP_IS_AUTO, null), PROP_IS_AUTO);
 		if (isAutoUpdatesEnabled.getValue() == null) {
-			isAutoUpdatesEnabled.setValueByOwner(UiUtils.confirm("prompt.doAutoUpdatesCheck", null, null));
+			isAutoUpdatesEnabled.setValueByOwner(UiUtils.confirmRegular("prompt.doAutoUpdatesCheck", null, null));
 		}
 
 		if (Boolean.FALSE.equals(isAutoUpdatesEnabled.getValue())) {

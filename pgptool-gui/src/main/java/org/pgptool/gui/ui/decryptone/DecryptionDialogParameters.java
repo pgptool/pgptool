@@ -116,4 +116,74 @@ public class DecryptionDialogParameters implements Serializable, DtoBase {
 	public void setCreatedAt(long createdAt) {
 		this.createdAt = createdAt;
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (createdAt ^ (createdAt >>> 32));
+		result = prime * result + ((decryptionKeyId == null) ? 0 : decryptionKeyId.hashCode());
+		result = prime * result + (isDeleteSourceFile ? 1231 : 1237);
+		result = prime * result + (isOpenAssociatedApplication ? 1231 : 1237);
+		result = prime * result + (isOpenTargetFolder ? 1231 : 1237);
+		result = prime * result + ((sourceFile == null) ? 0 : sourceFile.hashCode());
+		result = prime * result + ((targetFile == null) ? 0 : targetFile.hashCode());
+		result = prime * result + (useSameFolder ? 1231 : 1237);
+		result = prime * result + (useTempFolder ? 1231 : 1237);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		DecryptionDialogParameters other = (DecryptionDialogParameters) obj;
+		if (createdAt != other.createdAt) {
+			return false;
+		}
+		if (decryptionKeyId == null) {
+			if (other.decryptionKeyId != null) {
+				return false;
+			}
+		} else if (!decryptionKeyId.equals(other.decryptionKeyId)) {
+			return false;
+		}
+		if (isDeleteSourceFile != other.isDeleteSourceFile) {
+			return false;
+		}
+		if (isOpenAssociatedApplication != other.isOpenAssociatedApplication) {
+			return false;
+		}
+		if (isOpenTargetFolder != other.isOpenTargetFolder) {
+			return false;
+		}
+		if (sourceFile == null) {
+			if (other.sourceFile != null) {
+				return false;
+			}
+		} else if (!sourceFile.equals(other.sourceFile)) {
+			return false;
+		}
+		if (targetFile == null) {
+			if (other.targetFile != null) {
+				return false;
+			}
+		} else if (!targetFile.equals(other.targetFile)) {
+			return false;
+		}
+		if (useSameFolder != other.useSameFolder) {
+			return false;
+		}
+		if (useTempFolder != other.useTempFolder) {
+			return false;
+		}
+		return true;
+	}
 }

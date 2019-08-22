@@ -101,4 +101,8 @@ public class HistoryQuickSearchTableModel implements TableModel {
 		// no events here
 	}
 
+	public List<DecryptionDialogParameters> getRows() {
+		return decryptions;
+	}
+
 }

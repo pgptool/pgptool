@@ -388,6 +388,15 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 	protected Action actionHistoryQuickSearch = new LocalizedAction("term.history") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			getHistoryQuickSearchPm().refreshRecentlyUsed(); // this was added to address #168. Doesn't feel like the
+																// best approach, but I cannot find any better at this
+																// moment. One of the options would be to monitor all
+																// files using FileWatcher and refresh this list in case
+																// of any changes, but that seem to be overwhelming a
+																// bit. Assuming source files will not disappear all the
+																// time, background check is still more preferable,
+																// even if once in a blue moon UI will refresh after
+																// already been rendered
 			getHistoryQuickSearchView().renderTo(null);
 		}
 	};

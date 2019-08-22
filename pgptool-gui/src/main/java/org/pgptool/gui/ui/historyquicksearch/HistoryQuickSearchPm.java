@@ -44,6 +44,8 @@ import org.pgptool.gui.ui.decryptone.DecryptionDialogParameters;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 
 import com.google.common.base.Preconditions;
@@ -88,7 +90,7 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 		tableLabel = new ModelProperty<String>(this,
 				new ValueAdapterHolderImpl<String>(Messages.get("term.recentlyDecrypted")), "tableLabel");
 
-		handleRecordChanged(null);
+		refreshRecentlyUsed();
 	}
 
 	@Override
@@ -172,6 +174,10 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 		}
 	};
 
+	public void refreshRecentlyUsed() {
+		handleRecordChanged(null);
+	}
+
 	@Subscribe
 	public void handleRecordChanged(EntityChangedEvent<?> evt) {
 		try {
@@ -209,6 +215,15 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 						.filter(x -> x.getRight().isFile() && x.getRight().exists()).map(x -> x.getLeft()).limit(15)
 						.collect(Collectors.toList());
 
+				// this block was added to address #168 
+				if (lastPopularRecords instanceof HistoryQuickSearchTableModel) {
+					if (isSame(((HistoryQuickSearchTableModel) lastPopularRecords).getRows(), topRecords)) {
+						log.debug(
+								"lastPopularRecords results haven't changed, will not change anthing to avoid UI fidgeting.");
+						return lastPopularRecords;
+					}
+				}
+
 				lastPopularRecords = CollectionUtils.isEmpty(topRecords) ? null
 						: new HistoryQuickSearchTableModel(topRecords);
 				if (!isQuickSearchMode()) {
@@ -219,6 +234,18 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 				log.error("Failed to refresh records subjects", t);
 				return null;
 			}
+		}
+
+		private boolean isSame(List<DecryptionDialogParameters> cola, List<DecryptionDialogParameters> colb) {
+			if (cola.size() != colb.size()) {
+				return false;
+			}
+			for (int i = 0; i < cola.size(); i++) {
+				if (!ObjectUtils.nullSafeEquals(cola.get(i), colb.get(i))) {
+					return false;
+				}
+			}
+			return true;
 		}
 	};
 

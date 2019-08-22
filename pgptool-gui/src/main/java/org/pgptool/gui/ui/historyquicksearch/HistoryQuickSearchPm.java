@@ -45,7 +45,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 
 import com.google.common.base.Preconditions;
@@ -215,7 +214,7 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 						.filter(x -> x.getRight().isFile() && x.getRight().exists()).map(x -> x.getLeft()).limit(15)
 						.collect(Collectors.toList());
 
-				// this block was added to address #168 
+				// this block was added to address #168
 				if (lastPopularRecords instanceof HistoryQuickSearchTableModel) {
 					if (isSame(((HistoryQuickSearchTableModel) lastPopularRecords).getRows(), topRecords)) {
 						log.debug(

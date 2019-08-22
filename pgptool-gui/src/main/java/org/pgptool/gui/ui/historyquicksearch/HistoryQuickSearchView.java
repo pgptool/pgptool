@@ -69,6 +69,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Preconditions;
 
+import ru.skarpushin.swingpm.EXPORT.base.DialogViewBase;
 import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
@@ -357,6 +358,7 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 
 			window.addComponentListener(componentAdapter);
 			window.addWindowListener(windowAdapter);
+			DialogViewBase.installEscapeCloseOperation(window, window.getRootPane());
 		}
 
 		Point currentMousePosition = MouseInfo.getPointerInfo().getLocation();

@@ -29,7 +29,7 @@ import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersister;
 import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersisterImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ru.skarpushin.swingpm.base.DialogViewBase;
+import ru.skarpushin.swingpm.EXPORT.base.DialogViewBase;
 import ru.skarpushin.swingpm.base.PresentationModel;
 
 public abstract class DialogViewBaseCustom<TPM extends PresentationModel> extends DialogViewBase<TPM> {

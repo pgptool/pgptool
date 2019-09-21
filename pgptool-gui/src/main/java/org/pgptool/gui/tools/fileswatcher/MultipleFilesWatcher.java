@@ -170,7 +170,7 @@ public class MultipleFilesWatcher {
 						log.error("ClosedWatchServiceException fired, stoppign thread.", cwe);
 						return;
 					} catch (InterruptedException x) {
-						log.debug("FileWatcher thread stopped by InterruptedException", x);
+						log.debug("FileWatcher thread stopped by InterruptedException");
 						return;
 					} catch (Throwable t) {
 						log.error("Unexpected exception while checking for updates on watched file", t);

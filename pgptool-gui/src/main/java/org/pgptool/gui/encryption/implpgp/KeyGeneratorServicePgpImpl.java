@@ -20,6 +20,7 @@ package org.pgptool.gui.encryption.implpgp;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -31,11 +32,11 @@ import javax.crypto.spec.DHParameterSpec;
 
 import org.apache.log4j.Logger;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
-import org.bouncycastle.openpgp.PGPEncryptedData;
+import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
+import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
@@ -47,6 +48,7 @@ import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Required;
 import org.summerb.approaches.validation.FieldValidationException;
 import org.summerb.approaches.validation.ValidationContext;
 
@@ -54,21 +56,31 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
-	private static Logger log = Logger.getLogger(KeyGeneratorServicePgpImpl.class);
+	private static final Logger log = Logger.getLogger(KeyGeneratorServicePgpImpl.class);
+	private static final String PROVIDER = "BC";
 
 	@Autowired
 	private ExecutorService executorService;
 
-	// TBD: Shouldn't I generate it each time. Is it safe to have it hardcoded?
-	BigInteger g = new BigInteger(
-			"153d5d6172adb43045b68ae8e1de1070b6137005686d29d3d73a7749199681ee5b212c9b96bfdcfa5b20cd5e3fd2044895d609cf9b410b7a0f12ca1cb9a428cc",
-			16);
-	BigInteger p = new BigInteger(
-			"9494fec095f3b85ee286542b3836fc81a5dd0a0349b4c239dd38744d488cf8e31db8bcb7d33b41abb9e5a33cca9144b1cef332c94bf0573bf047a3aca98cdf3b",
-			16);
-	private static DsaKeyPairParams DEFAULT_DSA_KEY_PARAMETERS = new DsaKeyPairParams("DSA", "BC", 2048);
+	// Master key params
+	private String masterKeyAlgorithm;
+	private String masterKeyPurpose;
+	private int masterKeySize;
+	private KeyPairParams masterKeyParameters;
+	private String masterKeySignerAlgorithm;
+	private String masterKeySignerHashingAlgorithm;
 
-	private Map<DsaKeyPairParams, Future<KeyPair>> pregeneratedDsaKeyPairs = new ConcurrentHashMap<>();
+	// Secret Key encryption
+	private String secretKeyHashingAlgorithm;
+	private String secretKeyEncryptionAlgorithm;
+
+	// Encryption key params
+	private String encryptionKeyAlgorithm;
+	private String encryptionKeyPurpose;
+	private BigInteger dhParamsPrimeModulus;
+	private BigInteger dhParamsBaseGenerator;
+
+	private Map<KeyPairParams, Future<KeyPair>> pregeneratedKeyPairs = new ConcurrentHashMap<>();
 
 	public KeyGeneratorServicePgpImpl() {
 		KeyRingServicePgpImpl.touch();
@@ -80,72 +92,75 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 			Preconditions.checkArgument(params != null, "params must not be null");
 			assertParamsValid(params);
 
-			// Create KeyPairs
-			KeyPair dsaKp = getOrGenerateDsaKeyPair(DEFAULT_DSA_KEY_PARAMETERS);
-			KeyPairGenerator elgKpg = KeyPairGenerator.getInstance("ELGAMAL", "BC");
-			DHParameterSpec elParams = new DHParameterSpec(p, g);
-			elgKpg.initialize(elParams);
-			KeyPair elgKp = elgKpg.generateKeyPair();
+			// Create Master key
+			KeyPair masterKey = getOrGenerateKeyPair(getMasterKeyParameters());
+			PGPKeyPair masterKeyBc = new JcaPGPKeyPair(algorithmNameToTag(masterKeyPurpose), masterKey, new Date());
+			BcPGPContentSignerBuilder keySignerBuilderBc = new BcPGPContentSignerBuilder(
+					algorithmNameToTag(masterKeyPurpose), hashAlgorithmNameToTag(masterKeySignerHashingAlgorithm));
 
-			// Now let do some crazy stuff (I HAVE NO IDEA WHAT I AM DOING
-			// HERE). BouncyCastle guys are not helping by changing API from
-			// one version to another so often!!!!!!!
-			PGPKeyPair dsaKeyPair = new JcaPGPKeyPair(PGPPublicKey.DSA, dsaKp, new Date());
-			PGPKeyPair elgKeyPair = new JcaPGPKeyPair(PGPPublicKey.ELGAMAL_ENCRYPT, elgKp, new Date());
-
-			// PGPContentSignerBuilde
-			// JCA
-			// JcaPGPContentSignerBuilder keySignerBuilder = new
-			// JcaPGPContentSignerBuilder(
-			// dsaKeyPair.getPublicKey().getAlgorithm(),
-			// HashAlgorithmTags.SHA256);
-
-			// BC
-			BcPGPContentSignerBuilder keySignerBuilderBC = new BcPGPContentSignerBuilder(
-					dsaKeyPair.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA256);
-
-			// PGPDigestCalculator
-			// JCA
-			// PGPDigestCalculator sha1Calc = new
-			// JcaPGPDigestCalculatorProviderBuilder().build()
-			// .get(HashAlgorithmTags.SHA256);
-
-			// BC
-			PGPDigestCalculator sha1CalcBC = new BcPGPDigestCalculatorProvider().get(HashAlgorithmTags.SHA1);
-
-			// keyEncryptor
-			// BC
+			// Setup seret key encryption
+			PGPDigestCalculator digestCalc = new BcPGPDigestCalculatorProvider()
+					.get(hashAlgorithmNameToTag(secretKeyHashingAlgorithm));
 			BcPBESecretKeyEncryptorBuilder encryptorBuilderBC = new BcPBESecretKeyEncryptorBuilder(
-					PGPEncryptedData.AES_256, sha1CalcBC);
-			PBESecretKeyEncryptor keyEncryptorBC = encryptorBuilderBC.build(params.getPassphrase().toCharArray());
+					symmetricKeyAlgorithmNameToTag(secretKeyEncryptionAlgorithm), digestCalc);
+			PBESecretKeyEncryptor keyEncryptorBc = encryptorBuilderBC.build(params.getPassphrase().toCharArray());
 
-			// JCA
-			// JcePBESecretKeyEncryptorBuilder encryptorBuilder = new
-			// JcePBESecretKeyEncryptorBuilder(
-			// PGPEncryptedData.AES_256, sha1Calc).setProvider("BC");
-			// PBESecretKeyEncryptor keyEncryptor =
-			// encryptorBuilder.build(params.getPassphrase().toCharArray());
-
-			// keyRingGen
+			// Key pair generator
 			String userName = params.getFullName() + " <" + params.getEmail() + ">";
-			// JCA
-			// PGPKeyRingGenerator keyRingGen = new
-			// PGPKeyRingGenerator(PGPSignature.POSITIVE_CERTIFICATION,
-			// dsaKeyPair,
-			// userName, sha1Calc, null, null, keySignerBuilder,
-			// keyEncryptor);
+			PGPKeyRingGenerator keyPairGeneratorBc = new PGPKeyRingGenerator(PGPSignature.POSITIVE_CERTIFICATION,
+					masterKeyBc, userName, digestCalc, null, null, keySignerBuilderBc, keyEncryptorBc);
 
-			// BC
-			PGPKeyRingGenerator keyRingGen = new PGPKeyRingGenerator(PGPSignature.POSITIVE_CERTIFICATION, dsaKeyPair,
-					userName, sha1CalcBC, null, null, keySignerBuilderBC, keyEncryptorBC);
+			// Add Sub-key for encryption
+			KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(encryptionKeyAlgorithm, PROVIDER);
+			if ("ELGAMAL".equals(encryptionKeyAlgorithm)) {
+				keyPairGenerator.initialize(new DHParameterSpec(dhParamsPrimeModulus, dhParamsBaseGenerator));
+			} else if ("RSA".equals(encryptionKeyAlgorithm)) {
+				// Re-using master key size.
+				keyPairGenerator.initialize(new RSAKeyGenParameterSpec(masterKeySize, RSAKeyGenParameterSpec.F4));
+			} else {
+				throw new IllegalArgumentException(
+						"Hanlding of parameter creation for " + encryptionKeyAlgorithm + " is not implemented");
+			}
+			KeyPair encryptionSubKey = keyPairGenerator.generateKeyPair();
+			PGPKeyPair encryptionSubKeyBc = new JcaPGPKeyPair(algorithmNameToTag(encryptionKeyPurpose),
+					encryptionSubKey, new Date());
+			keyPairGeneratorBc.addSubKey(encryptionSubKeyBc);
 
-			keyRingGen.addSubKey(elgKeyPair);
+			// TBD-191: Also add a sub-key for signing
+			// KeyPair signatureSubKey = keyPairGenerator.generateKeyPair();
+			// PGPKeyPair signatureSubKeyBc = new
+			// TBD-191: RSA_SIGN must not be hardcoded
+			// JcaPGPKeyPair(algorithmNameToTag("RSA_SIGN"), signatureSubKey,
+			// new Date());
+			// keyPairGeneratorBc.addSubKey(signatureSubKeyBc);
+
 			// building ret
-			Key ret = buildKey(keyRingGen);
-			return ret;
+			return buildKey(keyPairGeneratorBc);
 		} catch (Throwable t) {
 			Throwables.throwIfInstanceOf(t, FieldValidationException.class);
 			throw new RuntimeException("Failed to generate key", t);
+		}
+	}
+
+	protected final static int symmetricKeyAlgorithmNameToTag(String algorithmName) {
+		return getStaticFieldValue(algorithmName, SymmetricKeyAlgorithmTags.class);
+	}
+
+	protected final static int hashAlgorithmNameToTag(String algorithmName) {
+		return getStaticFieldValue(algorithmName, HashAlgorithmTags.class);
+	}
+
+	protected final static int algorithmNameToTag(String algorithmName) {
+		return getStaticFieldValue(algorithmName, PublicKeyAlgorithmTags.class);
+	}
+
+	private static int getStaticFieldValue(String fieldName, Class<?> clazz) {
+		try {
+			return clazz.getField(fieldName).getInt(null);
+		} catch (NoSuchFieldException e) {
+			throw new IllegalArgumentException("No such field " + fieldName + " defined in class " + clazz);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to convert algorithm name " + fieldName + " to algorithm tag", e);
 		}
 	}
 
@@ -169,10 +184,10 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 	 * @return
 	 * @throws Exception
 	 */
-	private KeyPair getOrGenerateDsaKeyPair(DsaKeyPairParams params) throws Exception {
-		Future<KeyPair> future = pregeneratedDsaKeyPairs.remove(params);
+	private KeyPair getOrGenerateKeyPair(KeyPairParams params) throws Exception {
+		Future<KeyPair> future = pregeneratedKeyPairs.remove(params);
 		if (future == null) {
-			return PrecalculateDsaKeyPair.generateDsaKeyPair(params);
+			return PrecalculateDsaKeyPair.generateKeyPair(params);
 		}
 		return future.get();
 	}
@@ -197,54 +212,164 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 
 	@Override
 	public void expectNewKeyCreation() {
-		precalculateKeyPair(DEFAULT_DSA_KEY_PARAMETERS);
+		log.info(
+				"User doesn't seem to have private key pair. Proactively generating one so that key creation will happen faster");
+		precalculateKeyPair(getMasterKeyParameters());
 	}
 
-	private void precalculateKeyPair(DsaKeyPairParams params) {
+	private void precalculateKeyPair(KeyPairParams params) {
 		Future<KeyPair> future = executorService.submit(new PrecalculateDsaKeyPair(params));
-		pregeneratedDsaKeyPairs.put(params, future);
+		pregeneratedKeyPairs.put(params, future);
+	}
+
+	public String getEncryptionKeyAlgorithm() {
+		return encryptionKeyAlgorithm;
+	}
+
+	@Required
+	public void setEncryptionKeyAlgorithm(String encryptionKeyAlgorithm) {
+		this.encryptionKeyAlgorithm = encryptionKeyAlgorithm;
+	}
+
+	public KeyPairParams getMasterKeyParameters() {
+		if (masterKeyParameters == null) {
+			masterKeyParameters = new KeyPairParams(masterKeyAlgorithm, PROVIDER, masterKeySize);
+		}
+		return masterKeyParameters;
+	}
+
+	public String getMasterKeyAlgorithm() {
+		return masterKeyAlgorithm;
+	}
+
+	@Required
+	public void setMasterKeyAlgorithm(String masterKeyAlgorithm) {
+		this.masterKeyAlgorithm = masterKeyAlgorithm;
+		masterKeyParameters = null;
+	}
+
+	public int getMasterKeySize() {
+		return masterKeySize;
+	}
+
+	@Required
+	public void setMasterKeySize(int masterKeySize) {
+		this.masterKeySize = masterKeySize;
+		masterKeyParameters = null;
+	}
+
+	public BigInteger getDhParamsPrimeModulus() {
+		return dhParamsPrimeModulus;
+	}
+
+	@Required
+	public void setDhParamsPrimeModulus(BigInteger dhParamsPrimeModulus) {
+		this.dhParamsPrimeModulus = dhParamsPrimeModulus;
+	}
+
+	public BigInteger getDhParamsBaseGenerator() {
+		return dhParamsBaseGenerator;
+	}
+
+	@Required
+	public void setDhParamsBaseGenerator(BigInteger dhParamsBaseGenerator) {
+		this.dhParamsBaseGenerator = dhParamsBaseGenerator;
+	}
+
+	public String getEncryptionKeyPurpose() {
+		return encryptionKeyPurpose;
+	}
+
+	@Required
+	public void setEncryptionKeyPurpose(String encryptionKeyPurpose) {
+		this.encryptionKeyPurpose = encryptionKeyPurpose;
+	}
+
+	public String getMasterKeySignerHashingAlgorithm() {
+		return masterKeySignerHashingAlgorithm;
+	}
+
+	@Required
+	public void setMasterKeySignerHashingAlgorithm(String masterKeySignerHashingAlgorithm) {
+		this.masterKeySignerHashingAlgorithm = masterKeySignerHashingAlgorithm;
+	}
+
+	public String getSecretKeyHashingAlgorithm() {
+		return secretKeyHashingAlgorithm;
+	}
+
+	@Required
+	public void setSecretKeyHashingAlgorithm(String secretKeyHashingAlgorithm) {
+		this.secretKeyHashingAlgorithm = secretKeyHashingAlgorithm;
+	}
+
+	public String getSecretKeyEncryptionAlgorithm() {
+		return secretKeyEncryptionAlgorithm;
+	}
+
+	@Required
+	public void setSecretKeyEncryptionAlgorithm(String secretKeyEncryptionAlgorithm) {
+		this.secretKeyEncryptionAlgorithm = secretKeyEncryptionAlgorithm;
+	}
+
+	public String getMasterKeySignerAlgorithm() {
+		return masterKeySignerAlgorithm;
+	}
+
+	@Required
+	public void setMasterKeySignerAlgorithm(String masterKeySignerAlgorithm) {
+		this.masterKeySignerAlgorithm = masterKeySignerAlgorithm;
+	}
+
+	public String getMasterKeyPurpose() {
+		return masterKeyPurpose;
+	}
+
+	@Required
+	public void setMasterKeyPurpose(String masterKeyPurpose) {
+		this.masterKeyPurpose = masterKeyPurpose;
 	}
 
 	public static class PrecalculateDsaKeyPair implements Callable<KeyPair> {
-		private DsaKeyPairParams dsaKeyPairParams;
+		private KeyPairParams keyPairParams;
 
-		public PrecalculateDsaKeyPair(DsaKeyPairParams dsaKeyPairParams) {
-			this.dsaKeyPairParams = dsaKeyPairParams;
+		public PrecalculateDsaKeyPair(KeyPairParams keyPairParams) {
+			this.keyPairParams = keyPairParams;
 		}
 
 		@Override
 		public KeyPair call() throws Exception {
-			log.debug("Invoking pregeneration of DSA key pair " + dsaKeyPairParams);
+			log.debug("Invoking pregeneration of a key pair " + keyPairParams);
 			try {
-				return generateDsaKeyPair(dsaKeyPairParams);
+				return generateKeyPair(keyPairParams);
 			} finally {
-				log.debug("Invocation completed " + dsaKeyPairParams);
+				log.debug("Invocation completed " + keyPairParams);
 			}
 		}
 
-		public static KeyPair generateDsaKeyPair(DsaKeyPairParams dsaKeyPairParams) throws Exception {
+		public static KeyPair generateKeyPair(KeyPairParams keyPairParams) throws Exception {
 			try {
-				log.debug("Calculating DSA KeyPair " + dsaKeyPairParams);
-				KeyPairGenerator dsaKpg = KeyPairGenerator.getInstance(dsaKeyPairParams.algorithm,
-						dsaKeyPairParams.provider);
-				dsaKpg.initialize(dsaKeyPairParams.keysize);
+				log.debug("Calculating KeyPair " + keyPairParams);
+				KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(keyPairParams.algorithm,
+						keyPairParams.provider);
+				keyPairGenerator.initialize(keyPairParams.keysize);
 				log.info("Started key generation");
-				KeyPair dsaKp = dsaKpg.generateKeyPair();
+				KeyPair keyPair = keyPairGenerator.generateKeyPair();
 				log.info("Key generation is complete");
-				return dsaKp;
+				return keyPair;
 			} catch (Throwable t) {
-				log.error("Failed to generate DSA keypair " + dsaKeyPairParams, t);
-				throw new Exception("Failed to generate DSA keypair" + dsaKeyPairParams, t);
+				log.error("Failed to generate DSA keypair " + keyPairParams, t);
+				throw new Exception("Failed to generate DSA keypair" + keyPairParams, t);
 			}
 		}
 	}
 
-	public static class DsaKeyPairParams {
+	public static class KeyPairParams {
 		String algorithm;
 		String provider;
 		int keysize;
 
-		public DsaKeyPairParams(String algorithm, String provider, int keysize) {
+		public KeyPairParams(String algorithm, String provider, int keysize) {
 			this.algorithm = algorithm;
 			this.provider = provider;
 			this.keysize = keysize;
@@ -271,7 +396,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 			if (getClass() != obj.getClass()) {
 				return false;
 			}
-			DsaKeyPairParams other = (DsaKeyPairParams) obj;
+			KeyPairParams other = (KeyPairParams) obj;
 			if (algorithm == null) {
 				if (other.algorithm != null) {
 					return false;
@@ -294,7 +419,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 
 		@Override
 		public String toString() {
-			return "DsaKeyPairParams [algorithm=" + algorithm + ", provider=" + provider + ", keysize=" + keysize + "]";
+			return "KeyPairParams [algorithm=" + algorithm + ", PROVIDER=" + provider + ", keysize=" + keysize + "]";
 		}
 	}
 

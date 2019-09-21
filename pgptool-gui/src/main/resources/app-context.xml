@@ -78,7 +78,31 @@
 	<bean id="keyFilesOperations" class="org.pgptool.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
 	<bean id="keyRingService" class="org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl" />
 	<bean id="encryptionService" class="org.pgptool.gui.encryption.implpgp.EncryptionServicePgpImpl" />
-	<bean id="keyGeneratorService" class="org.pgptool.gui.encryption.implpgp.KeyGeneratorServicePgpImpl" />
+	<bean id="keyGeneratorService" class="org.pgptool.gui.encryption.implpgp.KeyGeneratorServicePgpImpl">
+		<property name="masterKeyAlgorithm" value="${keygen.masterKey.algorithm}" />
+		<property name="masterKeyPurpose" value="${keygen.masterKey.purpose}" />
+		<property name="masterKeySize" value="${keygen.masterKey.size}" />
+		<property name="masterKeySignerAlgorithm" value="${keygen.masterKey.signer.signerAlgorithm}" />
+		<property name="masterKeySignerHashingAlgorithm" value="${keygen.masterKey.signer.hashingAlgorithm}" />
+
+		<property name="secretKeyHashingAlgorithm" value="${keygen.secretKey.hashingAlgorithm}" />
+		<property name="secretKeyEncryptionAlgorithm" value="${keygen.secretKey.symmetricEncryptionAlgorithm}" />
+
+		<property name="encryptionKeyAlgorithm" value="${keygen.encryptionSubKey.algorithm}" />
+		<property name="dhParamsPrimeModulus">
+			<bean class="java.math.BigInteger">
+				<constructor-arg value="${keygen.encryptionSubKey.dhparams.primeModulus}" type="java.lang.String" />
+				<constructor-arg value="16" type="int" />
+			</bean>
+		</property>
+		<property name="dhParamsBaseGenerator">
+			<bean class="java.math.BigInteger">
+				<constructor-arg value="${keygen.encryptionSubKey.dhparams.baseGenerator}" type="java.lang.String" />
+				<constructor-arg value="16" type="int" />
+			</bean>
+		</property>
+		<property name="encryptionKeyPurpose" value="${keygen.encryptionSubKey.purpose}" />
+	</bean>
 
 	<bean class="org.pgptool.gui.decryptedlist.impl.MonitoringDecryptedFilesServiceImpl" />
 

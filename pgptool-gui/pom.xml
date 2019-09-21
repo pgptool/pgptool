@@ -117,11 +117,10 @@
 			<version>1.7.12</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcpg-jdk15on -->
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcpg-jdk15on</artifactId>
-			<version>1.56</version>
+			<version>1.63</version>
 		</dependency>
 
 		<dependency>
@@ -194,20 +193,16 @@
 								</filter>
 							</filters>
 							<transformers>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>org.pgptool.gui.app.EntryPoint</mainClass>
 								</transformer>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
 									<resource>META-INF/spring.handlers</resource>
 								</transformer>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
 									<resource>META-INF/spring.schemas</resource>
 								</transformer>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
 									<resource>META-INF/spring.tooling</resource>
 								</transformer>
 							</transformers>

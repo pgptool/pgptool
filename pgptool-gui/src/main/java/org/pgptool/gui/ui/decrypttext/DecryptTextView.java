@@ -20,6 +20,7 @@ package org.pgptool.gui.ui.decrypttext;
 import static org.pgptool.gui.app.Messages.text;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dialog.ModalityType;
 import java.awt.Dimension;
@@ -39,11 +40,14 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 
+import org.jdesktop.swingx.JXLabel;
 import org.pgptool.gui.app.Messages;
+import org.pgptool.gui.ui.encryptone.EncryptOneView;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.TextEditUxUtils;
 import org.pgptool.gui.ui.tools.UiUtils;
 
+import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
 public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
@@ -59,6 +63,9 @@ public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
 	private JButton btnDecrypt;
 	private JButton btnCancel;
 	private JButton btnReply;
+
+	private JPanel panelMissingPrivateKeyWarning;
+	private JPanel recipientsBlock;
 
 	@Override
 	protected void internalInitComponents() {
@@ -87,12 +94,19 @@ public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
 
 		// recipients
 		ret.add(new JLabel(text("term.encryptedFor")), sgl.cs(0, 2));
-		ret.add(new JScrollPane(edRecipients = new JTextArea()), sgl.cs(0, 3));
+		recipientsBlock = new JPanel(new BorderLayout());
+		recipientsBlock.add(new JScrollPane(edRecipients = new JTextArea()), BorderLayout.CENTER);
 		edRecipients.setFont(new JTextField().getFont());
 		edRecipients.setEditable(false);
 		edRecipients.setBackground(UIManager.getColor("Panel.background"));
 		edRecipients.setMargin(new Insets(5, 5, 5, 5));
 		edRecipients.setLineWrap(true);
+		ret.add(recipientsBlock, sgl.cs(0, 3));
+
+		JXLabel lblNoPrivateKeysSelectedWarning = new JXLabel(text("phrase.noMatchingPrivateKey"));
+		lblNoPrivateKeysSelectedWarning.setLineWrap(true);
+		panelMissingPrivateKeyWarning = EncryptOneView.wrapIntoMessagePanel(lblNoPrivateKeysSelectedWarning,
+				new Color(253, 221, 191));
 
 		// decrypt button
 		JPanel btns = new JPanel(new BorderLayout(10, 0));
@@ -140,7 +154,31 @@ public class DecryptTextView extends DialogViewBaseCustom<DecryptTextPm> {
 
 		bindingContext.setupBinding(pm.actionCancel, btnCancel);
 		bindingContext.setupBinding(pm.actionReply, btnReply);
+
+		bindingContext.registerOnChangeHandler(pm.getIsShowMissingPrivateKeyWarning(), onShowMissingPrivateKeyWarning);
 	}
+
+	@Override
+	protected void handleDialogShown() {
+		super.handleDialogShown();
+		// I had to put it here because otherwise there is a weird resizing glitch
+		// appears in rare case
+		onShowMissingPrivateKeyWarning.handlePropertyChanged(pm,
+				pm.getIsShowMissingPrivateKeyWarning().getPropertyName(), null,
+				pm.getIsShowMissingPrivateKeyWarning().getValue());
+	}
+
+	private TypedPropertyChangeListener<Boolean> onShowMissingPrivateKeyWarning = new TypedPropertyChangeListener<Boolean>() {
+		@Override
+		public void handlePropertyChanged(Object source, String propertyName, Boolean oldValue, Boolean newValue) {
+			if (newValue) {
+				recipientsBlock.add(panelMissingPrivateKeyWarning, BorderLayout.SOUTH);
+			} else {
+				recipientsBlock.remove(panelMissingPrivateKeyWarning);
+			}
+			recipientsBlock.validate();
+		}
+	};
 
 	@Override
 	protected JDialog initDialog(Window owner, Object constraints) {

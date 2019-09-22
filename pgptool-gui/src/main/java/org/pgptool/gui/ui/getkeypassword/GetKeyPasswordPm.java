@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import javax.swing.Action;
 
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.Message;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
@@ -75,7 +74,6 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
  *
  */
 public class GetKeyPasswordPm extends PresentationModelBase {
-	private static Logger log = Logger.getLogger(GetKeyPasswordPm.class);
 	private static final String FN_PASSWORD = "password";
 	private static final Map<String, PasswordDeterminedForKey> CACHE_KEYID_TO_PASSWORD = new HashMap<>();
 
@@ -98,6 +96,7 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 
 	private List<MatchedKey> matchedKeys;
 	private Message purposeMessage;
+	private boolean registeredOnEventBus;
 
 	public GetKeyPasswordPmInitResult init(GetKeyPasswordHost host, Set<String> keyIdsToChooseFrom,
 			Message purposeMessage) {
@@ -122,6 +121,7 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 
 		initModelProperties(matchedKeys.stream().map(x -> x.getMatchedKey()).collect(Collectors.toList()));
 		eventBus.register(this);
+		registeredOnEventBus = true;
 
 		// x. ret
 		return GetKeyPasswordPmInitResult.ShowUiAndAskUser;
@@ -130,7 +130,10 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 	@Override
 	public void detach() {
 		super.detach();
-		eventBus.unregister(this);
+		if (registeredOnEventBus) {
+			eventBus.unregister(this);
+			registeredOnEventBus = false;
+		}
 	}
 
 	private boolean passwordWasCached(GetKeyPasswordHost host, List<MatchedKey> matchedKeys) {

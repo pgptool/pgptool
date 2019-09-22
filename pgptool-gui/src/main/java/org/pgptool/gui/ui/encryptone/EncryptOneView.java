@@ -75,7 +75,6 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 	private JButton btnCancel;
 
 	private JPanel panelNoPrivateKeysSelectedWarning;
-
 	private JPanel recipientsBlock;
 
 	@Override
@@ -133,7 +132,8 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 
 		JXLabel lblNoPrivateKeysSelectedWarning = new JXLabel(text("encryption.warningNoPrivateKeysSelected"));
 		lblNoPrivateKeysSelectedWarning.setLineWrap(true);
-		panelNoPrivateKeysSelectedWarning = wrapIntoMessagePanel(lblNoPrivateKeysSelectedWarning);
+		panelNoPrivateKeysSelectedWarning = wrapIntoMessagePanel(lblNoPrivateKeysSelectedWarning,
+				new Color(221, 253, 191));
 		// NOTE: Not adding it now. It'll be handled by onNoPrivateKeysSelected
 
 		ret.add(recipientsBlock, sgl.cs(1, row, 1, 2));
@@ -157,7 +157,7 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 		return ret;
 	}
 
-	private JPanel wrapIntoMessagePanel(JComponent comp) {
+	public static JPanel wrapIntoMessagePanel(JComponent comp, Color color) {
 		JPanel pnlPadding = new JPanel(new BorderLayout());
 		pnlPadding.setBorder(BorderFactory.createLineBorder(Color.yellow.darker(), 1, true));
 		JPanel pnlMsg = new JPanel(new BorderLayout());
@@ -167,7 +167,7 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 		pnlMsg.setBorder(BorderFactory.createEmptyBorder(charHalfWidth / 2, 5, charHalfWidth / 2, 5));
 		comp.setOpaque(false);
 		pnlMsg.add(comp);
-		pnlPadding.setBackground(new Color(221, 253, 191));
+		pnlPadding.setBackground(color);
 		return pnlPadding;
 	}
 

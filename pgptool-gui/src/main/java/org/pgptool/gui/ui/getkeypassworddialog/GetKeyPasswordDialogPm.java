@@ -62,6 +62,12 @@ public class GetKeyPasswordDialogPm extends PresentationModelBase implements App
 
 		return true;
 	}
+	
+	@Override
+	public void detach() {
+		super.detach();
+		getKeyPasswordPm.detach();
+	}
 
 	private GetKeyPasswordHost getPasswordHost = new GetKeyPasswordHost() {
 		@Override

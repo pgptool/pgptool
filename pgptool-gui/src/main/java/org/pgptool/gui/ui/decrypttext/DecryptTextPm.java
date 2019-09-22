@@ -24,7 +24,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.swing.Action;
@@ -37,6 +39,7 @@ import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.encryption.api.EncryptionService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
+import org.pgptool.gui.encryption.api.dto.MatchedKey;
 import org.pgptool.gui.encryption.implpgp.SymmetricEncryptionIsNotSupportedException;
 import org.pgptool.gui.tools.ClipboardUtil;
 import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
@@ -46,6 +49,7 @@ import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.DecryptTextRecipientsIdentifiedUsage;
 import org.pgptool.gui.usage.dto.DecryptedTextUsage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.google.common.base.Preconditions;
@@ -74,26 +78,23 @@ public class DecryptTextPm extends PresentationModelBase {
 	private ModelProperty<String> recipients;
 	protected Set<String> recipientsList;
 	private ModelProperty<String> targetText;
+	private ModelProperty<Boolean> isShowMissingPrivateKeyWarning;
 
 	public boolean init(DecryptTextHost host) {
 		Preconditions.checkArgument(host != null);
 		this.host = host;
 
-		if (!doWeHaveKeysToDecryptWith()) {
+		if (!ensureWeHaveAtLeastOnePrivateKey()) {
 			return false;
 		}
 
 		initModelProperties();
 
-		// TBD: See if there is already text in clipboard that we can decrypt
-		// if (StringUtils.hasText(ClipboardUtil.tryGetClipboardText())) {
-		// if (!pasteFromCLipboardAndTryDecrypt()) {
-		// return false;
-		// }
-		// }
-		// NOTE: At this moment this feature is commented out because we have a problem
-		// with dialogs display order -- when password dialog displayed before main
-		// dialog it then gets covered by latter
+		String clipboard = ClipboardUtil.tryGetClipboardText();
+		Set<String> keysForDecryption = findKeysForTextDecryption(clipboard, true);
+		if (!keysForDecryption.isEmpty()) {
+			sourceText.setValueByOwner(clipboard);
+		}
 
 		return true;
 	}
@@ -108,12 +109,32 @@ public class DecryptTextPm extends PresentationModelBase {
 		actionCopyTargetToClipboard.setEnabled(false);
 
 		recipients = new ModelProperty<>(this, new ValueAdapterHolderImpl<String>(""), "recipients");
+		actionReply.setEnabled(false);
+
+		isShowMissingPrivateKeyWarning = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false),
+				"isShowMissingPrivateKeyWarning");
 	}
 
 	private PropertyChangeListener onSourceTextChanged = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			actionDecrypt.setEnabled(StringUtils.hasText((String) evt.getNewValue()));
+			boolean hasText = StringUtils.hasText((String) evt.getNewValue());
+			if (hasText) {
+				// Discover possible keys
+				keysIds = findKeysForTextDecryption(sourceText.getValue(), true);
+				// Show list of emails
+				recipientsList = new HashSet<>(keysIds);
+				recipients.setValueByOwner(collectRecipientsNames(keysIds));
+				// See if we have at least one key suitable for decryption
+				isShowMissingPrivateKeyWarning.setValueByOwner(shouldWeShowMissingPrivateKeyWarning(keysIds));
+				actionDecrypt.setEnabled(!keysIds.isEmpty() && !isShowMissingPrivateKeyWarning.getValue());
+			} else {
+				actionDecrypt.setEnabled(false);
+				keysIds = Collections.emptySet();
+				recipientsList = new HashSet<>();
+				recipients.setValueByOwner("");
+				isShowMissingPrivateKeyWarning.setValueByOwner(false);
+			}
 		}
 	};
 
@@ -125,16 +146,32 @@ public class DecryptTextPm extends PresentationModelBase {
 		}
 	};
 
-	private boolean doWeHaveKeysToDecryptWith() {
-		if (!keyRingService.readKeys().isEmpty()) {
+	private boolean ensureWeHaveAtLeastOnePrivateKey() {
+		if (doWeHaveAtLeastOnePrivateKey()) {
 			return true;
 		}
 		UiUtils.messageBox(text("phrase.noKeysForDecryption"), text("term.attention"), MessageSeverity.WARNING);
 		host.getActionToOpenCertificatesList().actionPerformed(null);
-		if (keyRingService.readKeys().isEmpty()) {
+		if (!doWeHaveAtLeastOnePrivateKey()) {
 			return false;
 		}
 		return true;
+	}
+
+	private boolean doWeHaveAtLeastOnePrivateKey() {
+		List<Key> keys = keyRingService.readKeys();
+		if (keys.isEmpty()) {
+			return false;
+		}
+		return keys.stream().anyMatch(x -> x.getKeyData().isCanBeUsedForDecryption());
+	}
+
+	private boolean shouldWeShowMissingPrivateKeyWarning(Set<String> options) {
+		if (options.isEmpty()) {
+			return false;
+		}
+		List<MatchedKey> matchingKeys = keyRingService.findMatchingDecryptionKeys(options);
+		return CollectionUtils.isEmpty(matchingKeys);
 	}
 
 	public ModelPropertyAccessor<String> getSourceText() {
@@ -146,14 +183,10 @@ public class DecryptTextPm extends PresentationModelBase {
 	}
 
 	private void decrypt() throws UnsupportedEncodingException, SymmetricEncryptionIsNotSupportedException {
-		// Discover possible keys
-		ByteArrayInputStream inputStream = new ByteArrayInputStream(sourceText.getValue().getBytes("UTF-8"));
-		keysIds = encryptionService.findKeyIdsForDecryption(inputStream);
+		findKeysForTextDecryption(sourceText.getValue(), false);
+		Preconditions.checkState(!CollectionUtils.isEmpty(keysIds),
+				"Invalid state. Expected to have list of keys which could be used for decryption");
 		usageLogger.write(new DecryptTextRecipientsIdentifiedUsage(keysIds));
-
-		// Show list of emails
-		recipientsList = new HashSet<>(keysIds);
-		recipients.setValueByOwner(collectRecipientsNames(keysIds));
 
 		// Request password for decryption key
 		if (keyAndPassword != null && keysIds.contains(keyAndPassword.getDecryptionKeyId())) {
@@ -164,9 +197,23 @@ public class DecryptTextPm extends PresentationModelBase {
 		}
 	}
 
+	private Set<String> findKeysForTextDecryption(String textToDecrypt, boolean failSilently) {
+		try {
+			ByteArrayInputStream inputStream = new ByteArrayInputStream(textToDecrypt.getBytes("UTF-8"));
+			return encryptionService.findKeyIdsForDecryption(inputStream);
+		} catch (Throwable t) {
+			if (failSilently) {
+				log.warn("Text in clipboard is not an encrypted content or there are no keys suitable for decryption");
+				return Collections.emptySet();
+			} else {
+				throw new RuntimeException("Failed to determine keys for text decryption", t);
+			}
+		}
+	}
+
 	private String pasteFromClipboard() {
 		String clipboard = ClipboardUtil.tryGetClipboardText();
-		if (clipboard == null || !StringUtils.hasText(clipboard)) {
+		if (!StringUtils.hasText(clipboard)) {
 			UiUtils.messageBox(findRegisteredWindowIfAny(), text("warning.noTextInClipboard"), text("term.attention"),
 					JOptionPane.INFORMATION_MESSAGE);
 			return null;
@@ -195,14 +242,21 @@ public class DecryptTextPm extends PresentationModelBase {
 		return recipients.getModelPropertyAccessor();
 	}
 
+	public ModelPropertyAccessor<Boolean> getIsShowMissingPrivateKeyWarning() {
+		return isShowMissingPrivateKeyWarning.getModelPropertyAccessor();
+	}
+
 	private KeyAndPasswordCallback keyAndPasswordCallback = new KeyAndPasswordCallback() {
 		@Override
 		public void onKeyPasswordResult(PasswordDeterminedForKey keyAndPassword) {
 			try {
 				DecryptTextPm.this.keyAndPassword = keyAndPassword;
 				if (keyAndPassword == null) {
-					UiUtils.messageBox(text("error.noMatchingKeysRegistered"), text("term.error"),
-							MessageSeverity.ERROR);
+					// this means user might have just canceled the dialog
+					if (isShowMissingPrivateKeyWarning.getValue()) {
+						UiUtils.messageBox(text("error.noMatchingKeysRegistered"), text("term.error"),
+								MessageSeverity.ERROR);
+					}
 					return;
 				}
 
@@ -212,6 +266,7 @@ public class DecryptTextPm extends PresentationModelBase {
 
 				// Set target text
 				targetText.setValueByOwner(decryptedText);
+				actionReply.setEnabled(true);
 			} catch (Throwable t) {
 				log.error("Failed to decrypt text", t);
 				EntryPoint.reportExceptionToUser("error.cantParseEncryptedText", t);

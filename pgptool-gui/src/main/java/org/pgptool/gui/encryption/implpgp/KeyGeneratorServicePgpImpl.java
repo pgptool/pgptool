@@ -187,7 +187,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 	private KeyPair getOrGenerateKeyPair(KeyPairParams params) throws Exception {
 		Future<KeyPair> future = pregeneratedKeyPairs.remove(params);
 		if (future == null) {
-			return PrecalculateDsaKeyPair.generateKeyPair(params);
+			return ProactivelyGenerateMasterKeyPair.generateKeyPair(params);
 		}
 		return future.get();
 	}
@@ -217,8 +217,8 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 			// there is already a pre-generated key params
 			return;
 		}
-		log.info("Pre-generating master key in a background to improve user experience");
-		Future<KeyPair> future = executorService.submit(new PrecalculateDsaKeyPair(params));
+		log.info("Proactively generating master key in a background to improve user experience");
+		Future<KeyPair> future = executorService.submit(new ProactivelyGenerateMasterKeyPair(params));
 		pregeneratedKeyPairs.put(params, future);
 	}
 
@@ -330,20 +330,20 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 		this.masterKeyPurpose = masterKeyPurpose;
 	}
 
-	public static class PrecalculateDsaKeyPair implements Callable<KeyPair> {
+	public static class ProactivelyGenerateMasterKeyPair implements Callable<KeyPair> {
 		private KeyPairParams keyPairParams;
 
-		public PrecalculateDsaKeyPair(KeyPairParams keyPairParams) {
+		public ProactivelyGenerateMasterKeyPair(KeyPairParams keyPairParams) {
 			this.keyPairParams = keyPairParams;
 		}
 
 		@Override
 		public KeyPair call() throws Exception {
-			log.debug("Invoking pregeneration of a key pair " + keyPairParams);
+			log.debug("Generating master key pair for parameters: " + keyPairParams);
 			try {
 				return generateKeyPair(keyPairParams);
 			} finally {
-				log.debug("Invocation completed " + keyPairParams);
+				log.debug("Master key generated: " + keyPairParams);
 			}
 		}
 

@@ -72,6 +72,7 @@ public class CreateKeyPm extends PresentationModelBase {
 	private ModelProperty<String> email;
 	private ModelProperty<String> passphrase;
 	private ModelProperty<String> passphraseAgain;
+	private ModelProperty<Boolean> isDisableControls;
 
 	private ModelProperty<Boolean> progressBarVisible;
 
@@ -93,6 +94,7 @@ public class CreateKeyPm extends PresentationModelBase {
 		passphrase = initStringModelProp(CreateKeyParams.FN_PASSPHRASE);
 		passphraseAgain = initStringModelProp(CreateKeyParams.FN_PASSPHRASE_AGAIN);
 
+		isDisableControls = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "isDisableControls");
 		progressBarVisible = new ModelProperty<>(this, new ValueAdapterHolderImpl<Boolean>(false),
 				"progressBarVisible");
 	}
@@ -110,6 +112,7 @@ public class CreateKeyPm extends PresentationModelBase {
 			super.actionPerformed(e);
 			progressBarVisible.setValueByOwner(true);
 			actionCreate.setEnabled(false);
+			isDisableControls.setValueByOwner(true);
 			keyGenerationFuture = executorService.submit(new KeyGenerationRunnable());
 		}
 	};
@@ -136,6 +139,7 @@ public class CreateKeyPm extends PresentationModelBase {
 			} finally {
 				progressBarVisible.setValueByOwner(false);
 				actionCreate.setEnabled(true);
+				isDisableControls.setValueByOwner(false);
 			}
 		}
 	}
@@ -173,6 +177,10 @@ public class CreateKeyPm extends PresentationModelBase {
 
 	public ModelPropertyAccessor<Boolean> getProgressBarVisible() {
 		return progressBarVisible.getModelPropertyAccessor();
+	}
+
+	public ModelPropertyAccessor<Boolean> getIsDisableControls() {
+		return isDisableControls.getModelPropertyAccessor();
 	}
 
 	static class NullToEmptyStringConverter extends ConversionValueAdapter<String, String> {

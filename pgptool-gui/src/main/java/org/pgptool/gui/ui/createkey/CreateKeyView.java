@@ -34,9 +34,11 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import org.pgptool.gui.app.Messages;
+import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
 
+import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
 public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
@@ -47,6 +49,7 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 	private JPasswordField passphrase;
 	private JPasswordField passphraseAgain;
 	private JProgressBar progressBar;
+	private TypedPropertyChangeListener<Boolean> isDisableControlsChanged;
 
 	private JButton btnCreate;
 	private JButton btnCancel;
@@ -55,8 +58,11 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 	protected void internalInitComponents() {
 		pnl = new JPanel(new BorderLayout());
 
-		pnl.add(buildPanelKeyInfo(), BorderLayout.CENTER);
+		JPanel pnlControls;
+		pnl.add(pnlControls = buildPanelKeyInfo(), BorderLayout.CENTER);
 		pnl.add(buildPanelButtons(), BorderLayout.SOUTH);
+		
+		isDisableControlsChanged = new ControlsDisabler(pnlControls);
 	}
 
 	private JPanel buildPanelKeyInfo() {
@@ -118,6 +124,8 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 		bindingContext.setupBinding(pm.actionCancel, btnCancel);
 
 		bindingContext.registerPropertyValuePropagation(pm.getProgressBarVisible(), progressBar, "visible");
+		bindingContext.registerOnChangeHandler(pm.getIsDisableControls(), isDisableControlsChanged);
+		isDisableControlsChanged.handlePropertyChanged(this, null, false, pm.getIsDisableControls().getValue());
 	}
 
 	@Override

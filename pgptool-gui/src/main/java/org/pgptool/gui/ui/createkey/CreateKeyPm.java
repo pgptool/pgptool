@@ -84,6 +84,7 @@ public class CreateKeyPm extends PresentationModelBase {
 		this.host = host;
 
 		initModelProperties();
+		keyGeneratorService.expectNewKeyCreation();
 	}
 
 	private void initModelProperties() {

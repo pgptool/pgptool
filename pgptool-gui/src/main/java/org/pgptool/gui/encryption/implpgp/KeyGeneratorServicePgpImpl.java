@@ -212,12 +212,12 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 
 	@Override
 	public void expectNewKeyCreation() {
-		log.info(
-				"User doesn't seem to have private key pair. Proactively generating one so that key creation will happen faster");
-		precalculateKeyPair(getMasterKeyParameters());
-	}
-
-	private void precalculateKeyPair(KeyPairParams params) {
+		KeyPairParams params = getMasterKeyParameters();
+		if (pregeneratedKeyPairs.containsKey(params)) {
+			// there is already a pre-generated key params
+			return;
+		}
+		log.info("Pre-generating master key in a background to improve user experience");
 		Future<KeyPair> future = executorService.submit(new PrecalculateDsaKeyPair(params));
 		pregeneratedKeyPairs.put(params, future);
 	}
@@ -356,6 +356,12 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 				log.info("Started key generation");
 				KeyPair keyPair = keyPairGenerator.generateKeyPair();
 				log.info("Key generation is complete");
+
+				// byte[] encoded =
+				// Base64.getEncoder().encode(keyPair.getPrivate().getEncoded());
+				// String pkey = new String(encoded, "UTF-8");
+				// log.debug("generated private key: " + pkey);
+
 				return keyPair;
 			} catch (Throwable t) {
 				log.error("Failed to generate DSA keypair " + keyPairParams, t);

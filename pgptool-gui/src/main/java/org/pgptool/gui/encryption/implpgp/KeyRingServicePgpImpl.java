@@ -88,6 +88,8 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 
 			// dumpKeys();
 			if (pgpKeysRing.size() == 0) {
+				log.info(
+						"User doesn't seem to have private key pair. Proactively generating one so that key creation will happen faster");
 				keyGeneratorService.expectNewKeyCreation();
 			}
 

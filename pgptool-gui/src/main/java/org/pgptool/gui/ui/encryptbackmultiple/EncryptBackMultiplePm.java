@@ -332,11 +332,6 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 				Collection<Key> recipients = keyRingService
 						.findMatchingKeys(new HashSet<>(encryptionParams.getRecipientsKeysIds()));
 				Preconditions.checkState(recipients.size() > 0, text("error.noRecipientsFound"));
-				boolean isMissingRecipients = recipients.size() < encryptionParams.getRecipientsKeysIds().size();
-				if (isMissingRecipients && isShouldSkipIfissingRecipients) {
-					ret.warnings.put(decryptedFile, new GenericException("error.someKeysAreMissing"));
-					return EncryptBackResult.MissingRecipients;
-				}
 
 				// Check if changed
 				DecryptedFile decryptedFileDto = monitoringDecryptedFilesService.findByDecryptedFile(decryptedFile);
@@ -362,6 +357,12 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 							return EncryptBackResult.ConcurrentChangeDetected;
 						}
 					}
+				}
+				
+				boolean isMissingRecipients = recipients.size() < encryptionParams.getRecipientsKeysIds().size();
+				if (isMissingRecipients && isShouldSkipIfissingRecipients) {
+					ret.warnings.put(decryptedFile, new GenericException("error.someKeysAreMissing"));
+					return EncryptBackResult.MissingRecipients;
 				}
 
 				// Actually encrypt

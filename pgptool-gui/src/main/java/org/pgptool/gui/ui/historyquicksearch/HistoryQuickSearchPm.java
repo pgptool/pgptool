@@ -51,10 +51,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class HistoryQuickSearchPm extends PresentationModelBase implements InitializingBean {
@@ -287,11 +287,12 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 		}
 	}
 
-	protected final Action actionOpen = new LocalizedAction("action.open") {
+	protected final Action actionOpen = new LocalizedActionEx("action.open", this) {
 		private static final long serialVersionUID = -6923195112372446340L;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			Preconditions.checkState(selectedRow != null, "No selected row");
 			host.handleChosen(selectedRow);
 			quickSearch.setValueByOwner("");
@@ -299,19 +300,21 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 	};
 
 	@SuppressWarnings("serial")
-	private final Action actionCancel = new LocalizedAction("action.cancel") {
+	private final Action actionCancel = new LocalizedActionEx("action.cancel", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			host.handleCancel();
 			quickSearch.setValueByOwner("");
 		}
 	};
 
-	private Action actionOpenLocation = new LocalizedAction("action.openLocation") {
+	private Action actionOpenLocation = new LocalizedActionEx("action.openLocation", this) {
 		private static final long serialVersionUID = -3192304131437449088L;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			Preconditions.checkState(selectedRow != null, "No selected row");
 			try {
 				Desktop.getDesktop().open(new File(selectedRow.getSourceFile()).getParentFile());

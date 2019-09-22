@@ -34,10 +34,10 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
@@ -96,17 +96,19 @@ public class AboutPm extends PresentationModelBase implements InitializingBean {
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionClose = new LocalizedAction("action.close") {
+	protected final Action actionClose = new LocalizedActionEx("action.close", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			host.handleClose();
 		}
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionOpenSite = new LocalizedAction("term.linkToSite") {
+	protected final Action actionOpenSite = new LocalizedActionEx("term.linkToSite", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			try {
 				Desktop.getDesktop().browse(new URI(urlToSite));
 			} catch (Throwable t) {
@@ -117,9 +119,10 @@ public class AboutPm extends PresentationModelBase implements InitializingBean {
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionDownloadNewVersion = new LocalizedAction("term.actionDownloadNewVersion") {
+	protected final Action actionDownloadNewVersion = new LocalizedActionEx("term.actionDownloadNewVersion", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			try {
 				Desktop.getDesktop().browse(new URI(updatePackageUrl));
 			} catch (Throwable t) {

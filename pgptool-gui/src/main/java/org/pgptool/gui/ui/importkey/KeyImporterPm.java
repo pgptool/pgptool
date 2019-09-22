@@ -53,11 +53,11 @@ import org.springframework.util.StringUtils;
 
 import com.google.common.base.Preconditions;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.base.View;
 import ru.skarpushin.swingpm.modelprops.table.ModelTableProperty;
 import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 
 public class KeyImporterPm extends PresentationModelBase {
 	private static Logger log = Logger.getLogger(KeyImporterPm.class);
@@ -245,9 +245,10 @@ public class KeyImporterPm extends PresentationModelBase {
 	}
 
 	@SuppressWarnings("serial")
-	private Action actionDoImport = new LocalizedAction("action.import") {
+	private Action actionDoImport = new LocalizedActionEx("action.import", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			try {
 				Preconditions.checkState(keys.getList().size() > 0, "No keys loaded");
 
@@ -283,9 +284,10 @@ public class KeyImporterPm extends PresentationModelBase {
 	};
 
 	@SuppressWarnings("serial")
-	private Action actionCancel = new LocalizedAction("action.cancel") {
+	private Action actionCancel = new LocalizedActionEx("action.cancel", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			host.handleImporterFinished();
 		}
 	};

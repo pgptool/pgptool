@@ -32,6 +32,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.pgptool.gui.autoupdate.impl.NewVersionCheckerGitHubImpl;
 import org.pgptool.gui.encryption.api.KeyRingService;
+import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.tools.osnative.OsNativeApiResolver;
 import org.pgptool.gui.tools.singleinstance.PrimaryInstanceListener;
@@ -41,6 +42,8 @@ import org.pgptool.gui.ui.mainframe.MainFrameView;
 import org.pgptool.gui.ui.root.RootPm;
 import org.pgptool.gui.ui.tools.BindingContextFactoryImpl;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.usage.api.UsageLogger;
+import org.pgptool.gui.usage.api.UsageLoggerNoOpImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -53,6 +56,7 @@ import ru.skarpushin.swingpm.tools.edt.Edt;
 public class EntryPoint {
 	public static Logger log = Logger.getLogger(EntryPoint.class);
 	public static EntryPoint INSTANCE;
+	public static UsageLogger usageLoggerStatic = new UsageLoggerNoOpImpl();
 
 	private static AbstractApplicationContext currentApplicationContext;
 	private RootPm rootPm;
@@ -86,6 +90,7 @@ public class EntryPoint {
 
 			// Now startup application logic
 			EntryPoint entryPoint = currentApplicationContext.getBean(EntryPoint.class);
+			usageLoggerStatic = currentApplicationContext.getBean(UsageLogger.class);
 			log.debug("EntryPoint bean resolved");
 			prefetchKeys();
 			splashScreenView.close();
@@ -97,7 +102,6 @@ public class EntryPoint {
 		} catch (Throwable t) {
 			log.error("Failed to startup application", t);
 			reportAppInitFailureMessageToUser(t);
-			// throw new RuntimeException("Application failed to start", t);
 			System.exit(-1);
 		} finally {
 			if (splashScreenView != null) {
@@ -117,13 +121,12 @@ public class EntryPoint {
 
 	private static void prefetchKeys() {
 		new Thread("Prefetching keys") {
-			@SuppressWarnings("rawtypes")
 			@Override
 			public void run() {
 				try {
 					KeyRingService keyRingService = (KeyRingService) currentApplicationContext
 							.getBean("keyRingService");
-					List keys = keyRingService.readKeys();
+					List<Key> keys = keyRingService.readKeys();
 					log.info("Keys prefetched. Count " + keys.size());
 				} catch (Throwable t) {
 					log.error("Failed to prefetch keys", t);
@@ -141,7 +144,7 @@ public class EntryPoint {
 						"Since this is a secondary instance args were forwarded to primary instance. This instance will now exit");
 				return false;
 			}
-			log.info("Faield to forward args to primary instance. We'll have to process it ourself");
+			log.info("Failed to forward args to primary instance. We'll have to process it ourself");
 			// NOTE: Now we happen to be in indistinctive state. We're not a
 			// primary instance and not secondary :-( But it feels like it's
 			// better that way since our goal is to make sure user request is
@@ -183,7 +186,6 @@ public class EntryPoint {
 			log.debug("Tearing down context");
 			currentApplicationContext.stop();
 			currentApplicationContext.close();
-			currentApplicationContext.destroy();
 			log.debug("Context stopped, closed, destroyed");
 		} catch (Throwable t) {
 			log.error("Failed to tear down context", t);

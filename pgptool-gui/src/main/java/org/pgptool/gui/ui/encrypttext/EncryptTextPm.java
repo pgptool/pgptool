@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.swing.Action;
 import javax.swing.JOptionPane;
@@ -42,6 +43,8 @@ import org.pgptool.gui.tools.ClipboardUtil;
 import org.pgptool.gui.ui.keyslist.ComparatorKeyByNameImpl;
 import org.pgptool.gui.ui.tools.ListChangeListenerAnyEventImpl;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.usage.api.UsageLogger;
+import org.pgptool.gui.usage.dto.EncryptTextRecipientsUsage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -49,12 +52,12 @@ import org.summerb.approaches.validation.ValidationContext;
 
 import com.google.common.base.Preconditions;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.lists.ModelListProperty;
 import ru.skarpushin.swingpm.modelprops.lists.ModelMultSelInListProperty;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
@@ -65,6 +68,8 @@ public class EncryptTextPm extends PresentationModelBase {
 	private KeyRingService keyRingService;
 	@Autowired
 	private EncryptionService encryptionService;
+	@Autowired
+	private UsageLogger usageLogger;
 
 	private EncryptTextHost host;
 
@@ -177,23 +182,26 @@ public class EncryptTextPm extends PresentationModelBase {
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionDoOperation = new LocalizedAction("action.encrypt") {
+	protected final Action actionDoOperation = new LocalizedActionEx("action.encrypt", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			try {
 				String encryptedTextStr = encryptionService.encryptText(sourceText.getValue(),
 						selectedRecipients.getList());
+				usageLogger.write(new EncryptTextRecipientsUsage(selectedRecipients.getList().stream()
+						.map(x -> x.getKeyInfo().getKeyId()).collect(Collectors.toSet())));
 				targetText.setValueByOwner(encryptedTextStr);
 			} catch (Throwable t) {
 				log.error("Failed to encrypt", t);
 				EntryPoint.reportExceptionToUser("error.failedToEncryptText", t);
-				return;
 			}
 		}
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionSelectRecipientsFromClipboard = new LocalizedAction("action.selectKeysFromClipboard") {
+	protected final Action actionSelectRecipientsFromClipboard = new LocalizedActionEx("action.selectKeysFromClipboard",
+			this) {
 		@Override
 		public Object getValue(String key) {
 			if (Action.SHORT_DESCRIPTION.equals(key)) {
@@ -204,6 +212,7 @@ public class EncryptTextPm extends PresentationModelBase {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			String clipboard = ClipboardUtil.tryGetClipboardText();
 			if (clipboard == null) {
 				UiUtils.messageBox(findRegisteredWindowIfAny(), text("warning.noTextInClipboard"),
@@ -271,9 +280,10 @@ public class EncryptTextPm extends PresentationModelBase {
 	}
 
 	@SuppressWarnings("serial")
-	protected final Action actionPasteSourceFromClipboard = new LocalizedAction("action.pasteFromClipboard") {
+	protected final Action actionPasteSourceFromClipboard = new LocalizedActionEx("action.pasteFromClipboard", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			String clipboard = ClipboardUtil.tryGetClipboardText();
 			if (clipboard == null) {
 				UiUtils.messageBox(findRegisteredWindowIfAny(), text("warning.noTextInClipboard"),
@@ -286,17 +296,19 @@ public class EncryptTextPm extends PresentationModelBase {
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionCopyTargetToClipboard = new LocalizedAction("action.copyToClipboard") {
+	protected final Action actionCopyTargetToClipboard = new LocalizedActionEx("action.copyToClipboard", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			ClipboardUtil.setClipboardText(targetText.getValue());
 		}
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionClose = new LocalizedAction("action.close") {
+	protected final Action actionClose = new LocalizedActionEx("action.close", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			host.handleClose();
 		}
 	};

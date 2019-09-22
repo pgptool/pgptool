@@ -42,15 +42,18 @@ import org.pgptool.gui.tools.ClipboardUtil;
 import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.usage.api.UsageLogger;
+import org.pgptool.gui.usage.dto.DecryptTextRecipientsIdentifiedUsage;
+import org.pgptool.gui.usage.dto.DecryptedTextUsage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
 import com.google.common.base.Preconditions;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class DecryptTextPm extends PresentationModelBase {
@@ -60,6 +63,8 @@ public class DecryptTextPm extends PresentationModelBase {
 	private KeyRingService keyRingService;
 	@Autowired
 	private EncryptionService encryptionService;
+	@Autowired
+	private UsageLogger usageLogger;
 	private DecryptTextHost host;
 
 	private Set<String> keysIds;
@@ -144,6 +149,7 @@ public class DecryptTextPm extends PresentationModelBase {
 		// Discover possible keys
 		ByteArrayInputStream inputStream = new ByteArrayInputStream(sourceText.getValue().getBytes("UTF-8"));
 		keysIds = encryptionService.findKeyIdsForDecryption(inputStream);
+		usageLogger.write(new DecryptTextRecipientsIdentifiedUsage(keysIds));
 
 		// Show list of emails
 		recipientsList = new HashSet<>(keysIds);
@@ -158,7 +164,7 @@ public class DecryptTextPm extends PresentationModelBase {
 		}
 	}
 
-	private String pasteFromCLipboard() {
+	private String pasteFromClipboard() {
 		String clipboard = ClipboardUtil.tryGetClipboardText();
 		if (clipboard == null || !StringUtils.hasText(clipboard)) {
 			UiUtils.messageBox(findRegisteredWindowIfAny(), text("warning.noTextInClipboard"), text("term.attention"),
@@ -202,6 +208,7 @@ public class DecryptTextPm extends PresentationModelBase {
 
 				// Decrypt
 				String decryptedText = encryptionService.decryptText(sourceText.getValue(), keyAndPassword);
+				usageLogger.write(new DecryptedTextUsage(keyAndPassword.getDecryptionKeyId()));
 
 				// Set target text
 				targetText.setValueByOwner(decryptedText);
@@ -213,28 +220,31 @@ public class DecryptTextPm extends PresentationModelBase {
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionReply = new LocalizedAction("action.reply") {
+	protected final Action actionReply = new LocalizedActionEx("action.reply", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			host.handleClose();
 			host.openEncryptText(recipientsList);
 		}
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionCopyTargetToClipboard = new LocalizedAction("action.copyToClipboard") {
+	protected final Action actionCopyTargetToClipboard = new LocalizedActionEx("action.copyToClipboard", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			ClipboardUtil.setClipboardText(targetText.getValue());
 		}
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionPasteAndDecrypt = new LocalizedAction("action.decryptFromClipboard") {
+	protected final Action actionPasteAndDecrypt = new LocalizedActionEx("action.decryptFromClipboard", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			try {
-				String clipboard = pasteFromCLipboard();
+				String clipboard = pasteFromClipboard();
 				if (clipboard == null) {
 					return;
 				}
@@ -247,9 +257,10 @@ public class DecryptTextPm extends PresentationModelBase {
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionDecrypt = new LocalizedAction("action.decrypt") {
+	protected final Action actionDecrypt = new LocalizedActionEx("action.decrypt", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			try {
 				Preconditions.checkState(StringUtils.hasText(sourceText.getValue()),
 						"Action must not be invoked if source text is empty");
@@ -262,9 +273,10 @@ public class DecryptTextPm extends PresentationModelBase {
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionCancel = new LocalizedAction("action.close") {
+	protected final Action actionCancel = new LocalizedActionEx("action.close", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			host.handleClose();
 		}
 	};

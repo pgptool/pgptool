@@ -79,12 +79,12 @@ import org.summerb.utils.DeepCopy;
 
 import com.google.common.base.Preconditions;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.lists.ModelListProperty;
 import ru.skarpushin.swingpm.modelprops.lists.ModelMultSelInListProperty;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
@@ -425,9 +425,10 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionDoOperation = new LocalizedAction("action.encrypt") {
+	protected final Action actionDoOperation = new LocalizedActionEx("action.encrypt", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			actionDoOperation.setEnabled(false);
 			isDisableControls.setValueByOwner(true);
 			operationThread = new Thread(operationWorker);
@@ -493,15 +494,16 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 			}
 
 			// Remember parameters
-			encryptionParamsStorage.persistDialogParametersForCurrentInputs(buildEncryptionDialogParameters(), true);
+			encryptionDialogParameters = buildEncryptionDialogParameters();
+			encryptionParamsStorage.persistDialogParametersForCurrentInputs(encryptionDialogParameters, true);
 
 			// close window
 			host.handleClose();
 		}
 
 		private boolean promptUserToOverwriteConcurrentChanges(String targetFileName) {
-			return UiUtils.confirmRegular("confirm.doYouWantToOverwriteConcurrentChanges", new String[] { targetFileName },
-					findRegisteredWindowIfAny());
+			return UiUtils.confirmRegular("confirm.doYouWantToOverwriteConcurrentChanges",
+					new String[] { targetFileName }, findRegisteredWindowIfAny());
 		}
 
 		private boolean isEncryptedFileChangedAfterDecryption(String encryptedFileName, String decryptedFilename,
@@ -599,9 +601,10 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 	}
 
 	@SuppressWarnings("serial")
-	protected final Action actionCancel = new LocalizedAction("action.cancel") {
+	protected final Action actionCancel = new LocalizedActionEx("action.cancel", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			if (operationThread != null && operationThread.isAlive()) {
 				operationThread.interrupt();
 			} else {
@@ -611,17 +614,19 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionBrowseSource = new LocalizedAction("action.browse") {
+	protected final Action actionBrowseSource = new LocalizedActionEx("action.browse", "EncryptOnePm.source") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			askUserForSourceFile();
 		}
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionBrowseTarget = new LocalizedAction("action.browse") {
+	protected final Action actionBrowseTarget = new LocalizedActionEx("action.browse", "EncryptOnePm.target") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			getTargetFileChooser().askUserForFile();
 			refreshPrimaryOperationAvailability();
 		}

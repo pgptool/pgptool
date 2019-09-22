@@ -33,9 +33,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.StringUtils;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
 
 public class UpdatesPolicy implements ApplicationContextAware {
@@ -76,9 +76,10 @@ public class UpdatesPolicy implements ApplicationContextAware {
 	}
 
 	@SuppressWarnings("serial")
-	public final Action actionAutoCheckForUpdates = new LocalizedAction("action.autoCheckUpdates") {
+	public final Action actionAutoCheckForUpdates = new LocalizedActionEx("action.toggleAutoCheckUpdates", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			isAutoUpdatesEnabled.setValueByOwner(!isAutoUpdatesEnabled.getValue());
 		}
 	};

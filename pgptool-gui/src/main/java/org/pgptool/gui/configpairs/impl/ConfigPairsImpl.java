@@ -25,6 +25,8 @@ import java.util.Set;
 
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
+import org.pgptool.gui.usage.api.UsageLogger;
+import org.pgptool.gui.usage.dto.ConfigPairUsage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 import org.summerb.approaches.jdbccrud.common.DtoBase;
@@ -43,6 +45,8 @@ public class ConfigPairsImpl implements ConfigPairs {
 	private ConfigRepository configRepository;
 	@Autowired
 	private EventBus eventBus;
+	@Autowired
+	private UsageLogger usageLogger;
 
 	private ConfigPairsEnvelop configPairsEnvelop;
 
@@ -69,6 +73,7 @@ public class ConfigPairsImpl implements ConfigPairs {
 			}
 		}
 		save();
+		usageLogger.write(new ConfigPairUsage(clarification, key, value));
 	}
 
 	private void save() {

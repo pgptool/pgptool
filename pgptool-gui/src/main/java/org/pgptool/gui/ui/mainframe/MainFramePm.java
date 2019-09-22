@@ -55,13 +55,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.table.ModelTableProperty;
 import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class MainFramePm extends PresentationModelBase implements ApplicationContextAware, HintsHolder {
@@ -255,17 +255,19 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 			null, actionEncryptBack, null, actionForget, actionDelete };
 
 	@SuppressWarnings("serial")
-	private final Action actionConfigExit = new LocalizedAction("action.exit") {
+	private final Action actionConfigExit = new LocalizedActionEx("action.exit", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			host.handleExitApp();
 		}
 	};
 
 	@SuppressWarnings("serial")
-	protected Action actionEncryptBackAll = new LocalizedAction("encrypBackMany.encryptBackAll") {
+	protected Action actionEncryptBackAll = new LocalizedActionEx("encrypBackMany.encryptBackAll", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			ArrayList<DecryptedFile> files = new ArrayList<>(rows.getList());
 			Preconditions.checkState(files.size() > 0,
 					"This action supposed to be available only when ther is at least one decrypted file monitored");
@@ -348,15 +350,16 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 		return hasData.getModelPropertyAccessor();
 	}
 
-	private abstract class RowContextAction extends LocalizedAction {
+	private abstract class RowContextAction extends LocalizedActionEx {
 		private static final long serialVersionUID = -1541017110511442732L;
 
 		public RowContextAction(String actionCode) {
-			super(actionCode);
+			super(actionCode, MainFramePm.this);
 		}
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			if (!rows.hasValue()) {
 				// silently exit -- not going to complain
 				return;
@@ -393,9 +396,10 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 	};
 
 	@SuppressWarnings("serial")
-	protected Action actionHistoryQuickSearch = new LocalizedAction("term.history") {
+	protected Action actionHistoryQuickSearch = new LocalizedActionEx("term.history", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			getHistoryQuickSearchPm().refreshRecentlyUsed(); // this was added to address #168. Doesn't feel like the
 																// best approach, but I cannot find any better at this
 																// moment. One of the options would be to monitor all

@@ -39,6 +39,7 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.FolderChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
+import org.pgptool.gui.usage.api.UsageLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 
@@ -54,6 +55,8 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 	private EventBus eventBus;
 	@Autowired
 	private ConfigPairs appProps;
+	@Autowired
+	private UsageLogger usageLogger;
 
 	private FolderChooserDialog folderChooserDialog;
 
@@ -65,6 +68,7 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 		}
 
 		try {
+			usageLogger.write(new PublicKeyExportedUsage(key.getKeyInfo().getKeyId(), targetFile));
 			keyFilesOperations.exportPublicKey(key, targetFile);
 		} catch (Throwable t) {
 			log.error("Failed to export key " + key, t);
@@ -105,6 +109,7 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 		}
 
 		try {
+			usageLogger.write(new PrivateKeyExportedUsage(key.getKeyInfo().getKeyId(), targetFile));
 			keyFilesOperations.exportPrivateKey(key, targetFile);
 			eventBus.post(EntityChangedEvent.added(new PrivateKeyExportedEvent(key)));
 		} catch (Throwable t) {
@@ -187,6 +192,8 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 			for (int i = 0; i < keys.size(); i++) {
 				Key key = keys.get(i);
 				File targetFile = suggestFileNameForKey(key, newFolder, null, true, true);
+				usageLogger
+						.write(new PublicKeyExportedUsage(key.getKeyInfo().getKeyId(), targetFile.getAbsolutePath()));
 				keyFilesOperations.exportPublicKey(key, targetFile.getAbsolutePath());
 				keysExported++;
 			}

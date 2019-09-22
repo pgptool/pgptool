@@ -21,6 +21,7 @@ import static org.pgptool.gui.app.Messages.text;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,6 +59,9 @@ import org.pgptool.gui.tools.FileUtilsEx;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
+import org.pgptool.gui.usage.api.UsageLogger;
+import org.pgptool.gui.usage.dto.EncryptBackAllIterationUsage;
+import org.pgptool.gui.usage.dto.EncryptBackAllUsage;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.utils.DeepCopy;
@@ -67,10 +71,10 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class EncryptBackMultiplePm extends PresentationModelBase implements InitializingBean {
@@ -88,6 +92,8 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 	private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
 	@Autowired
 	private MessageDigestFactory messageDigestFactory;
+	@Autowired
+	private UsageLogger usageLogger;
 
 	private EncryptBackMultipleHost host;
 	private Set<String> decryptedFiles;
@@ -195,9 +201,10 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 	}
 
 	@SuppressWarnings("serial")
-	protected final Action actionDoOperation = new LocalizedAction("action.encrypt") {
+	protected final Action actionDoOperation = new LocalizedActionEx("action.encrypt", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			actionDoOperation.setEnabled(false);
 			isDisableControls.setValueByOwner(true);
 			encryptionThread.start();
@@ -205,9 +212,10 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionCancel = new LocalizedAction("action.cancel") {
+	protected final Action actionCancel = new LocalizedActionEx("action.cancel", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			if (encryptionThread.isAlive()) {
 				encryptionThread.interrupt();
 			} else {
@@ -216,10 +224,12 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 		}
 	};
 
-	private static class BatchEncryptionResult {
-		Map<String, Throwable> errors = new HashMap<>();
-		Map<String, Throwable> warnings = new HashMap<>();
-		Multimap<EncryptBackResult, String> categories = ArrayListMultimap.create();
+	public static class BatchEncryptionResult implements Serializable {
+		private static final long serialVersionUID = -1020511844906379809L;
+		
+		public Map<String, Throwable> errors = new HashMap<>();
+		public Map<String, Throwable> warnings = new HashMap<>();
+		public Multimap<EncryptBackResult, String> categories = ArrayListMultimap.create();
 	}
 
 	private Thread encryptionThread = new Thread("BkgOpEncryptBackAll") {
@@ -282,6 +292,7 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 
 			boolean skipIfissingRecipients = !isIgnoreMissingRecipientsWarning.getValue();
 			totalFiles = decryptedFiles.size();
+			usageLogger.write(new EncryptBackAllUsage(totalFiles));
 			for (String decryptedFile : decryptedFiles) {
 				filesProcessed++;
 				// Main operation
@@ -306,6 +317,7 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 					}
 				}
 			}
+			usageLogger.write(new EncryptBackAllCompletedUsage(ret));
 			return ret;
 		}
 
@@ -314,6 +326,7 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 			try {
 				Preconditions.checkState(file.exists(), text("error.fileNotFound"));
 				EncryptionDialogParameters encryptionParams = mapFileToEncryptionParams.get(decryptedFile);
+				usageLogger.write(new EncryptBackAllIterationUsage(encryptionParams));
 
 				// Check recipients
 				Collection<Key> recipients = keyRingService

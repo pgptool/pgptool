@@ -71,12 +71,12 @@ import org.summerb.approaches.validation.errors.FieldRequiredValidationError;
 
 import com.google.common.base.Preconditions;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.collections.ListExImpl;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class DecryptOnePm extends PresentationModelBase implements InitializingBean {
@@ -457,9 +457,10 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 	}
 
 	@SuppressWarnings("serial")
-	protected final Action actionDoOperation = new LocalizedAction("action.decrypt") {
+	protected final Action actionDoOperation = new LocalizedActionEx("action.decrypt", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			actionDoOperation.setEnabled(false);
 			isDisableControls.setValueByOwner(true);
 			operationThread = new Thread(operationWorker);
@@ -478,6 +479,7 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 			}
 
 			String sourceFileStr = sourceFile.getValue();
+
 			Fingerprint sourceFileFingerprint = null;
 			Fingerprint targetFileFingerprint = null;
 			Future<Fingerprint> sourceFileFingerprintFuture = null;
@@ -685,9 +687,10 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 	}
 
 	@SuppressWarnings("serial")
-	protected final Action actionCancel = new LocalizedAction("action.cancel") {
+	protected final Action actionCancel = new LocalizedActionEx("action.cancel", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			if (operationThread != null && operationThread.isAlive()) {
 				operationThread.interrupt();
 			} else {
@@ -697,17 +700,19 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionBrowseSource = new LocalizedAction("action.browse") {
+	protected final Action actionBrowseSource = new LocalizedActionEx("action.browse", "DecryptOnePm.source") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			getSourceFileChooser().askUserForFile();
 		}
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionBrowseTarget = new LocalizedAction("action.browse") {
+	protected final Action actionBrowseTarget = new LocalizedActionEx("action.browse", "DecryptOnePm.target") {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			getTargetFileChooser().askUserForFile();
 		}
 	};

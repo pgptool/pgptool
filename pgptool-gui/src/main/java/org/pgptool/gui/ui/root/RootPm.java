@@ -83,6 +83,10 @@ import org.pgptool.gui.ui.mainframe.MainFramePm;
 import org.pgptool.gui.ui.mainframe.MainFrameView;
 import org.pgptool.gui.ui.tempfolderfordecrypted.TempFolderChooserPm;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.usage.api.UsageLogger;
+import org.pgptool.gui.usage.dto.ApplicationExitUsage;
+import org.pgptool.gui.usage.dto.ApplicationStartUsage;
+import org.pgptool.gui.usage.dto.CommandLineArgsUsage;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,10 +95,10 @@ import org.springframework.context.ApplicationContextAware;
 
 import com.google.common.eventbus.EventBus;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.HasWindow;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.base.ViewBase;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.tools.edt.Edt;
 
 /**
@@ -120,6 +124,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	private KeysExporterUi keysExporterUi;
 	@Autowired
 	private KeyFilesOperations keyFilesOperations;
+	@Autowired
+	private UsageLogger usageLogger;
 
 	private TempFolderChooserPm tempFolderChooserPm;
 
@@ -135,6 +141,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 
 	public void present(String[] commandLineArgs) {
 		try {
+			usageLogger.write(new ApplicationStartUsage());
 			updatesPolicy.start(checkForUpdatesDialog);
 			openMainFrameWindow();
 			processCommandLine(commandLineArgs);
@@ -164,6 +171,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 				}
 				return;
 			}
+
+			usageLogger.write(new CommandLineArgsUsage(commandLineArgs));
 
 			if (commandLineArgs.length > 1) {
 				log.warn("As of now application is not designed to handle more than 1 input file.");
@@ -211,6 +220,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	}
 
 	private void exitApplication(int statusCode) {
+		usageLogger.write(new ApplicationExitUsage());
 		entryPoint.tearDownContext();
 		System.exit(statusCode);
 	}
@@ -290,10 +300,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		private Action buyMeCoffee = buildAction("action.buyMeCoffee", "https://www.buymeacoffee.com/skarpushind");
 
 		@SuppressWarnings("serial")
-		private LocalizedAction buildAction(String messageCode, String url) {
-			return new LocalizedAction(messageCode) {
+		private LocalizedActionEx buildAction(String messageCode, String url) {
+			return new LocalizedActionEx(messageCode, this) {
 				@Override
 				public void actionPerformed(ActionEvent e) {
+					super.actionPerformed(e);
 					try {
 						Desktop.getDesktop().browse(new URI(url));
 					} catch (Throwable t) {
@@ -339,9 +350,10 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	}
 
 	@SuppressWarnings("serial")
-	protected Action actionShowTempFolderChooser = new LocalizedAction("term.changeTempFolderForDecrypted") {
+	protected Action actionShowTempFolderChooser = new LocalizedActionEx("term.changeTempFolderForDecrypted", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			tempFolderChooserPm = applicationContext.getBean(TempFolderChooserPm.class);
 			tempFolderChooserPm.present(mainFrameView == null ? null : mainFrameView.getWindow());
 			tempFolderChooserPm = null;
@@ -660,11 +672,12 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		};
 	};
 
-	private Action importKeyFromClipboard = new LocalizedAction("action.importKeyFromText") {
+	private Action importKeyFromClipboard = new LocalizedActionEx("action.importKeyFromText", this) {
 		private static final long serialVersionUID = -3347918300952342578L;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			String clipboard = ClipboardUtil.tryGetClipboardText();
 			if (clipboard == null) {
 				UiUtils.messageBox(mainFrameView.getWindow(), text("warning.noTextInClipboard"), text("term.attention"),
@@ -746,11 +759,12 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 			this.pmClass = pmClass;
 			this.viewClass = viewClass;
 
-			actionToOpenWindow = new LocalizedAction(openActionMessageCode) {
+			actionToOpenWindow = new LocalizedActionEx(openActionMessageCode, this) {
 				private static final long serialVersionUID = 2248174164525745404L;
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
+					super.actionPerformed(e);
 					try {
 						openWindow();
 					} catch (Throwable t) {

@@ -42,7 +42,7 @@ import org.summerb.approaches.jdbccrud.common.DtoBase;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 
 @SuppressWarnings("serial")
 public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
@@ -142,16 +142,18 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
 
 	@Override
 	protected Action[] getActions() {
-		actionClose = new LocalizedAction("term.dismiss") {
+		actionClose = new LocalizedActionEx("term.dismiss", this) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				super.actionPerformed(e);
 				removeHintForKeyIfApplicable(lastHintForKeyId);
 			}
 		};
 
-		Action actionExport = new LocalizedAction("action.export") {
+		Action actionExport = new LocalizedActionEx("action.export", this) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				super.actionPerformed(e);
 				Key key = keyRingService.findKeyById(lastHintForKeyId);
 				globalAppActions.triggerPrivateKeyExport(key);
 			}

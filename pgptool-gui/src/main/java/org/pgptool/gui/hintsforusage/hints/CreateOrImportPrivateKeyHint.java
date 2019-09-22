@@ -41,7 +41,7 @@ import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 
 @SuppressWarnings("serial")
 public class CreateOrImportPrivateKeyHint extends HintPm implements InitializingBean {
@@ -87,9 +87,10 @@ public class CreateOrImportPrivateKeyHint extends HintPm implements Initializing
 		}
 	}
 
-	private Action actionTellMeMore = new LocalizedAction("action.openFaq") {
+	private Action actionTellMeMore = new LocalizedActionEx("action.openFaq", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			try {
 				Desktop.getDesktop().browse(new URI("https://pgptool.github.io/#faq"));
 			} catch (Throwable t) {
@@ -101,9 +102,10 @@ public class CreateOrImportPrivateKeyHint extends HintPm implements Initializing
 
 	@Override
 	protected Action[] getActions() {
-		actionClose = new LocalizedAction("term.dismiss") {
+		actionClose = new LocalizedActionEx("term.dismiss", this) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				super.actionPerformed(e);
 				hintsProps.put(CONFIG_SUPPRESS_HINT, true);
 				if (hintHost != null) {
 					hintHost.onClose();
@@ -111,16 +113,18 @@ public class CreateOrImportPrivateKeyHint extends HintPm implements Initializing
 			}
 		};
 
-		Action actionCreate = new LocalizedAction("action.create") {
+		Action actionCreate = new LocalizedActionEx("action.create", this) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				super.actionPerformed(e);
 				globalAppActions.getActionCreateKey().actionPerformed(e);
 			}
 		};
 
-		Action actionImport = new LocalizedAction("action.import") {
+		Action actionImport = new LocalizedActionEx("action.import", this) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				super.actionPerformed(e);
 				globalAppActions.getActionImportKey().actionPerformed(e);
 			}
 		};

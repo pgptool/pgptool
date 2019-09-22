@@ -30,6 +30,7 @@ import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.hintsforusage.hints.PrivateKeyBackupHint.KeyCreatedEvent;
+import org.pgptool.gui.usage.api.UsageLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 import org.summerb.approaches.validation.FieldValidationException;
@@ -38,12 +39,12 @@ import org.summerb.approaches.validation.ValidationError;
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.collections.ListExImpl;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ConversionValueAdapter;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
@@ -60,6 +61,8 @@ public class CreateKeyPm extends PresentationModelBase {
 	private ExecutorService executorService;
 	@Autowired
 	private EventBus eventBus;
+	@Autowired
+	private UsageLogger usageLogger;
 
 	private CreateKeyHost host;
 
@@ -100,9 +103,10 @@ public class CreateKeyPm extends PresentationModelBase {
 	}
 
 	@SuppressWarnings("serial")
-	protected Action actionCreate = new LocalizedAction("action.create") {
+	protected Action actionCreate = new LocalizedActionEx("action.create", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			progressBarVisible.setValueByOwner(true);
 			actionCreate.setEnabled(false);
 			keyGenerationFuture = executorService.submit(new KeyGenerationRunnable());
@@ -114,12 +118,14 @@ public class CreateKeyPm extends PresentationModelBase {
 		public void run() {
 			validationErrors.clear();
 			try {
+				usageLogger.write(new CreateKeyUsage(createKeyParams));
 				Key key = keyGeneratorService.createNewKey(createKeyParams);
 				if (keyGenerationFuture == null) {
 					return;
 				}
 				keyRingService.addKey(key);
 				eventBus.post(EntityChangedEvent.added(new KeyCreatedEvent(key)));
+				usageLogger.write(new KeyCreatedUsage(key.getKeyInfo()));
 				host.handleClose();
 			} catch (FieldValidationException fve) {
 				validationErrors.addAll(fve.getErrors());
@@ -134,9 +140,10 @@ public class CreateKeyPm extends PresentationModelBase {
 	}
 
 	@SuppressWarnings("serial")
-	protected Action actionCancel = new LocalizedAction("action.cancel") {
+	protected Action actionCancel = new LocalizedActionEx("action.cancel", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			Future<?> tmp = keyGenerationFuture;
 			keyGenerationFuture = null;
 			if (tmp != null) {

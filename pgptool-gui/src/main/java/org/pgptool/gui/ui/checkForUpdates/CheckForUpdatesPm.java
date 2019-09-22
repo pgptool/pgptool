@@ -33,10 +33,10 @@ import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
@@ -108,26 +108,29 @@ public class CheckForUpdatesPm extends PresentationModelBase implements Initiali
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionClose = new LocalizedAction("action.close") {
+	protected final Action actionClose = new LocalizedActionEx("action.close", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			host.handleClose();
 		}
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionSnoozeVersion = new LocalizedAction("action.snoozeVersion") {
+	protected final Action actionSnoozeVersion = new LocalizedActionEx("action.snoozeVersion", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			updatesPolicy.snoozeVersion(newVersion.getValue());
 			host.handleClose();
 		}
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionDownloadNewVersion = new LocalizedAction("action.actionDownloadNewVersion") {
+	protected final Action actionDownloadNewVersion = new LocalizedActionEx("action.actionDownloadNewVersion", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			try {
 				Desktop.getDesktop().browse(new URI(updatePackageUrl));
 			} catch (Throwable t) {

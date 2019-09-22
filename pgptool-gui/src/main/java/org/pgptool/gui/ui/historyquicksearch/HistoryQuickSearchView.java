@@ -20,7 +20,6 @@ package org.pgptool.gui.ui.historyquicksearch;
 import static org.pgptool.gui.app.Messages.text;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;

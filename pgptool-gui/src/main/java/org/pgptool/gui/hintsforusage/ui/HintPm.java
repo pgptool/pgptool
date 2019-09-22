@@ -24,10 +24,10 @@ import javax.swing.Action;
 import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
 import org.summerb.approaches.jdbccrud.common.DtoBase;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 /**
@@ -48,9 +48,10 @@ public class HintPm extends PresentationModelBase implements DtoBase {
 	protected HintHost hintHost;
 
 	@SuppressWarnings("serial")
-	protected Action actionClose = new LocalizedAction("action.close") {
+	protected Action actionClose = new LocalizedActionEx("action.close", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			if (hintHost != null) {
 				hintHost.onClose();
 			}

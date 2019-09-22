@@ -37,6 +37,8 @@ import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.MatchedKey;
+import org.pgptool.gui.usage.api.KeyUsage;
+import org.pgptool.gui.usage.api.UsageLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.summerb.approaches.validation.FieldValidationException;
@@ -48,6 +50,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.collections.ListExImpl;
@@ -56,7 +59,6 @@ import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.lists.ModelListProperty;
 import ru.skarpushin.swingpm.modelprops.lists.ModelSelInComboBoxProperty;
 import ru.skarpushin.swingpm.modelprops.lists.ModelSelInComboBoxPropertyAccessor;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
@@ -83,6 +85,8 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 	private KeyFilesOperations keyFilesOperations;
 	@Autowired
 	private EventBus eventBus;
+	@Autowired
+	private UsageLogger usageLogger;
 
 	private GetKeyPasswordHost host;
 
@@ -171,17 +175,19 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionCancel = new LocalizedAction("action.cancel") {
+	protected final Action actionCancel = new LocalizedActionEx("action.cancel", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			host.onCancel();
 		}
 	};
 
 	@SuppressWarnings("serial")
-	protected final Action actionChooseKey = new LocalizedAction("action.choose") {
+	protected final Action actionChooseKey = new LocalizedActionEx("action.ok", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			Key key = selectedKey.getValue();
 			String passwordStr = password.getValue();
 
@@ -205,7 +211,7 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 			// If everything is ok -- return
 			PasswordDeterminedForKey ret = new PasswordDeterminedForKey(requestedKeyId, key, passwordStr);
 			CACHE_KEYID_TO_PASSWORD.put(requestedKeyId, ret);
-			// host.onPasswordDeterminedForKey(ret);
+			usageLogger.write(new KeyUsage(requestedKeyId));
 			eventBus.post(ret);
 		}
 	};

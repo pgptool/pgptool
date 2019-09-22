@@ -36,12 +36,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
+import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.table.ModelTableProperty;
 import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class KeysListPm extends PresentationModelBase {
@@ -117,25 +117,28 @@ public class KeysListPm extends PresentationModelBase {
 	}
 
 	@SuppressWarnings("serial")
-	private Action actionClose = new LocalizedAction("action.close") {
+	private Action actionClose = new LocalizedActionEx("action.close", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			host.handleClose();
 		}
 	};
 
 	@SuppressWarnings("serial")
-	private Action actionActivate = new LocalizedAction("action.activate") {
+	private Action actionActivate = new LocalizedActionEx("action.activate", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			// TBD: Impl
 		}
 	};
 
 	@SuppressWarnings("serial")
-	private Action actionDeleteKey = new LocalizedAction("action.deleteKey") {
+	private Action actionDeleteKey = new LocalizedActionEx("action.deleteKey", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			if (!tableModelProp.hasValue()) {
 				// silently exit -- not going to complain
 				return;
@@ -152,9 +155,10 @@ public class KeysListPm extends PresentationModelBase {
 	};
 
 	@SuppressWarnings("serial")
-	private Action actionExportPublicKey = new LocalizedAction("action.exportPublicKey") {
+	private Action actionExportPublicKey = new LocalizedActionEx("action.exportPublicKey", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			if (!tableModelProp.hasValue()) {
 				return;
 			}
@@ -164,9 +168,10 @@ public class KeysListPm extends PresentationModelBase {
 	};
 
 	@SuppressWarnings("serial")
-	private Action actionExportPrivateKey = new LocalizedAction("action.exportPrivateKey") {
+	private Action actionExportPrivateKey = new LocalizedActionEx("action.exportPrivateKey", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			if (!tableModelProp.hasValue()) {
 				return;
 			}
@@ -176,9 +181,10 @@ public class KeysListPm extends PresentationModelBase {
 	};
 
 	@SuppressWarnings("serial")
-	public Action actionExportAllPublicKeys = new LocalizedAction("keys.exportAllPublic") {
+	public Action actionExportAllPublicKeys = new LocalizedActionEx("keys.exportAllPublic", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
 			ArrayList<Key> keys = new ArrayList<>(tableModelProp.getList());
 			Preconditions.checkState(keys.size() > 0,
 					"Export all public keys action was triggered while there is no keys to export");

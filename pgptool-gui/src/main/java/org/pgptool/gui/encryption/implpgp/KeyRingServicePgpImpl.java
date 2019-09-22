@@ -31,6 +31,10 @@ import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.MatchedKey;
+import org.pgptool.gui.usage.api.UsageLogger;
+import org.pgptool.gui.usage.dto.KeyAddedUsage;
+import org.pgptool.gui.usage.dto.KeyRemovedUsage;
+import org.pgptool.gui.usage.dto.KeyRingUsage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -47,6 +51,8 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 	private KeyGeneratorService keyGeneratorService;
 
 	private PgpKeysRing pgpKeysRing;
+	@Autowired
+	private UsageLogger usageLogger;
 
 	static {
 		Security.addProvider(new BouncyCastleProvider());
@@ -84,6 +90,10 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 			if (pgpKeysRing.size() == 0) {
 				keyGeneratorService.expectNewKeyCreation();
 			}
+
+			if (pgpKeysRing.size() > 0) {
+				usageLogger.write(new KeyRingUsage(pgpKeysRing));
+			}
 		}
 	}
 
@@ -105,6 +115,7 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 		pgpKeysRing.add(key);
 		configRepository.persist(pgpKeysRing);
 		eventBus.post(EntityChangedEvent.added(key));
+		usageLogger.write(new KeyAddedUsage(key.getKeyInfo().getKeyId()));
 	}
 
 	@Override
@@ -129,6 +140,7 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 				iter.remove();
 				configRepository.persist(pgpKeysRing);
 				eventBus.post(EntityChangedEvent.removedObject(key));
+				usageLogger.write(new KeyRemovedUsage(key.getKeyInfo().getKeyId()));
 				return;
 			}
 		}

@@ -32,6 +32,7 @@ import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl;
+import org.pgptool.gui.usage.api.UsageLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -58,6 +59,8 @@ public class KeyRingServiceTest {
 	private ConfigRepository configRepository;
 	@Autowired
 	private EventBus eventBus;
+	@Autowired
+	private UsageLogger usageLogger;
 
 	@Test
 	public void testKeyRingServiceExpectCanFindKeyAfterSerialization() throws Exception {
@@ -82,6 +85,7 @@ public class KeyRingServiceTest {
 		keyRingService1.setConfigRepository(configRepository);
 		keyRingService1.setEventBus(eventBus);
 		keyRingService1.setKeyGeneratorService(Mockito.mock(KeyGeneratorService.class));
+		keyRingService1.setUsageLogger(usageLogger);
 		return (KeyRingService) keyRingService1;
 	}
 

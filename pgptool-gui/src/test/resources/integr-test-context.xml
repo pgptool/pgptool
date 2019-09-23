@@ -78,5 +78,7 @@
 		</property>
 		<property name="encryptionKeyPurpose" value="${keygen.encryptionSubKey.purpose}" />
 	</bean>
+	
+	<bean class="org.pgptool.gui.usage.api.UsageLoggerNoOpImpl" />
 
 </beans>

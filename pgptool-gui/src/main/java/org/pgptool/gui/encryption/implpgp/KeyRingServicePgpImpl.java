@@ -51,7 +51,6 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 	private KeyGeneratorService keyGeneratorService;
 
 	private PgpKeysRing pgpKeysRing;
-	@Autowired
 	private UsageLogger usageLogger;
 
 	static {
@@ -222,6 +221,15 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 	@Autowired
 	public void setKeyGeneratorService(KeyGeneratorService keyGeneratorService) {
 		this.keyGeneratorService = keyGeneratorService;
+	}
+
+	public UsageLogger getUsageLogger() {
+		return usageLogger;
+	}
+
+	@Autowired
+	public void setUsageLogger(UsageLogger usageLogger) {
+		this.usageLogger = usageLogger;
 	}
 
 }

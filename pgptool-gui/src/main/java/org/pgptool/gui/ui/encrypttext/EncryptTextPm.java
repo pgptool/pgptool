@@ -48,7 +48,7 @@ import org.pgptool.gui.usage.dto.EncryptTextRecipientsUsage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.summerb.approaches.validation.ValidationContext;
+import org.summerb.validation.ValidationContext;
 
 import com.google.common.base.Preconditions;
 

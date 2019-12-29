@@ -27,7 +27,7 @@ import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.summerb.approaches.validation.ValidationError;
+import org.summerb.validation.ValidationError;
 
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;

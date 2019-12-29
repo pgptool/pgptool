@@ -25,7 +25,7 @@ import org.pgptool.gui.hintsforusage.api.HintsHolder;
 import org.pgptool.gui.hintsforusage.ui.HintHost;
 import org.pgptool.gui.hintsforusage.ui.HintPm;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
+import org.summerb.easycrud.api.dto.EntityChangedEvent;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;

@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
-import org.summerb.approaches.jdbccrud.common.DtoBase;
+import org.summerb.utils.DtoBase;
 
 /**
  * This class is used to reflect dialog parameters. It's used to help suggest

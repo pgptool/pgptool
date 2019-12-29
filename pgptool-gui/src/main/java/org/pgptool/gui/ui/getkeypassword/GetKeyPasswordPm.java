@@ -40,10 +40,10 @@ import org.pgptool.gui.usage.api.KeyUsage;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import org.summerb.approaches.validation.FieldValidationException;
-import org.summerb.approaches.validation.ValidationError;
-import org.summerb.approaches.validation.ValidationErrorsUtils;
-import org.summerb.approaches.validation.errors.FieldRequiredValidationError;
+import org.summerb.validation.FieldValidationException;
+import org.summerb.validation.ValidationError;
+import org.summerb.validation.ValidationErrorsUtils;
+import org.summerb.validation.errors.FieldRequiredValidationError;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;

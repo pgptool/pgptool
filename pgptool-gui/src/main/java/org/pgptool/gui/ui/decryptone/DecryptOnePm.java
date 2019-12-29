@@ -65,9 +65,9 @@ import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import org.summerb.approaches.validation.ValidationError;
-import org.summerb.approaches.validation.ValidationErrorsUtils;
-import org.summerb.approaches.validation.errors.FieldRequiredValidationError;
+import org.summerb.validation.ValidationError;
+import org.summerb.validation.ValidationErrorsUtils;
+import org.summerb.validation.errors.FieldRequiredValidationError;
 
 import com.google.common.base.Preconditions;
 

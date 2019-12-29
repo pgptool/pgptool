@@ -45,7 +45,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
-import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
+import org.summerb.easycrud.api.dto.EntityChangedEvent;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;

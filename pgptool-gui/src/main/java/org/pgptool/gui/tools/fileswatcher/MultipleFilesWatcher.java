@@ -36,7 +36,8 @@ import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
-import org.summerb.utils.threads.RecurringBackgroundTask;
+
+import ru.skarpushin.swingpm.modelprops.virtualtable.RecurringBackgroundTask;
 
 // NOTE: Consider migrating to org.apache.commons.io.monitor.FileAlterationObserver, it appears we introduced bycle here
 

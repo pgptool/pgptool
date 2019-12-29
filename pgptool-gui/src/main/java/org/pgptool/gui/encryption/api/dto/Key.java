@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.encryption.api.dto;
 
-import org.summerb.approaches.jdbccrud.common.DtoBase;
+import org.summerb.utils.DtoBase;
 
 public class Key implements DtoBase {
 	private static final long serialVersionUID = 1614562515516152578L;

@@ -29,8 +29,8 @@ import org.pgptool.gui.config.api.ConfigsBasePathResolver;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
-import org.summerb.approaches.jdbccrud.common.DtoBase;
+import org.summerb.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.utils.DtoBase;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;

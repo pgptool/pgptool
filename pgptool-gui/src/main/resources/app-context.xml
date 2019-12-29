@@ -26,6 +26,8 @@
 			<list>
 				<value>classpath:pgptool-gui-messages</value>
 				<value>classpath:summerb-messages</value>
+				<value>classpath:service-users-messages</value>
+				<value>classpath:security-messages</value>
 			</list>
 		</property>
 		<property name="cacheSeconds" value="60" />

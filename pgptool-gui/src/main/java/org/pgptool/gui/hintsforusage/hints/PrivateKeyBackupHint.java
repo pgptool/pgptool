@@ -35,9 +35,9 @@ import org.pgptool.gui.hintsforusage.ui.HintPm;
 import org.pgptool.gui.ui.root.GlobalAppActions;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
-import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent.ChangeType;
-import org.summerb.approaches.jdbccrud.common.DtoBase;
+import org.summerb.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.easycrud.api.dto.EntityChangedEvent.ChangeType;
+import org.summerb.utils.DtoBase;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;

@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.filecomparison;
 
-import org.summerb.approaches.jdbccrud.common.DtoBase;
+import org.summerb.utils.DtoBase;
 
 /**
  * This structure is used to store file size and checksum. This is how we see if

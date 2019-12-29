@@ -49,8 +49,8 @@ import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Required;
-import org.summerb.approaches.validation.FieldValidationException;
-import org.summerb.approaches.validation.ValidationContext;
+import org.summerb.validation.FieldValidationException;
+import org.summerb.validation.ValidationContext;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;

@@ -30,7 +30,7 @@ import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
+import org.summerb.easycrud.api.dto.EntityChangedEvent;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;

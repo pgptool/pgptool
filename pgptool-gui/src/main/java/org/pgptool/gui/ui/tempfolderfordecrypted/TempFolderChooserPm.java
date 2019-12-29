@@ -29,7 +29,7 @@ import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.FolderChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.approaches.validation.FieldValidationException;
+import org.summerb.validation.FieldValidationException;
 
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapter;

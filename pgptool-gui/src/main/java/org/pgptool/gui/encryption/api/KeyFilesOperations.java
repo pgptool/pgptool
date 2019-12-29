@@ -21,7 +21,7 @@ import java.io.File;
 import java.util.List;
 
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.summerb.approaches.validation.FieldValidationException;
+import org.summerb.validation.FieldValidationException;
 
 public interface KeyFilesOperations {
 	final String FN_PASSWORD = "password";

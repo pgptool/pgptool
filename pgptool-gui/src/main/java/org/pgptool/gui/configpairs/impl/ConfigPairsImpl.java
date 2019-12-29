@@ -28,8 +28,8 @@ import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.ConfigPairUsage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
-import org.summerb.approaches.jdbccrud.common.DtoBase;
+import org.summerb.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.utils.DtoBase;
 
 import com.google.common.eventbus.EventBus;
 

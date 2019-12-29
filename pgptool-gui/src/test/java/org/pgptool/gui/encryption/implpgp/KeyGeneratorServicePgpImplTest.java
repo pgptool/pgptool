@@ -1,6 +1,6 @@
 package org.pgptool.gui.encryption.implpgp;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.junit.Test;

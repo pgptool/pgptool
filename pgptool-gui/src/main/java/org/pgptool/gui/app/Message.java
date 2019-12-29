@@ -17,8 +17,8 @@
  ******************************************************************************/
 package org.pgptool.gui.app;
 
-import org.summerb.approaches.i18n.HasMessageArgs;
-import org.summerb.approaches.i18n.HasMessageCode;
+import org.summerb.i18n.HasMessageArgs;
+import org.summerb.i18n.HasMessageCode;
 
 public class Message implements HasMessageCode, HasMessageArgs {
 	private String code;

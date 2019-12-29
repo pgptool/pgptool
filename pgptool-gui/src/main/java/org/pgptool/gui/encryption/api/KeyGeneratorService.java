@@ -19,7 +19,7 @@ package org.pgptool.gui.encryption.api;
 
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.summerb.approaches.validation.FieldValidationException;
+import org.summerb.validation.FieldValidationException;
 
 public interface KeyGeneratorService {
 	/**

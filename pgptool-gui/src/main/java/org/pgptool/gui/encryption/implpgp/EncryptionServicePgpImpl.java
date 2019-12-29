@@ -77,7 +77,7 @@ import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.tools.IoStreamUtils;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.springframework.util.StringUtils;
-import org.summerb.approaches.security.api.exceptions.InvalidPasswordException;
+import org.summerb.users.api.exceptions.InvalidPasswordException;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;

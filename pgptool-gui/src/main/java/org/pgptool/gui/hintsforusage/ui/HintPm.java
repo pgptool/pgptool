@@ -21,8 +21,8 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.Action;
 
-import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
-import org.summerb.approaches.jdbccrud.common.DtoBase;
+import org.summerb.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.utils.DtoBase;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 import ru.skarpushin.swingpm.base.PresentationModelBase;

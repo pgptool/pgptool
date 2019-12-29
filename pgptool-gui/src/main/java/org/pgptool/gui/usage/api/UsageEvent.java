@@ -2,7 +2,7 @@ package org.pgptool.gui.usage.api;
 
 import java.io.Serializable;
 
-import org.summerb.approaches.jdbccrud.common.DtoBase;
+import org.summerb.utils.DtoBase;
 
 public class UsageEvent implements DtoBase {
 	private static final long serialVersionUID = -2469884370085267887L;

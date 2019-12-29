@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.tempfolderfordecrypted.api;
 
-import org.summerb.approaches.validation.FieldValidationException;
+import org.summerb.validation.FieldValidationException;
 
 /**
  * This interface provides methods to work with temporary folder for temporarily

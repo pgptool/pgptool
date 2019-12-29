@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.bkgoperation;
 
-import org.summerb.approaches.i18n.HasMessageCode;
+import org.summerb.i18n.HasMessageCode;
 
 /**
  * Thrown when operation canceled due to cancelation requested by user

@@ -27,6 +27,7 @@ import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.config.api.ConfigsBasePathResolver;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
+import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.tools.TextFile;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.BeansException;
@@ -35,10 +36,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.StringUtils;
-import org.summerb.approaches.i18n.I18nUtils;
-import org.summerb.approaches.validation.FieldValidationException;
-import org.summerb.approaches.validation.ValidationError;
-import org.summerb.approaches.validation.errors.FieldRequiredValidationError;
+import org.summerb.validation.FieldValidationException;
+import org.summerb.validation.ValidationError;
+import org.summerb.validation.errors.FieldRequiredValidationError;
 
 import com.google.common.base.Throwables;
 
@@ -110,7 +110,7 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
 			Throwables.throwIfInstanceOf(t, FieldValidationException.class);
 			log.error("Exception during validation of target folder for temp decrypted files " + newValue, t);
 			throw new FieldValidationException(new ValidationError("error.temporaryFolderCannotbeUsed",
-					CONFIG_DECRYPTED_TEMP_FOLDER, I18nUtils.buildMessagesChain(t, applicationContext)));
+					CONFIG_DECRYPTED_TEMP_FOLDER, ConsoleExceptionUtils.getAllMessages(t)));
 		}
 	}
 

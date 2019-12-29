@@ -26,7 +26,7 @@ import org.pgptool.gui.bkgoperation.UserRequestedCancellationException;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.implpgp.SymmetricEncryptionIsNotSupportedException;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
-import org.summerb.approaches.security.api.exceptions.InvalidPasswordException;
+import org.summerb.users.api.exceptions.InvalidPasswordException;
 
 public interface EncryptionService {
 	void encrypt(String sourceFile, String targetFile, Collection<Key> recipients,

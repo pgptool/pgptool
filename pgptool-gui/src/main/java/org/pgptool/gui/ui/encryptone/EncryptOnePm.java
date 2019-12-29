@@ -75,7 +75,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.summerb.utils.DeepCopy;
+import org.summerb.utils.objectcopy.DeepCopy;
 
 import com.google.common.base.Preconditions;
 

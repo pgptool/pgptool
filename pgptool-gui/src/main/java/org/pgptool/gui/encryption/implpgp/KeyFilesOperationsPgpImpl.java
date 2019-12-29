@@ -53,9 +53,9 @@ import org.pgptool.gui.encryption.api.dto.KeyInfo;
 import org.pgptool.gui.encryption.api.dto.KeyTypeEnum;
 import org.pgptool.gui.tools.IoStreamUtils;
 import org.springframework.util.StringUtils;
-import org.summerb.approaches.security.api.exceptions.InvalidPasswordException;
-import org.summerb.approaches.validation.FieldValidationException;
-import org.summerb.approaches.validation.ValidationError;
+import org.summerb.users.api.exceptions.InvalidPasswordException;
+import org.summerb.validation.FieldValidationException;
+import org.summerb.validation.ValidationError;
 
 import com.google.common.base.Preconditions;
 

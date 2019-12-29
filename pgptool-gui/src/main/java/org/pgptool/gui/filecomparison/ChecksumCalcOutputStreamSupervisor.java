@@ -18,7 +18,7 @@
 package org.pgptool.gui.filecomparison;
 
 import org.pgptool.gui.encryption.api.OutputStreamSupervisor;
-import org.summerb.utils.Clonnable;
+import org.summerb.utils.objectcopy.Clonnable;
 
 /**
  * This factory will yield streams which will calculate checksum during

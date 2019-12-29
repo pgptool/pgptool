@@ -64,7 +64,7 @@ import org.pgptool.gui.usage.dto.EncryptBackAllIterationUsage;
 import org.pgptool.gui.usage.dto.EncryptBackAllUsage;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.utils.DeepCopy;
+import org.summerb.utils.objectcopy.DeepCopy;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;

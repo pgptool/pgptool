@@ -19,7 +19,7 @@ package org.pgptool.gui.configpairs.impl;
 
 import java.util.HashMap;
 
-import org.summerb.approaches.jdbccrud.common.DtoBase;
+import org.summerb.utils.DtoBase;
 
 public class ConfigPairsEnvelop extends HashMap<String, Object> implements DtoBase {
 	private static final long serialVersionUID = 7165377910943680166L;

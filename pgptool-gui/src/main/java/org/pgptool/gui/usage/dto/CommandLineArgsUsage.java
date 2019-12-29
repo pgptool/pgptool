@@ -1,6 +1,6 @@
 package org.pgptool.gui.usage.dto;
 
-import org.summerb.approaches.jdbccrud.common.DtoBase;
+import org.summerb.utils.DtoBase;
 
 public class CommandLineArgsUsage implements DtoBase {
 	private static final long serialVersionUID = -6529115848359084226L;

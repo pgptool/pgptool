@@ -19,7 +19,7 @@ package org.pgptool.gui.ui.decryptone;
 
 import java.io.Serializable;
 
-import org.summerb.approaches.jdbccrud.common.DtoBase;
+import org.summerb.utils.DtoBase;
 
 /**
  * This class is used to reflect dialog parameters. It's used to help suggest

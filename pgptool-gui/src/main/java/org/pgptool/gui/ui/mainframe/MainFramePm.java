@@ -48,8 +48,8 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
-import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent.ChangeType;
+import org.summerb.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.easycrud.api.dto.EntityChangedEvent.ChangeType;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;

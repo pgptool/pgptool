@@ -50,7 +50,7 @@ import org.springframework.test.annotation.ProfileValueSourceConfiguration;
 import org.springframework.test.annotation.SystemProfileValueSource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.summerb.approaches.validation.FieldValidationException;
+import org.summerb.validation.FieldValidationException;
 
 import integr.org.pgptool.gui.TestTools;
 

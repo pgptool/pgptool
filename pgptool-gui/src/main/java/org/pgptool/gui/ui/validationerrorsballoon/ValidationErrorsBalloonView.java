@@ -33,8 +33,9 @@ import javax.swing.border.Border;
 import org.copied.colin.mummery.VerticalLayout;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.ui.tools.UiUtils;
-import org.summerb.approaches.i18n.I18nUtils;
-import org.summerb.approaches.validation.ValidationError;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.summerb.i18n.I18nUtils;
+import org.summerb.validation.ValidationError;
 
 import com.google.common.base.Preconditions;
 
@@ -246,7 +247,7 @@ public class ValidationErrorsBalloonView
 	}
 
 	private String getValidationErrorMessage(ValidationError ve) {
-		return I18nUtils.buildMessage(ve, EntryPoint.INSTANCE.getApplicationContext());
+		return I18nUtils.buildMessage(ve, EntryPoint.INSTANCE.getApplicationContext(), LocaleContextHolder.getLocale());
 	}
 
 	@Override

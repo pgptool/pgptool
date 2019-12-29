@@ -17,8 +17,8 @@
  ******************************************************************************/
 package org.pgptool.gui.config.api.exceptions;
 
-import org.summerb.approaches.i18n.HasMessageArgs;
-import org.summerb.approaches.i18n.HasMessageCode;
+import org.summerb.i18n.HasMessageArgs;
+import org.summerb.i18n.HasMessageCode;
 
 public class ConfigReadException extends Exception implements HasMessageCode, HasMessageArgs {
 	private static final long serialVersionUID = 4233271701232842609L;

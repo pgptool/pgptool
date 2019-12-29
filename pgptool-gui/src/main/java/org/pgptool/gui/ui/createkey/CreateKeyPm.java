@@ -32,9 +32,9 @@ import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.hintsforusage.hints.PrivateKeyBackupHint.KeyCreatedEvent;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.approaches.jdbccrud.api.dto.EntityChangedEvent;
-import org.summerb.approaches.validation.FieldValidationException;
-import org.summerb.approaches.validation.ValidationError;
+import org.summerb.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.validation.FieldValidationException;
+import org.summerb.validation.ValidationError;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;

@@ -33,9 +33,12 @@ public interface KeyFilesOperations {
 
 	void exportPublicKey(Key key, String targetFilePathname);
 
+	String getPublicKeyArmoredRepresentation(Key key);
+
 	void exportPrivateKey(Key key, String targetFilePathname);
 
 	void validateDecryptionKeyPassword(String requestedKeyId, Key key, String password) throws FieldValidationException;
 
 	Key readKeyFromFile(String fileName);
+
 }

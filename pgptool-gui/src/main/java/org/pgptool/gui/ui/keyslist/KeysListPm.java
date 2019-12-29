@@ -26,8 +26,10 @@ import java.util.List;
 
 import javax.swing.Action;
 
+import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
+import org.pgptool.gui.tools.ClipboardUtil;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.easycrud.api.dto.EntityChangedEvent;
@@ -53,6 +55,8 @@ public class KeysListPm extends PresentationModelBase {
 	private KeyRingService keyRingService;
 	@Autowired
 	private KeysExporterUi keysExporterUi;
+	@Autowired
+	private KeyFilesOperations keyFilesOperations;
 
 	private KeysListHost host;
 
@@ -168,6 +172,20 @@ public class KeysListPm extends PresentationModelBase {
 	};
 
 	@SuppressWarnings("serial")
+	private Action actionExportPublicKeyToClipboard = new LocalizedActionEx("action.exportPublicKeyToClipboard", this) {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
+			if (!tableModelProp.hasValue()) {
+				return;
+			}
+			Key key = tableModelProp.getValue();
+			String keyAsc = keyFilesOperations.getPublicKeyArmoredRepresentation(key);
+			ClipboardUtil.setClipboardText(keyAsc);
+		}
+	};
+
+	@SuppressWarnings("serial")
 	private Action actionExportPrivateKey = new LocalizedActionEx("action.exportPrivateKey", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -194,7 +212,7 @@ public class KeysListPm extends PresentationModelBase {
 	};
 
 	private Action[] contextMenuActions = new Action[] { actionExportPublicKey, actionExportPrivateKey, null,
-			actionDeleteKey };
+			actionExportPublicKeyToClipboard, null, actionDeleteKey };
 
 	private KeysTablePm keysTablePm = new KeysTablePm() {
 		@Override

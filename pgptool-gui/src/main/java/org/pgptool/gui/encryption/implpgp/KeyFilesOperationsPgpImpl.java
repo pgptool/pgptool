@@ -18,6 +18,7 @@
 package org.pgptool.gui.encryption.implpgp;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -236,13 +237,24 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 
 	@Override
 	public void exportPublicKey(Key key, String targetFilePathname) {
+		Preconditions.checkArgument(StringUtils.hasText(targetFilePathname), "targetFilePathname must be provided");
+		try {
+			FileOutputStream fos = new FileOutputStream(targetFilePathname);
+			boolean saveAsArmored = "asc".equalsIgnoreCase(FilenameUtils.getExtension(targetFilePathname));
+			savePublicKey(key, fos, saveAsArmored);
+		} catch (Throwable t) {
+			throw new RuntimeException(
+					"Failed to export public key " + key.getKeyInfo().getUser() + " to " + targetFilePathname, t);
+		}
+	}
+
+	private void savePublicKey(Key key, OutputStream outputStream, boolean saveAsArmored) {
 		Preconditions.checkArgument(key != null && key.getKeyData() != null && key.getKeyInfo() != null,
 				"Key must be providedand fully described");
-		Preconditions.checkArgument(StringUtils.hasText(targetFilePathname), "targetFilePathname must be provided");
 		Stack<OutputStream> os = new Stack<>();
 		try {
-			os.push(new FileOutputStream(targetFilePathname));
-			if ("asc".equalsIgnoreCase(FilenameUtils.getExtension(targetFilePathname))) {
+			os.push(outputStream);
+			if (saveAsArmored) {
 				os.push(new ArmoredOutputStream(os.peek()));
 			}
 			KeyDataPgp keyDataPgp = KeyDataPgp.get(key);
@@ -252,13 +264,19 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 				keyDataPgp.getSecretKeyRing().getPublicKey().encode(os.peek());
 			}
 		} catch (Throwable t) {
-			throw new RuntimeException(
-					"Failed to export public key " + key.getKeyInfo().getUser() + " to " + targetFilePathname, t);
+			throw new RuntimeException("Failed to save public key " + key.getKeyInfo().getUser(), t);
 		} finally {
 			while (!os.isEmpty()) {
 				IoStreamUtils.safeClose(os.pop());
 			}
 		}
+	}
+
+	@Override
+	public String getPublicKeyArmoredRepresentation(Key key) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		savePublicKey(key, baos, true);
+		return baos.toString();
 	}
 
 	@Override
@@ -288,7 +306,6 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public void validateDecryptionKeyPassword(String requestedKeyId, Key key, String password)
 			throws FieldValidationException {

@@ -33,6 +33,7 @@ import javax.swing.JOptionPane;
 
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
+import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
@@ -92,6 +93,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.util.StringUtils;
 
 import com.google.common.eventbus.EventBus;
 
@@ -679,7 +681,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
 			String clipboard = ClipboardUtil.tryGetClipboardText();
-			if (clipboard == null) {
+			if (!StringUtils.hasText(clipboard)) {
 				UiUtils.messageBox(mainFrameView.getWindow(), text("warning.noTextInClipboard"), text("term.attention"),
 						JOptionPane.INFORMATION_MESSAGE);
 				return;
@@ -689,7 +691,9 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 			try {
 				keys = keyFilesOperations.readKeysFromText(clipboard);
 			} catch (Throwable t) {
-				UiUtils.messageBox(mainFrameView.getWindow(), text("warning.textDoesNotRepresentAKey"),
+				GenericException t2 = new GenericException("warning.failedToImportPgpKeyFromClipboard", t);
+				log.warn(t2.getMessage(), t2);
+				UiUtils.messageBox(mainFrameView.getWindow(), ConsoleExceptionUtils.getAllMessages(t2),
 						text("term.attention"), JOptionPane.INFORMATION_MESSAGE);
 				return;
 			}

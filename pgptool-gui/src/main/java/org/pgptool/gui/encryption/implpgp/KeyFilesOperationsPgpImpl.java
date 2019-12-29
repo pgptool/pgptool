@@ -47,6 +47,7 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
+import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyInfo;
@@ -117,18 +118,24 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 	}
 
 	@Override
-	public List<Key> readKeysFromText(String text) {
+	public List<Key> readKeysFromText(String text) throws GenericException {
 		try {
 			ArmoredInputSubStream subStream = new ArmoredInputSubStream(new ByteArrayInputStream(text.getBytes()));
 			List<Key> ret = new ArrayList<>();
 			while (subStream.hasNextSubStream()) {
-				ret.add(readFromStream(subStream));
+				try {
+					ret.add(readFromStream(subStream));
+				} catch (Throwable t) {
+					throw new GenericException("warning.keyIsDamaged", t);
+				}
 			}
-			Preconditions.checkArgument(ret.size() > 0, "No keys found");
+			if (ret.isEmpty()) {
+				throw new GenericException("warning.noKeysFound");
+			}
 			ret = combinePrivateAndPublicIfAny(ret);
 			return ret;
 		} catch (Throwable t) {
-			throw new RuntimeException("Can't read key file", t);
+			throw new GenericException("warning.couldNotReadAKey", t);
 		}
 	}
 

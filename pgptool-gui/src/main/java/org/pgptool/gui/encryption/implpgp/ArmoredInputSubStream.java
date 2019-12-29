@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import org.pgptool.gui.app.GenericException;
+
 public class ArmoredInputSubStream extends InputStream {
 	private static final String CHARSET = "UTF-8";
 	private static final String BLOCK_BEGIN = "-----BEGIN";
@@ -38,7 +40,7 @@ public class ArmoredInputSubStream extends InputStream {
 		this.inputStream = inputStream;
 	}
 
-	public boolean hasNextSubStream() {
+	public boolean hasNextSubStream() throws GenericException {
 		if (inputStream == null) {
 			return false;
 		}
@@ -63,7 +65,7 @@ public class ArmoredInputSubStream extends InputStream {
 				}
 			}
 		} catch (Throwable t) {
-			throw new RuntimeException("Failed to determine if there is next stream available", t);
+			throw new GenericException("warning.couldNotFindPgpBlock", t);
 		}
 	}
 

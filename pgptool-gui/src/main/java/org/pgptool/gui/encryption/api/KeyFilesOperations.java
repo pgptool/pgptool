@@ -20,6 +20,7 @@ package org.pgptool.gui.encryption.api;
 import java.io.File;
 import java.util.List;
 
+import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.summerb.validation.FieldValidationException;
 
@@ -28,7 +29,7 @@ public interface KeyFilesOperations {
 
 	List<Key> readKeysFromFile(File file);
 
-	List<Key> readKeysFromText(String text);
+	List<Key> readKeysFromText(String text) throws GenericException;
 
 	void exportPublicKey(Key key, String targetFilePathname);
 

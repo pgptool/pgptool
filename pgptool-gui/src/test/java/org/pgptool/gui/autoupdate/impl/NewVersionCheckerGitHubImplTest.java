@@ -28,7 +28,7 @@ public class NewVersionCheckerGitHubImplTest {
 	@Test
 	public void testFindNewUpdateIfAvailable() throws Exception {
 		NewVersionCheckerGitHubImpl f = new NewVersionCheckerGitHubImpl();
-		f.setConfiguredVersion("0.0.0.0");
+		f.setConfiguredVersion("0.0.0.1");
 
 		UpdatePackageInfo result = f.findNewUpdateIfAvailable();
 		assertNotNull(result);

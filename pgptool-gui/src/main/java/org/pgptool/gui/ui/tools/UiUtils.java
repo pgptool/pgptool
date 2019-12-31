@@ -22,7 +22,6 @@ import static org.pgptool.gui.app.Messages.text;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.DisplayMode;
 import java.awt.Font;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
@@ -37,6 +36,9 @@ import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.swing.Action;
@@ -54,6 +56,7 @@ import javax.swing.UIManager;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 import org.jdesktop.swingx.JXLabel;
 import org.pgptool.gui.app.EntryPoint;
@@ -76,80 +79,99 @@ public class UiUtils {
 	 */
 	public static void centerWindow(Window subject, Window optionalOrigin) {
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		GraphicsDevice[] gs = ge.getScreenDevices();
+		List<GraphicsDevice> graphicsDevices = Arrays.asList(ge.getScreenDevices());
 
-		if (gs.length == 1) {
+		if (graphicsDevices.size() == 1) {
+			// Single monitor configuration -- easy-peasy
 			Dimension scrDim = Toolkit.getDefaultToolkit().getScreenSize();
-			Point location = calculateCenterLocation(subject, scrDim.width, scrDim.height);
+			Point location = offsetWindowLocation(subject, scrDim.width / 2, scrDim.height / 2);
 			subject.setLocation(location);
-		} else {
-			log.debug("Positioning window according to multi-monitor configuration: " + formatMonitorSizes(gs));
-			GraphicsDevice screenDevice;
-			if (optionalOrigin == null) {
-				screenDevice = ge.getDefaultScreenDevice();
-			} else {
-				screenDevice = determineGraphicsDeviceByWindow(ge, gs, optionalOrigin);
-			}
-			DisplayMode displayMode = screenDevice.getDisplayMode();
-			Rectangle bounds = screenDevice.getDefaultConfiguration().getBounds();
-			Point location = calculateCenterLocation(subject, displayMode.getWidth() + bounds.x,
-					displayMode.getHeight() + bounds.y);
-			subject.setLocation(location);
+			return;
 		}
+
+		// Multi-monitor configuration -- not a rocket science too
+		log.debug(
+				"Positioning window according to multi-monitor configuration: " + formatMonitorSizes(graphicsDevices));
+		Pair<GraphicsDevice, GraphicsConfiguration> device = null;
+		if (optionalOrigin != null) {
+			device = determineGraphicsDeviceByWindow(ge, graphicsDevices, optionalOrigin);
+			if (device != null && log.isDebugEnabled()) {
+				int index = graphicsDevices.indexOf(device.getLeft());
+				log.debug("Parent window " + format(optionalOrigin.getBounds()) + " belongs to screen "
+						+ format(index, device.getLeft(), device.getRight()));
+			}
+		}
+
+		if (device == null) {
+			device = Pair.of(ge.getDefaultScreenDevice(), ge.getDefaultScreenDevice().getDefaultConfiguration());
+			int index = graphicsDevices.indexOf(device.getLeft());
+			log.debug("Selecting default screen: " + format(index, device.getLeft(), device.getRight()));
+		}
+
+		Rectangle bounds = device.getRight().getBounds();
+		Point location = offsetWindowLocation(subject, bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+		subject.setLocation(location);
 	}
 
-	private static GraphicsDevice determineGraphicsDeviceByWindow(GraphicsEnvironment graphicsEnvironment,
-			GraphicsDevice[] graphicsDevices, Window window) {
+	private static Point offsetWindowLocation(Window frm, int centerPointX, int centerPointY) {
+		return new Point(centerPointX - frm.getSize().width / 2, centerPointY - frm.getSize().height / 2);
+	}
+
+	private static Pair<GraphicsDevice, GraphicsConfiguration> determineGraphicsDeviceByWindow(
+			GraphicsEnvironment graphicsEnvironment, List<GraphicsDevice> graphicsDevices, Window window) {
+		log.debug("determineGraphicsDeviceByWindow " + format(window.getBounds()));
+
 		Rectangle windowBounds = window.getBounds();
 		int lastArea = 0;
-
-		GraphicsDevice ret = null;
-		for (int i = 0; i < graphicsDevices.length; ++i) {
-			GraphicsDevice graphicsDevice = graphicsDevices[i];
+		Pair<GraphicsDevice, GraphicsConfiguration> ret = null;
+		for (int i = 0; i < graphicsDevices.size(); ++i) {
+			GraphicsDevice graphicsDevice = graphicsDevices.get(i);
+			log.debug("- Checking GraphicsDevice: "
+					+ format(i, graphicsDevice, graphicsDevice.getDefaultConfiguration()));
 			GraphicsConfiguration[] graphicsConfigurations = graphicsDevice.getConfigurations();
+			Set<Rectangle> seen = new HashSet<>();
 			for (int j = 0; j < graphicsConfigurations.length; ++j) {
 				GraphicsConfiguration graphicsConfiguration = graphicsConfigurations[j];
 				Rectangle graphicsBounds = graphicsConfiguration.getBounds();
+				if (!seen.add(graphicsBounds)) {
+					continue;
+				}
+
+				log.debug("  - Checking GraphicsConfiguration: " + format(graphicsBounds));
 				Rectangle intersection = windowBounds.intersection(graphicsBounds);
 				int area = intersection.width * intersection.height;
 				if (area != 0 && area > lastArea) {
 					lastArea = area;
-					ret = graphicsDevice;
+					ret = Pair.of(graphicsDevice, graphicsConfiguration);
 				}
 			}
 		}
 
-		return ret != null ? ret : graphicsEnvironment.getDefaultScreenDevice();
+		return ret;
 	}
 
-	private static Point calculateCenterLocation(Window frm, int screenWidth, int screenHeight) {
-		return new Point((screenWidth - frm.getSize().width) / 2, (screenHeight - frm.getSize().height) / 2);
-	}
-
-	private static String formatMonitorSizes(GraphicsDevice[] gs) {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < gs.length; i++) {
+	private static String formatMonitorSizes(List<GraphicsDevice> graphicsDevices) {
+		String ret = "";
+		for (int i = 0; i < graphicsDevices.size(); i++) {
 			if (i > 0) {
-				sb.append(", ");
+				ret += ", ";
 			}
 
-			sb.append(i);
-			sb.append(": ");
-
-			GraphicsDevice graphicsDevice = gs[i];
-			Rectangle bounds = graphicsDevice.getDefaultConfiguration().getBounds();
-
-			sb.append("Pos = ");
-			sb.append((int) bounds.getX());
-			sb.append("x");
-			sb.append((int) bounds.getY());
-
-			sb.append(", Size = ");
-			sb.append((int) bounds.getWidth());
-			sb.append("x");
-			sb.append((int) bounds.getHeight());
+			GraphicsDevice graphicsDevice = graphicsDevices.get(i);
+			ret += format(i, graphicsDevice, graphicsDevice.getDefaultConfiguration());
 		}
-		return sb.toString();
+		return ret;
+	}
+
+	private static String format(int index, GraphicsDevice graphicsDevice,
+			GraphicsConfiguration graphicsConfiguration) {
+		Rectangle bounds = graphicsConfiguration.getBounds();
+		return "" + index + ": " + format(bounds);
+	}
+
+	private static String format(Rectangle bounds) {
+		return "x=" + (int) bounds.getX() + ",y=" + (int) bounds.getY() + ",w=" + (int) bounds.getWidth() + ",h="
+				+ (int) bounds.getHeight();
 	}
 
 	@SuppressWarnings("deprecation")

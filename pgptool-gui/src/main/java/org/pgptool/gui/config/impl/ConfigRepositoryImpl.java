@@ -156,7 +156,7 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 	public static void writeObject(Object o, String destinationFile) {
 		ObjectOutputStream oos = null;
 		try {
-			log.trace(String.format("Persisting %s to %s", o, destinationFile));
+			log.debug(String.format("Persisting %s to %s", o, destinationFile));
 
 			File file = new File(destinationFile);
 			if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {

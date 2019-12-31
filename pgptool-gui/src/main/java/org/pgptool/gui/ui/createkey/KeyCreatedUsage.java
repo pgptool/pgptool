@@ -6,7 +6,7 @@ import org.pgptool.gui.encryption.api.dto.KeyInfo;
 
 public class KeyCreatedUsage implements Serializable {
 	private static final long serialVersionUID = -8971219471059015750L;
-	
+
 	private KeyInfo keyInfo;
 
 	public KeyCreatedUsage() {

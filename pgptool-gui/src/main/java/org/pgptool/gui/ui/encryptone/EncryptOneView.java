@@ -26,6 +26,7 @@ import java.awt.Dialog.ModalityType;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -260,8 +261,8 @@ public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
 	}
 
 	@Override
-	protected void dispatchWindowCloseEvent() {
-		btnCancel.getAction().actionPerformed(null);
+	protected void dispatchWindowCloseEvent(ActionEvent originAction) {
+		btnCancel.getAction().actionPerformed(originAction);
 	}
 
 }

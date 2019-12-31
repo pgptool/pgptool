@@ -294,7 +294,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 				return;
 			}
 
-			pm.actionEncryptBack.actionPerformed(null);
+			pm.actionEncryptBack.actionPerformed(UiUtils.actionEvent(table, pm.actionEncryptBack));
 		}
 	};
 
@@ -366,7 +366,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 			if (e.getComponent() == table && e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
 				Action action = pm.actionOpen;
 				if (action != null && action.isEnabled()) {
-					action.actionPerformed(null);
+					action.actionPerformed(UiUtils.actionEvent(table, action));
 				}
 			}
 		}
@@ -605,7 +605,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 					scheduledExecutorService);
 			windowGeometryPersister.restoreSize();
 			// if (!windowGeometryPersister.restoreLocation()) {
-			UiUtils.centerWindow(frame);
+			UiUtils.centerWindow(frame, null);
 			// }
 
 			WindowIcon.setWindowIcon(frame);
@@ -618,7 +618,7 @@ public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
 		@Override
 		public void windowClosing(WindowEvent e) {
 			if (isAttached()) {
-				pm.getActionConfigExit().actionPerformed(null);
+				pm.getActionConfigExit().actionPerformed(UiUtils.actionEvent(table, "windowClosing"));
 			}
 			super.windowClosing(e);
 		};

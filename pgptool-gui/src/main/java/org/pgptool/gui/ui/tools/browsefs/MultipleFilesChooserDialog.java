@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.tools.browsefs;
 
-import java.awt.Component;
+import java.awt.event.ActionEvent;
 import java.io.File;
 
 import javax.swing.JFileChooser;
@@ -27,18 +27,16 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
+import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.util.StringUtils;
 
 public class MultipleFilesChooserDialog {
 	private static Logger log = Logger.getLogger(MultipleFilesChooserDialog.class);
 
-	private Component optionalParent;
 	private ConfigPairs configPairs;
 	private String configPairNameToRemember;
 
-	public MultipleFilesChooserDialog(Component optionalParent, ConfigPairs configPairs,
-			String configPairNameToRemember) {
-		this.optionalParent = optionalParent;
+	public MultipleFilesChooserDialog(ConfigPairs configPairs, String configPairNameToRemember) {
 		this.configPairs = configPairs;
 		this.configPairNameToRemember = configPairNameToRemember;
 	}
@@ -48,10 +46,10 @@ public class MultipleFilesChooserDialog {
 	 * 
 	 * @return null if nothing was chosen, or array of files chosen otherwise
 	 */
-	public File[] askUserForMultipleFiles() {
+	public File[] askUserForMultipleFiles(ActionEvent originEvent) {
 		JFileChooser ofd = buildFileChooserDialog();
 
-		int result = ofd.showOpenDialog(optionalParent);
+		int result = ofd.showOpenDialog(UiUtils.findWindow(originEvent));
 		if (result != JFileChooser.APPROVE_OPTION) {
 			handleFilesWereChosen(null);
 			return null;
@@ -71,8 +69,7 @@ public class MultipleFilesChooserDialog {
 	/**
 	 * Subclass can do post-processing if needed
 	 * 
-	 * @param retFile
-	 *            might be null if no files were chosen
+	 * @param retFile might be null if no files were chosen
 	 */
 	protected void handleFilesWereChosen(File[] retFile) {
 	}

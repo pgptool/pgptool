@@ -17,12 +17,13 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.tools.browsefs;
 
-import java.awt.Component;
+import java.awt.event.ActionEvent;
 import java.io.File;
 
 import javax.swing.JFileChooser;
 
 import org.pgptool.gui.app.Messages;
+import org.pgptool.gui.ui.tools.UiUtils;
 
 import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
 
@@ -35,7 +36,7 @@ public class FolderChooserDialog {
 		this.optionalRecentlyUsedFolder = optionalRecentlyUsedFolder;
 	}
 
-	public String askUserForFolder(Component parent) {
+	public String askUserForFolder(ActionEvent originEvent) {
 		JFileChooser ofd = new JFileChooser();
 		ofd.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		ofd.setAcceptAllFileFilterUsed(true);
@@ -44,7 +45,7 @@ public class FolderChooserDialog {
 		ofd.setApproveButtonText(Messages.get("action.choose"));
 		onPostConstruct(ofd);
 
-		int result = ofd.showOpenDialog(parent);
+		int result = ofd.showOpenDialog(UiUtils.findWindow(originEvent));
 		if (result != JFileChooser.APPROVE_OPTION) {
 			return onFolderChosen(null);
 		}

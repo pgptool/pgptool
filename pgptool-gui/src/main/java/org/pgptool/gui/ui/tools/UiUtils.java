@@ -22,22 +22,33 @@ import static org.pgptool.gui.app.Messages.text;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.DisplayMode;
 import java.awt.Font;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Set;
 
+import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
@@ -49,51 +60,134 @@ import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
 
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.tools.edt.Edt;
 
 public class UiUtils {
 	public static Logger log = Logger.getLogger(UiUtils.class);
 
-	public static void centerWindow(Window frm) {
-		Dimension scrDim = Toolkit.getDefaultToolkit().getScreenSize();
-		int x = (scrDim.width - frm.getSize().width) / 2;
-		int y = (scrDim.height - frm.getSize().height) / 2;
-		frm.setLocation(x, y);
+	/**
+	 * By default window will be placed at 0x0 coordinates, which is not pretty. We
+	 * have to position it to screen center
+	 * 
+	 * @param subject        the window to position
+	 * @param optionalOrigin The window where the action to open subject originated
+	 *                       from
+	 */
+	public static void centerWindow(Window subject, Window optionalOrigin) {
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		GraphicsDevice[] gs = ge.getScreenDevices();
+
+		if (gs.length == 1) {
+			Dimension scrDim = Toolkit.getDefaultToolkit().getScreenSize();
+			Point location = calculateCenterLocation(subject, scrDim.width, scrDim.height);
+			subject.setLocation(location);
+		} else {
+			log.debug("Positioning window according to multi-monitor configuration: " + formatMonitorSizes(gs));
+			GraphicsDevice screenDevice;
+			if (optionalOrigin == null) {
+				screenDevice = ge.getDefaultScreenDevice();
+			} else {
+				screenDevice = determineGraphicsDeviceByWindow(ge, gs, optionalOrigin);
+			}
+			DisplayMode displayMode = screenDevice.getDisplayMode();
+			Rectangle bounds = screenDevice.getDefaultConfiguration().getBounds();
+			Point location = calculateCenterLocation(subject, displayMode.getWidth() + bounds.x,
+					displayMode.getHeight() + bounds.y);
+			subject.setLocation(location);
+		}
 	}
 
+	private static GraphicsDevice determineGraphicsDeviceByWindow(GraphicsEnvironment graphicsEnvironment,
+			GraphicsDevice[] graphicsDevices, Window window) {
+		Rectangle windowBounds = window.getBounds();
+		int lastArea = 0;
+
+		GraphicsDevice ret = null;
+		for (int i = 0; i < graphicsDevices.length; ++i) {
+			GraphicsDevice graphicsDevice = graphicsDevices[i];
+			GraphicsConfiguration[] graphicsConfigurations = graphicsDevice.getConfigurations();
+			for (int j = 0; j < graphicsConfigurations.length; ++j) {
+				GraphicsConfiguration graphicsConfiguration = graphicsConfigurations[j];
+				Rectangle graphicsBounds = graphicsConfiguration.getBounds();
+				Rectangle intersection = windowBounds.intersection(graphicsBounds);
+				int area = intersection.width * intersection.height;
+				if (area != 0 && area > lastArea) {
+					lastArea = area;
+					ret = graphicsDevice;
+				}
+			}
+		}
+
+		return ret != null ? ret : graphicsEnvironment.getDefaultScreenDevice();
+	}
+
+	private static Point calculateCenterLocation(Window frm, int screenWidth, int screenHeight) {
+		return new Point((screenWidth - frm.getSize().width) / 2, (screenHeight - frm.getSize().height) / 2);
+	}
+
+	private static String formatMonitorSizes(GraphicsDevice[] gs) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < gs.length; i++) {
+			if (i > 0) {
+				sb.append(", ");
+			}
+
+			sb.append(i);
+			sb.append(": ");
+
+			GraphicsDevice graphicsDevice = gs[i];
+			Rectangle bounds = graphicsDevice.getDefaultConfiguration().getBounds();
+
+			sb.append("Pos = ");
+			sb.append((int) bounds.getX());
+			sb.append("x");
+			sb.append((int) bounds.getY());
+
+			sb.append(", Size = ");
+			sb.append((int) bounds.getWidth());
+			sb.append("x");
+			sb.append((int) bounds.getHeight());
+		}
+		return sb.toString();
+	}
+
+	@SuppressWarnings("deprecation")
 	public static String plainToBoldHtmlString(String text) {
 		return "<html><body><b>" + StringEscapeUtils.escapeXml(text) + "</b></body></html>";
 	}
 
+	@SuppressWarnings("deprecation")
 	public static String envelopeStringIntoHtml(String text) {
 		return "<html><body>" + StringEscapeUtils.escapeXml(text) + "</body></html>";
 	}
 
-	public static boolean confirmRegular(String userPromptMessageCode, Object[] messageArgs, Window parent) {
-		return confirm(userPromptMessageCode, messageArgs, parent, JOptionPane.QUESTION_MESSAGE);
+	public static boolean confirmRegular(ActionEvent originEvent, String userPromptMessageCode, Object[] messageArgs) {
+		return confirm(originEvent, userPromptMessageCode, messageArgs, JOptionPane.QUESTION_MESSAGE);
 	}
 
-	public static boolean confirmWarning(String userPromptMessageCode, Object[] messageArgs, Window parent) {
-		return confirm(userPromptMessageCode, messageArgs, parent, JOptionPane.WARNING_MESSAGE);
+	public static boolean confirmWarning(ActionEvent originEvent, String userPromptMessageCode, Object[] messageArgs) {
+		return confirm(originEvent, userPromptMessageCode, messageArgs, JOptionPane.WARNING_MESSAGE);
 	}
 
-	private static boolean confirm(String userPromptMessageCode, Object[] messageArgs, Window parent, int severity) {
+	private static boolean confirm(ActionEvent originEvent, String userPromptMessageCode, Object[] messageArgs,
+			int severity) {
 		int response = JOptionPane.OK_OPTION;
 
 		String msg = Messages.get(userPromptMessageCode, messageArgs);
 		if (msg.length() > 70) {
-			response = JOptionPane.showConfirmDialog(parent, getMultilineMessage(msg),
+			response = JOptionPane.showConfirmDialog(findWindow(originEvent), getMultilineMessage(msg),
 					Messages.get("term.confirmation"), JOptionPane.OK_CANCEL_OPTION, severity);
 		} else {
-			response = JOptionPane.showConfirmDialog(parent, msg, Messages.get("term.confirmation"),
+			response = JOptionPane.showConfirmDialog(findWindow(originEvent), msg, Messages.get("term.confirmation"),
 					JOptionPane.OK_CANCEL_OPTION, severity);
 		}
 		return response == JOptionPane.OK_OPTION;
 	}
 
-	public static String promptUserForTextString(String fieldLabel, Object[] fieldLabelMsgArgs, String windowTitle,
-			Window window) {
-		String ret = JOptionPane.showInputDialog(window, Messages.get(fieldLabel, fieldLabelMsgArgs),
+	public static String promptUserForTextString(ActionEvent originEvent, String windowTitle, String fieldLabel,
+			Object[] fieldLabelMsgArgs) {
+		String ret = JOptionPane.showInputDialog(findWindow(originEvent), Messages.get(fieldLabel, fieldLabelMsgArgs),
 				Messages.get(windowTitle), JOptionPane.QUESTION_MESSAGE);
 
 		return ret == null ? null : ret.trim();
@@ -125,7 +219,7 @@ public class UiUtils {
 
 			/**
 			 * In some cases (depends on OS theme) check menu item foreground is same as
-			 * bacground - thus it;'s invisible when cheked
+			 * background - thus it's invisible when checked
 			 */
 			private void fixCheckBoxMenuItemForeground() {
 				UIDefaults defaults = UIManager.getDefaults();
@@ -234,7 +328,8 @@ public class UiUtils {
 		window.repaint();
 	}
 
-	public static void messageBox(String messageText, String messageTitle, MessageSeverity messageSeverity) {
+	public static void messageBox(ActionEvent originEvent, String messageText, String messageTitle,
+			MessageSeverity messageSeverity) {
 		int messageType = JOptionPane.INFORMATION_MESSAGE;
 		if (messageSeverity == MessageSeverity.ERROR) {
 			messageType = JOptionPane.ERROR_MESSAGE;
@@ -243,17 +338,17 @@ public class UiUtils {
 		} else if (messageSeverity == MessageSeverity.INFO) {
 			messageType = JOptionPane.INFORMATION_MESSAGE;
 		}
-		UiUtils.messageBox(null, messageText, messageTitle, messageType);
+		UiUtils.messageBox(originEvent, messageText, messageTitle, messageType);
 	}
 
 	/**
-	 * @param messageType
-	 *            one of the JOptionPane ERROR_MESSAGE, INFORMATION_MESSAGE,
-	 *            WARNING_MESSAGE, QUESTION_MESSAGE, or PLAIN_MESSAGE
+	 * @param messageType one of the JOptionPane ERROR_MESSAGE, INFORMATION_MESSAGE,
+	 *                    WARNING_MESSAGE, QUESTION_MESSAGE, or PLAIN_MESSAGE
 	 */
-	public static void messageBox(Component parent, String msg, String title, int messageType) {
+	public static void messageBox(ActionEvent originEvent, String msg, String title, int messageType) {
 		Object content = buildMessageContentDependingOnLength(msg);
 
+		Component parent = findWindow(originEvent);
 		if (messageType != JOptionPane.ERROR_MESSAGE) {
 			JOptionPane.showMessageDialog(parent, content, title, messageType);
 			return;
@@ -323,8 +418,80 @@ public class UiUtils {
 		return lbl;
 	}
 
-	public static void reportExceptionToUser(String errorMessageCode, Throwable cause, Object... messageArgs) {
-		EntryPoint.reportExceptionToUser(errorMessageCode, cause, messageArgs);
+	public static Window findWindow(ActionEvent event) {
+		Window defaultValue = null;
+		if (EntryPoint.rootPmStatic != null) {
+			defaultValue = EntryPoint.rootPmStatic.findMainFrameWindow();
+		}
+
+		if (event == null) {
+			return defaultValue;
+		}
+		Object source = event.getSource();
+		if (source == null) {
+			return defaultValue;
+		}
+
+		if (source instanceof Component) {
+			Window containingWindow = findWindow((Component) source);
+			if (containingWindow != null) {
+				return containingWindow;
+			}
+		}
+
+		if (source instanceof PresentationModelBase) {
+			Window view = ((PresentationModelBase<?, ?>) source).findRegisteredWindowIfAny();
+			if (view != null) {
+				return view;
+			}
+		}
+
+		return defaultValue;
+	}
+
+	public static Window findWindow(Component c) {
+		Window defaultValue = null;
+		if (EntryPoint.rootPmStatic != null) {
+			defaultValue = EntryPoint.rootPmStatic.findMainFrameWindow();
+		}
+		if (c == null) {
+			return defaultValue;
+		} else if (c instanceof JPopupMenu) {
+			Component invoker = ((JPopupMenu) c).getInvoker();
+			if (invoker == null) {
+				return defaultValue;
+			}
+			return SwingUtilities.getWindowAncestor(invoker);
+		} else if (c instanceof Window) {
+			return (Window) c;
+		} else {
+			return findWindow(c.getParent());
+		}
+	}
+
+	public static ActionEvent actionEvent(Object source, Action action) {
+		if (source == null) {
+			return null;
+		}
+		return actionEvent(source, String.valueOf(action.getValue(Action.NAME)));
+	}
+
+	public static ActionEvent actionEvent(Object source, String actionName) {
+		if (source == null) {
+			return null;
+		}
+		return new ActionEvent(source, ActionEvent.ACTION_PERFORMED, actionName);
+	}
+
+	public static ActionEvent actionEvent(PropertyChangeEvent evt) {
+		if (evt.getSource() == null) {
+			return null;
+		}
+		// NOTE: This is flawed. Currently, event source is what was hard-coded in
+		// PresentationModel upon propertyModel init.
+		// We should be propagating source from Binding and
+		// ModelProperty.setValueByConsumer
+		return actionEvent(evt.getSource(), evt.getPropertyName() + " property changed");
 	}
 
 }

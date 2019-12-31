@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.decryptonedialog;
 
+import java.awt.event.ActionEvent;
 import java.util.Set;
 
 import javax.swing.Action;
@@ -28,12 +29,14 @@ import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordHost;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPm;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPmInitResult;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
+import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm.GetKeyPasswordPo;
+import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
@@ -43,7 +46,8 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
  * between {@link GetKeyPasswordPm} and {@link DecryptOnePm} to provide more
  * streamlined UX
  */
-public class DecryptOneDialogPm extends PresentationModelBase implements ApplicationContextAware {
+public class DecryptOneDialogPm extends PresentationModelBase<DecryptOneDialogHost, String>
+		implements ApplicationContextAware {
 	public static enum Intent {
 		Decrypt, PasswordRequest;
 	};
@@ -52,18 +56,16 @@ public class DecryptOneDialogPm extends PresentationModelBase implements Applica
 	private DecryptOnePm decryptOnePm;
 	private GetKeyPasswordPm getKeyPasswordPm;
 
-	private DecryptOneDialogHost host;
 	private ModelProperty<Intent> intent;
 
 	private KeyAndPasswordCallback keyAndPasswordCallback;
 	private PasswordDeterminedForKey passwordDeterminedForKey;
 
-	public boolean init(DecryptOneDialogHost host, String optionalSource) {
-		this.host = host;
-
+	@Override
+	public boolean init(ActionEvent originAction, DecryptOneDialogHost host, String optionalSource) {
+		super.init(originAction, host, optionalSource);
 		intent = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(Intent.Decrypt), "intent");
-
-		return decryptOnePm.init(decryptOneHost, optionalSource);
+		return decryptOnePm.init(originAction, decryptOneHost, optionalSource);
 	}
 
 	private DecryptOneHost decryptOneHost = new DecryptOneHost() {
@@ -83,8 +85,11 @@ public class DecryptOneDialogPm extends PresentationModelBase implements Applica
 			DecryptOneDialogPm.this.keyAndPasswordCallback = keyAndPasswordCallback;
 
 			getKeyPasswordPm = null; // force this PM to re-init
-			GetKeyPasswordPmInitResult initResult = getGetKeyPasswordPm().init(getPasswordHost,
-					sourceFileRecipientsKeysIds, purpose);
+			// NOTE: Instead of propagating actual event we construct surrogate one because
+			// this request came from child component
+			ActionEvent surrogateEvent = UiUtils.actionEvent(findRegisteredWindowIfAny(), "askUserForKeyAndPassword");
+			GetKeyPasswordPmInitResult initResult = getGetKeyPasswordPm().initEx(surrogateEvent, getPasswordHost,
+					new GetKeyPasswordPo(sourceFileRecipientsKeysIds, purpose, keyAndPasswordCallback));
 			if (initResult == GetKeyPasswordPmInitResult.CachedPasswordFound) {
 				// NOTE: It means getPasswordHost.onPasswordDeterminedForKey was
 				// already called somewhere deep in a stack-trace

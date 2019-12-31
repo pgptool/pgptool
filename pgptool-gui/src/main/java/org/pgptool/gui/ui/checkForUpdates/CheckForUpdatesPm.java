@@ -34,19 +34,18 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
-public class CheckForUpdatesPm extends PresentationModelBase implements InitializingBean {
+public class CheckForUpdatesPm extends PresentationModelBase<CheckForUpdatesHost, UpdatesPolicy>
+		implements InitializingBean {
 	private static Logger log = Logger.getLogger(CheckForUpdatesPm.class);
 
 	@Autowired
 	private NewVersionChecker newVersionChecker;
-	private CheckForUpdatesHost host;
-	private UpdatesPolicy updatesPolicy;
 
 	private ModelProperty<String> currentVersion;
 	private ModelProperty<String> versionCheckStatus;
@@ -71,12 +70,13 @@ public class CheckForUpdatesPm extends PresentationModelBase implements Initiali
 				"newVersionReleaseNotes");
 	}
 
-	public void init(CheckForUpdatesHost host, UpdatesPolicy updatesPolicy) {
-		this.host = host;
-		this.updatesPolicy = updatesPolicy;
+	@Override
+	public boolean init(ActionEvent originAction, CheckForUpdatesHost host, UpdatesPolicy updatesPolicy) {
+		super.init(originAction, host, updatesPolicy);
 		actionSnoozeVersion.setEnabled(false);
 		actionDownloadNewVersion.setEnabled(false);
 		new Thread(checkForNewVersion).start();
+		return true;
 	}
 
 	private Runnable checkForNewVersion = new Runnable() {
@@ -121,7 +121,7 @@ public class CheckForUpdatesPm extends PresentationModelBase implements Initiali
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
-			updatesPolicy.snoozeVersion(newVersion.getValue());
+			initParams.snoozeVersion(newVersion.getValue());
 			host.handleClose();
 		}
 	};
@@ -134,7 +134,7 @@ public class CheckForUpdatesPm extends PresentationModelBase implements Initiali
 			try {
 				Desktop.getDesktop().browse(new URI(updatePackageUrl));
 			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser("exception.unexpected", t);
+				EntryPoint.reportExceptionToUser(e, "exception.unexpected", t);
 			}
 			host.handleClose();
 		}

@@ -60,10 +60,8 @@ public class FileUtilsEx {
 	 * encrypting back - don't overwrite existing file until encryption 100%
 	 * completed"
 	 * 
-	 * @param targetFile
-	 *            desired target file name
-	 * @param fileCreatorLogic
-	 *            operation which will create the file
+	 * @param targetFile       desired target file name
+	 * @param fileCreatorLogic operation which will create the file
 	 */
 	public static void baitAndSwitch(String targetFile, FileCreatorLogic fileCreatorLogic)
 			throws Exception, UserRequestedCancellationException {

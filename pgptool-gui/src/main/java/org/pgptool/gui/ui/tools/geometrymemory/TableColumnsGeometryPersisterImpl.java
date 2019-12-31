@@ -52,9 +52,9 @@ public class TableColumnsGeometryPersisterImpl implements TableColumnModelListen
 	private ScheduledFuture<?> persistFuture;
 
 	/**
-	 * @param scheduledExecutorService
-	 *            it's used to dealy interraction with configPairs to avoid spamming
-	 *            it with values while user still dragging element
+	 * @param scheduledExecutorService it's used to dealy interraction with
+	 *                                 configPairs to avoid spamming it with values
+	 *                                 while user still dragging element
 	 */
 	public TableColumnsGeometryPersisterImpl(JTable table, String keyId, ConfigPairs configPairs,
 			ScheduledExecutorService scheduledExecutorService) {

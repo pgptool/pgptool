@@ -19,7 +19,7 @@ package org.pgptool.gui.ui.tempfolderfordecrypted;
 
 import static org.pgptool.gui.app.Messages.text;
 
-import java.awt.Component;
+import java.awt.event.ActionEvent;
 
 import javax.swing.JOptionPane;
 
@@ -31,7 +31,7 @@ import org.pgptool.gui.ui.tools.browsefs.FolderChooserDialog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.validation.FieldValidationException;
 
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
 
 /**
@@ -41,7 +41,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
  * @author Sergey Karpushin
  *
  */
-public class TempFolderChooserPm extends PresentationModelBase {
+public class TempFolderChooserPm extends PresentationModelBase<Void, Void> {
 	private static Logger log = Logger.getLogger(TempFolderChooserPm.class);
 
 	@Autowired
@@ -49,17 +49,17 @@ public class TempFolderChooserPm extends PresentationModelBase {
 
 	private FolderChooserDialog folderChooserDialog;
 
-	public void present(Component parent) {
+	public void present(ActionEvent originEvent) {
 		try {
-			String newFolder = getFolderChooserDialog().askUserForFolder(parent);
+			String newFolder = getFolderChooserDialog().askUserForFolder(originEvent);
 			if (newFolder == null) {
 				return;
 			}
-			UiUtils.messageBox(parent, text("phrase.settingsChangedConfirmFolder", newFolder), text("term.success"),
-					JOptionPane.INFORMATION_MESSAGE);
+			UiUtils.messageBox(originEvent, text("phrase.settingsChangedConfirmFolder", newFolder),
+					text("term.success"), JOptionPane.INFORMATION_MESSAGE);
 		} catch (Throwable t) {
 			log.error("Failed to save settigns for folder to use for temp decrypted files", t);
-			EntryPoint.reportExceptionToUser("error.failedToSetNewTempFolder", t);
+			EntryPoint.reportExceptionToUser(originEvent, "error.failedToSetNewTempFolder", t);
 		}
 	}
 

@@ -21,6 +21,7 @@ import java.awt.BorderLayout;
 import java.awt.Dialog.ModalityType;
 import java.awt.FlowLayout;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -61,7 +62,7 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 		JPanel pnlControls;
 		pnl.add(pnlControls = buildPanelKeyInfo(), BorderLayout.CENTER);
 		pnl.add(buildPanelButtons(), BorderLayout.SOUTH);
-		
+
 		isDisableControlsChanged = new ControlsDisabler(pnlControls);
 	}
 
@@ -137,7 +138,7 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 		ret.setTitle(Messages.get("action.createPgpKey"));
 		ret.add(pnl, BorderLayout.CENTER);
 		ret.pack();
-		UiUtils.centerWindow(ret);
+		UiUtils.centerWindow(ret, owner);
 		return ret;
 	}
 
@@ -153,8 +154,8 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 	}
 
 	@Override
-	protected void dispatchWindowCloseEvent() {
-		btnCancel.getAction().actionPerformed(null);
+	protected void dispatchWindowCloseEvent(ActionEvent originAction) {
+		btnCancel.getAction().actionPerformed(originAction);
 	}
 
 }

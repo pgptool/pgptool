@@ -27,6 +27,7 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -167,8 +168,8 @@ public class EncryptTextView extends DialogViewBaseCustom<EncryptTextPm> {
 	}
 
 	@Override
-	protected void dispatchWindowCloseEvent() {
-		btnCancel.getAction().actionPerformed(null);
+	protected void dispatchWindowCloseEvent(ActionEvent originAction) {
+		btnCancel.getAction().actionPerformed(originAction);
 	}
 
 }

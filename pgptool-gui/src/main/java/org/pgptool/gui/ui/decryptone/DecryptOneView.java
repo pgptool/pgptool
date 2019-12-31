@@ -24,6 +24,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.FlowLayout;
+import java.awt.Window;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -38,11 +39,12 @@ import javax.swing.JTextField;
 import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.UiUtils;
 
+import ru.skarpushin.swingpm.base.HasWindow;
 import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class DecryptOneView extends ViewBase<DecryptOnePm> {
+public class DecryptOneView extends ViewBase<DecryptOnePm> implements HasWindow {
 	private JPanel pnl;
 
 	private JPanel controlsPanel;
@@ -195,6 +197,15 @@ public class DecryptOneView extends ViewBase<DecryptOnePm> {
 	@Override
 	protected void internalRenderTo(Container owner, Object constraints) {
 		owner.add(pnl, constraints);
+	}
+
+	/**
+	 * NOTE: Although we don't really have window, we still impl this so that
+	 * dialog, initiated from this view will be shown in a proper position
+	 */
+	@Override
+	public Window getWindow() {
+		return UiUtils.findWindow(pnl.getParent());
 	}
 
 	@Override

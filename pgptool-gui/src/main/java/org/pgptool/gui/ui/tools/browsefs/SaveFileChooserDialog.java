@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.tools.browsefs;
 
-import java.awt.Window;
+import java.awt.event.ActionEvent;
 import java.io.File;
 
 import javax.swing.JFileChooser;
@@ -39,30 +39,28 @@ public class SaveFileChooserDialog {
 
 	private String dialogTitleCode;
 	private String approvalButtonTextCode;
-	private Window parentWindow;
 	private ConfigPairs configPairs;
 	private String configId;
 
-	public SaveFileChooserDialog(Window parentWindow, String dialogTitleCode, String approvalButtonTextCode) {
-		this.parentWindow = parentWindow;
+	public SaveFileChooserDialog(String dialogTitleCode, String approvalButtonTextCode) {
 		this.dialogTitleCode = dialogTitleCode;
 		this.approvalButtonTextCode = approvalButtonTextCode;
 	}
 
-	public SaveFileChooserDialog(Window parentWindow, String dialogTitleCode, String approvalButtonTextCode,
-			ConfigPairs configPairs, String configId) {
-		this(parentWindow, dialogTitleCode, approvalButtonTextCode);
+	public SaveFileChooserDialog(String dialogTitleCode, String approvalButtonTextCode, ConfigPairs configPairs,
+			String configId) {
+		this(dialogTitleCode, approvalButtonTextCode);
 		this.configPairs = configPairs;
 		this.configId = configId;
 	}
 
-	public String askUserForFile() {
+	public String askUserForFile(ActionEvent originEvent) {
 		JFileChooser ofd = prepareFileChooser();
 
 		boolean userWantsToSelectOtherFile = true;
 		File retFile = null;
 		while (userWantsToSelectOtherFile) {
-			int result = ofd.showSaveDialog(parentWindow);
+			int result = ofd.showSaveDialog(UiUtils.findWindow(originEvent));
 			if (result != JFileChooser.APPROVE_OPTION) {
 				return onDialogClosed(null, ofd);
 			}
@@ -73,8 +71,8 @@ public class SaveFileChooserDialog {
 
 			File retFileWithExt = new File(enforceExtension(retFile.getAbsolutePath(), ofd));
 			if (userWantsToSelectOtherFile = retFileWithExt.exists()) {
-				if (UiUtils.confirmRegular("confirm.overWriteExistingFile",
-						new Object[] { retFileWithExt.getAbsolutePath() }, parentWindow)) {
+				if (UiUtils.confirmRegular(originEvent,
+						"confirm.overWriteExistingFile", new Object[] { retFileWithExt.getAbsolutePath() })) {
 					userWantsToSelectOtherFile = false;
 				}
 			}
@@ -92,12 +90,12 @@ public class SaveFileChooserDialog {
 		ofd.setMultiSelectionEnabled(false);
 		ofd.setDialogTitle(Messages.get(dialogTitleCode));
 		ofd.setApproveButtonText(Messages.get(approvalButtonTextCode));
-		onFileChooserPostConstrct(ofd);
+		onFileChooserPostConstruct(ofd);
 		suggestTarget(ofd);
 		return ofd;
 	}
 
-	protected void onFileChooserPostConstrct(JFileChooser ofd) {
+	protected void onFileChooserPostConstruct(JFileChooser ofd) {
 	}
 
 	protected void suggestTarget(JFileChooser ofd) {
@@ -118,10 +116,8 @@ public class SaveFileChooserDialog {
 	/**
 	 * Subclass can do post-processing if needed
 	 * 
-	 * @param filePathName
-	 *            user choice, might be null
-	 * @param ofd
-	 *            dialog
+	 * @param filePathName user choice, might be null
+	 * @param ofd          dialog
 	 * @return value that will be returned to initial invoker
 	 */
 	protected String onDialogClosed(String filePathName, JFileChooser ofd) {

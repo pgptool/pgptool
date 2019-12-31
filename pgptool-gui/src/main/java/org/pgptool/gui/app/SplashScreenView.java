@@ -18,12 +18,12 @@
 package org.pgptool.gui.app;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Toolkit;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
+
+import org.pgptool.gui.ui.tools.UiUtils;
 
 public class SplashScreenView extends JFrame {
 	private static final long serialVersionUID = -1059755470997596254L;
@@ -40,7 +40,7 @@ public class SplashScreenView extends JFrame {
 	private void initComponents() {
 		setSize(300, 50);
 		setLayout(new BorderLayout());
-		centerWindow(this);
+		UiUtils.centerWindow(this, null);
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setUndecorated(true);
@@ -48,13 +48,6 @@ public class SplashScreenView extends JFrame {
 		add(label = new JLabel("Loading..."));
 		label.setHorizontalAlignment(JLabel.CENTER);
 		setVisible(true);
-	}
-
-	private void centerWindow(JFrame frm) {
-		Dimension scrDim = Toolkit.getDefaultToolkit().getScreenSize();
-		int x = (scrDim.width - frm.getSize().width) / 2;
-		int y = (scrDim.height - frm.getSize().height) / 2;
-		frm.setLocation(x, y);
 	}
 
 	public void close() {

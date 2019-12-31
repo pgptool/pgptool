@@ -56,7 +56,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
@@ -64,7 +64,8 @@ import ru.skarpushin.swingpm.modelprops.table.ModelTableProperty;
 import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
-public class MainFramePm extends PresentationModelBase implements ApplicationContextAware, HintsHolder {
+public class MainFramePm extends PresentationModelBase<MainFrameHost, UpdatesPolicy>
+		implements ApplicationContextAware, HintsHolder {
 	// private static Logger log = Logger.getLogger(MainFramePm.class);
 
 	@Autowired
@@ -77,22 +78,18 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 	private HistoryQuickSearchView historyQuickSearchView;
 	private HistoryQuickSearchPm historyQuickSearchPm;
 
-	private MainFrameHost host;
-
 	private ModelTableProperty<DecryptedFile> rows;
 	private ModelProperty<Boolean> hasData;
-	private UpdatesPolicy updatesPolicy;
 
 	private ModelProperty<HintPm> hint = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "hint");
 
-	public void init(MainFrameHost host, UpdatesPolicy updatesPolicy) {
-		this.updatesPolicy = updatesPolicy;
-		Preconditions.checkArgument(host != null);
+	@Override
+	public boolean init(ActionEvent originAction, MainFrameHost host, UpdatesPolicy updatesPolicy) {
 		Preconditions.checkState(this.host == null);
+		Preconditions.checkArgument(host != null);
+		super.init(originAction, host, updatesPolicy);
 
-		this.host = host;
-
-		historyQuickSearchPm.init(historyQuickSearchHost);
+		historyQuickSearchPm.init(originAction, historyQuickSearchHost, null);
 
 		List<DecryptedFile> initialKeys = monitoringDecryptedFilesService.getDecryptedFiles();
 		rows = new ModelTableProperty<>(this, initialKeys, "decryptedFiles",
@@ -109,6 +106,7 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 		onSelectionChangedHandler.propertyChange(null);
 
 		eventBus.register(this);
+		return true;
 	}
 
 	private PropertyChangeListener onSelectionChangedHandler = new PropertyChangeListener() {
@@ -173,11 +171,11 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 	@SuppressWarnings("serial")
 	protected Action actionOpen = new RowContextAction("action.openFile") {
 		@Override
-		public void onActionPerformed(DecryptedFile row) {
+		public void onActionPerformed(DecryptedFile row, ActionEvent e) {
 			try {
 				Desktop.getDesktop().open(new File(row.getDecryptedFile()));
 			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser("error.cannotOpenFile", t);
+				EntryPoint.reportExceptionToUser(e, "error.cannotOpenFile", t);
 			}
 		}
 	};
@@ -185,22 +183,22 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 	@SuppressWarnings("serial")
 	protected Action actionOpenSourceFolder = new RowContextAction("action.openSourceFolder") {
 		@Override
-		public void onActionPerformed(DecryptedFile row) {
+		public void onActionPerformed(DecryptedFile row, ActionEvent e) {
 			try {
 				Desktop.getDesktop().open(new File(row.getEncryptedFile()).getParentFile());
 			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser("error.cannotOpenFolder", t);
+				EntryPoint.reportExceptionToUser(e, "error.cannotOpenFolder", t);
 			}
 		}
 	};
 	@SuppressWarnings("serial")
 	protected Action actionOpenTargetFolder = new RowContextAction("action.openTargetFolder") {
 		@Override
-		public void onActionPerformed(DecryptedFile row) {
+		public void onActionPerformed(DecryptedFile row, ActionEvent e) {
 			try {
 				Desktop.getDesktop().open(new File(row.getDecryptedFile()).getParentFile());
 			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser("error.cannotOpenFolder", t);
+				EntryPoint.reportExceptionToUser(e, "error.cannotOpenFolder", t);
 			}
 		}
 	};
@@ -208,24 +206,23 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 	@SuppressWarnings("serial")
 	protected Action actionEncryptBack = new RowContextAction("action.encryptBack") {
 		@Override
-		public void onActionPerformed(DecryptedFile row) {
-			host.openEncryptDialogFor(row.getDecryptedFile());
+		public void onActionPerformed(DecryptedFile row, ActionEvent e) {
+			host.openEncryptDialogFor(row.getDecryptedFile(), e);
 		}
 	};
 
 	@SuppressWarnings("serial")
 	protected Action actionDelete = new RowContextAction("action.deleteUnencryptedFile") {
 		@Override
-		public void onActionPerformed(DecryptedFile row) {
+		public void onActionPerformed(DecryptedFile row, ActionEvent e) {
 			if (!new File(row.getEncryptedFile()).exists()) {
-				if (!UiUtils.confirmWarning("confirmation.areUserSureToDeletDecryptedFileWhileSourceIsNotFound",
-						new Object[] { FilenameUtils.getName(row.getDecryptedFile()), row.getEncryptedFile() },
-						findRegisteredWindowIfAny())) {
+				if (!UiUtils.confirmWarning(e,
+						"confirmation.areUserSureToDeletDecryptedFileWhileSourceIsNotFound", new Object[] { FilenameUtils.getName(row.getDecryptedFile()), row.getEncryptedFile() })) {
 					return;
 				}
 			} else {
-				if (!UiUtils.confirmRegular("confirmation.areUserSureToDeletDecryptedFile",
-						new Object[] { FilenameUtils.getName(row.getDecryptedFile()) }, findRegisteredWindowIfAny())) {
+				if (!UiUtils.confirmRegular(e,
+						"confirmation.areUserSureToDeletDecryptedFile", new Object[] { FilenameUtils.getName(row.getDecryptedFile()) })) {
 					return;
 				}
 			}
@@ -238,15 +235,15 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 				return;
 			}
 
-			UiUtils.messageBox(findRegisteredWindowIfAny(), Messages.get("error.cannotDeletebecauseFileIsLocked"),
-					Messages.get("term.error"), JOptionPane.ERROR_MESSAGE);
+			UiUtils.messageBox(e, Messages.get("error.cannotDeletebecauseFileIsLocked"), Messages.get("term.error"),
+					JOptionPane.ERROR_MESSAGE);
 		}
 	};
 
 	@SuppressWarnings("serial")
 	protected Action actionForget = new RowContextAction("action.forgetDecrypted") {
 		@Override
-		public void onActionPerformed(DecryptedFile row) {
+		public void onActionPerformed(DecryptedFile row, ActionEvent e) {
 			monitoringDecryptedFilesService.remove(row.getDecryptedFile());
 		}
 	};
@@ -273,7 +270,7 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 					"This action supposed to be available only when ther is at least one decrypted file monitored");
 
 			Set<String> fileNames = files.stream().map(x -> x.getDecryptedFile()).collect(Collectors.toSet());
-			host.openEncryptBackMultipleFor(fileNames);
+			host.openEncryptBackMultipleFor(fileNames, e);
 		}
 	};
 	private ApplicationContext applicationContext;
@@ -365,28 +362,32 @@ public class MainFramePm extends PresentationModelBase implements ApplicationCon
 				return;
 			}
 			DecryptedFile row = rows.getValue();
-			onActionPerformed(row);
+			onActionPerformed(row, e);
 		}
 
-		protected abstract void onActionPerformed(DecryptedFile row);
+		protected abstract void onActionPerformed(DecryptedFile row, ActionEvent e);
 	}
 
 	public Action getActionAutoCheckForUpdates() {
-		return updatesPolicy.actionAutoCheckForUpdates;
+		return initParams.actionAutoCheckForUpdates;
 	}
 
 	public ModelPropertyAccessor<?> getIsAutoUpdatesEnabled() {
-		return updatesPolicy.getIsAutoUpdatesEnabled();
+		return initParams.getIsAutoUpdatesEnabled();
 	}
 
 	private HistoryQuickSearchHost historyQuickSearchHost = new HistoryQuickSearchHost() {
 		@Override
-		public void handleChosen(DecryptionDialogParameters optionalTsRecordSubject) {
+		public void handleChosen(DecryptionDialogParameters optionalTsRecordSubject, ActionEvent originEvent) {
 			getHistoryQuickSearchView().unrender();
 			if (optionalTsRecordSubject == null) {
 				return;
 			}
-			host.openDecryptDialogFor(optionalTsRecordSubject.getSourceFile());
+			// NOTE: We override it here to avoid wrong behavior -- quick search is already
+			// closed so as a parent for this action it is useless
+			ActionEvent overiddenActionEvent = UiUtils.actionEvent(findRegisteredWindowIfAny(),
+					originEvent.getActionCommand());
+			host.openDecryptDialogFor(optionalTsRecordSubject.getSourceFile(), overiddenActionEvent);
 		}
 
 		@Override

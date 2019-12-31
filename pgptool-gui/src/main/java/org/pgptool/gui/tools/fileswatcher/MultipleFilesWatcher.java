@@ -253,6 +253,7 @@ public class MultipleFilesWatcher {
 		String folder;
 		Path path;
 		List<String> interestedFiles = new ArrayList<>();
+		@SuppressWarnings("unused")
 		WatchKey key;
 
 		public BaseFolder(String folder, WatchKey key, Path path, String firstFile) {

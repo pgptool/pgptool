@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.mainframe;
 
+import java.awt.event.ActionEvent;
 import java.util.Set;
 
 import javax.swing.Action;
@@ -44,13 +45,13 @@ public interface MainFrameHost {
 
 	Action getActionCheckForUpdates();
 
-	void openEncryptDialogFor(String decryptedFile);
+	void openEncryptDialogFor(String decryptedFile, ActionEvent originEvent);
 
-	void openDecryptDialogFor(String encryptedFile);
+	void openDecryptDialogFor(String encryptedFile, ActionEvent originEvent);
 
 	Action getActionCreateKey();
 
-	void openEncryptBackMultipleFor(Set<String> decryptedFiles);
+	void openEncryptBackMultipleFor(Set<String> decryptedFiles, ActionEvent originEvent);
 
 	Action getActionBuyMeCoffee();
 

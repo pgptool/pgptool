@@ -53,7 +53,7 @@ import org.summerb.validation.ValidationContext;
 import com.google.common.base.Preconditions;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.lists.ModelListProperty;
@@ -61,7 +61,7 @@ import ru.skarpushin.swingpm.modelprops.lists.ModelMultSelInListProperty;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
-public class EncryptTextPm extends PresentationModelBase {
+public class EncryptTextPm extends PresentationModelBase<EncryptTextHost, Set<String>> {
 	private static Logger log = Logger.getLogger(EncryptTextPm.class);
 
 	@Autowired
@@ -71,17 +71,16 @@ public class EncryptTextPm extends PresentationModelBase {
 	@Autowired
 	private UsageLogger usageLogger;
 
-	private EncryptTextHost host;
-
 	private ModelMultSelInListProperty<Key> selectedRecipients;
 	private ModelListProperty<Key> availabileRecipients;
 
 	private ModelProperty<String> sourceText;
 	private ModelProperty<String> targetText;
 
-	public boolean init(EncryptTextHost host, Set<String> preselectedKeyIds) {
+	@Override
+	public boolean init(ActionEvent originAction, EncryptTextHost host, Set<String> preselectedKeyIds) {
+		super.init(originAction, host, preselectedKeyIds);
 		Preconditions.checkArgument(host != null);
-		this.host = host;
 
 		if (!doWeHaveKeysToEncryptWith()) {
 			return false;
@@ -117,17 +116,17 @@ public class EncryptTextPm extends PresentationModelBase {
 			return;
 		}
 
-		UiUtils.messageBox(findRegisteredWindowIfAny(),
-				text("error.notAllRecipientsAvailable", Arrays.asList(missedKeys)), text("term.attention"),
-				JOptionPane.WARNING_MESSAGE);
+		UiUtils.messageBox(originAction, text("error.notAllRecipientsAvailable", Arrays.asList(missedKeys)),
+				text("term.attention"), JOptionPane.WARNING_MESSAGE);
 	}
 
 	private boolean doWeHaveKeysToEncryptWith() {
 		if (!keyRingService.readKeys().isEmpty()) {
 			return true;
 		}
-		UiUtils.messageBox(text("phrase.noKeysForEncryption"), text("term.attention"), MessageSeverity.WARNING);
-		host.getActionToOpenCertificatesList().actionPerformed(null);
+		UiUtils.messageBox(originAction, text("phrase.noKeysForEncryption"), text("term.attention"),
+				MessageSeverity.WARNING);
+		host.getActionToOpenCertificatesList().actionPerformed(originAction);
 		if (keyRingService.readKeys().isEmpty()) {
 			return false;
 		}
@@ -194,7 +193,7 @@ public class EncryptTextPm extends PresentationModelBase {
 				targetText.setValueByOwner(encryptedTextStr);
 			} catch (Throwable t) {
 				log.error("Failed to encrypt", t);
-				EntryPoint.reportExceptionToUser("error.failedToEncryptText", t);
+				EntryPoint.reportExceptionToUser(e, "error.failedToEncryptText", t);
 			}
 		}
 	};
@@ -215,20 +214,20 @@ public class EncryptTextPm extends PresentationModelBase {
 			super.actionPerformed(e);
 			String clipboard = ClipboardUtil.tryGetClipboardText();
 			if (clipboard == null) {
-				UiUtils.messageBox(findRegisteredWindowIfAny(), text("warning.noTextInClipboard"),
-						text("term.attention"), JOptionPane.INFORMATION_MESSAGE);
+				UiUtils.messageBox(e, text("warning.noTextInClipboard"), text("term.attention"),
+						JOptionPane.INFORMATION_MESSAGE);
 				return;
 			}
 
 			List<String> emails = findEmailsInText(clipboard);
 			if (emails == null) {
-				UiUtils.messageBox(findRegisteredWindowIfAny(), text("warning.noEmailsFoundInClipboard"),
-						text("term.attention"), JOptionPane.INFORMATION_MESSAGE);
+				UiUtils.messageBox(e, text("warning.noEmailsFoundInClipboard"), text("term.attention"),
+						JOptionPane.INFORMATION_MESSAGE);
 				return;
 			}
 
 			Set<String> missedKeys = selectRecipientsByEmails(new HashSet<>(emails));
-			notifyUserOfMissingKeysIfAny(missedKeys);
+			notifyUserOfMissingKeysIfAny(missedKeys, e);
 		}
 
 		private Set<String> selectRecipientsByEmails(Set<String> emails) {
@@ -249,14 +248,13 @@ public class EncryptTextPm extends PresentationModelBase {
 			return missedEmails;
 		}
 
-		private void notifyUserOfMissingKeysIfAny(Set<String> missedKeys) {
+		private void notifyUserOfMissingKeysIfAny(Set<String> missedKeys, ActionEvent e) {
 			if (CollectionUtils.isEmpty(missedKeys)) {
 				return;
 			}
 
-			UiUtils.messageBox(findRegisteredWindowIfAny(),
-					text("error.notAllEmailsAvailable", Arrays.asList(missedKeys)), text("term.attention"),
-					JOptionPane.WARNING_MESSAGE);
+			UiUtils.messageBox(e, text("error.notAllEmailsAvailable", Arrays.asList(missedKeys)),
+					text("term.attention"), JOptionPane.WARNING_MESSAGE);
 		}
 	};
 
@@ -286,8 +284,8 @@ public class EncryptTextPm extends PresentationModelBase {
 			super.actionPerformed(e);
 			String clipboard = ClipboardUtil.tryGetClipboardText();
 			if (clipboard == null) {
-				UiUtils.messageBox(findRegisteredWindowIfAny(), text("warning.noTextInClipboard"),
-						text("term.attention"), JOptionPane.INFORMATION_MESSAGE);
+				UiUtils.messageBox(e, text("warning.noTextInClipboard"), text("term.attention"),
+						JOptionPane.INFORMATION_MESSAGE);
 				return;
 			}
 

@@ -35,13 +35,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
-public class AboutPm extends PresentationModelBase implements InitializingBean {
+public class AboutPm extends PresentationModelBase<AboutHost, Void> implements InitializingBean {
 	private static Logger log = Logger.getLogger(AboutPm.class);
 
 	@Value("${net.ts.baseUrl}")
@@ -55,7 +55,6 @@ public class AboutPm extends PresentationModelBase implements InitializingBean {
 	private ModelProperty<String> versionStatus;
 	private ModelProperty<String> linkToNewVersion;
 
-	private AboutHost host;
 	private String updatePackageUrl;
 
 	@Override
@@ -68,9 +67,11 @@ public class AboutPm extends PresentationModelBase implements InitializingBean {
 		linkToNewVersion = new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "linkToNewVersion");
 	}
 
-	public void init(AboutHost host) {
-		this.host = host;
+	@Override
+	public boolean init(ActionEvent originAction, AboutHost host, Void initParams) {
+		super.init(originAction, host, initParams);
 		new Thread(checkForNewVersion).start();
+		return true;
 	}
 
 	private Runnable checkForNewVersion = new Runnable() {
@@ -112,7 +113,7 @@ public class AboutPm extends PresentationModelBase implements InitializingBean {
 			try {
 				Desktop.getDesktop().browse(new URI(urlToSite));
 			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser("exception.unexpected", t);
+				EntryPoint.reportExceptionToUser(e, "exception.unexpected", t);
 			}
 			host.handleClose();
 		}
@@ -126,7 +127,7 @@ public class AboutPm extends PresentationModelBase implements InitializingBean {
 			try {
 				Desktop.getDesktop().browse(new URI(updatePackageUrl));
 			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser("exception.unexpected", t);
+				EntryPoint.reportExceptionToUser(e, "exception.unexpected", t);
 			}
 			host.handleClose();
 		}

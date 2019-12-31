@@ -20,6 +20,8 @@ import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.KeyStroke;
 
+import org.pgptool.gui.ui.tools.UiUtils;
+
 import com.google.common.base.Preconditions;
 
 import ru.skarpushin.swingpm.base.HasWindow;
@@ -42,7 +44,7 @@ public abstract class DialogViewBase<TPM extends PresentationModel> extends View
 				"Target must not be specified or be sub-calss of Window");
 		Preconditions.checkState(pm != null, "PM is required for this view");
 
-		if (isDislogMustBeReinitialized(owner, constraints)) {
+		if (isDialogMustBeReinitialized(owner, constraints)) {
 			tearDownPreviousDialogInstance();
 		}
 
@@ -56,7 +58,8 @@ public abstract class DialogViewBase<TPM extends PresentationModel> extends View
 			initWindowIcon();
 		}
 
-		showDialog();
+		Window optionalParent = owner instanceof Window ? (Window) owner : null;
+		showDialog(optionalParent);
 	}
 
 	protected List<Image> getWindowIcon() {
@@ -83,7 +86,9 @@ public abstract class DialogViewBase<TPM extends PresentationModel> extends View
 		rootPane.getActionMap().put(dispatchWindowClosingActionMapKey, dispatchClosing);
 	}
 
-	protected void showDialog() {
+	protected void showDialog(Window optionalParent) {
+		UiUtils.centerWindow(dialog, optionalParent);
+		
 		// NOTE: IMPORTANT: This ismodal dialog, so this call blocks further
 		// execution!!!
 		dialog.setVisible(true);
@@ -99,7 +104,7 @@ public abstract class DialogViewBase<TPM extends PresentationModel> extends View
 		dialog = null;
 	}
 
-	protected boolean isDislogMustBeReinitialized(Container owner, Object constraints) {
+	protected boolean isDialogMustBeReinitialized(Container owner, Object constraints) {
 		return dialog != null && dialog.getOwner() != owner;
 	}
 
@@ -108,7 +113,7 @@ public abstract class DialogViewBase<TPM extends PresentationModel> extends View
 		public void windowClosing(WindowEvent e) {
 			super.windowClosing(e);
 			if (isAttached()) {
-				dispatchWindowCloseEvent();
+				dispatchWindowCloseEvent(UiUtils.actionEvent(e.getSource(), "windowClosing"));
 			}
 		};
 	};
@@ -143,7 +148,7 @@ public abstract class DialogViewBase<TPM extends PresentationModel> extends View
 
 	protected abstract JPanel getRootPanel();
 
-	protected abstract void dispatchWindowCloseEvent();
+	protected abstract void dispatchWindowCloseEvent(ActionEvent originAction);
 
 	@Override
 	public Window getWindow() {

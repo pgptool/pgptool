@@ -138,8 +138,7 @@ public class EncryptBackActionCellRenderer extends JPanel implements TableCellRe
 	 * Overrides <code>JComponent.setForeground</code> to assign the
 	 * unselected-foreground color to the specified color.
 	 *
-	 * @param c
-	 *            set the foreground color to this value
+	 * @param c set the foreground color to this value
 	 */
 	@Override
 	public void setForeground(Color c) {
@@ -151,8 +150,7 @@ public class EncryptBackActionCellRenderer extends JPanel implements TableCellRe
 	 * Overrides <code>JComponent.setBackground</code> to assign the
 	 * unselected-background color to the specified color.
 	 *
-	 * @param c
-	 *            set the background color to this value
+	 * @param c set the background color to this value
 	 */
 	@Override
 	public void setBackground(Color c) {

@@ -36,8 +36,7 @@ public interface KeyRingService {
 	 * supported by the key. Which means it doens't necessarily true that (pseudo
 	 * code) keysIds.containsAll(return.getIds)
 	 * 
-	 * @param keysIds
-	 *            list of ids needs to be found.
+	 * @param keysIds list of ids needs to be found.
 	 * @return list of keys or empty array if none found
 	 */
 	List<MatchedKey> findMatchingDecryptionKeys(Set<String> keysIds);

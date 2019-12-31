@@ -31,11 +31,9 @@ public class MatchedKey {
 
 	/**
 	 * 
-	 * @param requestedKeyId
-	 *            this key id found in encrypted file
-	 * @param matchedKey
-	 *            this key was found as a matched key, the one that contains
-	 *            requested decryption key
+	 * @param requestedKeyId this key id found in encrypted file
+	 * @param matchedKey     this key was found as a matched key, the one that
+	 *                       contains requested decryption key
 	 */
 	public MatchedKey(String requestedKeyId, Key matchedKey) {
 		super();

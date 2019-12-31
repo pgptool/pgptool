@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.root;
 
+import java.awt.event.ActionEvent;
+
 import javax.swing.Action;
 
 import org.pgptool.gui.encryption.api.dto.Key;
@@ -26,5 +28,5 @@ public interface GlobalAppActions {
 
 	Action getActionCreateKey();
 
-	void triggerPrivateKeyExport(Key key);
+	void triggerPrivateKeyExport(Key key, ActionEvent originEvent);
 }

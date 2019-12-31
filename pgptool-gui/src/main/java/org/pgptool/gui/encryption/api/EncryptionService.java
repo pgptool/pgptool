@@ -44,16 +44,17 @@ public interface EncryptionService {
 	/**
 	 * Discover all key ids which can be used for decryption
 	 * 
-	 * @throws SymmetricEncryptionIsNotSupportedException
-	 *             will be thrown if file was encrypted using symmetric encryption
+	 * @throws SymmetricEncryptionIsNotSupportedException will be thrown if file was
+	 *                                                    encrypted using symmetric
+	 *                                                    encryption
 	 */
 	Set<String> findKeyIdsForDecryption(String filePathName) throws SymmetricEncryptionIsNotSupportedException;
 
 	/**
-	 * @param inputStream
-	 *            input stream for encrypted text
-	 * @throws SymmetricEncryptionIsNotSupportedException
-	 *             will be thrown if file was encrypted using symmetric encryption
+	 * @param inputStream input stream for encrypted text
+	 * @throws SymmetricEncryptionIsNotSupportedException will be thrown if file was
+	 *                                                    encrypted using symmetric
+	 *                                                    encryption
 	 */
 	Set<String> findKeyIdsForDecryption(InputStream inputStream) throws SymmetricEncryptionIsNotSupportedException;
 
@@ -61,10 +62,8 @@ public interface EncryptionService {
 	 * This method "pre-decrypts" file only to get initial file name that was
 	 * encrypted
 	 * 
-	 * @param encryptedFile
-	 *            encrypted file
-	 * @param keyAndPassword
-	 *            key and password to use for decryption
+	 * @param encryptedFile  encrypted file
+	 * @param keyAndPassword key and password to use for decryption
 	 * @return initial file name that was encrypted (name only, no path)
 	 */
 	String getNameOfFileEncrypted(String encryptedFile, PasswordDeterminedForKey keyAndPassword)

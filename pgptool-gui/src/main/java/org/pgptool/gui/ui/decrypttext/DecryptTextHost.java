@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.decrypttext;
 
-import java.awt.Window;
+import java.awt.event.ActionEvent;
 import java.util.Set;
 
 import javax.swing.Action;
@@ -34,11 +34,9 @@ public interface DecryptTextHost {
 	 * This method will allow to find out password for a key. If password is already
 	 * cached it will be returned right away (through callback). Otherwise method
 	 * will return null and call callback when user will provide password.
-	 * 
-	 * @param window
 	 */
 	void askUserForKeyAndPassword(Set<String> keysIds, Message purpose, KeyAndPasswordCallback keyAndPasswordCallback,
-			Window parentWindow);
+			ActionEvent originEvent);
 
-	void openEncryptText(Set<String> recipientsList);
+	void openEncryptText(Set<String> recipientsList, ActionEvent originEvent);
 }

@@ -24,8 +24,6 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
-import org.apache.log4j.Logger;
-
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 
 /**
@@ -33,8 +31,6 @@ import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
  * will change to true
  */
 public class ControlsDisabler implements TypedPropertyChangeListener<Boolean> {
-	private static Logger log = Logger.getLogger(ControlsDisabler.class);
-
 	private List<Component> disabledComponents = new ArrayList<>();
 	private JPanel rootPanelToDisable;
 

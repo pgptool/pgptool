@@ -29,6 +29,8 @@ import java.util.function.BiConsumer;
 import javax.swing.Action;
 import javax.swing.JLabel;
 
+import org.pgptool.gui.ui.tools.UiUtils;
+
 public class LinkButton extends JLabel implements HasAction {
 	private static final long serialVersionUID = 9012537495123322302L;
 
@@ -100,7 +102,7 @@ public class LinkButton extends JLabel implements HasAction {
 			}
 
 			if (action != null) {
-				action.actionPerformed(null);
+				action.actionPerformed(UiUtils.actionEvent(LinkButton.this, action));
 			}
 		}
 	};

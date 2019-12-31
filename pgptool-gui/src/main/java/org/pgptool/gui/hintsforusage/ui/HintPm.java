@@ -25,7 +25,7 @@ import org.summerb.easycrud.api.dto.EntityChangedEvent;
 import org.summerb.utils.DtoBase;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
@@ -39,21 +39,19 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
  * @author sergeyk
  *
  */
-public class HintPm extends PresentationModelBase implements DtoBase {
+public class HintPm extends PresentationModelBase<HintHost, Void> implements DtoBase {
 	private static final long serialVersionUID = -6048386647066623217L;
 
 	protected ModelProperty<String> message = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "message");
 	protected Action[] actions;
-
-	protected HintHost hintHost;
 
 	@SuppressWarnings("serial")
 	protected Action actionClose = new LocalizedActionEx("action.close", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
-			if (hintHost != null) {
-				hintHost.onClose();
+			if (host != null) {
+				host.onClose();
 			}
 		}
 	};
@@ -77,11 +75,7 @@ public class HintPm extends PresentationModelBase implements DtoBase {
 		this.message.setValueByOwner(message);
 	}
 
-	public HintHost getHintHost() {
-		return hintHost;
-	}
-
 	public void setHintHost(HintHost hintHost) {
-		this.hintHost = hintHost;
+		this.host = hintHost;
 	}
 }

@@ -24,8 +24,7 @@ public interface NewVersionChecker {
 
 	/**
 	 * @return information about update or null if current version is same or newer
-	 * @throws GenericException
-	 *             if operation failed
+	 * @throws GenericException if operation failed
 	 */
 	UpdatePackageInfo findNewUpdateIfAvailable() throws GenericException;
 

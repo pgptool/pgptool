@@ -39,7 +39,7 @@ public class UsageLoggerDelegator implements UsageLogger, HasUsageRecordingSetti
 				new ValueAdapterPersistentPropertyImpl<Boolean>(appProps, IS_USAGE_RECORDING_ENABLED, null),
 				IS_USAGE_RECORDING_ENABLED);
 		if (isUsageRecordingEnabled.getValue() == null) {
-			isUsageRecordingEnabled.setValueByOwner(UiUtils.confirmRegular("prompt.doUsageRecording", null, null));
+			isUsageRecordingEnabled.setValueByOwner(UiUtils.confirmRegular(null, "prompt.doUsageRecording", null));
 		}
 		log.info("Current value of isUsageRecordingEnabled = " + isUsageRecordingEnabled.getValue());
 	}

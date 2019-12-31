@@ -25,9 +25,6 @@ public interface MonitoringDecryptedFilesService {
 
 	/**
 	 * Forget about decrypted file. does NOT remove file from disk
-	 * 
-	 * @param depcryptedFilePathname
-	 *            TODO
 	 */
 	void remove(String depcryptedFilePathname);
 

@@ -54,12 +54,12 @@ import org.springframework.util.StringUtils;
 import com.google.common.base.Preconditions;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.base.View;
 import ru.skarpushin.swingpm.modelprops.table.ModelTableProperty;
 import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
 
-public class KeyImporterPm extends PresentationModelBase {
+public class KeyImporterPm extends PresentationModelBase<KeyImporterHost, List<Key>> {
 	private static Logger log = Logger.getLogger(KeyImporterPm.class);
 	private static final String BROWSE_FOLDER = "KeyImporterPm.BROWSE_FOLDER";
 	private static final String[] EXTENSIONS = new String[] { "asc", "bpg" };
@@ -70,20 +70,30 @@ public class KeyImporterPm extends PresentationModelBase {
 	private KeyFilesOperations keyFilesOperations;
 	@Autowired
 	private KeyRingService keyRingService;
-	private KeyImporterHost host;
 
 	private ModelTableProperty<Key> keys;
 	private MultipleFilesChooserDialog sourceFileChooser;
 	private Comparator<Key> keySorterByNameAsc = new ComparatorKeyByNameImpl();
 
-	public boolean init(KeyImporterHost host) {
-		Preconditions.checkArgument(host != null);
-		this.host = host;
+	@Override
+	public boolean init(ActionEvent originAction, KeyImporterHost host, List<Key> preloadedKeys) {
+		super.init(originAction, host, preloadedKeys);
+		if (preloadedKeys != null) {
+			initWithPreloadedKeys(preloadedKeys);
+			return true;
+		}
+		if (!initByAskingUserToChooseFiles(originAction)) {
+			return false;
+		}
+		return true;
+	}
 
+	private boolean initByAskingUserToChooseFiles(ActionEvent originEvent) {
+		Preconditions.checkArgument(host != null);
 		initModelProperties();
 
 		File[] filesToLoad = null;
-		if ((filesToLoad = getSourceFileChooser().askUserForMultipleFiles()) == null) {
+		if ((filesToLoad = getSourceFileChooser().askUserForMultipleFiles(originEvent)) == null) {
 			return false;
 		}
 		if (!loadKey(filesToLoad)) {
@@ -93,10 +103,9 @@ public class KeyImporterPm extends PresentationModelBase {
 		return true;
 	}
 
-	public void init(KeyImporterHost host, List<Key> keys) {
+	private void initWithPreloadedKeys(List<Key> keys) {
 		Preconditions.checkArgument(host != null);
 		Preconditions.checkArgument(!CollectionUtils.isEmpty(keys));
-		this.host = host;
 		initModelProperties();
 		initLoadedKeys(keys);
 	}
@@ -114,7 +123,7 @@ public class KeyImporterPm extends PresentationModelBase {
 
 	public MultipleFilesChooserDialog getSourceFileChooser() {
 		if (sourceFileChooser == null) {
-			sourceFileChooser = new MultipleFilesChooserDialog(findRegisteredWindowIfAny(), appProps, BROWSE_FOLDER) {
+			sourceFileChooser = new MultipleFilesChooserDialog(appProps, BROWSE_FOLDER) {
 				@Override
 				protected void doFileChooserPostConstruct(JFileChooser ofd) {
 					super.doFileChooserPostConstruct(ofd);
@@ -196,7 +205,7 @@ public class KeyImporterPm extends PresentationModelBase {
 
 			if (exceptions.size() > 0) {
 				String msg = buildSummaryMessage("error.keysLoadedStatistics", loadedKeys.size(), exceptions);
-				UiUtils.messageBox(null, msg, Messages.get("term.attention"), JOptionPane.ERROR_MESSAGE);
+				UiUtils.messageBox(originAction, msg, Messages.get("term.attention"), JOptionPane.ERROR_MESSAGE);
 			}
 
 			if (loadedKeys.size() > 0) {
@@ -204,7 +213,7 @@ public class KeyImporterPm extends PresentationModelBase {
 				return true;
 			}
 		} catch (Throwable t) {
-			EntryPoint.reportExceptionToUser("exception.failedToReadKey", t);
+			EntryPoint.reportExceptionToUser(originAction, "exception.failedToReadKey", t);
 		}
 		return false;
 	}
@@ -257,13 +266,13 @@ public class KeyImporterPm extends PresentationModelBase {
 
 				if (exceptions.size() > 0) {
 					String msg = buildSummaryMessage("error.keysImportStatistics", loadedCount, exceptions);
-					UiUtils.messageBox(null, msg, Messages.get("term.attention"), JOptionPane.ERROR_MESSAGE);
+					UiUtils.messageBox(e, msg, Messages.get("term.attention"), JOptionPane.ERROR_MESSAGE);
 				}
 
 				host.handleImporterFinished();
 			} catch (Throwable t) {
 				log.error("Failed to import keys", t);
-				EntryPoint.reportExceptionToUser("exception.failedToImportPgpKey", t);
+				EntryPoint.reportExceptionToUser(e, "exception.failedToImportPgpKey", t);
 				return;
 			}
 		}

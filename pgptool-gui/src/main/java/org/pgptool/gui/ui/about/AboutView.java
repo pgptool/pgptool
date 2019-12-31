@@ -23,6 +23,7 @@ import java.awt.Desktop;
 import java.awt.Dialog.ModalityType;
 import java.awt.FlowLayout;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -108,23 +109,23 @@ public class AboutView extends DialogViewBaseCustom<AboutPm> {
 				return;
 			}
 
-			triggerAction();
+			triggerAction(UiUtils.actionEvent(e.getSource(), "LinkActivated"));
 		}
 
-		protected abstract void triggerAction();
+		protected abstract void triggerAction(ActionEvent originEvent);
 	}
 
 	private MouseListener siteLinkClickListener = new LinkMouseListener() {
 		@Override
-		protected void triggerAction() {
-			pm.actionOpenSite.actionPerformed(null);
+		protected void triggerAction(ActionEvent originEvent) {
+			pm.actionOpenSite.actionPerformed(originEvent);
 		}
 	};
 
 	private MouseListener newVersionLinkClickListener = new LinkMouseListener() {
 		@Override
-		protected void triggerAction() {
-			pm.actionDownloadNewVersion.actionPerformed(null);
+		protected void triggerAction(ActionEvent originEvent) {
+			pm.actionDownloadNewVersion.actionPerformed(originEvent);
 		}
 	};
 
@@ -149,7 +150,6 @@ public class AboutView extends DialogViewBaseCustom<AboutPm> {
 		ret.setTitle(Messages.get("term.aboutApp"));
 		ret.add(pnl, BorderLayout.CENTER);
 		ret.pack();
-		UiUtils.centerWindow(ret);
 		return ret;
 	}
 
@@ -159,7 +159,7 @@ public class AboutView extends DialogViewBaseCustom<AboutPm> {
 	}
 
 	@Override
-	protected void dispatchWindowCloseEvent() {
-		btnClose.getAction().actionPerformed(null);
+	protected void dispatchWindowCloseEvent(ActionEvent originAction) {
+		btnClose.getAction().actionPerformed(originAction);
 	}
 }

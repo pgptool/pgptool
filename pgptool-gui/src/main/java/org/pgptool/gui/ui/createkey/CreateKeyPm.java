@@ -40,7 +40,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.collections.ListExImpl;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
@@ -50,7 +50,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReflectionImpl;
 
-public class CreateKeyPm extends PresentationModelBase {
+public class CreateKeyPm extends PresentationModelBase<CreateKeyHost, Void> {
 	private static Logger log = Logger.getLogger(CreateKeyPm.class);
 
 	@Autowired
@@ -63,8 +63,6 @@ public class CreateKeyPm extends PresentationModelBase {
 	private EventBus eventBus;
 	@Autowired
 	private UsageLogger usageLogger;
-
-	private CreateKeyHost host;
 
 	private CreateKeyParams createKeyParams = new CreateKeyParams();
 
@@ -80,12 +78,13 @@ public class CreateKeyPm extends PresentationModelBase {
 
 	protected Future<?> keyGenerationFuture;
 
-	public void init(CreateKeyHost host) {
+	@Override
+	public boolean init(ActionEvent originAction, CreateKeyHost host, Void initParams) {
+		super.init(originAction, host, initParams);
 		Preconditions.checkArgument(host != null);
-		this.host = host;
-
 		initModelProperties();
 		keyGeneratorService.expectNewKeyCreation();
+		return true;
 	}
 
 	private void initModelProperties() {
@@ -113,11 +112,18 @@ public class CreateKeyPm extends PresentationModelBase {
 			progressBarVisible.setValueByOwner(true);
 			actionCreate.setEnabled(false);
 			isDisableControls.setValueByOwner(true);
-			keyGenerationFuture = executorService.submit(new KeyGenerationRunnable());
+			keyGenerationFuture = executorService.submit(new KeyGenerationRunnable(e));
 		}
 	};
 
 	private class KeyGenerationRunnable implements Runnable {
+		private ActionEvent runnableOriginEvent;
+
+		public KeyGenerationRunnable(ActionEvent runnableOriginEvent) {
+			this.runnableOriginEvent = runnableOriginEvent;
+		}
+
+		@SuppressWarnings("deprecation")
 		@Override
 		public void run() {
 			validationErrors.clear();
@@ -135,7 +141,7 @@ public class CreateKeyPm extends PresentationModelBase {
 				validationErrors.addAll(fve.getErrors());
 			} catch (Throwable t) {
 				log.error("Failed to create key", t);
-				EntryPoint.reportExceptionToUser("exception.failedToCreatePgpKey", t);
+				EntryPoint.reportExceptionToUser(runnableOriginEvent, "exception.failedToCreatePgpKey", t);
 			} finally {
 				progressBarVisible.setValueByOwner(false);
 				actionCreate.setEnabled(true);

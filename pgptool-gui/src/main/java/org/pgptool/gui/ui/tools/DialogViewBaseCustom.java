@@ -19,6 +19,7 @@ package org.pgptool.gui.ui.tools;
 
 import java.awt.Dialog.ModalityType;
 import java.awt.Image;
+import java.awt.Window;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -49,8 +50,8 @@ public abstract class DialogViewBaseCustom<TPM extends PresentationModel> extend
 	}
 
 	@Override
-	protected void showDialog() {
-		super.showDialog();
+	protected void showDialog(Window optionalParent) {
+		super.showDialog(optionalParent);
 		if (dialog.getModalityType() == ModalityType.MODELESS) {
 			UiUtils.makeSureWindowBroughtToFront(dialog);
 		}
@@ -63,8 +64,5 @@ public abstract class DialogViewBaseCustom<TPM extends PresentationModel> extend
 				dialog.pack();
 			}
 		}
-		// if (!windowGeometryPersister.restoreLocation()) {
-		UiUtils.centerWindow(dialog);
-		// }
 	}
 }

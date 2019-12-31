@@ -59,7 +59,7 @@ public class UpdatesPolicy implements ApplicationContextAware {
 		isAutoUpdatesEnabled = new ModelProperty<>(this,
 				new ValueAdapterPersistentPropertyImpl<Boolean>(appProps, PROP_IS_AUTO, null), PROP_IS_AUTO);
 		if (isAutoUpdatesEnabled.getValue() == null) {
-			isAutoUpdatesEnabled.setValueByOwner(UiUtils.confirmRegular("prompt.doAutoUpdatesCheck", null, null));
+			isAutoUpdatesEnabled.setValueByOwner(UiUtils.confirmRegular(null, "prompt.doAutoUpdatesCheck", null));
 		}
 
 		if (Boolean.FALSE.equals(isAutoUpdatesEnabled.getValue())) {
@@ -71,7 +71,7 @@ public class UpdatesPolicy implements ApplicationContextAware {
 			// result arrive view will just render already prepared results
 			checkForUpdatesPm = applicationContext.getBean(CheckForUpdatesPm.class);
 			checkForUpdatesPm.getNewVersion().addPropertyChangeListener(onNewVersionLinkChanged);
-			checkForUpdatesPm.init(checkForUpdatesDialog.host, this);
+			checkForUpdatesPm.init(null, checkForUpdatesDialog.host, this);
 		}
 	}
 
@@ -87,13 +87,13 @@ public class UpdatesPolicy implements ApplicationContextAware {
 	private PropertyChangeListener onNewVersionLinkChanged = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			if (!StringUtils.hasText("" + evt.getNewValue())) {
+			if (!StringUtils.hasText(String.valueOf(evt.getNewValue()))) {
 				return;
 			}
 			if (evt.getNewValue().equals(snoozedVersion.getValue())) {
 				return;
 			}
-			checkForUpdatesDialog.actionToOpenWindow.actionPerformed(null);
+			checkForUpdatesDialog.actionToOpenWindow.actionPerformed(UiUtils.actionEvent(evt));
 		}
 	};
 

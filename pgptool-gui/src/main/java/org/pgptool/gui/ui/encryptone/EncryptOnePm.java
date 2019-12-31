@@ -71,7 +71,6 @@ import org.pgptool.gui.ui.tools.ProgressHandlerPmMixinImpl;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -80,7 +79,7 @@ import org.summerb.utils.objectcopy.DeepCopy;
 import com.google.common.base.Preconditions;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.lists.ModelListProperty;
@@ -88,7 +87,7 @@ import ru.skarpushin.swingpm.modelprops.lists.ModelMultSelInListProperty;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
-public class EncryptOnePm extends PresentationModelBase implements InitializingBean {
+public class EncryptOnePm extends PresentationModelBase<EncryptOneHost, String> {
 	private static Logger log = Logger.getLogger(EncryptOnePm.class);
 
 	private static final String ENCRYPTED_FILE_EXTENSION = "pgp";
@@ -106,8 +105,6 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 	private KeyRingService keyRingService;
 	@Autowired
 	private EncryptionService encryptionService;
-
-	private EncryptOneHost host;
 
 	private ModelProperty<String> sourceFile;
 	private ModelProperty<Boolean> isUseSameFolder;
@@ -131,12 +128,9 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 	private Thread operationThread;
 
 	@Override
-	public void afterPropertiesSet() throws Exception {
-	}
-
-	public boolean init(EncryptOneHost host, String optionalSource) {
+	public boolean init(ActionEvent originAction, EncryptOneHost host, String optionalSource) {
+		super.init(originAction, host, optionalSource);
 		Preconditions.checkArgument(host != null);
-		this.host = host;
 
 		if (!doWeHaveKeysToEncryptWith()) {
 			return false;
@@ -145,7 +139,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		initModelProperties();
 
 		if (optionalSource == null) {
-			if (askUserForSourceFile() == null) {
+			if (askUserForSourceFile(originAction) == null) {
 				return false;
 			}
 		} else {
@@ -155,9 +149,9 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		return true;
 	}
 
-	private String askUserForSourceFile() {
+	private String askUserForSourceFile(ActionEvent originEvent) {
 		String selectedSourceFile;
-		if ((selectedSourceFile = getSourceFileChooser().askUserForFile()) == null) {
+		if ((selectedSourceFile = getSourceFileChooser().askUserForFile(originEvent)) == null) {
 			return null;
 		}
 		sourceFile.setValueByOwner(selectedSourceFile);
@@ -166,8 +160,8 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 
 	public SaveFileChooserDialog getTargetFileChooser() {
 		if (targetFileChooser == null) {
-			targetFileChooser = new SaveFileChooserDialog(findRegisteredWindowIfAny(), "action.chooseTargetFile",
-					"action.choose", appProps, "EncryptionTargetChooser") {
+			targetFileChooser = new SaveFileChooserDialog("action.chooseTargetFile", "action.choose", appProps,
+					"EncryptionTargetChooser") {
 				@Override
 				protected String onDialogClosed(String filePathName, JFileChooser ofd) {
 					String ret = super.onDialogClosed(filePathName, ofd);
@@ -178,7 +172,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 				}
 
 				@Override
-				protected void onFileChooserPostConstrct(JFileChooser ofd) {
+				protected void onFileChooserPostConstruct(JFileChooser ofd) {
 					ofd.setAcceptAllFileFilterUsed(false);
 					ofd.addChoosableFileFilter(new FileNameExtensionFilter("GPG Files (.pgp)", "pgp"));
 					// NOTE: Should we support other extensions?....
@@ -219,8 +213,9 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		if (!keyRingService.readKeys().isEmpty()) {
 			return true;
 		}
-		UiUtils.messageBox(text("phrase.noKeysForEncryption"), text("term.attention"), MessageSeverity.WARNING);
-		host.getActionToOpenCertificatesList().actionPerformed(null);
+		UiUtils.messageBox(originAction, text("phrase.noKeysForEncryption"), text("term.attention"),
+				MessageSeverity.WARNING);
+		host.getActionToOpenCertificatesList().actionPerformed(originAction);
 		if (keyRingService.readKeys().isEmpty()) {
 			return false;
 		}
@@ -268,7 +263,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 
 	public ExistingFileChooserDialog getSourceFileChooser() {
 		if (sourceFileChooser == null) {
-			sourceFileChooser = new ExistingFileChooserDialog(findRegisteredWindowIfAny(), appProps, SOURCE_FOLDER) {
+			sourceFileChooser = new ExistingFileChooserDialog(appProps, SOURCE_FOLDER) {
 				@Override
 				protected void doFileChooserPostConstruct(JFileChooser ofd) {
 					super.doFileChooserPostConstruct(ofd);
@@ -310,7 +305,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 			encryptionDialogParameters = encryptionParamsStorage.findParamsBasedOnSourceFile(sourceFile.getValue(),
 					true);
 			if (encryptionDialogParameters != null) {
-				useSugestedParameters(encryptionDialogParameters);
+				useSugestedParameters(encryptionDialogParameters, evt);
 			} else {
 				selectSelfAsRecipient();
 			}
@@ -326,7 +321,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 			}
 		}
 
-		private void useSugestedParameters(EncryptionDialogParameters params) {
+		private void useSugestedParameters(EncryptionDialogParameters params, PropertyChangeEvent evt) {
 			useSuggestedTargetFile(params);
 
 			// NOTE: MAGIC: We need to set it AFTER we set targetFolder. Because
@@ -338,7 +333,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 			isOpenTargetFolderAfter.setValueByOwner(params.isOpenTargetFolder());
 
 			Set<String> missedKeys = preselectRecipients(new HashSet<>(params.getRecipientsKeysIds()));
-			notifyUserOfMissingKeysIfAny(missedKeys);
+			notifyUserOfMissingKeysIfAny(missedKeys, evt);
 		}
 
 		private void useSuggestedTargetFile(EncryptionDialogParameters params) {
@@ -371,12 +366,12 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 			return missedKeys;
 		}
 
-		private void notifyUserOfMissingKeysIfAny(Set<String> missedKeys) {
+		private void notifyUserOfMissingKeysIfAny(Set<String> missedKeys, PropertyChangeEvent evt) {
 			if (CollectionUtils.isEmpty(missedKeys)) {
 				return;
 			}
 
-			UiUtils.messageBox(findRegisteredWindowIfAny(),
+			UiUtils.messageBox(UiUtils.actionEvent(evt),
 					text("error.notAllRecipientsAvailable", Arrays.asList(missedKeys)), text("term.attention"),
 					JOptionPane.WARNING_MESSAGE);
 		}
@@ -398,7 +393,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
-						getTargetFileChooser().askUserForFile();
+						getTargetFileChooser().askUserForFile(UiUtils.actionEvent(evt));
 						refreshPrimaryOperationAvailability();
 					}
 				});
@@ -431,12 +426,18 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 			super.actionPerformed(e);
 			actionDoOperation.setEnabled(false);
 			isDisableControls.setValueByOwner(true);
-			operationThread = new Thread(operationWorker);
+			operationThread = new Thread(new OperationWorker(e));
 			operationThread.start();
 		}
 	};
 
-	private Runnable operationWorker = new Runnable() {
+	private class OperationWorker implements Runnable {
+		private ActionEvent workerOriginEvent;
+
+		public OperationWorker(ActionEvent workerOriginEvent) {
+			this.workerOriginEvent = workerOriginEvent;
+		}
+
 		@Override
 		public void run() {
 			String targetFileName = getEffectiveTargetFileName();
@@ -467,7 +468,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 				return;
 			} catch (Throwable t) {
 				log.error("Failed to encrypt", t);
-				EntryPoint.reportExceptionToUser("error.failedToEncryptFile", t);
+				EntryPoint.reportExceptionToUser(workerOriginEvent, "error.failedToEncryptFile", t);
 				actionDoOperation.setEnabled(true);
 				isDisableControls.setValueByOwner(false);
 				isProgressVisible.setValueByOwner(false);
@@ -479,7 +480,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 				try {
 					Preconditions.checkState(new File(sourceFile.getValue()).delete(), "File.delete() returned false");
 				} catch (Throwable t) {
-					EntryPoint.reportExceptionToUser("error.encryptOkButCantDeleteSource", t);
+					EntryPoint.reportExceptionToUser(workerOriginEvent, "error.encryptOkButCantDeleteSource", t);
 				}
 			} else {
 				updateBaselineFingerprintsIfApplicable(sourceFile.getValue(), targetFileName, source, target);
@@ -490,7 +491,8 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 				askOperSystemToBrowseForFolder(targetFileName);
 			} else {
 				// Or show confirmation
-				UiUtils.messageBox(text("phrase.encryptionSuccess"), text("term.success"), MessageSeverity.INFO);
+				UiUtils.messageBox(workerOriginEvent, text("phrase.encryptionSuccess"), text("term.success"),
+						MessageSeverity.INFO);
 			}
 
 			// Remember parameters
@@ -502,8 +504,8 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		}
 
 		private boolean promptUserToOverwriteConcurrentChanges(String targetFileName) {
-			return UiUtils.confirmRegular("confirm.doYouWantToOverwriteConcurrentChanges",
-					new String[] { targetFileName }, findRegisteredWindowIfAny());
+			return UiUtils.confirmRegular(workerOriginEvent, "confirm.doYouWantToOverwriteConcurrentChanges",
+					new String[] { targetFileName });
 		}
 
 		private boolean isEncryptedFileChangedAfterDecryption(String encryptedFileName, String decryptedFilename,
@@ -561,7 +563,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 			try {
 				Desktop.getDesktop().browse(new File(targetFileName).getParentFile().toURI());
 			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser("error.encryptOkButCantBrowseForFolder", t);
+				EntryPoint.reportExceptionToUser(workerOriginEvent, "error.encryptOkButCantBrowseForFolder", t);
 			}
 		}
 
@@ -618,7 +620,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
-			askUserForSourceFile();
+			askUserForSourceFile(e);
 		}
 	};
 
@@ -627,7 +629,7 @@ public class EncryptOnePm extends PresentationModelBase implements InitializingB
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
-			getTargetFileChooser().askUserForFile();
+			getTargetFileChooser().askUserForFile(e);
 			refreshPrimaryOperationAvailability();
 		}
 	};

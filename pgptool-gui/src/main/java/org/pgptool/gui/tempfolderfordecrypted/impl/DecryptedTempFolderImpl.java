@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.tempfolderfordecrypted.impl;
 
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.Random;
 
@@ -29,12 +30,10 @@ import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.tools.TextFile;
+import org.pgptool.gui.ui.root.RootPm;
 import org.pgptool.gui.ui.tools.UiUtils;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.StringUtils;
 import org.summerb.validation.FieldValidationException;
 import org.summerb.validation.ValidationError;
@@ -42,7 +41,7 @@ import org.summerb.validation.errors.FieldRequiredValidationError;
 
 import com.google.common.base.Throwables;
 
-public class DecryptedTempFolderImpl implements DecryptedTempFolder, InitializingBean, ApplicationContextAware {
+public class DecryptedTempFolderImpl implements DecryptedTempFolder, InitializingBean {
 	public static final String CONFIG_DECRYPTED_TEMP_FOLDER = "tempFolderForDecrypted";
 	private static Logger log = Logger.getLogger(DecryptedTempFolderImpl.class);
 
@@ -50,9 +49,10 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
 	private ConfigsBasePathResolver configsBasePathResolver;
 	@Autowired
 	private ConfigPairs appProps;
+	@Autowired
+	private RootPm rootPm;
 
 	private String tempFolderBasePath;
-	private ApplicationContext applicationContext;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -64,19 +64,20 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
 			return;
 		}
 
+		ActionEvent surrogateEvent = UiUtils.actionEvent(rootPm.findMainFrameWindow(), "ensureDirExists");
 		if (ensureDirExists(defaultValue1)) {
-			UiUtils.messageBox(
+			UiUtils.messageBox(surrogateEvent,
 					Messages.get("decrypt.temp.folder.changedDueToFailure", tempFolderBasePath, defaultValue1),
 					Messages.get("term.attention"), MessageSeverity.WARNING);
 			setTempFolderBasePath(defaultValue1);
 		} else if (ensureDirExists(defaultValue2)) {
-			UiUtils.messageBox(
+			UiUtils.messageBox(surrogateEvent,
 					Messages.get("decrypt.temp.folder.changedDueToFailure", tempFolderBasePath, defaultValue2),
 					Messages.get("term.attention"), MessageSeverity.WARNING);
 			setTempFolderBasePath(defaultValue2);
 		} else {
-			UiUtils.messageBox(Messages.get("decrypt.temp.folder.failure"), Messages.get("term.attention"),
-					MessageSeverity.WARNING);
+			UiUtils.messageBox(surrogateEvent, Messages.get("decrypt.temp.folder.failure"),
+					Messages.get("term.attention"), MessageSeverity.WARNING);
 			tempFolderBasePath = "./";
 		}
 	}
@@ -98,7 +99,6 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
 		appProps.put(CONFIG_DECRYPTED_TEMP_FOLDER, tempFolderBasePath);
 	}
 
-	@SuppressWarnings("deprecation")
 	private void validate(String newValue) throws FieldValidationException {
 		try {
 			if (!StringUtils.hasText(newValue)) {
@@ -122,11 +122,6 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
 		} catch (Throwable t) {
 			throw new Exception("Failed to verify if temporary folder can actually be used", t);
 		}
-	}
-
-	@Override
-	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-		this.applicationContext = applicationContext;
 	}
 
 }

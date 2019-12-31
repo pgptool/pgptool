@@ -62,7 +62,6 @@ import org.pgptool.gui.ui.tools.ProgressHandlerPmMixinImpl;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.summerb.validation.ValidationError;
@@ -72,14 +71,14 @@ import org.summerb.validation.errors.FieldRequiredValidationError;
 import com.google.common.base.Preconditions;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.collections.ListExImpl;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
-public class DecryptOnePm extends PresentationModelBase implements InitializingBean {
+public class DecryptOnePm extends PresentationModelBase<DecryptOneHost, String> {
 	private static final String FN_SOURCE_FILE = "sourceFile";
 	private static final String FN_TARGET_FILE = "targetFile";
 
@@ -109,8 +108,6 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 	@Autowired
 	private MessageDigestFactory messageDigestFactory;
 
-	private DecryptOneHost host;
-
 	private ModelProperty<String> sourceFile;
 	private ModelProperty<Boolean> isUseSameFolder;
 	private ModelProperty<Boolean> isUseTempFolder;
@@ -138,12 +135,9 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 	private Thread operationThread;
 
 	@Override
-	public void afterPropertiesSet() throws Exception {
-	}
-
-	public boolean init(DecryptOneHost host, String optionalSource) {
+	public boolean init(ActionEvent originAction, DecryptOneHost host, String optionalSource) {
+		super.init(originAction, host, optionalSource);
 		Preconditions.checkArgument(host != null);
-		this.host = host;
 
 		if (!doWeHaveKeysToDecryptWith()) {
 			return false;
@@ -152,7 +146,7 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 		initModelProperties();
 
 		if (optionalSource == null) {
-			if (getSourceFileChooser().askUserForFile() == null) {
+			if (getSourceFileChooser().askUserForFile(originAction) == null) {
 				return false;
 			}
 		} else {
@@ -189,8 +183,8 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 
 	public SaveFileChooserDialog getTargetFileChooser() {
 		if (targetFileChooser == null) {
-			targetFileChooser = new SaveFileChooserDialog(findRegisteredWindowIfAny(), "action.chooseTargetFile",
-					"action.choose", appProps, "DecryptionTargetChooser") {
+			targetFileChooser = new SaveFileChooserDialog("action.chooseTargetFile", "action.choose", appProps,
+					"DecryptionTargetChooser") {
 				@Override
 				protected String onDialogClosed(String filePathName, JFileChooser ofd) {
 					String ret = super.onDialogClosed(filePathName, ofd);
@@ -235,8 +229,9 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 		if (!keyRingService.readKeys().isEmpty()) {
 			return true;
 		}
-		UiUtils.messageBox(text("phrase.noKeysForDecryption"), text("term.attention"), MessageSeverity.WARNING);
-		host.getActionToOpenCertificatesList().actionPerformed(null);
+		UiUtils.messageBox(originAction, text("phrase.noKeysForDecryption"), text("term.attention"),
+				MessageSeverity.WARNING);
+		host.getActionToOpenCertificatesList().actionPerformed(originAction);
 		if (keyRingService.readKeys().isEmpty()) {
 			return false;
 		}
@@ -245,7 +240,7 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 
 	public ExistingFileChooserDialog getSourceFileChooser() {
 		if (sourceFileChooser == null) {
-			sourceFileChooser = new ExistingFileChooserDialog(findRegisteredWindowIfAny(), appProps, SOURCE_FOLDER) {
+			sourceFileChooser = new ExistingFileChooserDialog(appProps, SOURCE_FOLDER) {
 				@Override
 				protected void doFileChooserPostConstruct(JFileChooser ofd) {
 					super.doFileChooserPostConstruct(ofd);
@@ -295,7 +290,6 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 		validationErrors.removeAll(ValidationErrorsUtils.findErrorsForField(FN_TARGET_FILE, validationErrors));
 	}
 
-	@SuppressWarnings("deprecation")
 	private PropertyChangeListener onSourceFileModified = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
@@ -439,7 +433,7 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 			// parameters. So if value is already provided for target file then
 			// we'll not show file chooser
 			if (result && !StringUtils.hasText(targetFile.getValue())) {
-				getTargetFileChooser().askUserForFile();
+				getTargetFileChooser().askUserForFile(UiUtils.actionEvent(evt));
 			}
 
 			if (!result) {
@@ -463,12 +457,18 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 			super.actionPerformed(e);
 			actionDoOperation.setEnabled(false);
 			isDisableControls.setValueByOwner(true);
-			operationThread = new Thread(operationWorker);
+			operationThread = new Thread(new OperationWorker(e));
 			operationThread.start();
 		}
 	};
 
-	private Runnable operationWorker = new Runnable() {
+	private class OperationWorker implements Runnable {
+		private ActionEvent workerOriginEvent;
+
+		public OperationWorker(ActionEvent workerOriginEvent) {
+			this.workerOriginEvent = workerOriginEvent;
+		}
+
 		@Override
 		public void run() {
 			String targetFileName = getEffectiveTargetFileName();
@@ -516,7 +516,7 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 				if (sourceFileFingerprintFuture != null) {
 					sourceFileFingerprintFuture.cancel(true);
 				}
-				EntryPoint.reportExceptionToUser("error.failedToDecryptFile", t);
+				EntryPoint.reportExceptionToUser(workerOriginEvent, "error.failedToDecryptFile", t);
 				actionDoOperation.setEnabled(true);
 				isDisableControls.setValueByOwner(false);
 				return;
@@ -532,7 +532,7 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 				try {
 					Preconditions.checkState(new File(sourceFileStr).delete(), "File.delete() returned false");
 				} catch (Throwable t) {
-					EntryPoint.reportExceptionToUser("error.decryptOkButCantDeleteSource", t);
+					EntryPoint.reportExceptionToUser(workerOriginEvent, "error.decryptOkButCantDeleteSource", t);
 				}
 			}
 
@@ -550,8 +550,8 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 			}
 
 			if (confirmationMessageRequired) {
-				UiUtils.messageBox(text("phrase.decryptionSuccess", targetFileName), text("term.success"),
-						MessageSeverity.INFO);
+				UiUtils.messageBox(workerOriginEvent, text("phrase.decryptionSuccess", targetFileName),
+						text("term.success"), MessageSeverity.INFO);
 			}
 
 			// close window
@@ -570,7 +570,7 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 			try {
 				Desktop.getDesktop().open(new File(targetFileName));
 			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser("error.decryptOkButCantBrowseForFolder", t);
+				EntryPoint.reportExceptionToUser(workerOriginEvent, "error.decryptOkButCantBrowseForFolder", t);
 			}
 		}
 
@@ -578,7 +578,7 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 			try {
 				Desktop.getDesktop().browse(new File(targetFileName).getParentFile().toURI());
 			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser("error.decryptOkButCantBrowseForFolder", t);
+				EntryPoint.reportExceptionToUser(workerOriginEvent, "error.decryptOkButCantBrowseForFolder", t);
 			}
 		}
 
@@ -704,7 +704,7 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
-			getSourceFileChooser().askUserForFile();
+			getSourceFileChooser().askUserForFile(e);
 		}
 	};
 
@@ -713,7 +713,7 @@ public class DecryptOnePm extends PresentationModelBase implements InitializingB
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
-			getTargetFileChooser().askUserForFile();
+			getTargetFileChooser().askUserForFile(e);
 		}
 	};
 

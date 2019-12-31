@@ -17,17 +17,17 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.keyslist;
 
-import java.awt.Window;
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 
 import org.pgptool.gui.encryption.api.dto.Key;
 
 public interface KeysExporterUi {
 
-	void exportPrivateKey(Key key, Window parentWindow);
+	void exportPrivateKey(Key key, ActionEvent originEvent);
 
-	void exportPublicKey(Key key, Window parentWindow);
+	void exportPublicKey(Key key, ActionEvent originEvent);
 
-	void exportPublicKeys(ArrayList<Key> keys, Window parentWindow);
+	void exportPublicKeys(ArrayList<Key> keys, ActionEvent originEvent);
 
 }

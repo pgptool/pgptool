@@ -167,9 +167,9 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 				}
 			} else if (e.getKeyCode() == KeyEvent.VK_ENTER && table.getSelectedRow() >= 0) {
 				e.consume();
-				pm.actionOpen.actionPerformed(null);
+				pm.actionOpen.actionPerformed(UiUtils.actionEvent(table, pm.actionOpen));
 			} else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-				pm.getActionCancel().actionPerformed(null);
+				pm.getActionCancel().actionPerformed(UiUtils.actionEvent(table, pm.getActionCancel()));
 			}
 		}
 	};
@@ -214,7 +214,7 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 			}
 
 			if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() == 2) {
-				pm.actionOpen.actionPerformed(null);
+				pm.actionOpen.actionPerformed(UiUtils.actionEvent(table, pm.actionOpen));
 				return;
 			}
 		}
@@ -375,7 +375,7 @@ public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
 				return;
 			}
 
-			pm.getActionCancel().actionPerformed(null);
+			pm.getActionCancel().actionPerformed(UiUtils.actionEvent(e.getSource(), "windowDeactivated"));
 		};
 	};
 

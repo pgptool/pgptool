@@ -25,6 +25,7 @@ import java.awt.Component;
 import java.awt.Dialog.ModalityType;
 import java.awt.FlowLayout;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -176,7 +177,7 @@ public class EncryptBackMultipleView extends DialogViewBaseCustom<EncryptBackMul
 		ret.setTitle(Messages.get("encrypBackMany.action"));
 		ret.add(pnl, BorderLayout.CENTER);
 		ret.pack();
-		UiUtils.centerWindow(ret);
+		UiUtils.centerWindow(ret, owner);
 		{
 			// DIRTY-HACK: YES, FOLLOWING 2 LINES ARE REPEATED BY INTENTION,
 			// OTHERWISE JXlABEL IS NOT
@@ -184,7 +185,7 @@ public class EncryptBackMultipleView extends DialogViewBaseCustom<EncryptBackMul
 			// THE ONLY WAY TO FORCE IT IS TO CENTER WINDOW. SO ONCE WE DID
 			// FIRST TIME NOW WE CAN PACK AND CENTER AGAIN
 			ret.pack();
-			UiUtils.centerWindow(ret);
+			UiUtils.centerWindow(ret, owner);
 		}
 		return ret;
 	}
@@ -195,7 +196,7 @@ public class EncryptBackMultipleView extends DialogViewBaseCustom<EncryptBackMul
 	}
 
 	@Override
-	protected void dispatchWindowCloseEvent() {
-		btnCancel.getAction().actionPerformed(null);
+	protected void dispatchWindowCloseEvent(ActionEvent originAction) {
+		btnCancel.getAction().actionPerformed(originAction);
 	}
 }

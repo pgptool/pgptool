@@ -26,6 +26,7 @@ import java.awt.Dialog.ModalityType;
 import java.awt.FlowLayout;
 import java.awt.Insets;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -124,16 +125,16 @@ public class CheckForUpdatesView extends DialogViewBaseCustom<CheckForUpdatesPm>
 				return;
 			}
 
-			triggerAction();
+			triggerAction(UiUtils.actionEvent(e.getSource(), "LinkActivated"));
 		}
 
-		protected abstract void triggerAction();
+		protected abstract void triggerAction(ActionEvent originEvent);
 	}
 
 	private MouseListener newVersionLinkClickListener = new LinkMouseListener() {
 		@Override
-		protected void triggerAction() {
-			pm.actionDownloadNewVersion.actionPerformed(null);
+		protected void triggerAction(ActionEvent originEvent) {
+			pm.actionDownloadNewVersion.actionPerformed(originEvent);
 		}
 	};
 
@@ -173,7 +174,7 @@ public class CheckForUpdatesView extends DialogViewBaseCustom<CheckForUpdatesPm>
 		ret.setTitle(text("action.checkForUpdates"));
 		ret.add(pnl, BorderLayout.CENTER);
 		ret.pack();
-		UiUtils.centerWindow(ret);
+		UiUtils.centerWindow(ret, owner);
 		return ret;
 	}
 
@@ -183,7 +184,7 @@ public class CheckForUpdatesView extends DialogViewBaseCustom<CheckForUpdatesPm>
 	}
 
 	@Override
-	protected void dispatchWindowCloseEvent() {
-		btnClose.getAction().actionPerformed(null);
+	protected void dispatchWindowCloseEvent(ActionEvent originAction) {
+		btnClose.getAction().actionPerformed(originAction);
 	}
 }

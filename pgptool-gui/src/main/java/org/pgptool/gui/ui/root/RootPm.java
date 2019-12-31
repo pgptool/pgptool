@@ -71,6 +71,7 @@ import org.pgptool.gui.ui.encrypttext.EncryptTextPm;
 import org.pgptool.gui.ui.encrypttext.EncryptTextView;
 import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogHost;
 import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm;
+import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm.GetKeyPasswordPo;
 import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogView;
 import org.pgptool.gui.ui.importkey.KeyImporterHost;
 import org.pgptool.gui.ui.importkey.KeyImporterPm;
@@ -98,8 +99,8 @@ import org.springframework.util.StringUtils;
 import com.google.common.eventbus.EventBus;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.base.HasWindow;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
 import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.tools.edt.Edt;
 
@@ -152,7 +153,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		} catch (Throwable t) {
 			try {
 				log.error("Failed to start application", t);
-				UiUtils.messageBox(ConsoleExceptionUtils.getAllMessages(t),
+				UiUtils.messageBox(/* by design */ null, ConsoleExceptionUtils.getAllMessages(t),
 						Messages.get("exception.unexpected.failedToStartupApplication"), MessageSeverity.ERROR);
 			} finally {
 				// NOTE: We actually mean to exit application
@@ -165,6 +166,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	 * 
 	 * @param commandLineArgs
 	 */
+	@SuppressWarnings("deprecation")
 	public void processCommandLine(String[] commandLineArgs) {
 		try {
 			if (commandLineArgs == null || commandLineArgs.length == 0) {
@@ -190,12 +192,12 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 				} else if (EncryptOnePm.isItLooksLikeYourSourceFile(file)) {
 					openNewEncryptionWindow(file);
 				} else {
-					UiUtils.messageBox("Program argument cannot be handled: " + file, text("term.attention"),
-							MessageSeverity.WARNING);
+					UiUtils.messageBox(/* by design */ null, "Program argument cannot be handled: " + file,
+							text("term.attention"), MessageSeverity.WARNING);
 				}
 			}
 		} catch (Throwable t) {
-			EntryPoint.reportExceptionToUser("error.failedToProcessCommandLine", t);
+			EntryPoint.reportExceptionToUser(null, "error.failedToProcessCommandLine", t);
 		}
 	}
 
@@ -205,7 +207,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 			public void run() {
 				// NOTE: Assuming it is blocking operation!
 				// Remember: View is singleton here
-				new DecryptionWindowOpener(sourceFile).actionToOpenWindow.actionPerformed(null);
+				new DecryptionWindowOpener(sourceFile).actionToOpenWindow.actionPerformed(/* by design */ null);
 			}
 		});
 	}
@@ -216,7 +218,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 			public void run() {
 				// NOTE: Assuming it is blocking operation!
 				// Remember: View is singleton here
-				new EncryptionWindowOpener(sourceFile).actionToOpenWindow.actionPerformed(null);
+				new EncryptionWindowOpener(sourceFile).actionToOpenWindow.actionPerformed(/* by design */ null);
 			}
 		});
 	}
@@ -265,13 +267,13 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		}
 
 		@Override
-		public void openEncryptDialogFor(String decryptedFile) {
-			new EncryptionWindowOpener(decryptedFile).actionToOpenWindow.actionPerformed(null);
+		public void openEncryptDialogFor(String decryptedFile, ActionEvent originEvent) {
+			new EncryptionWindowOpener(decryptedFile).actionToOpenWindow.actionPerformed(originEvent);
 		}
 
 		@Override
-		public void openDecryptDialogFor(String encryptedFile) {
-			new DecryptionWindowOpener(encryptedFile).actionToOpenWindow.actionPerformed(null);
+		public void openDecryptDialogFor(String encryptedFile, ActionEvent originEvent) {
+			new DecryptionWindowOpener(encryptedFile).actionToOpenWindow.actionPerformed(originEvent);
 		}
 
 		@Override
@@ -280,8 +282,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		}
 
 		@Override
-		public void openEncryptBackMultipleFor(Set<String> decryptedFiles) {
-			new EncryptBackManyWindowOpener(decryptedFiles).actionToOpenWindow.actionPerformed(null);
+		public void openEncryptBackMultipleFor(Set<String> decryptedFiles, ActionEvent originEvent) {
+			new EncryptBackManyWindowOpener(decryptedFiles).actionToOpenWindow.actionPerformed(originEvent);
 		}
 
 		@Override
@@ -310,7 +312,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 					try {
 						Desktop.getDesktop().browse(new URI(url));
 					} catch (Throwable t) {
-						EntryPoint.reportExceptionToUser("failed.toOpenBrowser", t);
+						EntryPoint.reportExceptionToUser(e, "failed.toOpenBrowser", t);
 					}
 				}
 			};
@@ -343,7 +345,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 
 	private void openMainFrameWindow() {
 		mainFramePm = applicationContext.getBean(MainFramePm.class);
-		mainFramePm.init(mainFrameHost, updatesPolicy);
+		mainFramePm.init(null, mainFrameHost, updatesPolicy);
+
 		MainFrameView view = getMainFrameView();
 		view.setPm(mainFramePm);
 		view.renderTo(null);
@@ -357,11 +360,12 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
 			tempFolderChooserPm = applicationContext.getBean(TempFolderChooserPm.class);
-			tempFolderChooserPm.present(mainFrameView == null ? null : mainFrameView.getWindow());
+			tempFolderChooserPm.present(e);
 			tempFolderChooserPm = null;
 		}
 	};
 
+	@SuppressWarnings("deprecation")
 	protected void tearDownConfigContext() {
 		try {
 			getMainFrameView().unrender();
@@ -371,7 +375,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 			mainFramePm = null;
 		} catch (Throwable t) {
 			log.error("Failed to gracefully close app", t);
-			EntryPoint.reportExceptionToUser("exception.unexpected.failedToCloseConfig", t);
+			EntryPoint.reportExceptionToUser(null, "exception.unexpected.failedToCloseConfig", t);
 		}
 	}
 
@@ -382,7 +386,15 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		return mainFrameView;
 	}
 
-	private class ImportKeyDialogOpener extends DialogOpener<KeyImporterPm, KeyImporterView> {
+	public Window findMainFrameWindow() {
+		if (mainFrameView != null) {
+			return mainFrameView.getWindow();
+		}
+		return null;
+	}
+
+	private class ImportKeyDialogOpener
+			extends DialogOpener<KeyImporterHost, List<Key>, KeyImporterPm, KeyImporterView> {
 		private List<Key> keys;
 
 		public ImportKeyDialogOpener() {
@@ -404,25 +416,21 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		};
 
 		@Override
-		protected boolean postConstructPm() {
-			if (keys != null) {
-				pm.init(host, keys);
-				return true;
-			}
-			if (!pm.init(host)) {
-				pm.detach();
-				pm = null;
-				return false;
-			}
-			return true;
-		};
+		protected KeyImporterHost getHost() {
+			return host;
+		}
+
+		@Override
+		protected List<Key> getInitParams() {
+			return keys;
+		}
 	}
 
-	private DialogOpener<KeyImporterPm, KeyImporterView> importKeyWindowHost = new ImportKeyDialogOpener();
+	private ImportKeyDialogOpener importKeyWindowHost = new ImportKeyDialogOpener();
 
 	protected EncryptTextDialogOpener encryptTextHost = new EncryptTextDialogOpener(new HashSet<>());
 
-	class EncryptTextDialogOpener extends DialogOpener<EncryptTextPm, EncryptTextView> {
+	class EncryptTextDialogOpener extends DialogOpener<EncryptTextHost, Set<String>, EncryptTextPm, EncryptTextView> {
 		private Set<String> preselectedKeyIds;
 
 		public EncryptTextDialogOpener(Set<String> preselectedKeyIds) {
@@ -445,31 +453,28 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		};
 
 		@Override
-		protected boolean postConstructPm() {
-			if (!pm.init(host, preselectedKeyIds)) {
-				// This happens if user clicked cancel during first render of
-				// "Browse dialog"
-				pm.detach();
-				pm = null;
-				return false;
-			}
-			return true;
+		protected EncryptTextHost getHost() {
+			return host;
+		}
+
+		@Override
+		protected Set<String> getInitParams() {
+			return preselectedKeyIds;
 		};
 	};
 
-	private class GetKeyPasswordDialogOpener extends DialogOpener<GetKeyPasswordDialogPm, GetKeyPasswordDialogView> {
+	private class GetKeyPasswordDialogOpener extends
+			DialogOpener<GetKeyPasswordDialogHost, GetKeyPasswordPo, GetKeyPasswordDialogPm, GetKeyPasswordDialogView> {
 		private Set<String> keysIds;
 		private Message purpose;
 		private KeyAndPasswordCallback keyAndPasswordCallback;
-		private Window parentWindow;
 
 		public GetKeyPasswordDialogOpener(Set<String> keysIds, Message purpose,
-				KeyAndPasswordCallback keyAndPasswordCallback, Window parentWindow) {
+				KeyAndPasswordCallback keyAndPasswordCallback) {
 			super(GetKeyPasswordDialogPm.class, GetKeyPasswordDialogView.class, "action.providePasswordForTheKey");
 			this.keysIds = keysIds;
 			this.purpose = purpose;
 			this.keyAndPasswordCallback = keyAndPasswordCallback;
-			this.parentWindow = parentWindow;
 		}
 
 		GetKeyPasswordDialogHost host = new GetKeyPasswordDialogHost() {
@@ -484,17 +489,22 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		};
 
 		@Override
-		protected boolean postConstructPm() {
-			return pm.init(host, keysIds, purpose, keyAndPasswordCallback);
-		};
+		protected GetKeyPasswordDialogHost getHost() {
+			return host;
+		}
 
 		@Override
-		protected void doRenderView() {
-			view.renderTo(parentWindow);
+		protected void doRenderView(Window optionalOrigin) {
+			view.renderTo(optionalOrigin);
+		}
+
+		@Override
+		protected GetKeyPasswordPo getInitParams() {
+			return new GetKeyPasswordPo(keysIds, purpose, keyAndPasswordCallback);
 		}
 	};
 
-	private DialogOpener<DecryptTextPm, DecryptTextView> decryptTextHost = new DialogOpener<DecryptTextPm, DecryptTextView>(
+	private DialogOpener<DecryptTextHost, Void, DecryptTextPm, DecryptTextView> decryptTextHost = new DialogOpener<DecryptTextHost, Void, DecryptTextPm, DecryptTextView>(
 			DecryptTextPm.class, DecryptTextView.class, "action.decryptText") {
 
 		class DecryptTextHostImpl implements DecryptTextHost {
@@ -512,33 +522,32 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 
 			@Override
 			public void askUserForKeyAndPassword(Set<String> keysIds, Message purpose,
-					KeyAndPasswordCallback keyAndPasswordCallback, Window parentWindow) {
-				new GetKeyPasswordDialogOpener(keysIds, purpose, keyAndPasswordCallback,
-						parentWindow).actionToOpenWindow.actionPerformed(null);
+					KeyAndPasswordCallback keyAndPasswordCallback, ActionEvent originEvent) {
+				new GetKeyPasswordDialogOpener(keysIds, purpose, keyAndPasswordCallback).actionToOpenWindow
+						.actionPerformed(originEvent);
 			}
 
 			@Override
-			public void openEncryptText(Set<String> recipientsList) {
-				new EncryptTextDialogOpener(recipientsList).actionToOpenWindow.actionPerformed(null);
+			public void openEncryptText(Set<String> recipientsList, ActionEvent originEvent) {
+				new EncryptTextDialogOpener(recipientsList).actionToOpenWindow.actionPerformed(originEvent);
 			}
 		};
 
 		private DecryptTextHostImpl host = new DecryptTextHostImpl();
 
 		@Override
-		protected boolean postConstructPm() {
-			if (!pm.init(host)) {
-				// This happens if user clicked cancel during first render of
-				// "Browse dialog"
-				pm.detach();
-				pm = null;
-				return false;
-			}
-			return true;
+		protected DecryptTextHost getHost() {
+			return host;
+		}
+
+		@Override
+		protected Void getInitParams() {
+			return null;
 		};
 	};
 
-	private class EncryptBackManyWindowOpener extends DialogOpener<EncryptBackMultiplePm, EncryptBackMultipleView> {
+	private class EncryptBackManyWindowOpener
+			extends DialogOpener<EncryptBackMultipleHost, Set<String>, EncryptBackMultiplePm, EncryptBackMultipleView> {
 		private Set<String> decryptedFiles;
 
 		public EncryptBackManyWindowOpener(Set<String> decryptedFiles) {
@@ -561,14 +570,19 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		};
 
 		@Override
-		protected boolean postConstructPm() {
-			return pm.init(host, decryptedFiles);
+		protected EncryptBackMultipleHost getHost() {
+			return host;
+		}
+
+		@Override
+		protected Set<String> getInitParams() {
+			return decryptedFiles;
 		};
 	};
 
-	private DialogOpener<EncryptOnePm, EncryptOneView> encryptionWindowHost = new EncryptionWindowOpener(null);
+	private EncryptionWindowOpener encryptionWindowHost = new EncryptionWindowOpener(null);
 
-	private class EncryptionWindowOpener extends DialogOpener<EncryptOnePm, EncryptOneView> {
+	private class EncryptionWindowOpener extends DialogOpener<EncryptOneHost, String, EncryptOnePm, EncryptOneView> {
 		private String sourceFile;
 
 		public EncryptionWindowOpener(String sourceFile) {
@@ -591,15 +605,20 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		};
 
 		@Override
-		protected boolean postConstructPm() {
-			return pm.init(host, sourceFile);
+		protected EncryptOneHost getHost() {
+			return host;
+		}
+
+		@Override
+		protected String getInitParams() {
+			return sourceFile;
 		};
 	};
 
-	private DialogOpener<DecryptOneDialogPm, DecryptOneDialogView> decryptionWindowHost = new DecryptionWindowOpener(
-			null);
+	private DecryptionWindowOpener decryptionWindowHost = new DecryptionWindowOpener(null);
 
-	private class DecryptionWindowOpener extends DialogOpener<DecryptOneDialogPm, DecryptOneDialogView> {
+	private class DecryptionWindowOpener
+			extends DialogOpener<DecryptOneDialogHost, String, DecryptOneDialogPm, DecryptOneDialogView> {
 		private String sourceFile;
 
 		public DecryptionWindowOpener(String sourceFile) {
@@ -622,32 +641,42 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		};
 
 		@Override
-		protected boolean postConstructPm() {
-			return pm.init(host, sourceFile);
+		protected DecryptOneDialogHost getHost() {
+			return host;
+		}
+
+		@Override
+		protected String getInitParams() {
+			return sourceFile;
 		};
 	};
 
-	private DialogOpener<CreateKeyPm, CreateKeyView> createKeyWindowHost = new DialogOpener<CreateKeyPm, CreateKeyView>(
+	private DialogOpener<CreateKeyHost, Void, CreateKeyPm, CreateKeyView> createKeyWindowHost = new DialogOpener<CreateKeyHost, Void, CreateKeyPm, CreateKeyView>(
 			CreateKeyPm.class, CreateKeyView.class, "action.createPgpKey") {
 		@Override
-		protected boolean postConstructPm() {
-			pm.init(new CreateKeyHost() {
+		protected CreateKeyHost getHost() {
+			return new CreateKeyHost() {
 				@Override
 				public void handleClose() {
 					view.unrender();
 					pm.detach();
 					pm = null;
 				}
-			});
-			return true;
+			};
+		}
+
+		@Override
+		protected Void getInitParams() {
+			return null;
 		};
 	};
 
-	private DialogOpener<KeysListPm, KeysListView> keysListWindowHost = new DialogOpener<KeysListPm, KeysListView>(
+	private DialogOpener<KeysListHost, Void, KeysListPm, KeysListView> keysListWindowHost = new DialogOpener<KeysListHost, Void, KeysListPm, KeysListView>(
 			KeysListPm.class, KeysListView.class, "action.showKeysList") {
+
 		@Override
-		protected boolean postConstructPm() {
-			pm.init(new KeysListHost() {
+		protected KeysListHost getHost() {
+			return new KeysListHost() {
 				@Override
 				public void handleClose() {
 					view.unrender();
@@ -669,8 +698,12 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 				public Action getActionImportKeyFromText() {
 					return importKeyFromClipboard;
 				}
-			});
-			return true;
+			};
+		}
+
+		@Override
+		protected Void getInitParams() {
+			return null;
 		};
 	};
 
@@ -682,7 +715,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 			super.actionPerformed(e);
 			String clipboard = ClipboardUtil.tryGetClipboardText();
 			if (!StringUtils.hasText(clipboard)) {
-				UiUtils.messageBox(mainFrameView.getWindow(), text("warning.noTextInClipboard"), text("term.attention"),
+				UiUtils.messageBox(e, text("warning.noTextInClipboard"), text("term.attention"),
 						JOptionPane.INFORMATION_MESSAGE);
 				return;
 			}
@@ -693,8 +726,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 			} catch (Throwable t) {
 				GenericException t2 = new GenericException("warning.failedToImportPgpKeyFromClipboard", t);
 				log.warn(t2.getMessage(), t2);
-				UiUtils.messageBox(mainFrameView.getWindow(), ConsoleExceptionUtils.getAllMessages(t2),
-						text("term.attention"), JOptionPane.INFORMATION_MESSAGE);
+				UiUtils.messageBox(e, ConsoleExceptionUtils.getAllMessages(t2), text("term.attention"),
+						JOptionPane.INFORMATION_MESSAGE);
 				return;
 			}
 
@@ -703,7 +736,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		}
 	};
 
-	public class CheckForUpdatesDialog extends DialogOpener<CheckForUpdatesPm, CheckForUpdatesView> {
+	public class CheckForUpdatesDialog
+			extends DialogOpener<CheckForUpdatesHost, UpdatesPolicy, CheckForUpdatesPm, CheckForUpdatesView> {
 		public CheckForUpdatesDialog() {
 			super(CheckForUpdatesPm.class, CheckForUpdatesView.class, "action.checkForUpdates");
 		}
@@ -716,28 +750,35 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		};
 
 		@Override
-		protected boolean postConstructPm() {
-			pm.init(host, updatesPolicy);
-			return true;
+		protected CheckForUpdatesHost getHost() {
+			return host;
+		}
+
+		@Override
+		protected UpdatesPolicy getInitParams() {
+			return null;
 		};
 	}
 
 	private CheckForUpdatesDialog checkForUpdatesDialog = new CheckForUpdatesDialog();
 
-	private DialogOpener<AboutPm, AboutView> aboutWindowHost = new DialogOpener<AboutPm, AboutView>(AboutPm.class,
-			AboutView.class, "term.aboutApp") {
-
+	private DialogOpener<AboutHost, Void, AboutPm, AboutView> aboutWindowHost = new DialogOpener<AboutHost, Void, AboutPm, AboutView>(
+			AboutPm.class, AboutView.class, "term.aboutApp") {
 		@Override
-		protected boolean postConstructPm() {
-			pm.init(new AboutHost() {
+		protected AboutHost getHost() {
+			return new AboutHost() {
 				@Override
 				public void handleClose() {
 					view.unrender();
 					pm.detach();
 					pm = null;
 				}
-			});
-			return true;
+			};
+		}
+
+		@Override
+		protected Void getInitParams() {
+			return null;
 		};
 	};
 
@@ -746,12 +787,10 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	 * 
 	 * @author Sergey Karpushin
 	 *
-	 * @param <TPmType>
-	 *            presentation model type
-	 * @param <TViewType>
-	 *            view type
+	 * @param <TPmType>   presentation model type
+	 * @param <TViewType> view type
 	 */
-	private abstract class DialogOpener<TPmType extends PresentationModelBase, TViewType extends ViewBase<TPmType>> {
+	private abstract class DialogOpener<PMHT, PMPO, TPmType extends PresentationModelBase<PMHT, PMPO>, TViewType extends ViewBase<TPmType>> {
 		private Class<TPmType> pmClass;
 		private Class<TViewType> viewClass;
 
@@ -770,26 +809,32 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 				public void actionPerformed(ActionEvent e) {
 					super.actionPerformed(e);
 					try {
-						openWindow();
+						openWindow(e);
 					} catch (Throwable t) {
 						log.error("Failed to open dialog " + pmClass.getSimpleName(), t);
-						UiUtils.reportExceptionToUser("failed.toOpenWindow", t, pmClass.getSimpleName());
+						Object[] messageArgs = { pmClass.getSimpleName() };
+						EntryPoint.reportExceptionToUser(e, "failed.toOpenWindow", t, messageArgs);
 					}
 				}
 			};
 		}
 
-		protected void openWindow() {
+		protected void openWindow(ActionEvent originAction) {
+			Window optionalOrigin = UiUtils.findWindow(originAction);
+
 			if (pm != null && view != null && view instanceof HasWindow) {
 				log.debug("Window is already opened -- just bring it to top " + view);
 				Window window = ((HasWindow) view).getWindow();
+				// TODO: Move this code to same place where we do center window
+				UiUtils.centerWindow(window, optionalOrigin);
 				window.setVisible(true);
 				return;
 			}
 
 			if (pm == null) {
 				pm = applicationContext.getBean(pmClass);
-				if (!postConstructPm()) {
+				if (!initPm(originAction)) {
+					pm.detach();
 					pm = null;
 					return;
 				}
@@ -799,11 +844,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 				buildViewInstance();
 			}
 			view.setPm(pm);
-			doRenderView();
+			doRenderView(optionalOrigin);
 		}
 
-		protected void doRenderView() {
-			view.renderTo(null);
+		protected void doRenderView(Window optionalOrigin) {
+			view.renderTo(optionalOrigin);
 		}
 
 		protected void buildViewInstance() {
@@ -816,9 +861,13 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		 * @return true if we should proceed and open view. false if operation should be
 		 *         canceled -- no view will be opened
 		 */
-		protected boolean postConstructPm() {
-			return true;
+		protected boolean initPm(ActionEvent originAction) {
+			return pm.init(originAction, getHost(), getInitParams());
 		}
+
+		protected abstract PMHT getHost();
+
+		protected abstract PMPO getInitParams();
 	}
 
 	public EventBus getEventBus() {
@@ -850,7 +899,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	}
 
 	@Override
-	public void triggerPrivateKeyExport(Key key) {
-		keysExporterUi.exportPrivateKey((Key) key, mainFrameView.getWindow());
+	public void triggerPrivateKeyExport(Key key, ActionEvent originEvent) {
+		keysExporterUi.exportPrivateKey((Key) key, originEvent);
 	}
 }

@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.tools.browsefs;
 
-import java.awt.Component;
+import java.awt.event.ActionEvent;
 import java.io.File;
 
 import javax.swing.JFileChooser;
@@ -27,26 +27,24 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
+import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.util.StringUtils;
 
 public class ExistingFileChooserDialog {
 	private static Logger log = Logger.getLogger(ExistingFileChooserDialog.class);
 
-	private Component optionalParent;
 	private ConfigPairs configPairs;
 	private String configPairNameToRemember;
 
-	public ExistingFileChooserDialog(Component optionalParent, ConfigPairs configPairs,
-			String configPairNameToRemember) {
-		this.optionalParent = optionalParent;
+	public ExistingFileChooserDialog(ConfigPairs configPairs, String configPairNameToRemember) {
 		this.configPairs = configPairs;
 		this.configPairNameToRemember = configPairNameToRemember;
 	}
 
-	public String askUserForFile() {
+	public String askUserForFile(ActionEvent originEvent) {
 		JFileChooser ofd = buildFileChooserDialog();
 
-		int result = ofd.showOpenDialog(optionalParent);
+		int result = ofd.showOpenDialog(UiUtils.findWindow(originEvent));
 		if (result != JFileChooser.APPROVE_OPTION) {
 			return handleFileWasChosen(null);
 		}
@@ -64,8 +62,7 @@ public class ExistingFileChooserDialog {
 	/**
 	 * Subclass can do post-processing if needed
 	 * 
-	 * @param filePathName
-	 *            user choice, might be null
+	 * @param filePathName user choice, might be null
 	 * @return value that will be returned to initial invoker
 	 */
 	protected String handleFileWasChosen(String filePathName) {

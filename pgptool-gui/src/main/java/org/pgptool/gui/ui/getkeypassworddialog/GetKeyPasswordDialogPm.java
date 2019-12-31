@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.getkeypassworddialog;
 
+import java.awt.event.ActionEvent;
 import java.util.Set;
 
 import org.pgptool.gui.app.Message;
@@ -25,44 +26,51 @@ import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordHost;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPm;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPmInitResult;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
+import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm.GetKeyPasswordPo;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 
 /**
  * This component is a container that will change it's appearance on the fly
  * between {@link GetKeyPasswordPm} and {@link GetKeyPasswordPm} to provide more
  * streamlined UX
  */
-public class GetKeyPasswordDialogPm extends PresentationModelBase implements ApplicationContextAware {
+public class GetKeyPasswordDialogPm extends PresentationModelBase<GetKeyPasswordDialogHost, GetKeyPasswordPo>
+		implements ApplicationContextAware {
 	@Autowired
 	private GetKeyPasswordPm getKeyPasswordPm;
 
-	private GetKeyPasswordDialogHost host;
-	private KeyAndPasswordCallback keyAndPasswordCallback;
+	public static class GetKeyPasswordPo {
+		public Set<String> keysIds;
+		public Message purpose;
+		public KeyAndPasswordCallback keyAndPasswordCallback;
 
-	public boolean init(GetKeyPasswordDialogHost host, Set<String> keysIds, Message purpose,
-			KeyAndPasswordCallback keyAndPasswordCallback) {
-		this.host = host;
-		this.keyAndPasswordCallback = keyAndPasswordCallback;
+		public GetKeyPasswordPo(Set<String> keysIds, Message purpose, KeyAndPasswordCallback keyAndPasswordCallback) {
+			this.keysIds = keysIds;
+			this.purpose = purpose;
+			this.keyAndPasswordCallback = keyAndPasswordCallback;
+		}
+	}
 
-		GetKeyPasswordPmInitResult result = getKeyPasswordPm.init(getPasswordHost, keysIds, purpose);
+	@Override
+	public boolean init(ActionEvent originAction, GetKeyPasswordDialogHost host, GetKeyPasswordPo initParams) {
+		super.init(originAction, host, initParams);
+		GetKeyPasswordPmInitResult result = getKeyPasswordPm.initEx(originAction, getPasswordHost, initParams);
 		if (result == GetKeyPasswordPmInitResult.NoMatchingKeys) {
-			keyAndPasswordCallback.onKeyPasswordResult(null);
+			initParams.keyAndPasswordCallback.onKeyPasswordResult(null);
 			return false;
 		}
-
 		if (result == GetKeyPasswordPmInitResult.CachedPasswordFound) {
 			// also not showing UI. Callback was already called
 			return false;
 		}
-
 		return true;
 	}
-	
+
 	@Override
 	public void detach() {
 		super.detach();
@@ -73,13 +81,13 @@ public class GetKeyPasswordDialogPm extends PresentationModelBase implements App
 		@Override
 		public void onPasswordDeterminedForKey(PasswordDeterminedForKey result) {
 			host.handleClose();
-			keyAndPasswordCallback.onKeyPasswordResult(result);
+			initParams.keyAndPasswordCallback.onKeyPasswordResult(result);
 		}
 
 		@Override
 		public void onCancel() {
 			host.handleClose();
-			keyAndPasswordCallback.onKeyPasswordResult(null);
+			initParams.keyAndPasswordCallback.onKeyPasswordResult(null);
 		}
 	};
 

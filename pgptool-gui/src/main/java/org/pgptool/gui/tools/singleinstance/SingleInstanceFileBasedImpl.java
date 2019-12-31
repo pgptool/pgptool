@@ -66,8 +66,7 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
 	private String basePathForCommands;
 
 	/**
-	 * @param tagName
-	 *            must be a valid folder name
+	 * @param tagName must be a valid folder name
 	 */
 	public SingleInstanceFileBasedImpl(String tagName) {
 		this.tagName = tagName;

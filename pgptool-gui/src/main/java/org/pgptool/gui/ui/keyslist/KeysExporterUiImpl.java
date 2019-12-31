@@ -20,7 +20,7 @@ package org.pgptool.gui.ui.keyslist;
 import static org.pgptool.gui.app.Messages.text;
 
 import java.awt.Desktop;
-import java.awt.Window;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.ArrayList;
 
@@ -61,8 +61,8 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 	private FolderChooserDialog folderChooserDialog;
 
 	@Override
-	public void exportPublicKey(Key key, Window parentWindow) {
-		String targetFile = buildPublicKeyTargetChooser(key, parentWindow).askUserForFile();
+	public void exportPublicKey(Key key, ActionEvent originEvent) {
+		String targetFile = buildPublicKeyTargetChooser(key).askUserForFile(originEvent);
 		if (targetFile == null) {
 			return;
 		}
@@ -72,18 +72,17 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 			keyFilesOperations.exportPublicKey(key, targetFile);
 		} catch (Throwable t) {
 			log.error("Failed to export key " + key, t);
-			EntryPoint.reportExceptionToUser("error.failedToExportPublicKey", t, key.toString());
+			EntryPoint.reportExceptionToUser(originEvent, "error.failedToExportPublicKey", t, key.toString());
 			return;
 		}
 
 		browseForFolder(FilenameUtils.getFullPath(targetFile));
 	}
 
-	public SaveFileChooserDialog buildPublicKeyTargetChooser(Key key, Window parentWindow) {
-		return new SaveFileChooserDialog(parentWindow, "action.exportPublicKey", "action.export", appProps,
-				"ExportKeyDialog") {
+	public SaveFileChooserDialog buildPublicKeyTargetChooser(Key key) {
+		return new SaveFileChooserDialog("action.exportPublicKey", "action.export", appProps, "ExportKeyDialog") {
 			@Override
-			protected void onFileChooserPostConstrct(JFileChooser ofd) {
+			protected void onFileChooserPostConstruct(JFileChooser ofd) {
 				ofd.setAcceptAllFileFilterUsed(false);
 				ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file armored (.asc)", "asc"));
 				ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file (.bpg)", "bpg"));
@@ -102,8 +101,8 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 	}
 
 	@Override
-	public void exportPrivateKey(Key key, Window parentWindow) {
-		String targetFile = buildPrivateKeyTargetChooser(key, parentWindow).askUserForFile();
+	public void exportPrivateKey(Key key, ActionEvent originEvent) {
+		String targetFile = buildPrivateKeyTargetChooser(key).askUserForFile(originEvent);
 		if (targetFile == null) {
 			return;
 		}
@@ -114,20 +113,19 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 			eventBus.post(EntityChangedEvent.added(new PrivateKeyExportedEvent(key)));
 		} catch (Throwable t) {
 			log.error("Failed to export private key " + key, t);
-			EntryPoint.reportExceptionToUser("error.failedToExportPrivateKey", t, key.toString());
+			EntryPoint.reportExceptionToUser(originEvent, "error.failedToExportPrivateKey", t, key.toString());
 			return;
 		}
 
-		UiUtils.messageBox(parentWindow, text("keys.privateKey.exportWarning"), text("term.attention"),
+		UiUtils.messageBox(originEvent, text("keys.privateKey.exportWarning"), text("term.attention"),
 				JOptionPane.WARNING_MESSAGE);
 		browseForFolder(FilenameUtils.getFullPath(targetFile));
 	}
 
-	public SaveFileChooserDialog buildPrivateKeyTargetChooser(final Key key, Window parentWindow) {
-		return new SaveFileChooserDialog(parentWindow, "action.exportPrivateKey", "action.export", appProps,
-				"ExportKeyDialog") {
+	public SaveFileChooserDialog buildPrivateKeyTargetChooser(final Key key) {
+		return new SaveFileChooserDialog("action.exportPrivateKey", "action.export", appProps, "ExportKeyDialog") {
 			@Override
-			protected void onFileChooserPostConstrct(JFileChooser ofd) {
+			protected void onFileChooserPostConstruct(JFileChooser ofd) {
 				ofd.setAcceptAllFileFilterUsed(false);
 				ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file armored (.asc)", "asc"));
 				ofd.addChoosableFileFilter(new FileNameExtensionFilter("Key file (.bpg)", "bpg"));
@@ -177,8 +175,8 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 	}
 
 	@Override
-	public void exportPublicKeys(ArrayList<Key> keys, Window parentWindow) {
-		String newFolder = getFolderChooserDialog().askUserForFolder(parentWindow);
+	public void exportPublicKeys(ArrayList<Key> keys, ActionEvent originEvent) {
+		String newFolder = getFolderChooserDialog().askUserForFolder(originEvent);
 		if (newFolder == null) {
 			return;
 		}
@@ -199,7 +197,7 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 			}
 		} catch (Throwable t) {
 			log.error("Failed to export keys", t);
-			EntryPoint.reportExceptionToUser("error.failedToExportKeys", t, keysExported, keysTotal);
+			EntryPoint.reportExceptionToUser(originEvent, "error.failedToExportKeys", t, keysExported, keysTotal);
 		} finally {
 			if (keysExported > 0) {
 				browseForFolder(newFolder);

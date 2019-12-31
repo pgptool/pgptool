@@ -21,6 +21,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dialog.ModalityType;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -104,7 +105,7 @@ public class GetKeyPasswordDialogView extends DialogViewBaseCustom<GetKeyPasswor
 		ret.setTitle(Messages.get("action.providePasswordForAKey"));
 		ret.add(pnl, BorderLayout.CENTER);
 		ret.pack();
-		UiUtils.centerWindow(ret);
+		UiUtils.centerWindow(ret, owner);
 		return ret;
 	}
 
@@ -122,8 +123,8 @@ public class GetKeyPasswordDialogView extends DialogViewBaseCustom<GetKeyPasswor
 	}
 
 	@Override
-	protected void dispatchWindowCloseEvent() {
-		buttonCancel.getAction().actionPerformed(null);
+	protected void dispatchWindowCloseEvent(ActionEvent originAction) {
+		buttonCancel.getAction().actionPerformed(originAction);
 	}
 
 	@Override

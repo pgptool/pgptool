@@ -26,16 +26,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.swing.Action;
 
-import org.pgptool.gui.app.Message;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.MatchedKey;
+import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm.GetKeyPasswordPo;
 import org.pgptool.gui.usage.api.KeyUsage;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +49,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.collections.ListExImpl;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
@@ -73,7 +72,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
  * @author Sergey Karpushin
  *
  */
-public class GetKeyPasswordPm extends PresentationModelBase {
+public class GetKeyPasswordPm extends PresentationModelBase<GetKeyPasswordHost, GetKeyPasswordPo> {
 	private static final String FN_PASSWORD = "password";
 	private static final Map<String, PasswordDeterminedForKey> CACHE_KEYID_TO_PASSWORD = new HashMap<>();
 
@@ -86,8 +85,6 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 	@Autowired
 	private UsageLogger usageLogger;
 
-	private GetKeyPasswordHost host;
-
 	private ModelSelInComboBoxProperty<Key> selectedKey;
 	private ModelListProperty<Key> decryptionKeys;
 	private ModelProperty<String> password;
@@ -95,17 +92,21 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 	private ListEx<ValidationError> validationErrors = new ListExImpl<ValidationError>();
 
 	private List<MatchedKey> matchedKeys;
-	private Message purposeMessage;
 	private boolean registeredOnEventBus;
 
-	public GetKeyPasswordPmInitResult init(GetKeyPasswordHost host, Set<String> keyIdsToChooseFrom,
-			Message purposeMessage) {
-		this.purposeMessage = purposeMessage;
+	@Override
+	public boolean init(ActionEvent originAction, GetKeyPasswordHost host, GetKeyPasswordPo initParams) {
+		throw new UnsupportedOperationException(
+				"GetKeyPasswordPm is not meant to be initialized by regular init. Use initEx instead");
+	}
+
+	public GetKeyPasswordPmInitResult initEx(ActionEvent originAction, GetKeyPasswordHost host,
+			GetKeyPasswordPo initParams) {
+		super.init(originAction, host, initParams);
 		Preconditions.checkArgument(host != null);
-		this.host = host;
 
 		// Fill model with matching keys
-		matchedKeys = keyRingService.findMatchingDecryptionKeys(keyIdsToChooseFrom);
+		matchedKeys = keyRingService.findMatchingDecryptionKeys(initParams.keysIds);
 		// NOTE: We're assuming here keys are distinct meaning same key will not
 		// appear 2 times
 		if (matchedKeys.size() == 0) {
@@ -147,7 +148,7 @@ public class GetKeyPasswordPm extends PresentationModelBase {
 	}
 
 	private void initModelProperties(List<Key> keys) {
-		purpose = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(text(purposeMessage)), "purpose",
+		purpose = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(text(initParams.purpose)), "purpose",
 				validationErrors);
 		decryptionKeys = new ModelListProperty<Key>(this, new ValueAdapterReadonlyImpl<List<Key>>(keys),
 				"decryptionKeys");

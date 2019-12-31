@@ -155,7 +155,7 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
 			public void actionPerformed(ActionEvent e) {
 				super.actionPerformed(e);
 				Key key = keyRingService.findKeyById(lastHintForKeyId);
-				globalAppActions.triggerPrivateKeyExport(key);
+				globalAppActions.triggerPrivateKeyExport(key, e);
 			}
 		};
 

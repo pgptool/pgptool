@@ -38,7 +38,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
-	public static final String DEV_CERSION = "0.0.0.0";
+	public static final String DEV_VERSION = "0.0.0.0";
 
 	private static Logger log = Logger.getLogger(NewVersionCheckerGitHubImpl.class);
 
@@ -51,8 +51,10 @@ public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
 	@Override
 	public UpdatePackageInfo findNewUpdateIfAvailable() throws GenericException {
 		try {
-			if (DEV_CERSION.equals(getVerisonsInfo())) {
+			String currentVersion = getCurrentVersion();
+			if (VERSION_UNRESOLVED.equals(currentVersion) || DEV_VERSION.equals(currentVersion)) {
 				// not spamming github during development runs
+				log.info("DEV mode detected -- not spaming github with updates check");
 				return null;
 			}
 
@@ -68,9 +70,7 @@ public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
 				return null;
 			}
 
-			String currentVersion = getCurrentVersion();
-			if (currentVersion.equals(VERSION_UNRESOLVED)
-					|| compareVersions(currentVersion, latestRelease.getTagName()) >= 0) {
+			if (compareVersions(currentVersion, latestRelease.getTagName()) >= 0) {
 				return null;
 			}
 
@@ -153,7 +153,7 @@ public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
 		NewVersionChecker newVersionChecker = new NewVersionCheckerGitHubImpl();
 		String pgpVersion = newVersionChecker.getCurrentVersion();
 		if (NewVersionChecker.VERSION_UNRESOLVED.equals(pgpVersion)) {
-			pgpVersion = DEV_CERSION;
+			pgpVersion = DEV_VERSION;
 		}
 
 		String javaVersion = System.getProperty("java.version");

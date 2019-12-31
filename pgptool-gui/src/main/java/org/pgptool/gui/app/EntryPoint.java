@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.pgptool.gui.app;
 
+import java.awt.Window;
+import java.awt.event.ActionEvent;
 import java.net.URL;
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -61,8 +63,8 @@ public class EntryPoint {
 	private static AbstractApplicationContext currentApplicationContext;
 	private RootPm rootPm;
 	private static SingleInstance singleInstance;
-	private static RootPm rootPmStatic;
 	private static Queue<String[]> postponedArgsFromSecondaryInstances = new ArrayDeque<>();
+	public static RootPm rootPmStatic;
 
 	public static void main(String[] args) {
 		DOMConfigurator.configure(EntryPoint.class.getClassLoader().getResource("pgptool-gui-log4j.xml"));
@@ -101,7 +103,7 @@ public class EntryPoint {
 			processPendingArgsIfAny(rootPmStatic);
 		} catch (Throwable t) {
 			log.error("Failed to startup application", t);
-			reportAppInitFailureMessageToUser(t);
+			reportAppInitFailureMessageToUser(determineWindowForGeneralFailure(splashScreenView), t);
 			System.exit(-1);
 		} finally {
 			if (splashScreenView != null) {
@@ -109,6 +111,18 @@ public class EntryPoint {
 				splashScreenView = null;
 			}
 		}
+	}
+
+	private static Window determineWindowForGeneralFailure(SplashScreenView splashScreenView) {
+		if (rootPmStatic != null) {
+			return rootPmStatic.findMainFrameWindow();
+		}
+
+		if (splashScreenView != null) {
+			return splashScreenView;
+		}
+
+		return null;
 	}
 
 	private static void processPendingArgsIfAny(RootPm rootPm) {
@@ -201,19 +215,21 @@ public class EntryPoint {
 		this.rootPm = rootPm;
 	}
 
-	private static void reportAppInitFailureMessageToUser(Throwable t) {
+	private static void reportAppInitFailureMessageToUser(Window window, Throwable t) {
 		String versionInfo = NewVersionCheckerGitHubImpl.getVerisonsInfo();
 		String msg = ConsoleExceptionUtils.getAllMessages(t);
 		msg += "\r\n" + versionInfo;
-		UiUtils.messageBox(null, msg, "PGP Tool startup failed" + versionInfo, JOptionPane.ERROR_MESSAGE);
+		UiUtils.messageBox(UiUtils.actionEvent(window, "reportAppInitFailureMessageToUser"), msg,
+				"PGP Tool startup failed" + versionInfo, JOptionPane.ERROR_MESSAGE);
 	}
 
-	public static void reportExceptionToUser(String errorMessageCode, Throwable cause, Object... messageArgs) {
+	public static void reportExceptionToUser(ActionEvent originAction, String errorMessageCode, Throwable cause,
+			Object... messageArgs) {
 		GenericException exc = new GenericException(errorMessageCode, cause, messageArgs);
 		String versionInfo = NewVersionCheckerGitHubImpl.getVerisonsInfo();
 		String msgs = ConsoleExceptionUtils.getAllMessages(exc);
 		msgs += "\r\n" + versionInfo;
-		UiUtils.messageBox(null, msgs, Messages.get("term.error") + versionInfo, JOptionPane.ERROR_MESSAGE);
+		UiUtils.messageBox(originAction, msgs, Messages.get("term.error") + versionInfo, JOptionPane.ERROR_MESSAGE);
 	}
 
 	public ApplicationContext getApplicationContext() {

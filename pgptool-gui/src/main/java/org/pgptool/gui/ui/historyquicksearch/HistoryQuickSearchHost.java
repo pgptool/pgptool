@@ -17,10 +17,12 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.historyquicksearch;
 
+import java.awt.event.ActionEvent;
+
 import org.pgptool.gui.ui.decryptone.DecryptionDialogParameters;
 
 public interface HistoryQuickSearchHost {
-	void handleChosen(DecryptionDialogParameters optionalTsRecordSubject);
+	void handleChosen(DecryptionDialogParameters optionalTsRecordSubject, ActionEvent originEvent);
 
 	void handleCancel();
 }

@@ -21,6 +21,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dialog.ModalityType;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -148,7 +149,7 @@ public class DecryptOneDialogView extends DialogViewBaseCustom<DecryptOneDialogP
 		ret.setTitle(Messages.get("action.decrypt"));
 		ret.add(pnl, BorderLayout.CENTER);
 		ret.pack();
-		UiUtils.centerWindow(ret);
+		UiUtils.centerWindow(ret, owner);
 		return ret;
 	}
 
@@ -166,9 +167,9 @@ public class DecryptOneDialogView extends DialogViewBaseCustom<DecryptOneDialogP
 	}
 
 	@Override
-	protected void dispatchWindowCloseEvent() {
+	protected void dispatchWindowCloseEvent(ActionEvent originAction) {
 		if (currentCancelButton != null) {
-			currentCancelButton.getAction().actionPerformed(null);
+			currentCancelButton.getAction().actionPerformed(originAction);
 		}
 	}
 

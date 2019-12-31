@@ -52,12 +52,13 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
-public class HistoryQuickSearchPm extends PresentationModelBase implements InitializingBean {
+public class HistoryQuickSearchPm extends PresentationModelBase<HistoryQuickSearchHost, Void>
+		implements InitializingBean {
 	private static Logger log = Logger.getLogger(HistoryQuickSearchPm.class);
 
 	private EventBus eventBus;
@@ -74,22 +75,21 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 
 	private TableModel lastPopularRecords;
 
-	private HistoryQuickSearchHost host;
-
 	private boolean listenerRegistered;
 	private DecryptionDialogParameters selectedRow;
 
-	public void init(HistoryQuickSearchHost host) {
+	@Override
+	public boolean init(ActionEvent originAction, HistoryQuickSearchHost host, Void initParams) {
+		super.init(originAction, host, initParams);
 		Preconditions.checkArgument(host != null);
-		this.host = host;
 
 		rowsTableModel = new ModelProperty<TableModel>(this, new ValueAdapterHolderImpl<TableModel>(),
 				"rowsTableModel");
 
 		tableLabel = new ModelProperty<String>(this,
 				new ValueAdapterHolderImpl<String>(Messages.get("term.recentlyDecrypted")), "tableLabel");
-
 		refreshRecentlyUsed();
+		return true;
 	}
 
 	@Override
@@ -218,7 +218,7 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 				if (lastPopularRecords instanceof HistoryQuickSearchTableModel) {
 					if (isSame(((HistoryQuickSearchTableModel) lastPopularRecords).getRows(), topRecords)) {
 						log.debug(
-								"lastPopularRecords results haven't changed, will not change anthing to avoid UI fidgeting.");
+								"lastPopularRecords results haven't changed, will not change anything to avoid UI fidgeting.");
 						return lastPopularRecords;
 					}
 				}
@@ -294,7 +294,7 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
 			Preconditions.checkState(selectedRow != null, "No selected row");
-			host.handleChosen(selectedRow);
+			host.handleChosen(selectedRow, e);
 			quickSearch.setValueByOwner("");
 		}
 	};
@@ -319,7 +319,7 @@ public class HistoryQuickSearchPm extends PresentationModelBase implements Initi
 			try {
 				Desktop.getDesktop().open(new File(selectedRow.getSourceFile()).getParentFile());
 			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser("error.cannotOpenFolder", t);
+				EntryPoint.reportExceptionToUser(e, "error.cannotOpenFolder", t);
 			}
 		}
 	};

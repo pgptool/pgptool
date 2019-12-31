@@ -21,6 +21,7 @@ import java.awt.BorderLayout;
 import java.awt.Dialog.ModalityType;
 import java.awt.Dimension;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
 
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -105,8 +106,8 @@ public class KeysListView extends DialogViewBaseCustom<KeysListPm> {
 	}
 
 	@Override
-	protected void dispatchWindowCloseEvent() {
-		miClose.getAction().actionPerformed(null);
+	protected void dispatchWindowCloseEvent(ActionEvent originAction) {
+		miClose.getAction().actionPerformed(originAction);
 	}
 
 }

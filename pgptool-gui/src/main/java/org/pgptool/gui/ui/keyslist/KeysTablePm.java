@@ -21,11 +21,11 @@ import javax.swing.Action;
 
 import org.pgptool.gui.encryption.api.dto.Key;
 
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
 
-public abstract class KeysTablePm extends PresentationModelBase {
+public abstract class KeysTablePm extends PresentationModelBase<Void, Void> {
 	abstract public ModelTablePropertyAccessor<Key> getKeys();
 
 	public ModelPropertyAccessor<Boolean> getHasData() {

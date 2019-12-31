@@ -55,12 +55,12 @@ import org.springframework.util.StringUtils;
 import com.google.common.base.Preconditions;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
-public class DecryptTextPm extends PresentationModelBase {
+public class DecryptTextPm extends PresentationModelBase<DecryptTextHost, Void> {
 	private static Logger log = Logger.getLogger(DecryptTextPm.class);
 
 	@Autowired
@@ -69,7 +69,6 @@ public class DecryptTextPm extends PresentationModelBase {
 	private EncryptionService encryptionService;
 	@Autowired
 	private UsageLogger usageLogger;
-	private DecryptTextHost host;
 
 	private Set<String> keysIds;
 	private PasswordDeterminedForKey keyAndPassword;
@@ -80,9 +79,10 @@ public class DecryptTextPm extends PresentationModelBase {
 	private ModelProperty<String> targetText;
 	private ModelProperty<Boolean> isShowMissingPrivateKeyWarning;
 
-	public boolean init(DecryptTextHost host) {
+	@Override
+	public boolean init(ActionEvent originAction, DecryptTextHost host, Void initParams) {
+		super.init(originAction, host, initParams);
 		Preconditions.checkArgument(host != null);
-		this.host = host;
 
 		if (!ensureWeHaveAtLeastOnePrivateKey()) {
 			return false;
@@ -150,8 +150,9 @@ public class DecryptTextPm extends PresentationModelBase {
 		if (doWeHaveAtLeastOnePrivateKey()) {
 			return true;
 		}
-		UiUtils.messageBox(text("phrase.noKeysForDecryption"), text("term.attention"), MessageSeverity.WARNING);
-		host.getActionToOpenCertificatesList().actionPerformed(null);
+		UiUtils.messageBox(originAction, text("phrase.noKeysForDecryption"), text("term.attention"),
+				MessageSeverity.WARNING);
+		host.getActionToOpenCertificatesList().actionPerformed(originAction);
 		if (!doWeHaveAtLeastOnePrivateKey()) {
 			return false;
 		}
@@ -182,7 +183,8 @@ public class DecryptTextPm extends PresentationModelBase {
 		return targetText.getModelPropertyAccessor();
 	}
 
-	private void decrypt() throws UnsupportedEncodingException, SymmetricEncryptionIsNotSupportedException {
+	private void decrypt(ActionEvent originEvent)
+			throws UnsupportedEncodingException, SymmetricEncryptionIsNotSupportedException {
 		findKeysForTextDecryption(sourceText.getValue(), false);
 		Preconditions.checkState(!CollectionUtils.isEmpty(keysIds),
 				"Invalid state. Expected to have list of keys which could be used for decryption");
@@ -193,7 +195,7 @@ public class DecryptTextPm extends PresentationModelBase {
 			keyAndPasswordCallback.onKeyPasswordResult(keyAndPassword);
 		} else {
 			Message purpose = new Message("phrase.needKeyToDecryptFromClipboard");
-			host.askUserForKeyAndPassword(keysIds, purpose, keyAndPasswordCallback, findRegisteredWindowIfAny());
+			host.askUserForKeyAndPassword(keysIds, purpose, keyAndPasswordCallback, originEvent);
 		}
 	}
 
@@ -211,10 +213,10 @@ public class DecryptTextPm extends PresentationModelBase {
 		}
 	}
 
-	private String pasteFromClipboard() {
+	private String pasteFromClipboard(ActionEvent originAction) {
 		String clipboard = ClipboardUtil.tryGetClipboardText();
 		if (!StringUtils.hasText(clipboard)) {
-			UiUtils.messageBox(findRegisteredWindowIfAny(), text("warning.noTextInClipboard"), text("term.attention"),
+			UiUtils.messageBox(originAction, text("warning.noTextInClipboard"), text("term.attention"),
 					JOptionPane.INFORMATION_MESSAGE);
 			return null;
 		}
@@ -249,12 +251,13 @@ public class DecryptTextPm extends PresentationModelBase {
 	private KeyAndPasswordCallback keyAndPasswordCallback = new KeyAndPasswordCallback() {
 		@Override
 		public void onKeyPasswordResult(PasswordDeterminedForKey keyAndPassword) {
+			ActionEvent surrogateEvent = UiUtils.actionEvent(findRegisteredWindowIfAny(), "onKeyPasswordResult");
 			try {
 				DecryptTextPm.this.keyAndPassword = keyAndPassword;
 				if (keyAndPassword == null) {
 					// this means user might have just canceled the dialog
 					if (isShowMissingPrivateKeyWarning.getValue()) {
-						UiUtils.messageBox(text("error.noMatchingKeysRegistered"), text("term.error"),
+						UiUtils.messageBox(surrogateEvent, text("error.noMatchingKeysRegistered"), text("term.error"),
 								MessageSeverity.ERROR);
 					}
 					return;
@@ -269,7 +272,7 @@ public class DecryptTextPm extends PresentationModelBase {
 				actionReply.setEnabled(true);
 			} catch (Throwable t) {
 				log.error("Failed to decrypt text", t);
-				EntryPoint.reportExceptionToUser("error.cantParseEncryptedText", t);
+				EntryPoint.reportExceptionToUser(surrogateEvent, "error.cantParseEncryptedText", t);
 			}
 		}
 	};
@@ -280,7 +283,7 @@ public class DecryptTextPm extends PresentationModelBase {
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
 			host.handleClose();
-			host.openEncryptText(recipientsList);
+			host.openEncryptText(recipientsList, e);
 		}
 	};
 
@@ -299,14 +302,14 @@ public class DecryptTextPm extends PresentationModelBase {
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
 			try {
-				String clipboard = pasteFromClipboard();
+				String clipboard = pasteFromClipboard(e);
 				if (clipboard == null) {
 					return;
 				}
-				decrypt();
+				decrypt(e);
 			} catch (Throwable t) {
 				log.info("Failed to process text", t);
-				EntryPoint.reportExceptionToUser("error.cantParseEncryptedText", t);
+				EntryPoint.reportExceptionToUser(e, "error.cantParseEncryptedText", t);
 			}
 		}
 	};
@@ -319,10 +322,10 @@ public class DecryptTextPm extends PresentationModelBase {
 			try {
 				Preconditions.checkState(StringUtils.hasText(sourceText.getValue()),
 						"Action must not be invoked if source text is empty");
-				decrypt();
+				decrypt(e);
 			} catch (Throwable t) {
 				log.info("Failed to process text", t);
-				EntryPoint.reportExceptionToUser("error.cantParseEncryptedText", t);
+				EntryPoint.reportExceptionToUser(e, "error.cantParseEncryptedText", t);
 			}
 		}
 	};

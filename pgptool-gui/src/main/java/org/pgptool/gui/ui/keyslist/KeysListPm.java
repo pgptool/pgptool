@@ -39,14 +39,14 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.table.ModelTableProperty;
 import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
-public class KeysListPm extends PresentationModelBase {
+public class KeysListPm extends PresentationModelBase<KeysListHost, Void> {
 	// private static Logger log = Logger.getLogger(KeysListPm.class);
 
 	@Autowired
@@ -58,16 +58,15 @@ public class KeysListPm extends PresentationModelBase {
 	@Autowired
 	private KeyFilesOperations keyFilesOperations;
 
-	private KeysListHost host;
-
 	private ModelTableProperty<Key> tableModelProp;
 	private ModelProperty<Boolean> hasData;
 
 	private Comparator<Key> keySorterByNameAsc = new ComparatorKeyByNameImpl();
 
-	public void init(KeysListHost host) {
+	@Override
+	public boolean init(ActionEvent originAction, KeysListHost host, Void initParams) {
+		super.init(originAction, host, initParams);
 		Preconditions.checkArgument(host != null);
-		this.host = host;
 
 		List<Key> initialKeys = keyRingService.readKeys();
 		initialKeys.sort(keySorterByNameAsc);
@@ -79,6 +78,7 @@ public class KeysListPm extends PresentationModelBase {
 		actionExportAllPublicKeys.setEnabled(hasData.getValue());
 
 		eventBus.register(this);
+		return true;
 	}
 
 	private PropertyChangeListener onSelectionChangedHandler = new PropertyChangeListener() {
@@ -149,8 +149,8 @@ public class KeysListPm extends PresentationModelBase {
 			}
 
 			Key key = tableModelProp.getValue();
-			if (!UiUtils.confirmRegular("phrase.areYouSureToDeleteKey", new Object[] { key.getKeyInfo().getUser() },
-					findRegisteredWindowIfAny())) {
+			if (!UiUtils.confirmRegular(e, "phrase.areYouSureToDeleteKey",
+					new Object[] { key.getKeyInfo().getUser() })) {
 				return;
 			}
 
@@ -167,7 +167,7 @@ public class KeysListPm extends PresentationModelBase {
 				return;
 			}
 			Key key = tableModelProp.getValue();
-			keysExporterUi.exportPublicKey(key, findRegisteredWindowIfAny());
+			keysExporterUi.exportPublicKey(key, e);
 		}
 	};
 
@@ -194,7 +194,7 @@ public class KeysListPm extends PresentationModelBase {
 				return;
 			}
 			Key key = tableModelProp.getValue();
-			keysExporterUi.exportPrivateKey(key, findRegisteredWindowIfAny());
+			keysExporterUi.exportPrivateKey(key, e);
 		}
 	};
 
@@ -207,7 +207,7 @@ public class KeysListPm extends PresentationModelBase {
 			Preconditions.checkState(keys.size() > 0,
 					"Export all public keys action was triggered while there is no keys to export");
 
-			keysExporterUi.exportPublicKeys(keys, findRegisteredWindowIfAny());
+			keysExporterUi.exportPublicKeys(keys, e);
 		}
 	};
 

@@ -62,7 +62,6 @@ import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.EncryptBackAllIterationUsage;
 import org.pgptool.gui.usage.dto.EncryptBackAllUsage;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.utils.objectcopy.DeepCopy;
 
@@ -72,12 +71,12 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.base.PresentationModelBase;
+import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
-public class EncryptBackMultiplePm extends PresentationModelBase implements InitializingBean {
+public class EncryptBackMultiplePm extends PresentationModelBase<EncryptBackMultipleHost, Set<String>> {
 	private static Logger log = Logger.getLogger(EncryptBackMultiplePm.class);
 
 	@Autowired
@@ -95,8 +94,6 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 	@Autowired
 	private UsageLogger usageLogger;
 
-	private EncryptBackMultipleHost host;
-	private Set<String> decryptedFiles;
 	private Map<String, EncryptionDialogParameters> mapFileToEncryptionParams = new HashMap<>();
 
 	private ModelProperty<String> sourceFilesSummary;
@@ -112,22 +109,17 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 	private ModelProperty<Boolean> isDisableControls;
 
 	@Override
-	public void afterPropertiesSet() throws Exception {
-	}
-
-	public boolean init(EncryptBackMultipleHost host, Set<String> decryptedFiles) {
+	public boolean init(ActionEvent originAction, EncryptBackMultipleHost host, Set<String> decryptedFiles) {
+		super.init(originAction, host, decryptedFiles);
 		Preconditions.checkArgument(host != null, "host required");
 		Preconditions.checkArgument(decryptedFiles != null && decryptedFiles.size() > 0,
 				"decryptedFiles array must not be empty");
-		this.host = host;
-		this.decryptedFiles = decryptedFiles;
 
 		if (!doWeHaveKeysToEncryptWith()) {
 			return false;
 		}
 
 		initModelProperties();
-
 		return true;
 	}
 
@@ -135,8 +127,9 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 		if (!keyRingService.readKeys().isEmpty()) {
 			return true;
 		}
-		UiUtils.messageBox(text("phrase.noKeysForEncryption"), text("term.attention"), MessageSeverity.WARNING);
-		host.getActionToOpenCertificatesList().actionPerformed(null);
+		UiUtils.messageBox(originAction, text("phrase.noKeysForEncryption"), text("term.attention"),
+				MessageSeverity.WARNING);
+		host.getActionToOpenCertificatesList().actionPerformed(originAction);
 		if (keyRingService.readKeys().isEmpty()) {
 			return false;
 		}
@@ -154,7 +147,8 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 				new ValueAdapterPersistentPropertyImpl<>(appProps, "EncryptBackMultiplePm.isEncryptOnlyChanged", true),
 				"isEncryptOnlyChanged");
 
-		sourceFilesSummary = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(buildOperationTitle()),
+		sourceFilesSummary = new ModelProperty<>(this,
+				new ValueAdapterHolderImpl<>(text("encrypBackMany.operationInfo", initParams.size())),
 				"sourceFilesSummary");
 		recipientsSummary = new ModelProperty<>(this, new ValueAdapterHolderImpl<>("(collecting information...)"),
 				"recipientsSummary");
@@ -172,11 +166,6 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 		progressNote = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "progressNote");
 	}
 
-	private String buildOperationTitle() {
-		String ret = text("encrypBackMany.operationInfo", decryptedFiles.size());
-		return ret;
-	}
-
 	private boolean discoverIsHasMissingRecipients() {
 		log.debug("Discovering missing recipients");
 		Set<String> allRecipients = enumerateAllRecipientsIds();
@@ -188,7 +177,7 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 
 	private Set<String> enumerateAllRecipientsIds() {
 		Set<String> allRecipients = new HashSet<>();
-		for (String file : decryptedFiles) {
+		for (String file : initParams) {
 			EncryptionDialogParameters params = encryptionParamsStorage.findParamsBasedOnSourceFile(file, false);
 			if (params == null) {
 				// we'll deal with this problem later when will try to decrypt
@@ -226,7 +215,7 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 
 	public static class BatchEncryptionResult implements Serializable {
 		private static final long serialVersionUID = -1020511844906379809L;
-		
+
 		public Map<String, Throwable> errors = new HashMap<>();
 		public Map<String, Throwable> warnings = new HashMap<>();
 		public Multimap<EncryptBackResult, String> categories = ArrayListMultimap.create();
@@ -257,7 +246,8 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 				String msg = buildSummaryMessage(ret);
 				int severity = ret.errors.size() + ret.warnings.size() == 0 ? JOptionPane.INFORMATION_MESSAGE
 						: JOptionPane.WARNING_MESSAGE;
-				UiUtils.messageBox(null, msg, Messages.get("encrypBackMany.action"), severity);
+				UiUtils.messageBox(UiUtils.actionEvent(findRegisteredWindowIfAny(), "BkgOpEncryptBackAll"), msg,
+						Messages.get("encrypBackMany.action"), severity);
 
 				// close window
 				host.handleClose();
@@ -291,9 +281,9 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 			BatchEncryptionResult ret = new BatchEncryptionResult();
 
 			boolean skipIfissingRecipients = !isIgnoreMissingRecipientsWarning.getValue();
-			totalFiles = decryptedFiles.size();
+			totalFiles = initParams.size();
 			usageLogger.write(new EncryptBackAllUsage(totalFiles));
-			for (String decryptedFile : decryptedFiles) {
+			for (String decryptedFile : initParams) {
 				filesProcessed++;
 				// Main operation
 				File file = new File(decryptedFile);
@@ -358,7 +348,7 @@ public class EncryptBackMultiplePm extends PresentationModelBase implements Init
 						}
 					}
 				}
-				
+
 				boolean isMissingRecipients = recipients.size() < encryptionParams.getRecipientsKeysIds().size();
 				if (isMissingRecipients && isShouldSkipIfissingRecipients) {
 					ret.warnings.put(decryptedFile, new GenericException("error.someKeysAreMissing"));

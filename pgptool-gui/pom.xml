@@ -181,9 +181,7 @@
 			<plugin>
 				<groupId>com.akathist.maven.plugins.launch4j</groupId>
 				<artifactId>launch4j-maven-plugin</artifactId>
-				<!-- Official launch4j wasn't supporting Java 9+ versioning scheme and my pull request wqasn't getting timely attention, so I forked and 
-					added this support. I'm not deploying it to any repo, so if you want to build locally, please pull and `maven install` https://github.com/skarpushin/launch4j-fork -->
-				<version>1.7.23-SK</version>
+				<version>1.7.25</version>
 				<executions>
 					<execution>
 						<id>l4j-clui</id>

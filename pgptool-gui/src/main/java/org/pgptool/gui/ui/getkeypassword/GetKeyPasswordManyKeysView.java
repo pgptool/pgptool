@@ -31,7 +31,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 
-import org.jdesktop.swingx.JXLabel;
+import org.jdesktop.swingx.imported.JXLabel;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.ui.tools.UiUtils;
 

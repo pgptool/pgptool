@@ -36,7 +36,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 
-import org.jdesktop.swingx.JXLabel;
+import org.jdesktop.swingx.imported.JXLabel;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;

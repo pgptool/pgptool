@@ -1,23 +1,15 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.pgptool</groupId>
 	<artifactId>gui</artifactId>
-	<version>0.5.8.0</version>
+	<version>0.5.9.0</version>
 
 	<properties>
 		<org.springframework-version>5.0.5.RELEASE</org.springframework-version>
 	</properties>
 
 	<dependencies>
-		<dependency>
-			<!-- It's for JXLabel -->
-			<groupId>org.swinglabs</groupId>
-			<artifactId>swingx</artifactId>
-			<version>1.6.1</version>
-		</dependency>
-
 		<dependency>
 			<groupId>net.java.dev.jna</groupId>
 			<artifactId>jna</artifactId>
@@ -42,6 +34,14 @@
 				<exclusion>
 					<groupId>org.springframework</groupId>
 					<artifactId>spring-jdbc</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>mysql</groupId>
+					<artifactId>mysql-connector-java</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.github.skarpushin</groupId>
+					<artifactId>summerb-security</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -131,7 +131,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.4.3</version>
+				<version>3.2.1</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -146,24 +146,30 @@
 										<exclude>META-INF/*.SF</exclude>
 										<exclude>META-INF/*.DSA</exclude>
 										<exclude>META-INF/*.RSA</exclude>
+
+										<exclude>com/sun/jna/aix-ppc/**</exclude>
+										<exclude>com/sun/jna/aix-ppc64/**</exclude>
+										<exclude>com/sun/jna/darwin/**</exclude>
+										<exclude>com/sun/jna/linux-aarch64/**</exclude>
+										<exclude>com/sun/jna/linux-arm/**</exclude>
+										<exclude>com/sun/jna/linux-ppc/**</exclude>
+										<exclude>com/sun/jna/linux-ppc64le/**</exclude>
+										<exclude>com/sun/jna/linux-x86/**</exclude>
+										<exclude>com/sun/jna/linux-x86-64/**</exclude>
 									</excludes>
 								</filter>
 							</filters>
 							<transformers>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>org.pgptool.gui.app.EntryPoint</mainClass>
 								</transformer>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
 									<resource>META-INF/spring.handlers</resource>
 								</transformer>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
 									<resource>META-INF/spring.schemas</resource>
 								</transformer>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
 									<resource>META-INF/spring.tooling</resource>
 								</transformer>
 							</transformers>
@@ -175,10 +181,8 @@
 			<plugin>
 				<groupId>com.akathist.maven.plugins.launch4j</groupId>
 				<artifactId>launch4j-maven-plugin</artifactId>
-				<!-- Official launch4j wasn't supporting Java 9+ versioning scheme and 
-					my pull request wqasn't getting timely attention, so I forked and added this 
-					support. I'm not deploying it to any repo, so if you want to build locally, 
-					please pull and `maven install` https://github.com/skarpushin/launch4j-fork -->
+				<!-- Official launch4j wasn't supporting Java 9+ versioning scheme and my pull request wqasn't getting timely attention, so I forked and 
+					added this support. I'm not deploying it to any repo, so if you want to build locally, please pull and `maven install` https://github.com/skarpushin/launch4j-fork -->
 				<version>1.7.23-SK</version>
 				<executions>
 					<execution>

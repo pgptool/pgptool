@@ -41,7 +41,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 
-import org.jdesktop.swingx.JXLabel;
+import org.jdesktop.swingx.imported.JXLabel;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.ui.encryptone.EncryptOneView;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;

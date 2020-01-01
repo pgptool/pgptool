@@ -27,7 +27,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
-import org.jdesktop.swingx.JXLabel;
+import org.jdesktop.swingx.imported.JXLabel;
 import org.pgptool.gui.ui.tools.UiUtils;
 
 import ru.skarpushin.swingpm.base.ViewBase;

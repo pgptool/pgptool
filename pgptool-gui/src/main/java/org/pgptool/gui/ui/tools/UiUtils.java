@@ -58,7 +58,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
-import org.jdesktop.swingx.JXLabel;
+import org.jdesktop.swingx.imported.JXLabel;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
@@ -73,9 +73,10 @@ public class UiUtils {
 	 * By default window will be placed at 0x0 coordinates, which is not pretty. We
 	 * have to position it to screen center
 	 * 
-	 * @param subject        the window to position
-	 * @param optionalOrigin The window where the action to open subject originated
-	 *                       from
+	 * @param subject
+	 *            the window to position
+	 * @param optionalOrigin
+	 *            The window where the action to open subject originated from
 	 */
 	public static void centerWindow(Window subject, Window optionalOrigin) {
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -364,8 +365,9 @@ public class UiUtils {
 	}
 
 	/**
-	 * @param messageType one of the JOptionPane ERROR_MESSAGE, INFORMATION_MESSAGE,
-	 *                    WARNING_MESSAGE, QUESTION_MESSAGE, or PLAIN_MESSAGE
+	 * @param messageType
+	 *            one of the JOptionPane ERROR_MESSAGE, INFORMATION_MESSAGE,
+	 *            WARNING_MESSAGE, QUESTION_MESSAGE, or PLAIN_MESSAGE
 	 */
 	public static void messageBox(ActionEvent originEvent, String msg, String title, int messageType) {
 		Object content = buildMessageContentDependingOnLength(msg);

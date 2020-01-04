@@ -40,6 +40,7 @@ import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.hintsforusage.api.HintsCoordinator;
+import org.pgptool.gui.hintsforusage.hints.BuyMeCoffeeHint;
 import org.pgptool.gui.tools.ClipboardUtil;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.about.AboutHost;
@@ -129,7 +130,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	private KeyFilesOperations keyFilesOperations;
 	@Autowired
 	private UsageLogger usageLogger;
-
+	@Autowired
+	private BuyMeCoffeeHint buyMeCoffeeHint;
 	private TempFolderChooserPm tempFolderChooserPm;
 
 	@Override
@@ -166,7 +168,6 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	 * 
 	 * @param commandLineArgs
 	 */
-	@SuppressWarnings("deprecation")
 	public void processCommandLine(String[] commandLineArgs) {
 		try {
 			if (commandLineArgs == null || commandLineArgs.length == 0) {
@@ -301,10 +302,22 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 			return checkForUpdatesDialog.actionToOpenWindow;
 		}
 
-		private Action buyMeCoffee = buildAction("action.buyMeCoffee", "https://www.buymeacoffee.com/skarpushind");
+		@Override
+		public Action getActionBuyMeCoffee() {
+			return buyMeCoffeeHint.getBuyMeCoffeeAction();
+		}
+
+		private Action openFaq = buildUrlAction("action.openFaq", "https://pgptool.github.io/#faq");
+
+		@Override
+		public Action getActionFaq() {
+			return openFaq;
+		}
+
+		private Action openHelp = buildUrlAction("action.openHelp", "https://pgptool.github.io/#help");
 
 		@SuppressWarnings("serial")
-		private LocalizedActionEx buildAction(String messageCode, String url) {
+		private LocalizedActionEx buildUrlAction(String messageCode, String url) {
 			return new LocalizedActionEx(messageCode, this) {
 				@Override
 				public void actionPerformed(ActionEvent e) {
@@ -317,20 +330,6 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 				}
 			};
 		}
-
-		@Override
-		public Action getActionBuyMeCoffee() {
-			return buyMeCoffee;
-		}
-
-		private Action openFaq = buildAction("action.openFaq", "https://pgptool.github.io/#faq");
-
-		@Override
-		public Action getActionFaq() {
-			return openFaq;
-		}
-
-		private Action openHelp = buildAction("action.openHelp", "https://pgptool.github.io/#help");
 
 		@Override
 		public Action getActionHelp() {
@@ -365,7 +364,6 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		}
 	};
 
-	@SuppressWarnings("deprecation")
 	protected void tearDownConfigContext() {
 		try {
 			getMainFrameView().unrender();
@@ -787,8 +785,10 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	 * 
 	 * @author Sergey Karpushin
 	 *
-	 * @param <TPmType>   presentation model type
-	 * @param <TViewType> view type
+	 * @param <TPmType>
+	 *            presentation model type
+	 * @param <TViewType>
+	 *            view type
 	 */
 	private abstract class DialogOpener<PMHT, PMPO, TPmType extends PresentationModelBase<PMHT, PMPO>, TViewType extends ViewBase<TPmType>> {
 		private Class<TPmType> pmClass;

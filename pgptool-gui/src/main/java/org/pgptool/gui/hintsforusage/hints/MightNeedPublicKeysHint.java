@@ -124,7 +124,7 @@ public class MightNeedPublicKeysHint extends HintPm implements InitializingBean 
 			try {
 				Desktop.getDesktop().browse(new URI("https://pgptool.github.io/#faq"));
 			} catch (Throwable t) {
-				log.error("Failed to pen browser", t);
+				log.error("Failed to open browser", t);
 				EntryPoint.reportExceptionToUser(e, "failed.toOpenBrowser", t);
 			}
 		}

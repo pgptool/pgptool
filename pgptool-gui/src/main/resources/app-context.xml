@@ -41,8 +41,8 @@
 
 	<context:annotation-config />
 
-	<bean class="org.pgptool.gui.app.EntryPoint" />
-	<bean class="org.pgptool.gui.app.Messages" />
+	<bean id="messages" class="org.pgptool.gui.app.Messages" />
+	<bean class="org.pgptool.gui.app.EntryPoint" depends-on="messages" />
 	<bean class="com.google.common.eventbus.EventBus" />
 
 	<bean id="configsBasePathResolver" class="org.pgptool.gui.config.impl.ConfigsBasePathResolverUserHomeImpl">
@@ -119,6 +119,7 @@
 	<bean class="org.pgptool.gui.hintsforusage.hints.CreateOrImportPrivateKeyHint" />
 	<bean class="org.pgptool.gui.hintsforusage.hints.MightNeedPublicKeysHint" />
 	<bean class="org.pgptool.gui.hintsforusage.hints.PrivateKeyBackupHint" />
+	<bean class="org.pgptool.gui.hintsforusage.hints.BuyMeCoffeeHint" />
 
 	<bean class="org.pgptool.gui.ui.about.AboutView" lazy-init="true" scope="singleton" />
 	<bean class="org.pgptool.gui.ui.about.AboutPm" scope="prototype" />

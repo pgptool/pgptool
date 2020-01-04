@@ -31,15 +31,12 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.springframework.util.StringUtils;
 
 import com.google.common.base.Preconditions;
 
 public class TableColumnsGeometryPersisterImpl implements TableColumnModelListener, TableColumnsGeometryPersister {
-	private static Logger log = Logger.getLogger(TableColumnsGeometryPersisterImpl.class);
-
 	private static final long DELAY = 500;
 	private static final TimeUnit DELAY_TIME_UNIT = TimeUnit.MILLISECONDS;
 
@@ -52,9 +49,9 @@ public class TableColumnsGeometryPersisterImpl implements TableColumnModelListen
 	private ScheduledFuture<?> persistFuture;
 
 	/**
-	 * @param scheduledExecutorService it's used to dealy interraction with
-	 *                                 configPairs to avoid spamming it with values
-	 *                                 while user still dragging element
+	 * @param scheduledExecutorService
+	 *            it's used to dealy interraction with configPairs to avoid spamming
+	 *            it with values while user still dragging element
 	 */
 	public TableColumnsGeometryPersisterImpl(JTable table, String keyId, ConfigPairs configPairs,
 			ScheduledExecutorService scheduledExecutorService) {
@@ -147,7 +144,6 @@ public class TableColumnsGeometryPersisterImpl implements TableColumnModelListen
 		}
 		prevColumnsConfig = columnsConfig;
 		configPairs.put(keyId, columnsConfig);
-		log.debug(keyId + ": " + columnsConfig.toString());
 	}
 
 	private ArrayList<Pair<Integer, Integer>> buildCurConfig() {

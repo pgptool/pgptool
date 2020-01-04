@@ -23,15 +23,15 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
-import org.pgptool.gui.usage.api.UsageLogger;
-import org.pgptool.gui.usage.dto.ConfigPairUsage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.easycrud.api.dto.EntityChangedEvent;
 import org.summerb.utils.DtoBase;
 
 import com.google.common.eventbus.EventBus;
+import com.google.gson.Gson;
 
 /**
  * This is VERY simple map-based impl of this storage. It uses config repo and
@@ -41,16 +41,16 @@ import com.google.common.eventbus.EventBus;
  *
  */
 public class ConfigPairsImpl implements ConfigPairs {
+	private static Logger log = Logger.getLogger(ConfigPairsImpl.class);
+
 	@Autowired
 	private ConfigRepository configRepository;
 	@Autowired
 	private EventBus eventBus;
-	@Autowired
-	private UsageLogger usageLogger;
 
 	private ConfigPairsEnvelop configPairsEnvelop;
-
 	private String clarification;
+	private Gson gson = new Gson();
 
 	public ConfigPairsImpl(String clarification) {
 		this.clarification = clarification;
@@ -58,6 +58,11 @@ public class ConfigPairsImpl implements ConfigPairs {
 
 	@Override
 	public synchronized void put(String key, Object value) {
+		if (log.isDebugEnabled()) {
+			String valueStr = value == null ? "(null)" : gson.toJson(value);
+			log.debug(String.format("Saving \"%s\" property \"%s\" value: %s", clarification, key, valueStr));
+		}
+
 		if (value == null) {
 			Object removed = getConfigPairsEnvelop().remove(key);
 			if (removed != null & removed instanceof DtoBase) {
@@ -73,7 +78,6 @@ public class ConfigPairsImpl implements ConfigPairs {
 			}
 		}
 		save();
-		usageLogger.write(new ConfigPairUsage(clarification, key, value));
 	}
 
 	private void save() {
@@ -109,5 +113,9 @@ public class ConfigPairsImpl implements ConfigPairs {
 			configPairsEnvelop = configRepository.readOrConstruct(ConfigPairsEnvelop.class, clarification);
 		}
 		return configPairsEnvelop;
+	}
+
+	public void setGson(Gson gson) {
+		this.gson = gson;
 	}
 }

@@ -15,7 +15,7 @@
   <manifest></manifest>
   <icon>/home/sergeyk/_prj/pgptool/pgptool-gui/src/main/resources/icons/favicon.ico</icon>
   <jre>
-    <path></path>
+    <path>%JAVA_HOME%</path>
     <bundledJre64Bit>false</bundledJre64Bit>
     <bundledJreAsFallback>false</bundledJreAsFallback>
     <minVersion>1.8.0_0</minVersion>

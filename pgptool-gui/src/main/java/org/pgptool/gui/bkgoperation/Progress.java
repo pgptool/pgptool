@@ -113,7 +113,8 @@ public class Progress {
 		}
 
 		public void updateStepsTaken(BigInteger stepsTaken) {
-			Preconditions.checkState(totalSteps != null);
+			Preconditions.checkState(totalSteps != null && !BigInteger.ZERO.equals(totalSteps),
+					"totalSteps must not be null or zero");
 			Preconditions.checkArgument(stepsTaken != null);
 			Progress.this.stepsTaken = stepsTaken;
 
@@ -141,7 +142,7 @@ public class Progress {
 		}
 
 		private void updateEta() {
-			if (stepsTaken == null || totalSteps == null) {
+			if (stepsTaken == null || BigInteger.ZERO.equals(stepsTaken) || totalSteps == null) {
 				return;
 			}
 

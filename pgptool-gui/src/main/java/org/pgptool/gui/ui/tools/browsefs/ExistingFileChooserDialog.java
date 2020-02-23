@@ -25,6 +25,7 @@ import javax.swing.JFileChooser;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
+import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.ui.tools.UiUtils;
@@ -52,6 +53,11 @@ public class ExistingFileChooserDialog {
 		if (retFile == null) {
 			return handleFileWasChosen(null);
 		}
+		if (retFile.length() == 0) {
+			UiUtils.messageBox(originEvent, Messages.get("phrase.cannotWorkWithEmptyFile"),
+					Messages.get("term.attention"), MessageSeverity.WARNING);
+			return handleFileWasChosen(null);
+		}
 
 		String ret = retFile.getAbsolutePath();
 		ret = handleFileWasChosen(ret);
@@ -62,7 +68,8 @@ public class ExistingFileChooserDialog {
 	/**
 	 * Subclass can do post-processing if needed
 	 * 
-	 * @param filePathName user choice, might be null
+	 * @param filePathName
+	 *            user choice, might be null
 	 * @return value that will be returned to initial invoker
 	 */
 	protected String handleFileWasChosen(String filePathName) {

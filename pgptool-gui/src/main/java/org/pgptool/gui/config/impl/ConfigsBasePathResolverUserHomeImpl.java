@@ -82,7 +82,7 @@ public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResol
 				TextFile.write(testFile.getAbsolutePath(), "test");
 				if (!testFile.delete()) {
 					throw new RuntimeException("Failed to delete test file " + testFile
-							+ ", this might braka app logic, path is not reliable");
+							+ ", this might break app logic, path is not reliable");
 				}
 			}
 		} catch (Throwable t) {

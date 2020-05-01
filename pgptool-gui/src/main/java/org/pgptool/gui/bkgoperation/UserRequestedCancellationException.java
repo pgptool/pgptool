@@ -34,6 +34,6 @@ public class UserRequestedCancellationException extends Exception implements Has
 
 	@Override
 	public String getMessageCode() {
-		return "exception.userRequestedCancelation";
+		return "exception.userRequestedCancellation";
 	}
 }

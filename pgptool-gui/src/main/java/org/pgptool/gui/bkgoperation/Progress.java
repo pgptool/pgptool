@@ -44,7 +44,7 @@ public class Progress {
 	private long startedAt;
 	private Long toBeFinishedBy;
 	private ProgressHandler progressHandler;
-	private boolean isCancelationRequested;
+	private boolean isCancellationRequested;
 
 	public static Updater create(String operationCode, ProgressHandler progressHandler) {
 		Progress ret = new Progress(operationCode, progressHandler);
@@ -100,16 +100,16 @@ public class Progress {
 	 * Calling this method will set a flag that must be handled by executor. And
 	 * once it's handled {@link UserRequestedCancellationException} will be thrown
 	 */
-	public void requestCancelation() {
-		isCancelationRequested = true;
+	public void requestCancellation() {
+		isCancellationRequested = true;
 	}
 
 	public class Updater {
 		protected Updater() {
 		}
 
-		public boolean isCancelationRequested() {
-			return isCancelationRequested;
+		public boolean isCancellationRequested() {
+			return isCancellationRequested;
 		}
 
 		public void updateStepsTaken(BigInteger stepsTaken) {

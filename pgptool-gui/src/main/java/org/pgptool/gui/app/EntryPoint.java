@@ -99,7 +99,7 @@ public class EntryPoint {
 			splashScreenView = null;
 			entryPoint.startUp(args);
 			rootPmStatic = entryPoint.getRootPm();
-			log.debug("RootPM bean resolved");
+			log.debug("RootPM been resolved");
 			processPendingArgsIfAny(rootPmStatic);
 		} catch (Throwable t) {
 			log.error("Failed to startup application", t);
@@ -128,7 +128,7 @@ public class EntryPoint {
 	private static void processPendingArgsIfAny(RootPm rootPm) {
 		while (!postponedArgsFromSecondaryInstances.isEmpty()) {
 			String[] args = postponedArgsFromSecondaryInstances.poll();
-			log.debug("Precessing postponed args from secondary instance: " + Arrays.toString(args));
+			log.debug("Processing postponed args from secondary instance: " + Arrays.toString(args));
 			rootPm.processCommandLine(args);
 		}
 	}
@@ -180,7 +180,7 @@ public class EntryPoint {
 					}
 				});
 			} else {
-				log.debug("Posponing args processing from secondary instance: " + Arrays.toString(args));
+				log.debug("Postponing args processing from secondary instance: " + Arrays.toString(args));
 				postponedArgsFromSecondaryInstances.offer(args);
 			}
 		}
@@ -220,7 +220,7 @@ public class EntryPoint {
 		String msg = ConsoleExceptionUtils.getAllMessages(t);
 		msg += "\r\n" + versionInfo;
 		UiUtils.messageBox(UiUtils.actionEvent(window, "reportAppInitFailureMessageToUser"), msg,
-				"PGP Tool startup failed" + versionInfo, JOptionPane.ERROR_MESSAGE);
+				"PGPTool startup failed" + versionInfo, JOptionPane.ERROR_MESSAGE);
 	}
 
 	public static void reportExceptionToUser(ActionEvent originAction, String errorMessageCode, Throwable cause,

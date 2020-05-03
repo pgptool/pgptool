@@ -20,7 +20,7 @@ package org.pgptool.gui.bkgoperation;
 import org.summerb.i18n.HasMessageCode;
 
 /**
- * Thrown when operation canceled due to cancelation requested by user
+ * Thrown when operation canceled due to cancellation requested by user
  * 
  * @author sergeyk
  *

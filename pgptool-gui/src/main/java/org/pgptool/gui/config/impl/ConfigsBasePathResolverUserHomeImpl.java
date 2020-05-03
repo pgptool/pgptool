@@ -50,7 +50,7 @@ public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResol
 			}
 
 			Preconditions.checkState(false,
-					"No config path was chosen as acceptable. Check application have rights to write files on the disk");
+					"No config path was chosen as acceptable. Verify that the application has rights to write files on the disk");
 		}
 
 		return chosenLocation;

@@ -91,7 +91,7 @@ public class KeyRingServiceTest {
 
 	@Test
 	public void testKeyCreation() throws Exception {
-		Key key = keyGeneratorService.createNewKey(buildTestKey());
+		Key key = keyGeneratorService.createNewKey(buildTestKey(), false);
 		assertNotNull(key);
 	}
 

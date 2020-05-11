@@ -185,9 +185,9 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 	}
 
 	/**
-	 * @param countingStream this stream is passed for progress reporting only.
-	 *                       Optional, if not provided then return from pIn method
-	 *                       will be used
+	 * @param countingStream
+	 *            this stream is passed for progress reporting only. Optional, if
+	 *            not provided then return from pIn method will be used
 	 */
 	private static void pipeStream(InputStream pIn, OutputStream pOut, int bufSize, Updater progress,
 			CountingInputStream countingStream) throws IOException, UserRequestedCancellationException {
@@ -355,7 +355,6 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 				"Source file name must be correct");
 		Preconditions.checkArgument(StringUtils.hasText(targetFile), "Target file name must be provided");
 		Preconditions.checkArgument(decryptionKey != null, "decryption key must be provided");
-		Preconditions.checkArgument(StringUtils.hasText(passphrase), "Passphrase must be provided");
 
 		InputStream in = null;
 		try {
@@ -397,8 +396,9 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 	 * Inspired by
 	 * https://github.com/bcgit/bc-java/blob/master/pg/src/main/java/org/bouncycastle/openpgp/examples/KeyBasedFileProcessor.java
 	 * 
-	 * @param countingStream this stream is passed for progress reporting only, must
-	 *                       not be used to actually read data
+	 * @param countingStream
+	 *            this stream is passed for progress reporting only, must not be
+	 *            used to actually read data
 	 */
 	private void decryptStream(PGPPublicKeyEncryptedData pbe, PGPPrivateKey privateKey, OutputStream outputStream,
 			Updater optionalProgress, CountingInputStream countingStream) throws UserRequestedCancellationException {
@@ -517,7 +517,6 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 		Preconditions.checkArgument(StringUtils.hasText(encryptedFile) && new File(encryptedFile).exists(),
 				"Source file name must be correct");
 		Preconditions.checkArgument(decryptionKey != null, "decryption key must be provided");
-		Preconditions.checkArgument(StringUtils.hasText(passphrase), "Passphrase must be provided");
 
 		InputStream in = null;
 		try {

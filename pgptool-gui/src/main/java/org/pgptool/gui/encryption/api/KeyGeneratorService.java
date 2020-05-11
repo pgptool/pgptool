@@ -29,5 +29,12 @@ public interface KeyGeneratorService {
 	 */
 	void expectNewKeyCreation();
 
-	Key createNewKey(CreateKeyParams params) throws FieldValidationException;
+	/**
+	 * Create key
+	 * 
+	 * @param emptyPassphraseConsent
+	 *            must be explicitly specified if user agreed to use empty
+	 *            passphrase
+	 */
+	Key createNewKey(CreateKeyParams params, boolean emptyPassphraseConsent) throws FieldValidationException;
 }

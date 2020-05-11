@@ -323,6 +323,8 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 
 	private PGPPrivateKey getPrivateKey(String passphrase, PGPSecretKey secretKey) throws InvalidPasswordException {
 		try {
+			// TODO: REFACTOR: Why is this code duplicated in EncryptionServicePgpImpl
+			// ??!?!?!
 			PBESecretKeyDecryptor decryptorFactory = new BcPBESecretKeyDecryptorBuilder(
 					new BcPGPDigestCalculatorProvider()).build(passphrase.toCharArray());
 			PGPPrivateKey privateKey = secretKey.extractPrivateKey(decryptorFactory);

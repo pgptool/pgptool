@@ -49,6 +49,7 @@ import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Required;
+import org.springframework.util.StringUtils;
 import org.summerb.validation.FieldValidationException;
 import org.summerb.validation.ValidationContext;
 
@@ -87,10 +88,10 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 	}
 
 	@Override
-	public Key createNewKey(CreateKeyParams params) throws FieldValidationException {
+	public Key createNewKey(CreateKeyParams params, boolean emptyPassphraseConsent) throws FieldValidationException {
 		try {
 			Preconditions.checkArgument(params != null, "params must not be null");
-			assertParamsValid(params);
+			assertParamsValid(params, emptyPassphraseConsent);
 
 			// Create Master key
 			KeyPair masterKey = getOrGenerateKeyPair(getMasterKeyParameters());
@@ -102,8 +103,10 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 			PGPDigestCalculator digestCalc = new BcPGPDigestCalculatorProvider()
 					.get(hashAlgorithmNameToTag(secretKeyHashingAlgorithm));
 			BcPBESecretKeyEncryptorBuilder encryptorBuilderBC = new BcPBESecretKeyEncryptorBuilder(
-					symmetricKeyAlgorithmNameToTag(secretKeyEncryptionAlgorithm), digestCalc);
-			PBESecretKeyEncryptor keyEncryptorBc = encryptorBuilderBC.build(params.getPassphrase().toCharArray());
+					symmetricKeyAlgorithmNameToTag(
+							getSecretKeyEncryptionAlgorithmForOptionalPassphrase(emptyPassphraseConsent)),
+					digestCalc);
+			PBESecretKeyEncryptor keyEncryptorBc = encryptorBuilderBC.build(toCharArray(params.getPassphrase()));
 
 			// Key pair generator
 			String userName = params.getFullName() + " <" + params.getEmail() + ">";
@@ -140,6 +143,20 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 			Throwables.throwIfInstanceOf(t, FieldValidationException.class);
 			throw new RuntimeException("Failed to generate key", t);
 		}
+	}
+
+	private char[] toCharArray(String optionalPasshprase) {
+		if (optionalPasshprase == null) {
+			return new char[0];
+		}
+		return optionalPasshprase.toCharArray();
+	}
+
+	private String getSecretKeyEncryptionAlgorithmForOptionalPassphrase(boolean emptyPassphraseConsent) {
+		if (emptyPassphraseConsent) {
+			return /* SymmetricKeyAlgorithmTags. */ "NULL";
+		}
+		return secretKeyEncryptionAlgorithm;
 	}
 
 	protected final static int symmetricKeyAlgorithmNameToTag(String algorithmName) {
@@ -192,14 +209,19 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 		return future.get();
 	}
 
-	private void assertParamsValid(CreateKeyParams params) throws FieldValidationException {
+	private void assertParamsValid(CreateKeyParams params, boolean emptyPassphraseConsent)
+			throws FieldValidationException {
 		ValidationContext ctx = new ValidationContext();
 
 		ctx.validateNotEmpty(params.getFullName(), CreateKeyParams.FN_FULL_NAME);
 		if (ctx.validateNotEmpty(params.getEmail(), CreateKeyParams.FN_EMAIL)) {
 			ctx.validateEmailFormat(params.getEmail(), CreateKeyParams.FN_EMAIL);
 		}
-		if (ctx.validateNotEmpty(params.getPassphrase(), CreateKeyParams.FN_PASSPHRASE)
+
+		if (!emptyPassphraseConsent) {
+			ctx.validateNotEmpty(params.getPassphrase(), CreateKeyParams.FN_PASSPHRASE);
+		}
+		if (StringUtils.hasText(params.getPassphrase())
 				&& ctx.validateNotEmpty(params.getPassphraseAgain(), CreateKeyParams.FN_PASSPHRASE_AGAIN)) {
 			ctx.equals(params.getPassphrase(), "term." + CreateKeyParams.FN_PASSPHRASE, params.getPassphraseAgain(),
 					"term." + CreateKeyParams.FN_PASSPHRASE_AGAIN, CreateKeyParams.FN_PASSPHRASE_AGAIN);

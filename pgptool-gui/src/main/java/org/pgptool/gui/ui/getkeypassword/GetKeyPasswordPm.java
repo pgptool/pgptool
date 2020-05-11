@@ -144,6 +144,22 @@ public class GetKeyPasswordPm extends PresentationModelBase<GetKeyPasswordHost, 
 				return true;
 			}
 		}
+
+		// now check if we have matching key with empty password
+		for (MatchedKey k : matchedKeys) {
+			try {
+				keyFilesOperations.validateDecryptionKeyPassword(k.getRequestedKeyId(), k.getMatchedKey(), "");
+				// empty password worked
+				PasswordDeterminedForKey ret = new PasswordDeterminedForKey(k.getRequestedKeyId(), k.getMatchedKey(),
+						"");
+				CACHE_KEYID_TO_PASSWORD.put(k.getRequestedKeyId(), ret);
+				host.onPasswordDeterminedForKey(ret);
+				return true;
+			} catch (FieldValidationException e) {
+				// nope, empty password doesn't work.
+			}
+		}
+
 		return false;
 	}
 

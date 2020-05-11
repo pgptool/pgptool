@@ -19,6 +19,8 @@ package org.pgptool.gui.ui.getkeypassword;
 
 import org.pgptool.gui.encryption.api.dto.Key;
 
+import ru.skarpushin.swingpm.modelprops.ModelProperty;
+
 public class PasswordDeterminedForKey {
 	private String decryptionKeyId;
 	private Key matchedKey;

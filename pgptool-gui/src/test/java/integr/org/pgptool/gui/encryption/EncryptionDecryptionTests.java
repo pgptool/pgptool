@@ -122,7 +122,7 @@ public class EncryptionDecryptionTests {
 
 	@Test
 	public void testWeCanDecryptTheProductOfEncryptionUsingCreatedKey() throws Exception {
-		Key key = keyGeneratorService.createNewKey(KeyRingServiceTest.buildTestKey());
+		Key key = keyGeneratorService.createNewKey(KeyRingServiceTest.buildTestKey(), false);
 		List keys = Arrays.asList(key);
 
 		String targetFilename = tempDirPath + File.separator + FilenameUtils.getBaseName(testSubjectFilename) + ".pgp";

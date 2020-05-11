@@ -2,8 +2,6 @@ package org.pgptool.gui.ui.createkey;
 
 import java.io.Serializable;
 
-import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
-
 public class CreateKeyUsage implements Serializable {
 	private static final long serialVersionUID = -6652489944057680318L;
 	private String userName;
@@ -12,10 +10,9 @@ public class CreateKeyUsage implements Serializable {
 	public CreateKeyUsage() {
 	}
 
-	public CreateKeyUsage(CreateKeyParams createKeyParams) {
-		userName = createKeyParams.getFullName();
-		email = createKeyParams.getEmail();
-		// NOTE: We're not saving passphrase intentionally!!!
+	public CreateKeyUsage(String userName, String email) {
+		this.userName = userName;
+		this.email = email;
 	}
 
 	public String getUserName() {

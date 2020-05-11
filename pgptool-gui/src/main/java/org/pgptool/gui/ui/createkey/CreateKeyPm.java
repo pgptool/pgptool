@@ -30,8 +30,10 @@ import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.hintsforusage.hints.PrivateKeyBackupHint.KeyCreatedEvent;
+import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.summerb.easycrud.api.dto.EntityChangedEvent;
 import org.summerb.validation.FieldValidationException;
 import org.summerb.validation.ValidationError;
@@ -123,15 +125,16 @@ public class CreateKeyPm extends PresentationModelBase<CreateKeyHost, Void> {
 			this.runnableOriginEvent = runnableOriginEvent;
 		}
 
-		@SuppressWarnings("deprecation")
 		@Override
 		public void run() {
 			validationErrors.clear();
 			try {
-				usageLogger.write(new CreateKeyUsage(createKeyParams));
-				Key key = keyGeneratorService.createNewKey(createKeyParams);
+				usageLogger.write(new CreateKeyUsage(createKeyParams.getFullName(), createKeyParams.getEmail()));
+				boolean emptyPassphraseConsent = !StringUtils.hasText(createKeyParams.getPassphrase())
+						&& UiUtils.confirmWarning(runnableOriginEvent, "confirm.createKeyWithoutPassphrase", null);
+				Key key = keyGeneratorService.createNewKey(createKeyParams, emptyPassphraseConsent);
 				if (keyGenerationFuture == null) {
-					return;
+					return; // this will happen if user canceled operation
 				}
 				keyRingService.addKey(key);
 				eventBus.post(EntityChangedEvent.added(new KeyCreatedEvent(key)));

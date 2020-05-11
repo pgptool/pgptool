@@ -99,7 +99,7 @@ public class EntryPoint {
 			splashScreenView = null;
 			entryPoint.startUp(args);
 			rootPmStatic = entryPoint.getRootPm();
-			log.debug("RootPM been resolved");
+			log.debug("RootPM bean resolved");
 			processPendingArgsIfAny(rootPmStatic);
 		} catch (Throwable t) {
 			log.error("Failed to startup application", t);
@@ -220,7 +220,7 @@ public class EntryPoint {
 		String msg = ConsoleExceptionUtils.getAllMessages(t);
 		msg += "\r\n" + versionInfo;
 		UiUtils.messageBox(UiUtils.actionEvent(window, "reportAppInitFailureMessageToUser"), msg,
-				"PGPTool startup failed" + versionInfo, JOptionPane.ERROR_MESSAGE);
+				"PGP Tool startup failed" + versionInfo, JOptionPane.ERROR_MESSAGE);
 	}
 
 	public static void reportExceptionToUser(ActionEvent originAction, String errorMessageCode, Throwable cause,

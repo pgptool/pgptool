@@ -190,13 +190,13 @@ public class EncryptOnePm extends PresentationModelBase<EncryptOneHost, String> 
 						if (encryptionDialogParameters.getSourceFile().equals(sourceFile.getValue())) {
 							use(ofd, encryptionDialogParameters.getTargetFile());
 						} else {
-							use(ofd, madeUpTargetFileName(sourceFile.getValue(), FilenameUtils
+							use(ofd, makeUpTargetFileName(sourceFile.getValue(), FilenameUtils
 									.getFullPathNoEndSeparator(encryptionDialogParameters.getTargetFile())));
 						}
 					} else if (StringUtils.hasText(sourceFileStr) && new File(sourceFileStr).exists()) {
 						String basePath = FilenameUtils.getFullPathNoEndSeparator(sourceFileStr);
 						ofd.setCurrentDirectory(new File(basePath));
-						ofd.setSelectedFile(new File(madeUpTargetFileName(sourceFileStr, basePath)));
+						ofd.setSelectedFile(new File(makeUpTargetFileName(sourceFileStr, basePath)));
 					}
 				}
 
@@ -343,7 +343,7 @@ public class EncryptOnePm extends PresentationModelBase<EncryptOneHost, String> 
 				} else {
 					// NOTE: Assuming that params fully valid and target file is
 					// provided
-					targetFile.setValueByOwner(madeUpTargetFileName(sourceFile.getValue(),
+					targetFile.setValueByOwner(makeUpTargetFileName(sourceFile.getValue(),
 							FilenameUtils.getFullPathNoEndSeparator(params.getTargetFile())));
 				}
 			} else {
@@ -440,17 +440,17 @@ public class EncryptOnePm extends PresentationModelBase<EncryptOneHost, String> 
 
 		@Override
 		public void run() {
-			String targetFileName = getEffectiveTargetFileName();
-
+			String targetFileName;
 			Fingerprint source;
 			Fingerprint target;
 
 			try {
+				targetFileName = getEffectiveTargetFileName();
+
 				ChecksumCalcInputStreamSupervisor inputStreamSupervisor = new ChecksumCalcInputStreamSupervisorImpl(
 						messageDigestFactory);
 				ChecksumCalcOutputStreamSupervisor outputStreamSupervisor = new ChecksumCalcOutputStreamSupervisorImpl(
 						messageDigestFactory);
-
 				if (isEncryptedFileChangedAfterDecryption(targetFileName, sourceFile.getValue(), progressHandler)
 						&& !promptUserToOverwriteConcurrentChanges(targetFileName)) {
 					throw new UserRequestedCancellationException();
@@ -464,14 +464,16 @@ public class EncryptOnePm extends PresentationModelBase<EncryptOneHost, String> 
 
 				log.debug("Encryption completed: " + targetFileName);
 			} catch (UserRequestedCancellationException ce) {
-				host.handleClose();
+				if (ce.isSoftCancel()) {
+					reEnableDialog();
+				} else {
+					host.handleClose();
+				}
 				return;
 			} catch (Throwable t) {
 				log.error("Failed to encrypt", t);
 				EntryPoint.reportExceptionToUser(workerOriginEvent, "error.failedToEncryptFile", t);
-				actionDoOperation.setEnabled(true);
-				isDisableControls.setValueByOwner(false);
-				isProgressVisible.setValueByOwner(false);
+				reEnableDialog();
 				return;
 			}
 
@@ -501,6 +503,12 @@ public class EncryptOnePm extends PresentationModelBase<EncryptOneHost, String> 
 
 			// close window
 			host.handleClose();
+		}
+
+		private void reEnableDialog() {
+			actionDoOperation.setEnabled(true);
+			isDisableControls.setValueByOwner(false);
+			isProgressVisible.setValueByOwner(false);
 		}
 
 		private boolean promptUserToOverwriteConcurrentChanges(String targetFileName) {
@@ -567,18 +575,34 @@ public class EncryptOnePm extends PresentationModelBase<EncryptOneHost, String> 
 			}
 		}
 
-		private String getEffectiveTargetFileName() {
-			if (!StringUtils.hasText(targetFile.getValue()) || isUseSameFolder.getValue()) {
-				isUseSameFolder.setValueByOwner(true);
-				return madeUpTargetFileName(sourceFile.getValue(),
-						FilenameUtils.getFullPathNoEndSeparator(sourceFile.getValue()));
+		private String getEffectiveTargetFileName() throws UserRequestedCancellationException {
+			if (StringUtils.hasText(targetFile.getValue()) && !isUseSameFolder.getValue()) {
+				String targetFileName = targetFile.getValue();
+				File parentFolder = new File(targetFileName).getParentFile();
+				Preconditions.checkState(parentFolder.exists() || parentFolder.mkdirs(),
+						"Failed to ensure all parents directories created");
+				return targetFileName;
 			}
 
-			String targetFileName = targetFile.getValue();
-			File parentFolder = new File(targetFileName).getParentFile();
-			Preconditions.checkState(parentFolder.exists() || parentFolder.mkdirs(),
-					"Failed to ensure all parents directories created");
+			// NOTE: Following logic is not triggered when user is encrypting back, because
+			// encrypt back uses concrete target file location
+
+			isUseSameFolder.setValueByOwner(true); // in case targetFile is empty, reinforce UseSameFolder
+			String targetFileName = makeUpTargetFileName(sourceFile.getValue(),
+					FilenameUtils.getFullPathNoEndSeparator(sourceFile.getValue()));
+
+			boolean confirmOverwriteWithUser = (encryptionDialogParameters == null
+					|| !sourceFile.getValue().equalsIgnoreCase(encryptionDialogParameters.getSourceFile()))
+					&& new File(targetFileName).exists();
+			if (confirmOverwriteWithUser && !promptUserToOverwriteExistingFile(targetFileName)) {
+				throw new UserRequestedCancellationException(true);
+			}
 			return targetFileName;
+		}
+
+		private boolean promptUserToOverwriteExistingFile(String targetFileName) {
+			return UiUtils.confirmWarning(workerOriginEvent, "confirm.overWriteExistingFile",
+					new Object[] { targetFileName });
 		}
 
 		private EncryptionDialogParameters buildEncryptionDialogParameters() {
@@ -596,9 +620,8 @@ public class EncryptOnePm extends PresentationModelBase<EncryptOneHost, String> 
 		}
 	};
 
-	private String madeUpTargetFileName(String sourceFileName, String targetBasedPath) {
-		File fileSource = new File(sourceFileName);
-		String fileNameOnlyWoPathAndExtension = FilenameUtils.getBaseName(fileSource.getAbsolutePath());
+	protected static String makeUpTargetFileName(String sourceFileName, String targetBasedPath) {
+		String fileNameOnlyWoPathAndExtension = FilenameUtils.getBaseName(sourceFileName);
 		return targetBasedPath + File.separator + fileNameOnlyWoPathAndExtension + "." + ENCRYPTED_FILE_EXTENSION;
 	}
 

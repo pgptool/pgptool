@@ -24,8 +24,6 @@ import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class EncryptionParamsStorageImpl implements EncryptionParamsStorage {
-	public static final String CONFIG_PAIR_BASE = "Encrypt:";
-
 	@Autowired
 	private ConfigPairs encryptionParams;
 

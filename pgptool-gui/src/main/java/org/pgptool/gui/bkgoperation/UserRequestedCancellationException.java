@@ -28,12 +28,24 @@ import org.summerb.i18n.HasMessageCode;
 public class UserRequestedCancellationException extends Exception implements HasMessageCode {
 	private static final long serialVersionUID = 1290562826825044541L;
 
+	private final boolean softCancel;
+
 	public UserRequestedCancellationException() {
 		super("Operation canceled by user");
+		softCancel = false;
+	}
+
+	public UserRequestedCancellationException(boolean softCancel) {
+		super("Operation canceled by user");
+		this.softCancel = softCancel;
 	}
 
 	@Override
 	public String getMessageCode() {
 		return "exception.userRequestedCancelation";
+	}
+
+	public boolean isSoftCancel() {
+		return softCancel;
 	}
 }

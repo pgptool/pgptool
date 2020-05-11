@@ -128,7 +128,7 @@ public class EntryPoint {
 	private static void processPendingArgsIfAny(RootPm rootPm) {
 		while (!postponedArgsFromSecondaryInstances.isEmpty()) {
 			String[] args = postponedArgsFromSecondaryInstances.poll();
-			log.debug("Precessing postponed args from secondary instance: " + Arrays.toString(args));
+			log.debug("Processing postponed args from secondary instance: " + Arrays.toString(args));
 			rootPm.processCommandLine(args);
 		}
 	}
@@ -180,7 +180,7 @@ public class EntryPoint {
 					}
 				});
 			} else {
-				log.debug("Posponing args processing from secondary instance: " + Arrays.toString(args));
+				log.debug("Postponing args processing from secondary instance: " + Arrays.toString(args));
 				postponedArgsFromSecondaryInstances.offer(args);
 			}
 		}

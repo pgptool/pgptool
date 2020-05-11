@@ -69,7 +69,7 @@ public class ChecksumCalculationTask implements Callable<Fingerprint> {
 			while ((readCount = is.read(buf)) > 0) {
 				totalReadCount += readCount;
 				// continue reading
-				if (progress.isCancelationRequested()) {
+				if (progress.isCancellationRequested()) {
 					throw new UserRequestedCancellationException();
 				}
 				progress.updateStepsTaken(BigInteger.valueOf(totalReadCount));

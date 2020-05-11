@@ -50,7 +50,7 @@ public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResol
 			}
 
 			Preconditions.checkState(false,
-					"No config path was chosen as acceptable. Check application have rights to write files on the disk");
+					"No config path was chosen as acceptable. Verify that the application has rights to write files on the disk");
 		}
 
 		return chosenLocation;
@@ -82,7 +82,7 @@ public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResol
 				TextFile.write(testFile.getAbsolutePath(), "test");
 				if (!testFile.delete()) {
 					throw new RuntimeException("Failed to delete test file " + testFile
-							+ ", this might braka app logic, path is not reliable");
+							+ ", this might break app logic, path is not reliable");
 				}
 			}
 		} catch (Throwable t) {

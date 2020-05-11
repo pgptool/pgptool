@@ -542,7 +542,7 @@ public class EncryptOnePm extends PresentationModelBase<EncryptOneHost, String> 
 				int read, totalRead = 0;
 				while ((read = inputStream.read(buf)) > 0) {
 					totalRead += read;
-					if (progress.isCancelationRequested()) {
+					if (progress.isCancellationRequested()) {
 						throw new UserRequestedCancellationException();
 					}
 					progress.updateStepsTaken(BigInteger.valueOf(totalRead));

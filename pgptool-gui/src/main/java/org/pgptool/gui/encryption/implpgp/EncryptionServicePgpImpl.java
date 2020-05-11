@@ -213,7 +213,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 			return;
 		}
 		progress.updateStepsTaken(BigInteger.valueOf(totalBytesRead));
-		if (progress.isCancelationRequested()) {
+		if (progress.isCancellationRequested()) {
 			throw new UserRequestedCancellationException();
 		}
 	}

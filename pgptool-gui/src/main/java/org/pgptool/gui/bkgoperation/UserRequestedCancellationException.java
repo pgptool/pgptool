@@ -20,7 +20,7 @@ package org.pgptool.gui.bkgoperation;
 import org.summerb.i18n.HasMessageCode;
 
 /**
- * Thrown when operation canceled due to cancelation requested by user
+ * Thrown when operation canceled due to cancellation requested by user
  * 
  * @author sergeyk
  *
@@ -42,7 +42,7 @@ public class UserRequestedCancellationException extends Exception implements Has
 
 	@Override
 	public String getMessageCode() {
-		return "exception.userRequestedCancelation";
+		return "exception.userRequestedCancellation";
 	}
 
 	public boolean isSoftCancel() {

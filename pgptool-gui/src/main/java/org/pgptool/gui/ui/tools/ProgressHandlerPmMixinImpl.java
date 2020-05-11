@@ -39,7 +39,7 @@ public class ProgressHandlerPmMixinImpl implements ProgressHandler {
 	@Override
 	public void onProgressUpdated(Progress progress) {
 		if (Thread.interrupted()) {
-			progress.requestCancelation();
+			progress.requestCancellation();
 		}
 
 		if (!isProgressVisible.getValue()) {

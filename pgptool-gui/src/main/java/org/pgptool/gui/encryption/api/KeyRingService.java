@@ -31,12 +31,20 @@ public interface KeyRingService {
 	void removeKey(Key key);
 
 	/**
+	 * Atomic operation to replace key in a keyring. NOTE: This has to be atomic
+	 * (transactional) because we want to be 100% sure that if we delete key with
+	 * old password, then key with new password will be successfully saved on disk
+	 */
+	void replaceKey(Key key, Key newKey);
+
+	/**
 	 * This method will find all keys that are compatible with IDs provided and
 	 * suitable for decryption. It might not be the keyId itself, but ID that is
 	 * supported by the key. Which means it doens't necessarily true that (pseudo
 	 * code) keysIds.containsAll(return.getIds)
 	 * 
-	 * @param keysIds list of ids needs to be found.
+	 * @param keysIds
+	 *            list of ids needs to be found.
 	 * @return list of keys or empty array if none found
 	 */
 	List<MatchedKey> findMatchingDecryptionKeys(Set<String> keysIds);

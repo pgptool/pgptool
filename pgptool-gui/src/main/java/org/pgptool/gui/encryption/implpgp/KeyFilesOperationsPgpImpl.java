@@ -46,10 +46,9 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
-import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
-import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
+import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyInfo;
 import org.pgptool.gui.encryption.api.dto.KeyTypeEnum;
@@ -307,13 +306,10 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 	}
 
 	@Override
-	public void validateDecryptionKeyPassword(String requestedKeyId, Key key, String password)
+	public void validateDecryptionKeyPassword(String secretKeyId, Key key, String password)
 			throws FieldValidationException {
 		try {
-			PGPSecretKey secretKey = KeyDataPgp.get(key).findSecretKeyById(requestedKeyId);
-			Preconditions.checkArgument(secretKey != null, "Matching secret key wasn't found");
-			PGPPrivateKey privateKey = getPrivateKey(password, secretKey);
-			Preconditions.checkArgument(privateKey != null, "Failed to extract private key");
+			validatePasswordUnchecked(secretKeyId, key, password);
 		} catch (InvalidPasswordException pe) {
 			throw new FieldValidationException(new ValidationError(pe.getMessageCode(), FN_PASSWORD));
 		} catch (Throwable t) {
@@ -321,17 +317,61 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 		}
 	}
 
-	private PGPPrivateKey getPrivateKey(String passphrase, PGPSecretKey secretKey) throws InvalidPasswordException {
+	@Override
+	public void validateKeyPassword(Key key, String passphrase) throws FieldValidationException {
 		try {
-			// TODO: REFACTOR: Why is this code duplicated in EncryptionServicePgpImpl
-			// ??!?!?!
-			PBESecretKeyDecryptor decryptorFactory = new BcPBESecretKeyDecryptorBuilder(
-					new BcPGPDigestCalculatorProvider()).build(passphrase.toCharArray());
-			PGPPrivateKey privateKey = secretKey.extractPrivateKey(decryptorFactory);
-			return privateKey;
+			KeyDataPgp keyData = (KeyDataPgp) key.getKeyData();
+			for (PGPSecretKey secretKey : keyData.getSecretKeyRing()) {
+				String keyIdStr = KeyDataPgp.buildKeyIdStr(secretKey.getKeyID());
+				KeyFilesOperationsPgpImpl.validatePasswordUnchecked(keyIdStr, key, passphrase);
+			}
+		} catch (InvalidPasswordException pe) {
+			throw new FieldValidationException(new ValidationError(pe.getMessageCode(), CreateKeyParams.FN_PASSPHRASE));
 		} catch (Throwable t) {
-			log.warn("Failed to extract private key. Most likely it because of incorrect passphrase provided", t);
+			throw new RuntimeException("Unknown failure during attempt to verify current key password", t);
+		}
+	}
+
+	protected static void validatePasswordUnchecked(String secretKeyId, Key key, String password)
+			throws InvalidPasswordException {
+		PGPSecretKey secretKey = KeyDataPgp.get(key).findSecretKeyById(secretKeyId);
+		Preconditions.checkArgument(secretKey != null, "Matching secret key wasn't found");
+
+		// NOTE: When actual key does not have any password then getPrivateKey() will
+		// succeed with any password provided. Which is weird. So I'm enforcing check on
+		// empty password myself
+		if (isActuallyHasEmptyPassword(secretKey) && StringUtils.hasText(password)) {
 			throw new InvalidPasswordException();
+		}
+
+		// Now regular password check
+		PGPPrivateKey privateKey = getPrivateKey(password, secretKey);
+		Preconditions.checkArgument(privateKey != null, "Failed to extract private key");
+	}
+
+	protected static boolean isActuallyHasEmptyPassword(PGPSecretKey secretKey) {
+		try {
+			PGPPrivateKey privateKey = getPrivateKey(null, secretKey);
+			Preconditions.checkArgument(privateKey != null, "Failed to extract private key");
+			return true;
+		} catch (InvalidPasswordException e) {
+			// that's ok
+			return false;
+		}
+	}
+
+	protected static PGPPrivateKey getPrivateKey(String passphrase, PGPSecretKey secretKey)
+			throws InvalidPasswordException {
+		try {
+			PBESecretKeyDecryptor decryptorFactory = EncryptionServicePgpImpl.buildKeyDecryptor(passphrase);
+			return secretKey.extractPrivateKey(decryptorFactory);
+		} catch (PGPException pgpe) {
+			if (pgpe.getMessage() == null || !pgpe.getMessage().contains("checksum mismatch")) {
+				log.debug("Can't extract private key. Most likely passphrase is incorrect", pgpe);
+			}
+			throw new InvalidPasswordException();
+		} catch (Throwable t) {
+			throw new RuntimeException("Failed to extract private key", t);
 		}
 	}
 

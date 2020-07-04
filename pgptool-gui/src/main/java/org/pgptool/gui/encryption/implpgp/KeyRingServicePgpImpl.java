@@ -107,7 +107,8 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 		Key existingKey = findKeyById(key.getKeyInfo().getKeyId());
 		if (existingKey != null) {
 			if (!existingKey.getKeyData().isCanBeUsedForDecryption() && key.getKeyData().isCanBeUsedForDecryption()) {
-				removeKey(existingKey);
+				replaceKey(existingKey, key);
+				return;
 			} else {
 				throw new RuntimeException("This key was already added");
 			}
@@ -117,6 +118,35 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 		configRepository.persist(pgpKeysRing);
 		eventBus.post(EntityChangedEvent.added(key));
 		usageLogger.write(new KeyAddedUsage(key.getKeyInfo().getKeyId()));
+	}
+
+	@Override
+	public synchronized void replaceKey(Key key, Key newKey) {
+		Preconditions.checkArgument(key != null, "key required");
+		Preconditions.checkArgument(key.getKeyData() != null, "key data required");
+		Preconditions.checkArgument(key.getKeyData() instanceof KeyDataPgp, "Wrong key data type");
+
+		Preconditions.checkArgument(newKey != null, "newKey required");
+		Preconditions.checkArgument(newKey.getKeyData() != null, "newKey data required");
+		Preconditions.checkArgument(newKey.getKeyData() instanceof KeyDataPgp, "Wrong newKey data type");
+
+		ensureRead();
+		String keyId = key.getKeyInfo().getKeyId();
+		for (Iterator<Key> iter = pgpKeysRing.iterator(); iter.hasNext();) {
+			Key cur = iter.next();
+			if (!cur.getKeyInfo().getKeyId().equals(keyId)) {
+				continue;
+			}
+
+			iter.remove();
+			pgpKeysRing.add(newKey);
+
+			configRepository.persist(pgpKeysRing);
+			eventBus.post(EntityChangedEvent.updated(newKey));
+			return;
+		}
+
+		throw new IllegalStateException("Key " + keyId + " was not found in the ring");
 	}
 
 	@Override

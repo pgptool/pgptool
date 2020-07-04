@@ -26,6 +26,7 @@ import java.io.ObjectOutputStream;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.config.api.ConfigsBasePathResolver;
+import org.pgptool.gui.tools.FileUtilsEx;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -64,8 +65,9 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 			Preconditions.checkArgument(object != null, "Can't persist null object");
 			String filename = buildFilenameForClass(object.getClass());
 			filename = addClarification(filename, clarification);
-			writeObject(object, filename);
+			FileUtilsEx.baitAndSwitch(filename, x -> writeObject(object, x));
 			eventBus.post(EntityChangedEvent.updated(object));
+			log.debug("Updating config file: " + filename);
 		} catch (Throwable t) {
 			throw new RuntimeException("Failed to persist object " + object, t);
 		}

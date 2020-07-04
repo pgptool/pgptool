@@ -23,13 +23,16 @@ import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.swing.Action;
 
+import org.apache.log4j.Logger;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
@@ -39,6 +42,8 @@ import org.pgptool.gui.usage.api.KeyUsage;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
+import org.summerb.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.easycrud.api.dto.EntityChangedEvent.ChangeType;
 import org.summerb.validation.FieldValidationException;
 import org.summerb.validation.ValidationError;
 import org.summerb.validation.ValidationErrorsUtils;
@@ -73,6 +78,8 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
  *
  */
 public class GetKeyPasswordPm extends PresentationModelBase<GetKeyPasswordHost, GetKeyPasswordPo> {
+	private static Logger log = Logger.getLogger(GetKeyPasswordPm.class);
+
 	private static final String FN_PASSWORD = "password";
 	private static final Map<String, PasswordDeterminedForKey> CACHE_KEYID_TO_PASSWORD = new HashMap<>();
 
@@ -242,6 +249,22 @@ public class GetKeyPasswordPm extends PresentationModelBase<GetKeyPasswordHost, 
 			if (mk.getRequestedKeyId().equals(evt.getDecryptionKeyId())) {
 				host.onPasswordDeterminedForKey(evt);
 				return;
+			}
+		}
+	}
+
+	@Subscribe
+	public void onKeyChanged(EntityChangedEvent<Key> e) {
+		if (!e.isTypeOf(Key.class) || e.getChangeType() == ChangeType.ADDED) {
+			return;
+		}
+
+		for (Iterator<Entry<String, PasswordDeterminedForKey>> iter = CACHE_KEYID_TO_PASSWORD.entrySet()
+				.iterator(); iter.hasNext();) {
+
+			if (e.getValue().getKeyData().isHasAlternativeId(iter.next().getKey())) {
+				iter.remove();
+				log.debug("Removed cached password for changed key " + e.getValue().getKeyInfo().getKeyId());
 			}
 		}
 	}

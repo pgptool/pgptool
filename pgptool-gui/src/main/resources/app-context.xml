@@ -145,6 +145,9 @@
 	<bean class="org.pgptool.gui.ui.createkey.CreateKeyView" lazy-init="true" scope="singleton" />
 	<bean class="org.pgptool.gui.ui.createkey.CreateKeyPm" scope="prototype" />
 
+	<bean class="org.pgptool.gui.ui.changekeypassword.ChangeKeyPasswordView" lazy-init="true" scope="singleton" />
+	<bean class="org.pgptool.gui.ui.changekeypassword.ChangeKeyPasswordPm" scope="prototype" />
+
 	<bean class="org.pgptool.gui.ui.keyslist.KeysTableView" scope="prototype" />
 
 	<bean class="org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleView" lazy-init="true" scope="singleton" />

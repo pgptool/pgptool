@@ -47,7 +47,7 @@ public class KeyDataPgp extends KeyData {
 
 	private transient PGPSecretKeyRing secretKeyRing;
 	private transient PGPPublicKeyRing publicKeyRing;
-
+ 
 	public static KeyDataPgp cast(KeyData keyData) {
 		if (keyData == null) {
 			return null;

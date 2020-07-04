@@ -73,7 +73,7 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
 
 	private Runnable think = () -> {
 		// See if there is a key we need to remind
-		PrivateKeyBackupReminderData keyToBeExported = findKeyWhichbackIsDue();
+		PrivateKeyBackupReminderData keyToBeExported = findKeyWhichBackupIsDue();
 		if (keyToBeExported == null) {
 			return;
 		}
@@ -84,7 +84,7 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
 		hintsCoordinator.scheduleHint(this);
 	};
 
-	private PrivateKeyBackupReminderData findKeyWhichbackIsDue() {
+	private PrivateKeyBackupReminderData findKeyWhichBackupIsDue() {
 		List<PrivateKeyBackupReminderData> reminders = hintsProps.findAllWithPrefixedKey(CONFIG_PREFIX);
 		if (reminders.size() == 0) {
 			return null;
@@ -193,4 +193,5 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
 			this.key = key;
 		}
 	}
+
 }

@@ -12,9 +12,11 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * @param <H> Host type
- * @param <P> Parameter Object type used to initialize the PresentationModelBase
- *            via calling {@link #init(ActionEvent, Object)}
+ * @param <H>
+ *            Host type
+ * @param <P>
+ *            Parameter Object type used to initialize the PresentationModelBase
+ *            via calling {@link #init(ActionEvent, Object, Object)}
  */
 public class PresentationModelBase<H, P> extends ru.skarpushin.swingpm.base.PresentationModelBase {
 	private Logger log = Logger.getLogger(getClass());

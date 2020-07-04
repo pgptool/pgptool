@@ -46,6 +46,9 @@ import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.ui.about.AboutHost;
 import org.pgptool.gui.ui.about.AboutPm;
 import org.pgptool.gui.ui.about.AboutView;
+import org.pgptool.gui.ui.changekeypassword.ChangeKeyPasswordHost;
+import org.pgptool.gui.ui.changekeypassword.ChangeKeyPasswordPm;
+import org.pgptool.gui.ui.changekeypassword.ChangeKeyPasswordView;
 import org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesHost;
 import org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesPm;
 import org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesView;
@@ -669,6 +672,33 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		};
 	};
 
+	private class ChangeKeyPasswordDialogOpener
+			extends DialogOpener<ChangeKeyPasswordHost, Key, ChangeKeyPasswordPm, ChangeKeyPasswordView> {
+		private Key key;
+
+		public ChangeKeyPasswordDialogOpener(Key key) {
+			super(ChangeKeyPasswordPm.class, ChangeKeyPasswordView.class, "action.changePassphrase");
+			this.key = key;
+		}
+
+		@Override
+		protected ChangeKeyPasswordHost getHost() {
+			return new ChangeKeyPasswordHost() {
+				@Override
+				public void handleClose() {
+					view.unrender();
+					pm.detach();
+					pm = null;
+				}
+			};
+		}
+
+		@Override
+		protected Key getInitParams() {
+			return key;
+		};
+	}
+
 	private DialogOpener<KeysListHost, Void, KeysListPm, KeysListView> keysListWindowHost = new DialogOpener<KeysListHost, Void, KeysListPm, KeysListView>(
 			KeysListPm.class, KeysListView.class, "action.showKeysList") {
 
@@ -695,6 +725,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 				@Override
 				public Action getActionImportKeyFromText() {
 					return importKeyFromClipboard;
+				}
+
+				@Override
+				public void changeKeyPassphrase(Key key, ActionEvent originalEvent) {
+					new ChangeKeyPasswordDialogOpener(key).actionToOpenWindow.actionPerformed(originalEvent);
 				}
 			};
 		}
@@ -825,7 +860,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 			if (pm != null && view != null && view instanceof HasWindow) {
 				log.debug("Window is already opened -- just bring it to top " + view);
 				Window window = ((HasWindow) view).getWindow();
-				// TODO: Move this code to same place where we do center window
+				// TBD: Move this code to same place where we do center window
 				UiUtils.centerWindow(window, optionalOrigin);
 				window.setVisible(true);
 				return;

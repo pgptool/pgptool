@@ -93,7 +93,10 @@ public class KeysListPm extends PresentationModelBase<KeysListHost, Void> {
 				}
 				((Action) action).setEnabled(hasSelection);
 			}
-			actionExportPrivateKey.setEnabled(key != null && key.getKeyData().isCanBeUsedForDecryption());
+
+			boolean isPrivateKey = key != null && key.getKeyData().isCanBeUsedForDecryption();
+			actionExportPrivateKey.setEnabled(isPrivateKey);
+			actionChangePassphrase.setEnabled(isPrivateKey);
 		}
 	};
 
@@ -199,6 +202,19 @@ public class KeysListPm extends PresentationModelBase<KeysListHost, Void> {
 	};
 
 	@SuppressWarnings("serial")
+	private Action actionChangePassphrase = new LocalizedActionEx("action.changePassphrase", this) {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			super.actionPerformed(e);
+			if (!tableModelProp.hasValue()) {
+				return;
+			}
+			Key key = tableModelProp.getValue();
+			host.changeKeyPassphrase(key, e);
+		}
+	};
+
+	@SuppressWarnings("serial")
 	public Action actionExportAllPublicKeys = new LocalizedActionEx("keys.exportAllPublic", this) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -211,8 +227,8 @@ public class KeysListPm extends PresentationModelBase<KeysListHost, Void> {
 		}
 	};
 
-	private Action[] contextMenuActions = new Action[] { actionExportPublicKey, actionExportPrivateKey, null,
-			actionExportPublicKeyToClipboard, null, actionDeleteKey };
+	private Action[] contextMenuActions = new Action[] { actionExportPublicKey, actionExportPrivateKey,
+			actionChangePassphrase, null, actionExportPublicKeyToClipboard, null, actionDeleteKey };
 
 	private KeysTablePm keysTablePm = new KeysTablePm() {
 		@Override

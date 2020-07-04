@@ -650,7 +650,7 @@ public class JXLabel extends JLabel {
 		if (isLineWrap() != old) {
 			firePropertyChange("lineWrap", old, isLineWrap());
 			if (getForegroundPainter() != null) {
-				// XXX There is a bug here. In order to make painter work with this, caching has
+				// NOTE: There is a bug here. In order to make painter work with this, caching has
 				// to be disabled
 				((AbstractPainter) getForegroundPainter()).setCacheable(!b);
 			}

@@ -32,8 +32,8 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 /**
  * 
- * NOTE: This is not actual DTO and we not going to serialize that but we use it
- * as a dirty workaround so we can use instances of this class in conjunction
+ * NOTE: This is not actual DTO and we're not going to serialize that but we use
+ * it as a dirty workaround so we can use instances of this class in conjunction
  * with {@link EntityChangedEvent}
  * 
  * @author sergeyk

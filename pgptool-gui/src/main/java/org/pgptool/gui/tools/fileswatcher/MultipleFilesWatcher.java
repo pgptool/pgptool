@@ -168,7 +168,7 @@ public class MultipleFilesWatcher {
 						// NOTE: Since we're watching only one folder we assume
 						// that there will be only one key for our folder
 					} catch (ClosedWatchServiceException cwe) {
-						log.error("ClosedWatchServiceException fired, stoppign thread.", cwe);
+						log.info("ClosedWatchServiceException fired, stopping thread.");
 						return;
 					} catch (InterruptedException x) {
 						log.debug("FileWatcher thread stopped by InterruptedException");

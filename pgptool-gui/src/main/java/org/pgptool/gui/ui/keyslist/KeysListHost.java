@@ -17,7 +17,11 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.keyslist;
 
+import java.awt.event.ActionEvent;
+
 import javax.swing.Action;
+
+import org.pgptool.gui.encryption.api.dto.Key;
 
 public interface KeysListHost {
 	void handleClose();
@@ -27,4 +31,6 @@ public interface KeysListHost {
 	Action getActionImportKeyFromText();
 
 	Action getActionCreateKey();
+
+	void changeKeyPassphrase(Key key, ActionEvent originalEvent);
 }

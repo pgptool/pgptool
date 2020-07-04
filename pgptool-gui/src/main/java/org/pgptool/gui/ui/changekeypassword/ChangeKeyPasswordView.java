@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  ******************************************************************************/
-package org.pgptool.gui.ui.createkey;
+package org.pgptool.gui.ui.changekeypassword;
 
 import java.awt.BorderLayout;
 import java.awt.Dialog.ModalityType;
@@ -30,27 +30,22 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
-import javax.swing.JProgressBar;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import org.pgptool.gui.app.Messages;
-import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
 
-import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
+public class ChangeKeyPasswordView extends DialogViewBaseCustom<ChangeKeyPasswordPm> {
 	private JPanel pnl;
 
-	private JTextField fullName;
-	private JTextField email;
+	private JLabel fullName;
+
 	private JPasswordField passphrase;
-	private JPasswordField passphraseAgain;
-	private JProgressBar progressBar;
-	private TypedPropertyChangeListener<Boolean> isDisableControlsChanged;
+	private JPasswordField newPassphrase;
+	private JPasswordField newPassphraseAgain;
 
 	private JButton btnCreate;
 	private JButton btnCancel;
@@ -59,11 +54,8 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 	protected void internalInitComponents() {
 		pnl = new JPanel(new BorderLayout());
 
-		JPanel pnlControls;
-		pnl.add(pnlControls = buildPanelKeyInfo(), BorderLayout.CENTER);
+		pnl.add(buildPanelKeyInfo(), BorderLayout.CENTER);
 		pnl.add(buildPanelButtons(), BorderLayout.SOUTH);
-
-		isDisableControlsChanged = new ControlsDisabler(pnlControls);
 	}
 
 	private JPanel buildPanelKeyInfo() {
@@ -76,16 +68,16 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 
 		int row = 0;
 		ret.add(lbl("term.fullName"), sgl.cs(0, row));
-		ret.add(fullName = new JTextField(), sgl.cs(1, row));
+		ret.add(fullName = new JLabel(), sgl.cs(1, row));
 		row++;
-		ret.add(lbl("term.email"), sgl.cs(0, row));
-		ret.add(email = new JTextField(), sgl.cs(1, row));
-		row++;
-		ret.add(lbl("term.passphrase"), sgl.cs(0, row));
+		ret.add(lbl("term.oldPassphrase"), sgl.cs(0, row));
 		ret.add(passphrase = new JPasswordField(), sgl.cs(1, row));
 		row++;
-		ret.add(lbl("term.passphraseAgain"), sgl.cs(0, row));
-		ret.add(passphraseAgain = new JPasswordField(), sgl.cs(1, row));
+		ret.add(lbl("term.newPassphrase"), sgl.cs(0, row));
+		ret.add(newPassphrase = new JPasswordField(), sgl.cs(1, row));
+		row++;
+		ret.add(lbl("term.newPassphraseAgain"), sgl.cs(0, row));
+		ret.add(newPassphraseAgain = new JPasswordField(), sgl.cs(1, row));
 
 		return ret;
 	}
@@ -97,14 +89,8 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 	private JPanel buildPanelButtons() {
 		JPanel whole = new JPanel(new BorderLayout());
 
-		progressBar = new JProgressBar(0, 100);
-		progressBar.setToolTipText(Messages.text("phrase.generatingYourSecureKey"));
-		progressBar.setIndeterminate(true);
-
 		JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
 		btns.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
-		btns.add(progressBar);
-		btns.add(new JLabel("  "));
 		btns.add(btnCreate = new JButton());
 		btns.add(btnCancel = new JButton());
 		whole.add(btns, BorderLayout.EAST);
@@ -117,16 +103,13 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 		super.internalBindToPm();
 
 		bindingContext.setupBinding(pm.getFullName(), fullName);
-		bindingContext.setupBinding(pm.getEmail(), email);
+
 		bindingContext.setupBinding(pm.getPassphrase(), passphrase);
-		bindingContext.setupBinding(pm.getPassphraseAgain(), passphraseAgain);
+		bindingContext.setupBinding(pm.getNewPassphrase(), newPassphrase);
+		bindingContext.setupBinding(pm.getNewPassphraseAgain(), newPassphraseAgain);
 
-		bindingContext.setupBinding(pm.actionCreate, btnCreate);
+		bindingContext.setupBinding(pm.actionChange, btnCreate);
 		bindingContext.setupBinding(pm.actionCancel, btnCancel);
-
-		bindingContext.registerPropertyValuePropagation(pm.getProgressBarVisible(), progressBar, "visible");
-		bindingContext.registerOnChangeHandler(pm.getIsDisableControls(), isDisableControlsChanged);
-		isDisableControlsChanged.handlePropertyChanged(this, null, false, pm.getIsDisableControls().getValue());
 	}
 
 	@Override
@@ -135,7 +118,7 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 		ret.setLayout(new BorderLayout());
 		ret.setResizable(false);
 		ret.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		ret.setTitle(Messages.get("action.createPgpKey"));
+		ret.setTitle(Messages.get("action.changePassphrase"));
 		ret.add(pnl, BorderLayout.CENTER);
 		ret.pack();
 		UiUtils.centerWindow(ret, owner);
@@ -151,7 +134,7 @@ public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
 	protected void handleDialogShown() {
 		super.handleDialogShown();
 		dialog.getRootPane().setDefaultButton(btnCreate);
-		fullName.requestFocusInWindow();
+		passphrase.requestFocusInWindow();
 	}
 
 	@Override

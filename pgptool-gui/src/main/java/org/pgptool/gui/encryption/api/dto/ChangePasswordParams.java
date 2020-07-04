@@ -15,43 +15,41 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  ******************************************************************************/
-package org.pgptool.gui.ui.getkeypassword;
+package org.pgptool.gui.encryption.api.dto;
 
-import org.pgptool.gui.encryption.api.dto.Key;
+import java.io.Serializable;
 
-public class PasswordDeterminedForKey {
-	private String decryptionKeyId;
-	private Key matchedKey;
-	private String password;
+public class ChangePasswordParams implements Serializable {
+	private static final long serialVersionUID = -1722195689488854053L;
+	
+	public static final String FN_NEW_PASSPHRASE = "newPassphrase";
+	public static final String FN_NEW_PASSPHRASE_AGAIN = "newPassphraseAgain";
 
-	public PasswordDeterminedForKey(String decryptionKeyId, Key matchedKey, String password) {
-		super();
-		this.decryptionKeyId = decryptionKeyId;
-		this.matchedKey = matchedKey;
-		this.password = password;
+	private String passphrase;
+	private String newPassphrase;
+	private String newPassphraseAgain;
+
+	public String getNewPassphrase() {
+		return newPassphrase;
 	}
 
-	public Key getMatchedKey() {
-		return matchedKey;
+	public void setNewPassphrase(String passphrase) {
+		this.newPassphrase = passphrase;
 	}
 
-	public void setMatchedKey(Key key) {
-		this.matchedKey = key;
+	public String getNewPassphraseAgain() {
+		return newPassphraseAgain;
 	}
 
-	public String getPassword() {
-		return password;
+	public void setNewPassphraseAgain(String passphraseAgain) {
+		this.newPassphraseAgain = passphraseAgain;
 	}
 
-	public void setPassword(String password) {
-		this.password = password;
+	public String getPassphrase() {
+		return passphrase;
 	}
 
-	public String getDecryptionKeyId() {
-		return decryptionKeyId;
-	}
-
-	public void setDecryptionKeyId(String decryptionKeyId) {
-		this.decryptionKeyId = decryptionKeyId;
+	public void setPassphrase(String currentPassphrase) {
+		this.passphrase = currentPassphrase;
 	}
 }

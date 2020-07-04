@@ -62,7 +62,7 @@ public class BuyMeCoffeeHint extends HintPm implements InitializingBean {
 	public void afterPropertiesSet() throws Exception {
 		setMessage(Messages.text("hint.buyMeCoffee"));
 
-		actionClose = new LocalizedActionEx("term.dismiss", this) {
+		actionClose = new LocalizedActionEx("term.notThatHappy", this) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				super.actionPerformed(e);

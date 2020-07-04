@@ -496,14 +496,18 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 
 	private PGPPrivateKey getPrivateKey(String passphrase, PGPSecretKey secretKey) throws InvalidPasswordException {
 		try {
-			PBESecretKeyDecryptor decryptorFactory = new BcPBESecretKeyDecryptorBuilder(
-					new BcPGPDigestCalculatorProvider()).build(passphrase.toCharArray());
+			PBESecretKeyDecryptor decryptorFactory = buildKeyDecryptor(passphrase);
 			PGPPrivateKey privateKey = secretKey.extractPrivateKey(decryptorFactory);
 			return privateKey;
 		} catch (Throwable t) {
 			log.warn("Failed to extract private key. Most likely it because of incorrect passphrase provided", t);
 			throw new InvalidPasswordException();
 		}
+	}
+
+	protected static PBESecretKeyDecryptor buildKeyDecryptor(String passphrase) {
+		char[] charArray = passphrase != null ? passphrase.toCharArray() : new char[0];
+		return new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(charArray);
 	}
 
 	@Override

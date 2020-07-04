@@ -47,8 +47,6 @@ import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.collections.ListExImpl;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
-import ru.skarpushin.swingpm.valueadapters.ConversionValueAdapter;
-import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReflectionImpl;
 
@@ -190,21 +188,5 @@ public class CreateKeyPm extends PresentationModelBase<CreateKeyHost, Void> {
 
 	public ModelPropertyAccessor<Boolean> getIsDisableControls() {
 		return isDisableControls.getModelPropertyAccessor();
-	}
-
-	static class NullToEmptyStringConverter extends ConversionValueAdapter<String, String> {
-		public NullToEmptyStringConverter(ValueAdapter<String> innerValueAdapter) {
-			super(innerValueAdapter);
-		}
-
-		@Override
-		protected String convertInnerToOuter(String value) {
-			return value != null ? value : "";
-		}
-
-		@Override
-		protected String convertOuterToInner(String value) {
-			return value != null ? value : "";
-		}
 	}
 }

@@ -37,7 +37,10 @@ import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
+import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyEncryptorBuilder;
@@ -45,11 +48,13 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.pgptool.gui.encryption.api.KeyGeneratorService;
+import org.pgptool.gui.encryption.api.dto.ChangePasswordParams;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.util.StringUtils;
+import org.summerb.utils.objectcopy.DeepCopy;
 import org.summerb.validation.FieldValidationException;
 import org.summerb.validation.ValidationContext;
 
@@ -100,13 +105,9 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 					algorithmNameToTag(masterKeyPurpose), hashAlgorithmNameToTag(masterKeySignerHashingAlgorithm));
 
 			// Setup seret key encryption
-			PGPDigestCalculator digestCalc = new BcPGPDigestCalculatorProvider()
-					.get(hashAlgorithmNameToTag(secretKeyHashingAlgorithm));
-			BcPBESecretKeyEncryptorBuilder encryptorBuilderBC = new BcPBESecretKeyEncryptorBuilder(
-					symmetricKeyAlgorithmNameToTag(
-							getSecretKeyEncryptionAlgorithmForOptionalPassphrase(emptyPassphraseConsent)),
-					digestCalc);
-			PBESecretKeyEncryptor keyEncryptorBc = encryptorBuilderBC.build(toCharArray(params.getPassphrase()));
+			PGPDigestCalculator digestCalc = buildDigestCalc();
+			PBESecretKeyEncryptor keyEncryptorBc = buildKeyEncryptor(digestCalc, params.getPassphrase(),
+					emptyPassphraseConsent);
 
 			// Key pair generator
 			String userName = params.getFullName() + " <" + params.getEmail() + ">";
@@ -143,6 +144,10 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 			Throwables.throwIfInstanceOf(t, FieldValidationException.class);
 			throw new RuntimeException("Failed to generate key", t);
 		}
+	}
+
+	protected PGPDigestCalculator buildDigestCalc() throws PGPException {
+		return new BcPGPDigestCalculatorProvider().get(hashAlgorithmNameToTag(secretKeyHashingAlgorithm));
 	}
 
 	private char[] toCharArray(String optionalPasshprase) {
@@ -227,9 +232,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 					"term." + CreateKeyParams.FN_PASSPHRASE_AGAIN, CreateKeyParams.FN_PASSPHRASE_AGAIN);
 		}
 
-		if (ctx.getHasErrors()) {
-			throw new FieldValidationException(ctx.getErrors());
-		}
+		ctx.throwIfHasErrors();
 	}
 
 	@Override
@@ -242,6 +245,57 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 		log.info("Proactively generating master key in a background to improve user experience");
 		Future<KeyPair> future = executorService.submit(new ProactivelyGenerateMasterKeyPair(params));
 		pregeneratedKeyPairs.put(params, future);
+	}
+
+	@Override
+	public Key changeKeyPassword(Key key, ChangePasswordParams params, boolean emptyPasswordConsent)
+			throws FieldValidationException {
+		assertParamsValid(key, params, emptyPasswordConsent);
+
+		try {
+			PGPDigestCalculator digestCalc = buildDigestCalc();
+			PBESecretKeyDecryptor decryptor = EncryptionServicePgpImpl.buildKeyDecryptor(params.getPassphrase());
+			PBESecretKeyEncryptor encryptor = buildKeyEncryptor(digestCalc, params.getNewPassphrase(),
+					emptyPasswordConsent);
+
+			Key ret = DeepCopy.copyOrPopagateExcIfAny(key);
+			KeyDataPgp keyData = (KeyDataPgp) ret.getKeyData();
+			for (PGPSecretKey secretKey : keyData.getSecretKeyRing()) {
+				PGPSecretKey secretKey2 = PGPSecretKey.copyWithNewPassword(secretKey, decryptor, encryptor);
+				keyData.setSecretKeyRing(PGPSecretKeyRing.insertSecretKey(keyData.getSecretKeyRing(), secretKey2));
+			}
+
+			return ret;
+		} catch (Throwable t) {
+			throw new RuntimeException("Change password failed", t);
+		}
+	}
+
+	protected PBESecretKeyEncryptor buildKeyEncryptor(PGPDigestCalculator digestCalc, String password,
+			boolean emptyPasswordConsent) throws PGPException {
+		BcPBESecretKeyEncryptorBuilder encryptorBuilderBC = new BcPBESecretKeyEncryptorBuilder(
+				symmetricKeyAlgorithmNameToTag(
+						getSecretKeyEncryptionAlgorithmForOptionalPassphrase(emptyPasswordConsent)),
+				digestCalc);
+		PBESecretKeyEncryptor keyEncryptorBc = encryptorBuilderBC.build(toCharArray(password));
+		return keyEncryptorBc;
+	}
+
+	private void assertParamsValid(Key key, ChangePasswordParams params, boolean emptyPassphraseConsent)
+			throws FieldValidationException {
+		ValidationContext ctx = new ValidationContext();
+
+		if (!emptyPassphraseConsent) {
+			ctx.validateNotEmpty(params.getNewPassphrase(), ChangePasswordParams.FN_NEW_PASSPHRASE);
+		}
+		if (StringUtils.hasText(params.getNewPassphrase())
+				&& ctx.validateNotEmpty(params.getNewPassphraseAgain(), ChangePasswordParams.FN_NEW_PASSPHRASE_AGAIN)) {
+			ctx.equals(params.getNewPassphrase(), "term." + ChangePasswordParams.FN_NEW_PASSPHRASE,
+					params.getNewPassphraseAgain(), "term." + ChangePasswordParams.FN_NEW_PASSPHRASE_AGAIN,
+					ChangePasswordParams.FN_NEW_PASSPHRASE_AGAIN);
+		}
+
+		ctx.throwIfHasErrors();
 	}
 
 	public String getEncryptionKeyAlgorithm() {

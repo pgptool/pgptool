@@ -60,6 +60,7 @@ import javax.swing.table.TableModel;
 import org.jdesktop.swingx.imported.JXLabel;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.ui.decryptone.DecryptionDialogParameters;
+import org.pgptool.gui.ui.swingpm.ViewBaseEx;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersister;
 import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersisterImpl;
@@ -70,11 +71,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.google.common.base.Preconditions;
 
 import ru.skarpushin.swingpm.EXPORT.base.DialogViewBase;
-import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class HistoryQuickSearchView extends ViewBase<HistoryQuickSearchPm> {
+public class HistoryQuickSearchView extends ViewBaseEx<HistoryQuickSearchPm> {
 	@Autowired
 	private ScheduledExecutorService scheduledExecutorService;
 	@Autowired

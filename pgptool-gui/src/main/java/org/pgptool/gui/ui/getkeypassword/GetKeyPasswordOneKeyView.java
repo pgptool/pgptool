@@ -31,12 +31,12 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 
 import org.jdesktop.swingx.imported.JXLabel;
+import org.pgptool.gui.ui.swingpm.ViewBaseEx;
 import org.pgptool.gui.ui.tools.UiUtils;
 
-import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class GetKeyPasswordOneKeyView extends ViewBase<GetKeyPasswordPm> {
+public class GetKeyPasswordOneKeyView extends ViewBaseEx<GetKeyPasswordPm> {
 	private JPanel pnl;
 
 	private JXLabel purpose;

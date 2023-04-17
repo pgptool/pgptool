@@ -28,11 +28,10 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import org.jdesktop.swingx.imported.JXLabel;
+import org.pgptool.gui.ui.swingpm.ViewBaseEx;
 import org.pgptool.gui.ui.tools.UiUtils;
 
-import ru.skarpushin.swingpm.base.ViewBase;
-
-public class HintView extends ViewBase<HintPm> {
+public class HintView extends ViewBaseEx<HintPm> {
 	private JPanel root;
 
 	private JXLabel message;

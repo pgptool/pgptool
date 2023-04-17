@@ -33,12 +33,12 @@ import javax.swing.JPasswordField;
 
 import org.jdesktop.swingx.imported.JXLabel;
 import org.pgptool.gui.encryption.api.dto.Key;
+import org.pgptool.gui.ui.swingpm.ViewBaseEx;
 import org.pgptool.gui.ui.tools.UiUtils;
 
-import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class GetKeyPasswordManyKeysView extends ViewBase<GetKeyPasswordPm> {
+public class GetKeyPasswordManyKeysView extends ViewBaseEx<GetKeyPasswordPm> {
 	private JPanel pnl;
 
 	private JXLabel purpose;

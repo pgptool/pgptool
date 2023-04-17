@@ -64,6 +64,7 @@ import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.hintsforusage.ui.HintPm;
 import org.pgptool.gui.hintsforusage.ui.HintView;
+import org.pgptool.gui.ui.swingpm.ViewBaseEx;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.WindowIcon;
 import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersisterImpl;
@@ -75,13 +76,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.google.common.base.Preconditions;
 
 import ru.skarpushin.swingpm.base.HasWindow;
-import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.modelprops.EXPORT.HasActionBinding;
 import ru.skarpushin.swingpm.tools.SwingPmSettings;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class MainFrameView extends ViewBase<MainFramePm> implements HasWindow {
+public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow {
 	private static final String DELETE = "Delete";
 	private static final String CHOOSE = "Choose";
 

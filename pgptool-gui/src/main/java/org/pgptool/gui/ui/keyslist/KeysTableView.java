@@ -48,14 +48,14 @@ import javax.swing.table.DefaultTableModel;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.dto.Key;
+import org.pgptool.gui.ui.swingpm.ViewBaseEx;
 import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersister;
 import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersisterImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 
-public class KeysTableView extends ViewBase<KeysTablePm> {
+public class KeysTableView extends ViewBaseEx<KeysTablePm> {
 	private static final String DELETE = "Delete";
 
 	@Autowired

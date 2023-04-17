@@ -36,15 +36,15 @@ import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
+import org.pgptool.gui.ui.swingpm.ViewBaseEx;
 import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.UiUtils;
 
 import ru.skarpushin.swingpm.base.HasWindow;
-import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class DecryptOneView extends ViewBase<DecryptOnePm> implements HasWindow {
+public class DecryptOneView extends ViewBaseEx<DecryptOnePm> implements HasWindow {
 	private JPanel pnl;
 
 	private JPanel controlsPanel;

@@ -26,14 +26,14 @@ import java.util.concurrent.ScheduledExecutorService;
 import javax.swing.JDialog;
 
 import org.pgptool.gui.configpairs.api.ConfigPairs;
+import org.pgptool.gui.ui.swingpm.DialogViewBaseEx;
 import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersister;
 import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersisterImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ru.skarpushin.swingpm.EXPORT.base.DialogViewBase;
 import ru.skarpushin.swingpm.base.PresentationModel;
 
-public abstract class DialogViewBaseCustom<TPM extends PresentationModel> extends DialogViewBase<TPM> {
+public abstract class DialogViewBaseCustom<TPM extends PresentationModel> extends DialogViewBaseEx<TPM> {
 	@Autowired
 	protected ScheduledExecutorService scheduledExecutorService;
 	@Autowired

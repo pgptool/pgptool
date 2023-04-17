@@ -41,13 +41,13 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
+import org.pgptool.gui.ui.swingpm.DialogViewBaseEx;
 import org.pgptool.gui.ui.tools.UiUtils;
 
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class CheckForUpdatesView extends DialogViewBaseCustom<CheckForUpdatesPm> {
+public class CheckForUpdatesView extends DialogViewBaseEx<CheckForUpdatesPm> {
 	private JPanel pnl;
 	private JButton btnDownload;
 	private JButton btnSnoozeVersion;

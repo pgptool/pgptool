@@ -70,7 +70,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Preconditions;
 
-import ru.skarpushin.swingpm.EXPORT.base.DialogViewBase;
+import ru.skarpushin.swingpm.base.DialogViewBase;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 

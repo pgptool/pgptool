@@ -38,14 +38,14 @@ import javax.swing.JProgressBar;
 
 import org.jdesktop.swingx.imported.JXLabel;
 import org.pgptool.gui.app.Messages;
+import org.pgptool.gui.ui.swingpm.DialogViewBaseEx;
 import org.pgptool.gui.ui.tools.ControlsDisabler;
-import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
 
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class EncryptBackMultipleView extends DialogViewBaseCustom<EncryptBackMultiplePm> {
+public class EncryptBackMultipleView extends DialogViewBaseEx<EncryptBackMultiplePm> {
 	private JPanel pnl;
 
 	private JXLabel lblSourceFilesSummaru;

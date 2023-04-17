@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.keyslist;
 
-import static org.pgptool.gui.ui.tools.DialogViewBaseCustom.spacing;
+import static org.pgptool.gui.ui.swingpm.DialogViewBaseEx.spacing;
 
 import java.awt.BorderLayout;
 import java.awt.Container;

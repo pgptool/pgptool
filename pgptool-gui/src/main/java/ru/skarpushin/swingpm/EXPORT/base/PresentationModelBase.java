@@ -57,7 +57,7 @@ public class PresentationModelBase<H, P> extends ru.skarpushin.swingpm.base.Pres
 		return null;
 	}
 
-	private String getWindowName(Window ret) {
+	protected String getWindowName(Window ret) {
 		if (ret instanceof JFrame) {
 			return ((JFrame) ret).getTitle();
 		}

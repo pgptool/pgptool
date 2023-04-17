@@ -35,14 +35,14 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import org.pgptool.gui.app.Messages;
+import org.pgptool.gui.ui.swingpm.DialogViewBaseEx;
 import org.pgptool.gui.ui.tools.ControlsDisabler;
-import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
 
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class CreateKeyView extends DialogViewBaseCustom<CreateKeyPm> {
+public class CreateKeyView extends DialogViewBaseEx<CreateKeyPm> {
 	private JPanel pnl;
 
 	private JTextField fullName;

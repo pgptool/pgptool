@@ -35,7 +35,7 @@ import org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogPm.Intent;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordManyKeysView;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordOneKeyView;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPm;
-import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
+import org.pgptool.gui.ui.swingpm.DialogViewBaseEx;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -44,7 +44,7 @@ import org.springframework.context.ApplicationContextAware;
 import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 
-public class DecryptOneDialogView extends DialogViewBaseCustom<DecryptOneDialogPm> implements ApplicationContextAware {
+public class DecryptOneDialogView extends DialogViewBaseEx<DecryptOneDialogPm> implements ApplicationContextAware {
 	private DecryptOneView decryptOneView;
 	private ViewBase<GetKeyPasswordPm> passwordView;
 

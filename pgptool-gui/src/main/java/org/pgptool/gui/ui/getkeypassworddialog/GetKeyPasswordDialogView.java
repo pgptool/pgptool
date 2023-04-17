@@ -35,7 +35,7 @@ import org.pgptool.gui.encryption.api.dto.MatchedKey;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordManyKeysView;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordOneKeyView;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPm;
-import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
+import org.pgptool.gui.ui.swingpm.DialogViewBaseEx;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -43,7 +43,7 @@ import org.springframework.context.ApplicationContextAware;
 
 import ru.skarpushin.swingpm.base.ViewBase;
 
-public class GetKeyPasswordDialogView extends DialogViewBaseCustom<GetKeyPasswordDialogPm>
+public class GetKeyPasswordDialogView extends DialogViewBaseEx<GetKeyPasswordDialogPm>
 		implements ApplicationContextAware {
 	private ViewBase<GetKeyPasswordPm> passwordView;
 

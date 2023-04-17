@@ -33,12 +33,12 @@ import javax.swing.JPasswordField;
 import javax.swing.SwingConstants;
 
 import org.pgptool.gui.app.Messages;
-import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
+import org.pgptool.gui.ui.swingpm.DialogViewBaseEx;
 import org.pgptool.gui.ui.tools.UiUtils;
 
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class ChangeKeyPasswordView extends DialogViewBaseCustom<ChangeKeyPasswordPm> {
+public class ChangeKeyPasswordView extends DialogViewBaseEx<ChangeKeyPasswordPm> {
 	private JPanel pnl;
 
 	private JLabel fullName;

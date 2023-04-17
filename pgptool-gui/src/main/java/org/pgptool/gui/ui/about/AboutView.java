@@ -37,13 +37,13 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.pgptool.gui.app.Messages;
-import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
+import org.pgptool.gui.ui.swingpm.DialogViewBaseEx;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.WindowIcon;
 
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class AboutView extends DialogViewBaseCustom<AboutPm> {
+public class AboutView extends DialogViewBaseEx<AboutPm> {
 	private JPanel pnl;
 	private JButton btnClose;
 	private JLabel lblVersion;

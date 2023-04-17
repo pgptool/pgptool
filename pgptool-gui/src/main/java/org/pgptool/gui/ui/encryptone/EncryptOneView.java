@@ -43,8 +43,8 @@ import javax.swing.JTextField;
 import org.jdesktop.swingx.imported.JXLabel;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.encryption.api.dto.Key;
+import org.pgptool.gui.ui.swingpm.DialogViewBaseEx;
 import org.pgptool.gui.ui.tools.ControlsDisabler;
-import org.pgptool.gui.ui.tools.DialogViewBaseCustom;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.checklistbox.JCheckList;
 import org.pgptool.gui.ui.tools.checklistbox.ModelMultSelInCheckListBinding;
@@ -52,7 +52,7 @@ import org.pgptool.gui.ui.tools.checklistbox.ModelMultSelInCheckListBinding;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
-public class EncryptOneView extends DialogViewBaseCustom<EncryptOnePm> {
+public class EncryptOneView extends DialogViewBaseEx<EncryptOnePm> {
 	private JPanel pnl;
 
 	private JPanel controlsPanel;

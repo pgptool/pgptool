@@ -176,11 +176,11 @@ public class UiUtils {
 	}
 
 	public static String plainToBoldHtmlString(String text) {
-		return "<html><body><b>" + StringEscapeUtils.escapeXml11(text) + "</b></body></html>";
+		return "<html><body><b>" + StringEscapeUtils.escapeHtml4(text) + "</b></body></html>";
 	}
 
 	public static String envelopeStringIntoHtml(String text) {
-		return "<html><body>" + StringEscapeUtils.escapeXml11(text) + "</body></html>";
+		return "<html><body>" + StringEscapeUtils.escapeHtml4(text) + "</body></html>";
 	}
 
 	public static boolean confirmRegular(ActionEvent originEvent, String userPromptMessageCode, Object[] messageArgs) {

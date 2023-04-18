@@ -61,6 +61,8 @@ import org.summerb.validation.ValidationContext;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
+import EXPORT.org.summerb.validation.ValidationContextEx;
+
 public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 	private static final Logger log = Logger.getLogger(KeyGeneratorServicePgpImpl.class);
 	private static final String PROVIDER = "BC";
@@ -216,7 +218,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 
 	private void assertParamsValid(CreateKeyParams params, boolean emptyPassphraseConsent)
 			throws FieldValidationException {
-		ValidationContext ctx = new ValidationContext();
+		ValidationContext ctx = new ValidationContextEx();
 
 		ctx.validateNotEmpty(params.getFullName(), CreateKeyParams.FN_FULL_NAME);
 		if (ctx.validateNotEmpty(params.getEmail(), CreateKeyParams.FN_EMAIL)) {

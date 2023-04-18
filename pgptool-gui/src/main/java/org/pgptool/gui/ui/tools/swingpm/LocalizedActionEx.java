@@ -1,4 +1,4 @@
-package ru.skarpushin.swingpm.EXPORT.base;
+package org.pgptool.gui.ui.tools.swingpm;
 
 import java.awt.event.ActionEvent;
 

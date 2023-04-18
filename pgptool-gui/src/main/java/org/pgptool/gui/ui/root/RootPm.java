@@ -89,6 +89,8 @@ import org.pgptool.gui.ui.mainframe.MainFramePm;
 import org.pgptool.gui.ui.mainframe.MainFrameView;
 import org.pgptool.gui.ui.tempfolderfordecrypted.TempFolderChooserPm;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
+import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.ApplicationExitUsage;
 import org.pgptool.gui.usage.dto.ApplicationStartUsage;
@@ -102,8 +104,6 @@ import org.springframework.util.StringUtils;
 
 import com.google.common.eventbus.EventBus;
 
-import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.base.HasWindow;
 import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.tools.edt.Edt;
@@ -825,7 +825,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	 * @param <TViewType>
 	 *            view type
 	 */
-	private abstract class DialogOpener<PMHT, PMPO, TPmType extends PresentationModelBase<PMHT, PMPO>, TViewType extends ViewBase<TPmType>> {
+	private abstract class DialogOpener<PMHT, PMPO, TPmType extends PresentationModelBaseEx<PMHT, PMPO>, TViewType extends ViewBase<TPmType>> {
 		private Class<TPmType> pmClass;
 		private Class<TViewType> viewClass;
 

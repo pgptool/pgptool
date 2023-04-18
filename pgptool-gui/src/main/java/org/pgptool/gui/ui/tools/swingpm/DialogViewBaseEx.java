@@ -1,4 +1,4 @@
-package org.pgptool.gui.ui.swingpm;
+package org.pgptool.gui.ui.tools.swingpm;
 
 import java.awt.Dialog.ModalityType;
 import java.awt.Image;

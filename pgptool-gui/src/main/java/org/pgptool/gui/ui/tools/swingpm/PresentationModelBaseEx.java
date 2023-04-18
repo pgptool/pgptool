@@ -1,4 +1,4 @@
-package ru.skarpushin.swingpm.EXPORT.base;
+package org.pgptool.gui.ui.tools.swingpm;
 
 import java.awt.Window;
 import java.awt.event.ActionEvent;
@@ -11,6 +11,8 @@ import org.pgptool.gui.ui.root.RootPm;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ru.skarpushin.swingpm.base.PresentationModelBase;
+
 /**
  * @param <H>
  *            Host type
@@ -18,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  *            Parameter Object type used to initialize the PresentationModelBase
  *            via calling {@link #init(ActionEvent, Object, Object)}
  */
-public class PresentationModelBase<H, P> extends ru.skarpushin.swingpm.base.PresentationModelBase {
+public class PresentationModelBaseEx<H, P> extends PresentationModelBase {
 	private Logger log = Logger.getLogger(getClass());
 
 	@Autowired

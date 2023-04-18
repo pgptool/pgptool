@@ -27,19 +27,18 @@ import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPm;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPmInitResult;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm.GetKeyPasswordPo;
+import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-
-import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 
 /**
  * This component is a container that will change it's appearance on the fly
  * between {@link GetKeyPasswordPm} and {@link GetKeyPasswordPm} to provide more
  * streamlined UX
  */
-public class GetKeyPasswordDialogPm extends PresentationModelBase<GetKeyPasswordDialogHost, GetKeyPasswordPo>
+public class GetKeyPasswordDialogPm extends PresentationModelBaseEx<GetKeyPasswordDialogHost, GetKeyPasswordPo>
 		implements ApplicationContextAware {
 	@Autowired
 	private GetKeyPasswordPm getKeyPasswordPm;

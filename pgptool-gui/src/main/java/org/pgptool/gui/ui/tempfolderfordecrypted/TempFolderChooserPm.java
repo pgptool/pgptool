@@ -28,10 +28,10 @@ import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.FolderChooserDialog;
+import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.validation.FieldValidationException;
 
-import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
 
 /**
@@ -41,7 +41,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
  * @author Sergey Karpushin
  *
  */
-public class TempFolderChooserPm extends PresentationModelBase<Void, Void> {
+public class TempFolderChooserPm extends PresentationModelBaseEx<Void, Void> {
 	private static Logger log = Logger.getLogger(TempFolderChooserPm.class);
 
 	@Autowired

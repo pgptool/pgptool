@@ -55,15 +55,15 @@ import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.jdesktop.swingx.imported.JXLabel;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
+import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 
-import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.tools.edt.Edt;
 
 public class UiUtils {
@@ -175,14 +175,12 @@ public class UiUtils {
 				+ (int) bounds.getHeight();
 	}
 
-	@SuppressWarnings("deprecation")
 	public static String plainToBoldHtmlString(String text) {
-		return "<html><body><b>" + StringEscapeUtils.escapeXml(text) + "</b></body></html>";
+		return "<html><body><b>" + StringEscapeUtils.escapeXml11(text) + "</b></body></html>";
 	}
 
-	@SuppressWarnings("deprecation")
 	public static String envelopeStringIntoHtml(String text) {
-		return "<html><body>" + StringEscapeUtils.escapeXml(text) + "</body></html>";
+		return "<html><body>" + StringEscapeUtils.escapeXml11(text) + "</body></html>";
 	}
 
 	public static boolean confirmRegular(ActionEvent originEvent, String userPromptMessageCode, Object[] messageArgs) {
@@ -463,8 +461,8 @@ public class UiUtils {
 			}
 		}
 
-		if (source instanceof PresentationModelBase) {
-			Window view = ((PresentationModelBase<?, ?>) source).findRegisteredWindowIfAny();
+		if (source instanceof PresentationModelBaseEx) {
+			Window view = ((PresentationModelBaseEx<?, ?>) source).findRegisteredWindowIfAny();
 			if (view != null) {
 				return view;
 			}

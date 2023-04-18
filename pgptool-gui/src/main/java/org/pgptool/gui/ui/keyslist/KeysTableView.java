@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.keyslist;
 
-import static org.pgptool.gui.ui.swingpm.DialogViewBaseEx.spacing;
+import static org.pgptool.gui.ui.tools.swingpm.DialogViewBaseEx.spacing;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -48,9 +48,9 @@ import javax.swing.table.DefaultTableModel;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.pgptool.gui.ui.swingpm.ViewBaseEx;
 import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersister;
 import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersisterImpl;
+import org.pgptool.gui.ui.tools.swingpm.ViewBaseEx;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;

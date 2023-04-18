@@ -31,6 +31,8 @@ import javax.swing.JLabel;
 
 import org.pgptool.gui.ui.tools.UiUtils;
 
+import ru.skarpushin.swingpm.bindings.HasAction;
+
 public class LinkButton extends JLabel implements HasAction {
 	private static final long serialVersionUID = 9012537495123322302L;
 

@@ -1,4 +1,4 @@
-package org.pgptool.gui.ui.swingpm;
+package org.pgptool.gui.ui.tools.swingpm;
 
 import org.springframework.beans.factory.InitializingBean;
 

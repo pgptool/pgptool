@@ -59,6 +59,8 @@ import org.pgptool.gui.tools.FileUtilsEx;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
+import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
+import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.EncryptBackAllIterationUsage;
 import org.pgptool.gui.usage.dto.EncryptBackAllUsage;
@@ -70,13 +72,11 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
-public class EncryptBackMultiplePm extends PresentationModelBase<EncryptBackMultipleHost, Set<String>> {
+public class EncryptBackMultiplePm extends PresentationModelBaseEx<EncryptBackMultipleHost, Set<String>> {
 	private static Logger log = Logger.getLogger(EncryptBackMultiplePm.class);
 
 	@Autowired

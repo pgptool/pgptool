@@ -45,6 +45,8 @@ import org.pgptool.gui.tools.ClipboardUtil;
 import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
+import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.DecryptTextRecipientsIdentifiedUsage;
 import org.pgptool.gui.usage.dto.DecryptedTextUsage;
@@ -54,13 +56,11 @@ import org.springframework.util.StringUtils;
 
 import com.google.common.base.Preconditions;
 
-import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
-public class DecryptTextPm extends PresentationModelBase<DecryptTextHost, Void> {
+public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void> {
 	private static Logger log = Logger.getLogger(DecryptTextPm.class);
 
 	@Autowired

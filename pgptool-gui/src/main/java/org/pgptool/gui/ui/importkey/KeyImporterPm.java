@@ -47,19 +47,19 @@ import org.pgptool.gui.ui.keyslist.KeysTableModel;
 import org.pgptool.gui.ui.keyslist.KeysTablePm;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.MultipleFilesChooserDialog;
+import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
+import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.google.common.base.Preconditions;
 
-import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.base.View;
 import ru.skarpushin.swingpm.modelprops.table.ModelTableProperty;
 import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
 
-public class KeyImporterPm extends PresentationModelBase<KeyImporterHost, List<Key>> {
+public class KeyImporterPm extends PresentationModelBaseEx<KeyImporterHost, List<Key>> {
 	private static Logger log = Logger.getLogger(KeyImporterPm.class);
 	private static final String BROWSE_FOLDER = "KeyImporterPm.BROWSE_FOLDER";
 	private static final String[] EXTENSIONS = new String[] { "asc", "bpg" };

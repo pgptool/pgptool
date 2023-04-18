@@ -71,6 +71,8 @@ import org.pgptool.gui.ui.tools.ProgressHandlerPmMixinImpl;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
+import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
+import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -78,8 +80,6 @@ import org.summerb.utils.objectcopy.DeepCopy;
 
 import com.google.common.base.Preconditions;
 
-import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.lists.ModelListProperty;
@@ -87,7 +87,7 @@ import ru.skarpushin.swingpm.modelprops.lists.ModelMultSelInListProperty;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
-public class EncryptOnePm extends PresentationModelBase<EncryptOneHost, String> {
+public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String> {
 	private static Logger log = Logger.getLogger(EncryptOnePm.class);
 
 	private static final String ENCRYPTED_FILE_EXTENSION = "pgp";

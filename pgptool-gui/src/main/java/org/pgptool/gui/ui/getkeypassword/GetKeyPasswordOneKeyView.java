@@ -31,8 +31,8 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 
 import org.jdesktop.swingx.imported.JXLabel;
-import org.pgptool.gui.ui.swingpm.ViewBaseEx;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.ui.tools.swingpm.ViewBaseEx;
 
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 

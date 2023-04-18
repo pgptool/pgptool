@@ -35,9 +35,9 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import org.pgptool.gui.app.Messages;
-import org.pgptool.gui.ui.swingpm.DialogViewBaseEx;
 import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.ui.tools.swingpm.DialogViewBaseEx;
 
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;

@@ -31,10 +31,9 @@ import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.hintsforusage.api.HintsCoordinator;
 import org.pgptool.gui.hintsforusage.ui.HintPm;
+import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
 
 @SuppressWarnings("serial")
 public class BuyMeCoffeeHint extends HintPm implements InitializingBean {

@@ -37,9 +37,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.pgptool.gui.app.Messages;
-import org.pgptool.gui.ui.swingpm.DialogViewBaseEx;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.WindowIcon;
+import org.pgptool.gui.ui.tools.swingpm.DialogViewBaseEx;
 
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 

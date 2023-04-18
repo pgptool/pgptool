@@ -31,12 +31,12 @@ import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPmInitResult;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm.GetKeyPasswordPo;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
@@ -46,7 +46,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
  * between {@link GetKeyPasswordPm} and {@link DecryptOnePm} to provide more
  * streamlined UX
  */
-public class DecryptOneDialogPm extends PresentationModelBase<DecryptOneDialogHost, String>
+public class DecryptOneDialogPm extends PresentationModelBaseEx<DecryptOneDialogHost, String>
 		implements ApplicationContextAware {
 	public static enum Intent {
 		Decrypt, PasswordRequest;

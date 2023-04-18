@@ -30,17 +30,17 @@ import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.autoupdate.api.NewVersionChecker;
 import org.pgptool.gui.autoupdate.api.UpdatePackageInfo;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
+import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
+import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ru.skarpushin.swingpm.EXPORT.base.LocalizedActionEx;
-import ru.skarpushin.swingpm.EXPORT.base.PresentationModelBase;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
-public class CheckForUpdatesPm extends PresentationModelBase<CheckForUpdatesHost, UpdatesPolicy>
+public class CheckForUpdatesPm extends PresentationModelBaseEx<CheckForUpdatesHost, UpdatesPolicy>
 		implements InitializingBean {
 	private static Logger log = Logger.getLogger(CheckForUpdatesPm.class);
 

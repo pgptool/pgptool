@@ -36,9 +36,9 @@ import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
-import org.pgptool.gui.ui.swingpm.ViewBaseEx;
 import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.ui.tools.swingpm.ViewBaseEx;
 
 import ru.skarpushin.swingpm.base.HasWindow;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;

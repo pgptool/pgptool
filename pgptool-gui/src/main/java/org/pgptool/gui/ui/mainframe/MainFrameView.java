@@ -64,20 +64,20 @@ import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.hintsforusage.ui.HintPm;
 import org.pgptool.gui.hintsforusage.ui.HintView;
-import org.pgptool.gui.ui.swingpm.ViewBaseEx;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.WindowIcon;
 import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersisterImpl;
 import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersister;
 import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersisterImpl;
 import org.pgptool.gui.ui.tools.linkbutton.LinkButton;
+import org.pgptool.gui.ui.tools.swingpm.ViewBaseEx;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Preconditions;
 
 import ru.skarpushin.swingpm.base.HasWindow;
+import ru.skarpushin.swingpm.bindings.HasActionBinding;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
-import ru.skarpushin.swingpm.modelprops.EXPORT.HasActionBinding;
 import ru.skarpushin.swingpm.tools.SwingPmSettings;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 

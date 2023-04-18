@@ -31,7 +31,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
 import org.pgptool.gui.app.Messages;
-import org.pgptool.gui.ui.swingpm.DialogViewBaseEx;
+import org.pgptool.gui.ui.tools.swingpm.DialogViewBaseEx;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class KeysListView extends DialogViewBaseEx<KeysListPm> {

@@ -182,7 +182,10 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
 			} else if (oldValue != null && newValue == null) {
 				hintView.unrender();
 			}
-			panelRoot.validate();
+
+			// NOTE: We're using doLayout() instead of validate() because latter would not
+			// correctly update layout on component size change
+			panelRoot.doLayout();
 		}
 	};
 
@@ -535,7 +538,6 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
 	private void bindToActions() {
 		bindingContext.setupBinding(pm.getActionConfigExit(), miConfigExit);
 
-		
 		bindingContext.setupBinding(pm.getActionAskQuestionInChat(), miAskQuestionInChat);
 		bindingContext.setupBinding(pm.getActionReportIssue(), miReportAnIssue);
 		bindingContext.setupBinding(pm.getActionBuyMeCoffee(), miBmc);

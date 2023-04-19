@@ -23,7 +23,6 @@ import java.security.KeyPairGenerator;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Date;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -209,11 +208,16 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 	 * @throws Exception
 	 */
 	private KeyPair getOrGenerateKeyPair(KeyPairParams params) throws Exception {
+		log.debug("Checking if we have pregenerated master KeyPair");
 		Future<KeyPair> future = pregeneratedKeyPairs.remove(params);
 		if (future == null) {
+			log.debug("Creating master KeyPair via directly calling ProactivelyGenerateMasterKeyPair.generateKeyPair");
 			return ProactivelyGenerateMasterKeyPair.generateKeyPair(params);
 		}
-		return future.get();
+		log.debug("Obtaining master KeyPair via pregenerated future");
+		KeyPair ret = future.get();
+		log.debug("master KeyPair obtained");
+		return ret;
 	}
 
 	private void assertParamsValid(CreateKeyParams params, boolean emptyPassphraseConsent)
@@ -406,46 +410,6 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 	@Required
 	public void setMasterKeyPurpose(String masterKeyPurpose) {
 		this.masterKeyPurpose = masterKeyPurpose;
-	}
-
-	public static class ProactivelyGenerateMasterKeyPair implements Callable<KeyPair> {
-		private KeyPairParams keyPairParams;
-
-		public ProactivelyGenerateMasterKeyPair(KeyPairParams keyPairParams) {
-			this.keyPairParams = keyPairParams;
-		}
-
-		@Override
-		public KeyPair call() throws Exception {
-			log.debug("Generating master key pair for parameters: " + keyPairParams);
-			try {
-				return generateKeyPair(keyPairParams);
-			} finally {
-				log.debug("Master key generated: " + keyPairParams);
-			}
-		}
-
-		public static KeyPair generateKeyPair(KeyPairParams keyPairParams) throws Exception {
-			try {
-				log.debug("Calculating KeyPair " + keyPairParams);
-				KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(keyPairParams.algorithm,
-						keyPairParams.provider);
-				keyPairGenerator.initialize(keyPairParams.keysize);
-				log.info("Started key generation");
-				KeyPair keyPair = keyPairGenerator.generateKeyPair();
-				log.info("Key generation is complete");
-
-				// byte[] encoded =
-				// Base64.getEncoder().encode(keyPair.getPrivate().getEncoded());
-				// String pkey = new String(encoded, "UTF-8");
-				// log.debug("generated private key: " + pkey);
-
-				return keyPair;
-			} catch (Throwable t) {
-				log.error("Failed to generate DSA keypair " + keyPairParams, t);
-				throw new Exception("Failed to generate DSA keypair" + keyPairParams, t);
-			}
-		}
 	}
 
 	public static class KeyPairParams {

@@ -31,6 +31,7 @@ import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.hintsforusage.api.HintsCoordinator;
 import org.pgptool.gui.hintsforusage.ui.HintPm;
+import org.pgptool.gui.ui.tools.UrlOpener;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,11 +110,7 @@ public class BuyMeCoffeeHint extends HintPm implements InitializingBean {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
-			try {
-				Desktop.getDesktop().browse(new URI(BUYMEACOFFEE_LINK));
-			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser(e, "failed.toOpenBrowser", t);
-			}
+			UrlOpener.open(e, BUYMEACOFFEE_LINK);
 			actionClose.actionPerformed(e);
 		}
 	};

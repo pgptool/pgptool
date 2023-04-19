@@ -19,10 +19,8 @@ package org.pgptool.gui.ui.root;
 
 import static org.pgptool.gui.app.Messages.text;
 
-import java.awt.Desktop;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -89,6 +87,7 @@ import org.pgptool.gui.ui.mainframe.MainFramePm;
 import org.pgptool.gui.ui.mainframe.MainFrameView;
 import org.pgptool.gui.ui.tempfolderfordecrypted.TempFolderChooserPm;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.pgptool.gui.ui.tools.UrlOpener;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.UsageLogger;
@@ -238,6 +237,13 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	}
 
 	private MainFrameHost mainFrameHost = new MainFrameHost() {
+		private Action openHelp = UrlOpener.buildAction("action.openHelp", "https://pgptool.github.io/#help", this);
+		private Action openFaq = UrlOpener.buildAction("action.openFaq", "https://pgptool.github.io/#faq", this);
+		private Action reportIssue = UrlOpener.buildAction("action.reportIssue",
+				"https://github.com/pgptool/pgptool/issues", this);
+		private Action askQuestionInChat = UrlOpener.buildAction("action.askQuestionInChat",
+				"https://app.gitter.im/#/room/#pgptool_Lobby:gitter.im", this);
+
 		@Override
 		public void handleExitApp() {
 			tearDownConfigContext();
@@ -314,28 +320,9 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 			return buyMeCoffeeHint.getBuyMeCoffeeAction();
 		}
 
-		private Action openFaq = buildUrlAction("action.openFaq", "https://pgptool.github.io/#faq");
-
 		@Override
 		public Action getActionFaq() {
 			return openFaq;
-		}
-
-		private Action openHelp = buildUrlAction("action.openHelp", "https://pgptool.github.io/#help");
-
-		@SuppressWarnings("serial")
-		private LocalizedActionEx buildUrlAction(String messageCode, String url) {
-			return new LocalizedActionEx(messageCode, this) {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					super.actionPerformed(e);
-					try {
-						Desktop.getDesktop().browse(new URI(url));
-					} catch (Throwable t) {
-						EntryPoint.reportExceptionToUser(e, "failed.toOpenBrowser", t);
-					}
-				}
-			};
 		}
 
 		@Override
@@ -346,6 +333,16 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 		@Override
 		public Action getActionImportKeyFromText() {
 			return importKeyFromClipboard;
+		}
+
+		@Override
+		public Action getActionReportIssue() {
+			return reportIssue;
+		}
+
+		@Override
+		public Action getAskQuestionInChat() {
+			return askQuestionInChat;
 		}
 	};
 

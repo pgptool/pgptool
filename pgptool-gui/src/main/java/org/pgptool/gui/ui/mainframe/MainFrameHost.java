@@ -58,4 +58,8 @@ public interface MainFrameHost {
 	Action getActionFaq();
 
 	Action getActionHelp();
+
+	Action getActionReportIssue();
+
+	Action getAskQuestionInChat();
 }

@@ -216,13 +216,13 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
 		@Override
 		public void onActionPerformed(DecryptedFile row, ActionEvent e) {
 			if (!new File(row.getEncryptedFile()).exists()) {
-				if (!UiUtils.confirmWarning(e,
-						"confirmation.areUserSureToDeletDecryptedFileWhileSourceIsNotFound", new Object[] { FilenameUtils.getName(row.getDecryptedFile()), row.getEncryptedFile() })) {
+				if (!UiUtils.confirmWarning(e, "confirmation.areUserSureToDeletDecryptedFileWhileSourceIsNotFound",
+						new Object[] { FilenameUtils.getName(row.getDecryptedFile()), row.getEncryptedFile() })) {
 					return;
 				}
 			} else {
-				if (!UiUtils.confirmRegular(e,
-						"confirmation.areUserSureToDeletDecryptedFile", new Object[] { FilenameUtils.getName(row.getDecryptedFile()) })) {
+				if (!UiUtils.confirmRegular(e, "confirmation.areUserSureToDeletDecryptedFile",
+						new Object[] { FilenameUtils.getName(row.getDecryptedFile()) })) {
 					return;
 				}
 			}
@@ -285,6 +285,14 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
 
 	public Action getActionBuyMeCoffee() {
 		return host.getActionBuyMeCoffee();
+	}
+
+	public Action getActionAskQuestionInChat() {
+		return host.getAskQuestionInChat();
+	}
+
+	public Action getActionReportIssue() {
+		return host.getActionReportIssue();
 	}
 
 	public Action getActionFaq() {

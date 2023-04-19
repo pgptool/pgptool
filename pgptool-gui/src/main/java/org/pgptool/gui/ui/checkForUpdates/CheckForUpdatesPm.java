@@ -19,17 +19,15 @@ package org.pgptool.gui.ui.checkForUpdates;
 
 import static org.pgptool.gui.app.Messages.text;
 
-import java.awt.Desktop;
 import java.awt.event.ActionEvent;
-import java.net.URI;
 
 import javax.swing.Action;
 
 import org.apache.log4j.Logger;
-import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.autoupdate.api.NewVersionChecker;
 import org.pgptool.gui.autoupdate.api.UpdatePackageInfo;
 import org.pgptool.gui.tools.ConsoleExceptionUtils;
+import org.pgptool.gui.ui.tools.UrlOpener;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.springframework.beans.factory.InitializingBean;
@@ -131,11 +129,7 @@ public class CheckForUpdatesPm extends PresentationModelBaseEx<CheckForUpdatesHo
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
-			try {
-				Desktop.getDesktop().browse(new URI(updatePackageUrl));
-			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser(e, "exception.unexpected", t);
-			}
+			UrlOpener.open(e, updatePackageUrl);
 			host.handleClose();
 		}
 	};

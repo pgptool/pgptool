@@ -106,6 +106,8 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
 	private JMenuItem miBmc;
 	private JMenuItem miFaq;
 	private JMenuItem miHelp;
+	private JMenuItem miReportAnIssue;
+	private JMenuItem miAskQuestionInChat;
 	private JMenuItem miAbout;
 	private JMenuItem miCheckForUpdates;
 	private JCheckBoxMenuItem miAutoCheckForUpdates;
@@ -429,6 +431,9 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
 		menuFile.addSeparator();
 		menuFile.add(miFaq = new JMenuItem());
 		menuFile.add(miHelp = new JMenuItem());
+		menuFile.add(miAskQuestionInChat = new JMenuItem());
+		menuFile.add(miReportAnIssue = new JMenuItem());
+		menuFile.addSeparator();
 		menuFile.add(miBmc = new JMenuItem());
 		menuFile.addSeparator();
 		menuFile.add(miConfigExit = new JMenuItem());
@@ -530,6 +535,9 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
 	private void bindToActions() {
 		bindingContext.setupBinding(pm.getActionConfigExit(), miConfigExit);
 
+		
+		bindingContext.setupBinding(pm.getActionAskQuestionInChat(), miAskQuestionInChat);
+		bindingContext.setupBinding(pm.getActionReportIssue(), miReportAnIssue);
 		bindingContext.setupBinding(pm.getActionBuyMeCoffee(), miBmc);
 		bindingContext.setupBinding(pm.getActionFaq(), miFaq);
 		bindingContext.setupBinding(pm.getActionHelp(), miHelp);

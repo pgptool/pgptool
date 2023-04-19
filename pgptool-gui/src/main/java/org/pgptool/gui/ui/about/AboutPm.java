@@ -30,6 +30,7 @@ import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.autoupdate.api.NewVersionChecker;
 import org.pgptool.gui.autoupdate.api.UpdatePackageInfo;
+import org.pgptool.gui.ui.tools.UrlOpener;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.springframework.beans.factory.InitializingBean;
@@ -110,11 +111,7 @@ public class AboutPm extends PresentationModelBaseEx<AboutHost, Void> implements
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
-			try {
-				Desktop.getDesktop().browse(new URI(urlToSite));
-			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser(e, "exception.unexpected", t);
-			}
+			UrlOpener.open(e, urlToSite);
 			host.handleClose();
 		}
 	};
@@ -124,11 +121,7 @@ public class AboutPm extends PresentationModelBaseEx<AboutHost, Void> implements
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			super.actionPerformed(e);
-			try {
-				Desktop.getDesktop().browse(new URI(updatePackageUrl));
-			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser(e, "exception.unexpected", t);
-			}
+			UrlOpener.open(e, updatePackageUrl);
 			host.handleClose();
 		}
 	};

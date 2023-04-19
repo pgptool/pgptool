@@ -37,6 +37,7 @@ import org.pgptool.gui.usage.api.UsageLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.summerb.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.utils.exceptions.ExceptionUtils;
 import org.summerb.validation.FieldValidationException;
 import org.summerb.validation.ValidationError;
 
@@ -141,6 +142,11 @@ public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
 			} catch (FieldValidationException fve) {
 				validationErrors.addAll(fve.getErrors());
 			} catch (Throwable t) {
+				if (ExceptionUtils.findExceptionOfType(t, InterruptedException.class) != null) {
+					// user cancelled key creation
+					host.handleClose();
+					return;
+				}
 				log.error("Failed to create key", t);
 				EntryPoint.reportExceptionToUser(runnableOriginEvent, "exception.failedToCreatePgpKey", t);
 			} finally {

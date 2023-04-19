@@ -21,7 +21,6 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.Action;
 
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyGeneratorService;
@@ -48,8 +47,6 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReflectionImpl;
 
 public class ChangeKeyPasswordPm extends PresentationModelBaseEx<ChangeKeyPasswordHost, Key> {
-	private static Logger log = Logger.getLogger(ChangeKeyPasswordPm.class);
-
 	@Autowired
 	private KeyRingService keyRingService;
 	@Autowired
@@ -118,7 +115,6 @@ public class ChangeKeyPasswordPm extends PresentationModelBaseEx<ChangeKeyPasswo
 			} catch (FieldValidationException fve) {
 				validationErrors.addAll(fve.getErrors());
 			} catch (Throwable t) {
-				log.error("Failed to change key password", t);
 				EntryPoint.reportExceptionToUser(e, "exception.failedToChangeKey", t);
 			} finally {
 				actionChange.setEnabled(true);

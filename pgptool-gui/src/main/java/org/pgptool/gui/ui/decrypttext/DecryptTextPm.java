@@ -271,7 +271,6 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
 				targetText.setValueByOwner(decryptedText);
 				actionReply.setEnabled(true);
 			} catch (Throwable t) {
-				log.error("Failed to decrypt text", t);
 				EntryPoint.reportExceptionToUser(surrogateEvent, "error.cantParseEncryptedText", t);
 			}
 		}
@@ -308,7 +307,6 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
 				}
 				decrypt(e);
 			} catch (Throwable t) {
-				log.info("Failed to process text", t);
 				EntryPoint.reportExceptionToUser(e, "error.cantParseEncryptedText", t);
 			}
 		}
@@ -324,7 +322,6 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
 						"Action must not be invoked if source text is empty");
 				decrypt(e);
 			} catch (Throwable t) {
-				log.info("Failed to process text", t);
 				EntryPoint.reportExceptionToUser(e, "error.cantParseEncryptedText", t);
 			}
 		}

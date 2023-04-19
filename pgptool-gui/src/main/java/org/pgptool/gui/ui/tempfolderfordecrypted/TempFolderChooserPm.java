@@ -23,7 +23,6 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.JOptionPane;
 
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.ui.tools.UiUtils;
@@ -42,8 +41,6 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
  *
  */
 public class TempFolderChooserPm extends PresentationModelBaseEx<Void, Void> {
-	private static Logger log = Logger.getLogger(TempFolderChooserPm.class);
-
 	@Autowired
 	private DecryptedTempFolder decryptedTempFolder;
 
@@ -58,7 +55,6 @@ public class TempFolderChooserPm extends PresentationModelBaseEx<Void, Void> {
 			UiUtils.messageBox(originEvent, text("phrase.settingsChangedConfirmFolder", newFolder),
 					text("term.success"), JOptionPane.INFORMATION_MESSAGE);
 		} catch (Throwable t) {
-			log.error("Failed to save settigns for folder to use for temp decrypted files", t);
 			EntryPoint.reportExceptionToUser(originEvent, "error.failedToSetNewTempFolder", t);
 		}
 	}

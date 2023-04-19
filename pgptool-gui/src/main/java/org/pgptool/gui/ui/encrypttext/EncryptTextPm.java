@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.encryption.api.EncryptionService;
@@ -62,8 +61,6 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
 public class EncryptTextPm extends PresentationModelBaseEx<EncryptTextHost, Set<String>> {
-	private static Logger log = Logger.getLogger(EncryptTextPm.class);
-
 	@Autowired
 	private KeyRingService keyRingService;
 	@Autowired
@@ -192,7 +189,6 @@ public class EncryptTextPm extends PresentationModelBaseEx<EncryptTextHost, Set<
 						.map(x -> x.getKeyInfo().getKeyId()).collect(Collectors.toSet())));
 				targetText.setValueByOwner(encryptedTextStr);
 			} catch (Throwable t) {
-				log.error("Failed to encrypt", t);
 				EntryPoint.reportExceptionToUser(e, "error.failedToEncryptText", t);
 			}
 		}

@@ -114,7 +114,7 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
 		T result = read(clazz, clarification);
 		if (result == null) {
 			try {
-				result = clazz.newInstance();
+				result = clazz.getConstructor().newInstance();
 			} catch (Throwable t) {
 				throw new RuntimeException("Failed to create new instance of " + clazz, t);
 			}

@@ -271,7 +271,6 @@ public class KeyImporterPm extends PresentationModelBaseEx<KeyImporterHost, List
 
 				host.handleImporterFinished();
 			} catch (Throwable t) {
-				log.error("Failed to import keys", t);
 				EntryPoint.reportExceptionToUser(e, "exception.failedToImportPgpKey", t);
 				return;
 			}

@@ -24,7 +24,6 @@ import java.util.concurrent.ExecutorService;
 
 import javax.swing.Action;
 
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
@@ -45,7 +44,6 @@ import com.google.common.eventbus.Subscribe;
 
 @SuppressWarnings("serial")
 public class MightNeedPublicKeysHint extends HintPm implements InitializingBean {
-	private static Logger log = Logger.getLogger(MightNeedPublicKeysHint.class);
 	private static final String CONFIG_SUPPRESS_HINT = "MightNeedPublicKeysHint.supress";
 
 	@Autowired
@@ -123,7 +121,6 @@ public class MightNeedPublicKeysHint extends HintPm implements InitializingBean 
 			try {
 				Desktop.getDesktop().browse(new URI("https://pgptool.github.io/#faq"));
 			} catch (Throwable t) {
-				log.error("Failed to open browser", t);
 				EntryPoint.reportExceptionToUser(e, "failed.toOpenBrowser", t);
 			}
 		}

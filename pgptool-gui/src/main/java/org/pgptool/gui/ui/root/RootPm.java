@@ -172,14 +172,18 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	 * @param commandLineArgs
 	 */
 	public void processCommandLine(String[] commandLineArgs) {
-		try {
-			if (commandLineArgs == null || commandLineArgs.length == 0) {
+		if (commandLineArgs == null || commandLineArgs.length == 0) {
+			try {
 				if (mainFrameView != null) {
 					mainFrameView.bringToFront();
 				}
-				return;
+			} catch (Throwable t) {
+				EntryPoint.reportExceptionToUser(null, "exception.unexpected", t);
 			}
+			return;
+		}
 
+		try {
 			usageLogger.write(new CommandLineArgsUsage(commandLineArgs));
 
 			if (commandLineArgs.length > 1) {
@@ -375,7 +379,6 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 			mainFramePm.detach();
 			mainFramePm = null;
 		} catch (Throwable t) {
-			log.error("Failed to gracefully close app", t);
 			EntryPoint.reportExceptionToUser(null, "exception.unexpected.failedToCloseConfig", t);
 		}
 	}
@@ -844,7 +847,6 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 					try {
 						openWindow(e);
 					} catch (Throwable t) {
-						log.error("Failed to open dialog " + pmClass.getSimpleName(), t);
 						Object[] messageArgs = { pmClass.getSimpleName() };
 						EntryPoint.reportExceptionToUser(e, "failed.toOpenWindow", t, messageArgs);
 					}

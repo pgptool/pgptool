@@ -225,6 +225,7 @@ public class EntryPoint {
 
 	public static void reportExceptionToUser(ActionEvent originAction, String errorMessageCode, Throwable cause,
 			Object... messageArgs) {
+		log.error(errorMessageCode, cause);
 		GenericException exc = new GenericException(errorMessageCode, cause, messageArgs);
 		String versionInfo = NewVersionCheckerGitHubImpl.getVerisonsInfo();
 		String msgs = ConsoleExceptionUtils.getAllMessages(exc);

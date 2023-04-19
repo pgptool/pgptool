@@ -71,7 +71,6 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 			usageLogger.write(new PublicKeyExportedUsage(key.getKeyInfo().getKeyId(), targetFile));
 			keyFilesOperations.exportPublicKey(key, targetFile);
 		} catch (Throwable t) {
-			log.error("Failed to export key " + key, t);
 			EntryPoint.reportExceptionToUser(originEvent, "error.failedToExportPublicKey", t, key.toString());
 			return;
 		}
@@ -112,7 +111,6 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 			keyFilesOperations.exportPrivateKey(key, targetFile);
 			eventBus.post(EntityChangedEvent.added(new PrivateKeyExportedEvent(key)));
 		} catch (Throwable t) {
-			log.error("Failed to export private key " + key, t);
 			EntryPoint.reportExceptionToUser(originEvent, "error.failedToExportPrivateKey", t, key.toString());
 			return;
 		}
@@ -196,7 +194,6 @@ public class KeysExporterUiImpl implements KeysExporterUi {
 				keysExported++;
 			}
 		} catch (Throwable t) {
-			log.error("Failed to export keys", t);
 			EntryPoint.reportExceptionToUser(originEvent, "error.failedToExportKeys", t, keysExported, keysTotal);
 		} finally {
 			if (keysExported > 0) {

@@ -23,7 +23,6 @@ import java.util.concurrent.Future;
 
 import javax.swing.Action;
 
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.KeyRingService;
@@ -52,8 +51,6 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReflectionImpl;
 
 public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
-	private static Logger log = Logger.getLogger(CreateKeyPm.class);
-
 	@Autowired
 	private KeyRingService keyRingService;
 	@Autowired
@@ -147,7 +144,6 @@ public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
 					host.handleClose();
 					return;
 				}
-				log.error("Failed to create key", t);
 				EntryPoint.reportExceptionToUser(runnableOriginEvent, "exception.failedToCreatePgpKey", t);
 			} finally {
 				progressBarVisible.setValueByOwner(false);

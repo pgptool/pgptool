@@ -471,7 +471,6 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
 				}
 				return;
 			} catch (Throwable t) {
-				log.error("Failed to encrypt", t);
 				EntryPoint.reportExceptionToUser(workerOriginEvent, "error.failedToEncryptFile", t);
 				reEnableDialog();
 				return;

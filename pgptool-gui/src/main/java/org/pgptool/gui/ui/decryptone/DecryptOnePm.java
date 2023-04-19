@@ -25,6 +25,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -88,6 +90,14 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
 	public static final String CONFIG_PAIR_BASE = "Decrypt:";
 
 	private static final String[] EXTENSIONS = new String[] { "gpg", "pgp", "asc" };
+
+	/**
+	 * NOTE: My first thought was to make it configurable, but since inception no
+	 * one reported any issues related t that part, so it looks like there is no
+	 * demand, hence I will not invest time in that
+	 */
+	private static final Set<String> FOR_WHICH_FILE_TYPES_WE_SHOULD_REQUEST_EDITOR = new HashSet<>(
+			Arrays.asList("txt", "doc", "xls", "ppt", "docx", "xlsx", "pptx"));
 
 	@Autowired
 	private ConfigPairs appProps;
@@ -512,7 +522,6 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
 				host.handleClose();
 				return;
 			} catch (Throwable t) {
-				log.error("Failed to decrypt", t);
 				if (sourceFileFingerprintFuture != null) {
 					sourceFileFingerprintFuture.cancel(true);
 				}
@@ -568,9 +577,14 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
 
 		private void openAssociatedApp(String targetFileName) {
 			try {
-				Desktop.getDesktop().open(new File(targetFileName));
+				if (FOR_WHICH_FILE_TYPES_WE_SHOULD_REQUEST_EDITOR
+						.contains(FilenameUtils.getExtension(targetFileName).toLowerCase())) {
+					Desktop.getDesktop().edit(new File(targetFileName));
+				} else {
+					Desktop.getDesktop().open(new File(targetFileName));
+				}
 			} catch (Throwable t) {
-				EntryPoint.reportExceptionToUser(workerOriginEvent, "error.decryptOkButCantBrowseForFolder", t);
+				EntryPoint.reportExceptionToUser(workerOriginEvent, "error.decryptOkButFailedToOpenAssociatedApp", t);
 			}
 		}
 
@@ -648,8 +662,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
 		 * NOTE: Slight SRP concern here. We're interfering with responsibility area of
 		 * {@link EncryptOnePm}
 		 * 
-		 * @param decryptedFile
-		 *            decrypted file path name
+		 * @param decryptedFile decrypted file path name
 		 */
 		protected void persistEncryptionDialogParameters(String decryptedFile) {
 			EncryptionDialogParameters dialogParameters = buildEncryptionDialogParameters(decryptedFile);

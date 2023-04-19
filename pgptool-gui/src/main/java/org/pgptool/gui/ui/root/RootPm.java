@@ -820,10 +820,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 	 * 
 	 * @author Sergey Karpushin
 	 *
-	 * @param <TPmType>
-	 *            presentation model type
-	 * @param <TViewType>
-	 *            view type
+	 * @param <TPmType>   presentation model type
+	 * @param <TViewType> view type
 	 */
 	private abstract class DialogOpener<PMHT, PMPO, TPmType extends PresentationModelBaseEx<PMHT, PMPO>, TViewType extends ViewBase<TPmType>> {
 		private Class<TPmType> pmClass;
@@ -869,8 +867,10 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 			if (pm == null) {
 				pm = applicationContext.getBean(pmClass);
 				if (!initPm(originAction)) {
-					pm.detach();
-					pm = null;
+					if (pm != null) {
+						pm.detach();
+						pm = null;
+					}
 					return;
 				}
 			}

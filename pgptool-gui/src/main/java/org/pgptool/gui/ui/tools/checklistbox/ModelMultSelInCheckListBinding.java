@@ -1,59 +1,59 @@
 /*******************************************************************************
  * PGPTool is a desktop application for pgp encryption/decryption
  * Copyright (C) 2019 Sergey Karpushin
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  ******************************************************************************/
 package org.pgptool.gui.ui.tools.checklistbox;
 
-import javax.swing.DefaultListModel;
-
 import com.google.common.base.Preconditions;
-
+import javax.swing.DefaultListModel;
 import ru.skarpushin.swingpm.bindings.Binding;
 import ru.skarpushin.swingpm.bindings.BindingContext;
 import ru.skarpushin.swingpm.modelprops.lists.ModelMultSelInListProperty;
 import ru.skarpushin.swingpm.modelprops.lists.ModelMultSelInListPropertyAccessor;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class ModelMultSelInCheckListBinding<E> implements Binding {
-	private ModelMultSelInListPropertyAccessor<E> modelProperty;
-	private JCheckList list;
+  private ModelMultSelInListPropertyAccessor<E> modelProperty;
+  private JCheckList list;
 
-	public ModelMultSelInCheckListBinding(BindingContext bindingContext, ModelMultSelInListProperty<E> modelPropertyA,
-			JCheckList list) {
-		modelProperty = modelPropertyA.getModelMultSelInListPropertyAccessor();
-		this.list = list;
+  public ModelMultSelInCheckListBinding(
+      BindingContext bindingContext,
+      ModelMultSelInListProperty<E> modelPropertyA,
+      JCheckList list) {
+    modelProperty = modelPropertyA.getModelMultSelInListPropertyAccessor();
+    this.list = list;
 
-		list.setModel(modelProperty.getOptions());
-		list.setCheckState(modelPropertyA.getList());
+    list.setModel(modelProperty.getOptions());
+    list.setCheckState(modelPropertyA.getList());
 
-		bindingContext.createValidationErrorsViewIfAny(modelProperty, list);
-	}
+    bindingContext.createValidationErrorsViewIfAny(modelProperty, list);
+  }
 
-	@Override
-	public boolean isBound() {
-		return modelProperty != null;
-	}
+  @Override
+  public boolean isBound() {
+    return modelProperty != null;
+  }
 
-	@Override
-	public void unbind() {
-		Preconditions.checkState(modelProperty != null);
+  @Override
+  public void unbind() {
+    Preconditions.checkState(modelProperty != null);
 
-		list.setModel(new DefaultListModel());
-		list.setCheckState(null);
-		list = null;
-		modelProperty = null;
-	}
+    list.setModel(new DefaultListModel());
+    list.setCheckState(null);
+    list = null;
+    modelProperty = null;
+  }
 }

@@ -2,38 +2,38 @@
 <!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
 
-	<appender name="FILE" class="org.apache.log4j.FileAppender">
-		<param name="file" value="${user.home}/pgptool-gui.log" />
-		<param name="append" value="true" />
-		<param name="encoding" value="UTF-8" />
+    <appender name="FILE" class="org.apache.log4j.FileAppender">
+        <param name="file" value="${user.home}/pgptool-gui.log"/>
+        <param name="append" value="true"/>
+        <param name="encoding" value="UTF-8"/>
 
-		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p %t %C{1} %m%n" />
-		</layout>
-	</appender>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p %t %C{1} %m%n"/>
+        </layout>
+    </appender>
 
-	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
-		<param name="target" value="System.out" />
-		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p %t %C{1} %m%n" />
-		</layout>
-		<!-- <filter class="org.apache.log4j.varia.LevelRangeFilter"> -->
-		<!-- <param name="LevelMin" value="WARN"/> -->
-		<!-- </filter> -->
-	</appender>
+    <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+        <param name="target" value="System.out"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p %t %C{1} %m%n"/>
+        </layout>
+        <!-- <filter class="org.apache.log4j.varia.LevelRangeFilter"> -->
+        <!-- <param name="LevelMin" value="WARN"/> -->
+        <!-- </filter> -->
+    </appender>
 
-	<category name="org.pgptool.gui">
-		<priority value="DEBUG" />
-	</category>
-	   
-	<category name="ru.skarpushin.swingpm.tools.sglayout">
-		<priority value="ERROR" />
-	</category>
-	   
-	<root>
-		<level value="INFO" />
-		<appender-ref ref="FILE" />
-		<appender-ref ref="CONSOLE" />
-	</root>
+    <category name="org.pgptool.gui">
+        <priority value="DEBUG"/>
+    </category>
+
+    <category name="ru.skarpushin.swingpm.tools.sglayout">
+        <priority value="ERROR"/>
+    </category>
+
+    <root>
+        <level value="INFO"/>
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </root>
 
 </log4j:configuration>

@@ -1,17 +1,17 @@
 /*******************************************************************************
  * PGPTool is a desktop application for pgp encryption/decryption
  * Copyright (C) 2019 Sergey Karpushin
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  ******************************************************************************/
@@ -21,7 +21,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
-
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -33,142 +32,145 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.TableCellRenderer;
 
 public class EncryptBackActionCellRenderer extends JPanel implements TableCellRenderer {
-	private static final long serialVersionUID = 1821194884019502554L;
+  private static final long serialVersionUID = 1821194884019502554L;
 
-	private static final Border SAFE_NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
-	private static final Border DEFAULT_NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
-	protected static Border noFocusBorder = DEFAULT_NO_FOCUS_BORDER;
+  private static final Border SAFE_NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
+  private static final Border DEFAULT_NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
+  protected static Border noFocusBorder = DEFAULT_NO_FOCUS_BORDER;
 
-	private JLabel lbl;
+  private JLabel lbl;
 
-	private Color unselectedForeground;
-	private Color unselectedBackground;
+  private Color unselectedForeground;
+  private Color unselectedBackground;
 
-	public EncryptBackActionCellRenderer() {
-		BorderLayout layout = new BorderLayout();
-		setLayout(layout);
-		lbl = new JLabel("Encrypt back");
-		lbl.setForeground(Color.blue);
-		lbl.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 0));
-		add(lbl, BorderLayout.WEST);
-		setBorder(getNoFocusBorder());
-	}
+  public EncryptBackActionCellRenderer() {
+    BorderLayout layout = new BorderLayout();
+    setLayout(layout);
+    lbl = new JLabel("Encrypt back");
+    lbl.setForeground(Color.blue);
+    lbl.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 0));
+    add(lbl, BorderLayout.WEST);
+    setBorder(getNoFocusBorder());
+  }
 
-	@Override
-	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
-			int row, int column) {
+  @Override
+  public Component getTableCellRendererComponent(
+      JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 
-		if (table == null) {
-			return this;
-		}
+    if (table == null) {
+      return this;
+    }
 
-		lbl.setFont(table.getFont().deriveFont(Font.BOLD));
+    lbl.setFont(table.getFont().deriveFont(Font.BOLD));
 
-		Color fg = null;
-		Color bg = null;
+    Color fg = null;
+    Color bg = null;
 
-		JTable.DropLocation dropLocation = table.getDropLocation();
-		if (dropLocation != null && !dropLocation.isInsertRow() && !dropLocation.isInsertColumn()
-				&& dropLocation.getRow() == row && dropLocation.getColumn() == column) {
-			fg = UIManager.getColor("Table.dropCellForeground");
-			bg = UIManager.getColor("Table.dropCellBackground");
-			isSelected = true;
-		}
+    JTable.DropLocation dropLocation = table.getDropLocation();
+    if (dropLocation != null
+        && !dropLocation.isInsertRow()
+        && !dropLocation.isInsertColumn()
+        && dropLocation.getRow() == row
+        && dropLocation.getColumn() == column) {
+      fg = UIManager.getColor("Table.dropCellForeground");
+      bg = UIManager.getColor("Table.dropCellBackground");
+      isSelected = true;
+    }
 
-		if (isSelected) {
-			super.setForeground(fg == null ? table.getSelectionForeground() : fg);
-			super.setBackground(bg == null ? table.getSelectionBackground() : bg);
-		} else {
-			Color background = unselectedBackground != null ? unselectedBackground : table.getBackground();
-			if (background == null || background instanceof javax.swing.plaf.UIResource) {
-				Color alternateColor = UIManager.getColor("Table.alternateRowColor");
-				if (alternateColor != null && row % 2 != 0) {
-					background = alternateColor;
-				}
-			}
-			super.setForeground(unselectedForeground != null ? unselectedForeground : table.getForeground());
-			super.setBackground(background);
-		}
+    if (isSelected) {
+      super.setForeground(fg == null ? table.getSelectionForeground() : fg);
+      super.setBackground(bg == null ? table.getSelectionBackground() : bg);
+    } else {
+      Color background =
+          unselectedBackground != null ? unselectedBackground : table.getBackground();
+      if (background == null || background instanceof javax.swing.plaf.UIResource) {
+        Color alternateColor = UIManager.getColor("Table.alternateRowColor");
+        if (alternateColor != null && row % 2 != 0) {
+          background = alternateColor;
+        }
+      }
+      super.setForeground(
+          unselectedForeground != null ? unselectedForeground : table.getForeground());
+      super.setBackground(background);
+    }
 
-		setFont(table.getFont());
+    setFont(table.getFont());
 
-		if (hasFocus) {
-			Border border = null;
-			if (isSelected) {
-				border = UIManager.getBorder("Table.focusSelectedCellHighlightBorder");
-			}
-			if (border == null) {
-				border = UIManager.getBorder("Table.focusCellHighlightBorder");
-			}
-			setBorder(border);
+    if (hasFocus) {
+      Border border = null;
+      if (isSelected) {
+        border = UIManager.getBorder("Table.focusSelectedCellHighlightBorder");
+      }
+      if (border == null) {
+        border = UIManager.getBorder("Table.focusCellHighlightBorder");
+      }
+      setBorder(border);
 
-			if (!isSelected && table.isCellEditable(row, column)) {
-				Color col;
-				col = UIManager.getColor("Table.focusCellForeground");
-				if (col != null) {
-					super.setForeground(col);
-				}
-				col = UIManager.getColor("Table.focusCellBackground");
-				if (col != null) {
-					super.setBackground(col);
-				}
-			}
-		} else {
-			setBorder(getNoFocusBorder());
-		}
+      if (!isSelected && table.isCellEditable(row, column)) {
+        Color col;
+        col = UIManager.getColor("Table.focusCellForeground");
+        if (col != null) {
+          super.setForeground(col);
+        }
+        col = UIManager.getColor("Table.focusCellBackground");
+        if (col != null) {
+          super.setBackground(col);
+        }
+      }
+    } else {
+      setBorder(getNoFocusBorder());
+    }
 
-		return this;
-	}
+    return this;
+  }
 
-	private Border getNoFocusBorder() {
-		Border border = UIManager.getBorder("Table.cellNoFocusBorder");
-		if (System.getSecurityManager() != null) {
-			if (border != null)
-				return border;
-			return SAFE_NO_FOCUS_BORDER;
-		} else if (border != null) {
-			if (noFocusBorder == null || noFocusBorder == DEFAULT_NO_FOCUS_BORDER) {
-				return border;
-			}
-		}
-		return noFocusBorder;
-	}
+  private Border getNoFocusBorder() {
+    Border border = UIManager.getBorder("Table.cellNoFocusBorder");
+    if (System.getSecurityManager() != null) {
+      if (border != null) return border;
+      return SAFE_NO_FOCUS_BORDER;
+    } else if (border != null) {
+      if (noFocusBorder == null || noFocusBorder == DEFAULT_NO_FOCUS_BORDER) {
+        return border;
+      }
+    }
+    return noFocusBorder;
+  }
 
-	/**
-	 * Overrides <code>JComponent.setForeground</code> to assign the
-	 * unselected-foreground color to the specified color.
-	 *
-	 * @param c set the foreground color to this value
-	 */
-	@Override
-	public void setForeground(Color c) {
-		super.setForeground(c);
-		unselectedForeground = c;
-	}
+  /**
+   * Overrides <code>JComponent.setForeground</code> to assign the unselected-foreground color to
+   * the specified color.
+   *
+   * @param c set the foreground color to this value
+   */
+  @Override
+  public void setForeground(Color c) {
+    super.setForeground(c);
+    unselectedForeground = c;
+  }
 
-	/**
-	 * Overrides <code>JComponent.setBackground</code> to assign the
-	 * unselected-background color to the specified color.
-	 *
-	 * @param c set the background color to this value
-	 */
-	@Override
-	public void setBackground(Color c) {
-		super.setBackground(c);
-		unselectedBackground = c;
-	}
+  /**
+   * Overrides <code>JComponent.setBackground</code> to assign the unselected-background color to
+   * the specified color.
+   *
+   * @param c set the background color to this value
+   */
+  @Override
+  public void setBackground(Color c) {
+    super.setBackground(c);
+    unselectedBackground = c;
+  }
 
-	/**
-	 * Notification from the <code>UIManager</code> that the look and feel [L&amp;F]
-	 * has changed. Replaces the current UI object with the latest version from the
-	 * <code>UIManager</code>.
-	 *
-	 * @see JComponent#updateUI
-	 */
-	@Override
-	public void updateUI() {
-		super.updateUI();
-		setForeground(null);
-		setBackground(null);
-	}
+  /**
+   * Notification from the <code>UIManager</code> that the look and feel [L&amp;F] has changed.
+   * Replaces the current UI object with the latest version from the <code>UIManager</code>.
+   *
+   * @see JComponent#updateUI
+   */
+  @Override
+  public void updateUI() {
+    super.updateUI();
+    setForeground(null);
+    setBackground(null);
+  }
 }

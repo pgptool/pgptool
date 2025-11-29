@@ -7,14 +7,13 @@ import org.junit.Test;
 
 public class KeyGeneratorServicePgpImplTest {
 
-	@Test
-	public void testAlgorithmNameToTag() {
-		assertEquals(PGPPublicKey.DSA, KeyGeneratorServicePgpImpl.algorithmNameToTag("DSA"));
-	}
+  @Test
+  public void testAlgorithmNameToTag() {
+    assertEquals(PGPPublicKey.DSA, KeyGeneratorServicePgpImpl.algorithmNameToTag("DSA"));
+  }
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testAlgorithmNameToTagExpectFail() {
-		KeyGeneratorServicePgpImpl.algorithmNameToTag("invalid");
-	}
-
+  @Test(expected = IllegalArgumentException.class)
+  public void testAlgorithmNameToTagExpectFail() {
+    KeyGeneratorServicePgpImpl.algorithmNameToTag("invalid");
+  }
 }

@@ -1,41 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch4jConfig>
-  <dontWrapJar>true</dontWrapJar>
-  <headerType>gui</headerType>
-  <jar>value for this field will be set by maven plugin during build</jar>
-  <outfile>value for this field will be set by maven plugin during build</outfile>
-  <errTitle></errTitle>
-  <cmdLine></cmdLine>
-  <chdir>.</chdir>
-  <priority>normal</priority>
-  <downloadUrl>http://java.com/download</downloadUrl>
-  <supportUrl>https://pgptool.github.io/</supportUrl>
-  <stayAlive>false</stayAlive>
-  <restartOnCrash>false</restartOnCrash>
-  <manifest></manifest>
-  <icon>value for this field will be set by maven plugin during build</icon>
-  <jre>
-    <path>%JAVA_HOME%</path>
-    <bundledJre64Bit>false</bundledJre64Bit>
-    <bundledJreAsFallback>false</bundledJreAsFallback>
-    <minVersion>1.8.0_0</minVersion>
-    <maxVersion></maxVersion>
-    <jdkPreference>preferJre</jdkPreference>
-    <runtimeBits>64/32</runtimeBits>
-    <maxHeapSize>100</maxHeapSize>
-  </jre>
-  <versionInfo>
-    <fileVersion>0.1.0.0</fileVersion>
-    <txtFileVersion>0.1.0-SNAPSHOT</txtFileVersion>
-    <fileDescription>PGP Tool</fileDescription>
-    <copyright>Sergey Karpushin</copyright>
-    <productVersion>0.1.0.0</productVersion>
-    <txtProductVersion>0.1.0-SNAPSHOT</txtProductVersion>
-    <productName>PGP Tool Desktop Application</productName>
-    <companyName>https://pgptool.github.io/</companyName>
-    <internalName>pgptool</internalName>
-    <originalFilename>pgptool.exe</originalFilename>
-    <trademarks></trademarks>
-    <language>ENGLISH_US</language>
-  </versionInfo>
+    <dontWrapJar>true</dontWrapJar>
+    <headerType>gui</headerType>
+    <jar>value for this field will be set by maven plugin during build</jar>
+    <outfile>value for this field will be set by maven plugin during build</outfile>
+    <errTitle></errTitle>
+    <cmdLine></cmdLine>
+    <chdir>.</chdir>
+    <priority>normal</priority>
+    <downloadUrl>http://java.com/download</downloadUrl>
+    <supportUrl>https://pgptool.github.io/</supportUrl>
+    <stayAlive>false</stayAlive>
+    <restartOnCrash>false</restartOnCrash>
+    <manifest></manifest>
+    <icon>value for this field will be set by maven plugin during build</icon>
+    <jre>
+        <path>%JAVA_HOME%</path>
+        <bundledJre64Bit>false</bundledJre64Bit>
+        <bundledJreAsFallback>false</bundledJreAsFallback>
+        <minVersion>1.8.0_0</minVersion>
+        <maxVersion></maxVersion>
+        <jdkPreference>preferJre</jdkPreference>
+        <runtimeBits>64/32</runtimeBits>
+        <maxHeapSize>100</maxHeapSize>
+    </jre>
+    <versionInfo>
+        <fileVersion>0.1.0.0</fileVersion>
+        <txtFileVersion>0.1.0-SNAPSHOT</txtFileVersion>
+        <fileDescription>PGP Tool</fileDescription>
+        <copyright>Sergey Karpushin</copyright>
+        <productVersion>0.1.0.0</productVersion>
+        <txtProductVersion>0.1.0-SNAPSHOT</txtProductVersion>
+        <productName>PGP Tool Desktop Application</productName>
+        <companyName>https://pgptool.github.io/</companyName>
+        <internalName>pgptool</internalName>
+        <originalFilename>pgptool.exe</originalFilename>
+        <trademarks></trademarks>
+        <language>ENGLISH_US</language>
+    </versionInfo>
 </launch4jConfig>

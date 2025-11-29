@@ -1,182 +1,182 @@
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
-	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context" xmlns:jee="http://www.springframework.org/schema/jee"
-	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:task="http://www.springframework.org/schema/task"
-	xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.2.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.2.xsd">
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
 
-	<bean id="propertyHolder" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-		<property name="properties" ref="properties" />
-		<property name="ignoreResourceNotFound" value="true" />
-		<property name="systemPropertiesMode" value="2" />
-		<property name="nullValue" value="null" />
-	</bean>
+    <bean id="propertyHolder" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="properties" ref="properties"/>
+        <property name="ignoreResourceNotFound" value="true"/>
+        <property name="systemPropertiesMode" value="2"/>
+        <property name="nullValue" value="null"/>
+    </bean>
 
-	<bean id="properties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
-		<property name="ignoreResourceNotFound" value="true" />
-		<property name="locations">
-			<list>
-				<!-- Default configuration values -->
-				<value>classpath:default.properties</value>
-				<value>file:pgptool-gui-devmode.properties</value>
-			</list>
-		</property>
-	</bean>
+    <bean id="properties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+        <property name="ignoreResourceNotFound" value="true"/>
+        <property name="locations">
+            <list>
+                <!-- Default configuration values -->
+                <value>classpath:default.properties</value>
+                <value>file:pgptool-gui-devmode.properties</value>
+            </list>
+        </property>
+    </bean>
 
-	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
-		<property name="basenames">
-			<list>
-				<value>classpath:pgptool-gui-messages</value>
-				<value>classpath:summerb-messages</value>
-				<value>classpath:service-users-messages</value>
-				<value>classpath:security-messages</value>
-			</list>
-		</property>
-		<property name="cacheSeconds" value="60" />
-		<property name="defaultEncoding" value="UTF-8" />
-		<property name="fallbackToSystemLocale" value="true" />
-	</bean>
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <property name="basenames">
+            <list>
+                <value>classpath:pgptool-gui-messages</value>
+                <value>classpath:summerb-messages</value>
+                <value>classpath:service-users-messages</value>
+                <value>classpath:security-messages</value>
+            </list>
+        </property>
+        <property name="cacheSeconds" value="60"/>
+        <property name="defaultEncoding" value="UTF-8"/>
+        <property name="fallbackToSystemLocale" value="true"/>
+    </bean>
 
-	<bean id="executorService" class="java.util.concurrent.Executors" factory-method="newScheduledThreadPool" destroy-method="shutdownNow">
-		<constructor-arg value="4" />
-	</bean>
+    <bean id="executorService" class="java.util.concurrent.Executors" factory-method="newScheduledThreadPool"
+          destroy-method="shutdownNow">
+        <constructor-arg value="4"/>
+    </bean>
 
-	<context:annotation-config />
+    <context:annotation-config/>
 
-	<bean id="messages" class="org.pgptool.gui.app.Messages" />
-	<bean class="org.pgptool.gui.app.EntryPoint" depends-on="messages" />
-	<bean class="com.google.common.eventbus.EventBus" />
+    <bean id="messages" class="org.pgptool.gui.app.Messages"/>
+    <bean class="org.pgptool.gui.app.EntryPoint" depends-on="messages"/>
+    <bean class="com.google.common.eventbus.EventBus"/>
 
-	<bean id="configsBasePathResolver" class="org.pgptool.gui.config.impl.ConfigsBasePathResolverUserHomeImpl">
-		<property name="configFolderName" value="${configuration.configFolderName}" />
-	</bean>
+    <bean id="configsBasePathResolver" class="org.pgptool.gui.config.impl.ConfigsBasePathResolverUserHomeImpl">
+        <property name="configFolderName" value="${configuration.configFolderName}"/>
+    </bean>
 
-	<bean id="configRepository" class="org.pgptool.gui.config.impl.ConfigRepositoryImpl" />
-	<bean id="appProps" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
-		<constructor-arg value="app-props" />
-	</bean>
-	<bean id="encryptionParams" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
-		<constructor-arg value="encr-params" />
-	</bean>
-	<bean id="decryptionParams" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
-		<constructor-arg value="decr-params" />
-	</bean>
-	<bean id="monitoredDecrypted" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
-		<constructor-arg value="mon-decr" />
-	</bean>
-	<bean id="hintsProps" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
-		<constructor-arg value="hints" />
-	</bean>
-	<bean id="uiGeom" class="org.pgptool.gui.ui.tools.geometrymemory.ConfigPairsMonitorsDependentImpl">
-		<constructor-arg>
-			<bean class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
-				<constructor-arg value="uipos" />
-			</bean>
-		</constructor-arg>
-	</bean>
+    <bean id="configRepository" class="org.pgptool.gui.config.impl.ConfigRepositoryImpl"/>
+    <bean id="appProps" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
+        <constructor-arg value="app-props"/>
+    </bean>
+    <bean id="encryptionParams" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
+        <constructor-arg value="encr-params"/>
+    </bean>
+    <bean id="decryptionParams" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
+        <constructor-arg value="decr-params"/>
+    </bean>
+    <bean id="monitoredDecrypted" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
+        <constructor-arg value="mon-decr"/>
+    </bean>
+    <bean id="hintsProps" class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
+        <constructor-arg value="hints"/>
+    </bean>
+    <bean id="uiGeom" class="org.pgptool.gui.ui.tools.geometrymemory.ConfigPairsMonitorsDependentImpl">
+        <constructor-arg>
+            <bean class="org.pgptool.gui.configpairs.impl.ConfigPairsImpl">
+                <constructor-arg value="uipos"/>
+            </bean>
+        </constructor-arg>
+    </bean>
 
-	<bean class="org.pgptool.gui.filecomparison.MessageDigestFactoryImpl" />
-	<bean class="org.pgptool.gui.tempfolderfordecrypted.impl.DecryptedTempFolderImpl" />
-	<bean class="org.pgptool.gui.encryptionparams.impl.EncryptionParamsStorageImpl" />
+    <bean class="org.pgptool.gui.filecomparison.MessageDigestFactoryImpl"/>
+    <bean class="org.pgptool.gui.tempfolderfordecrypted.impl.DecryptedTempFolderImpl"/>
+    <bean class="org.pgptool.gui.encryptionparams.impl.EncryptionParamsStorageImpl"/>
 
-	<bean id="keyFilesOperations" class="org.pgptool.gui.encryption.implpgp.KeyFilesOperationsPgpImpl" />
-	<bean id="keyRingService" class="org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl" />
-	<bean id="encryptionService" class="org.pgptool.gui.encryption.implpgp.EncryptionServicePgpImpl" />
-	<bean id="keyGeneratorService" class="org.pgptool.gui.encryption.implpgp.KeyGeneratorServicePgpImpl">
-		<property name="masterKeyAlgorithm" value="${keygen.masterKey.algorithm}" />
-		<property name="masterKeyPurpose" value="${keygen.masterKey.purpose}" />
-		<property name="masterKeySize" value="${keygen.masterKey.size}" />
-		<property name="masterKeySignerAlgorithm" value="${keygen.masterKey.signer.signerAlgorithm}" />
-		<property name="masterKeySignerHashingAlgorithm" value="${keygen.masterKey.signer.hashingAlgorithm}" />
+    <bean id="keyFilesOperations" class="org.pgptool.gui.encryption.implpgp.KeyFilesOperationsPgpImpl"/>
+    <bean id="keyRingService" class="org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl"/>
+    <bean id="encryptionService" class="org.pgptool.gui.encryption.implpgp.EncryptionServicePgpImpl"/>
+    <bean id="keyGeneratorService" class="org.pgptool.gui.encryption.implpgp.KeyGeneratorServicePgpImpl">
+        <property name="masterKeyAlgorithm" value="${keygen.masterKey.algorithm}"/>
+        <property name="masterKeyPurpose" value="${keygen.masterKey.purpose}"/>
+        <property name="masterKeySize" value="${keygen.masterKey.size}"/>
+        <property name="masterKeySignerAlgorithm" value="${keygen.masterKey.signer.signerAlgorithm}"/>
+        <property name="masterKeySignerHashingAlgorithm" value="${keygen.masterKey.signer.hashingAlgorithm}"/>
 
-		<property name="secretKeyHashingAlgorithm" value="${keygen.secretKey.hashingAlgorithm}" />
-		<property name="secretKeyEncryptionAlgorithm" value="${keygen.secretKey.symmetricEncryptionAlgorithm}" />
+        <property name="secretKeyHashingAlgorithm" value="${keygen.secretKey.hashingAlgorithm}"/>
+        <property name="secretKeyEncryptionAlgorithm" value="${keygen.secretKey.symmetricEncryptionAlgorithm}"/>
 
-		<property name="encryptionKeyAlgorithm" value="${keygen.encryptionSubKey.algorithm}" />
-		<property name="dhParamsPrimeModulus">
-			<bean class="java.math.BigInteger">
-				<constructor-arg value="${keygen.encryptionSubKey.dhparams.primeModulus}" type="java.lang.String" />
-				<constructor-arg value="16" type="int" />
-			</bean>
-		</property>
-		<property name="dhParamsBaseGenerator">
-			<bean class="java.math.BigInteger">
-				<constructor-arg value="${keygen.encryptionSubKey.dhparams.baseGenerator}" type="java.lang.String" />
-				<constructor-arg value="16" type="int" />
-			</bean>
-		</property>
-		<property name="encryptionKeyPurpose" value="${keygen.encryptionSubKey.purpose}" />
-	</bean>
+        <property name="encryptionKeyAlgorithm" value="${keygen.encryptionSubKey.algorithm}"/>
+        <property name="dhParamsPrimeModulus">
+            <bean class="java.math.BigInteger">
+                <constructor-arg value="${keygen.encryptionSubKey.dhparams.primeModulus}" type="java.lang.String"/>
+                <constructor-arg value="16" type="int"/>
+            </bean>
+        </property>
+        <property name="dhParamsBaseGenerator">
+            <bean class="java.math.BigInteger">
+                <constructor-arg value="${keygen.encryptionSubKey.dhparams.baseGenerator}" type="java.lang.String"/>
+                <constructor-arg value="16" type="int"/>
+            </bean>
+        </property>
+        <property name="encryptionKeyPurpose" value="${keygen.encryptionSubKey.purpose}"/>
+    </bean>
 
-	<bean class="org.pgptool.gui.decryptedlist.impl.MonitoringDecryptedFilesServiceImpl" />
+    <bean class="org.pgptool.gui.decryptedlist.impl.MonitoringDecryptedFilesServiceImpl"/>
 
-	<!-- Views -->
-	<bean class="org.pgptool.gui.ui.root.RootPm" scope="singleton" />
+    <!-- Views -->
+    <bean class="org.pgptool.gui.ui.root.RootPm" scope="singleton"/>
 
-	<bean class="org.pgptool.gui.ui.mainframe.MainFramePm" scope="prototype" />
-	<bean class="org.pgptool.gui.ui.mainframe.MainFrameView" scope="prototype" />
-	<bean class="org.pgptool.gui.hintsforusage.ui.HintView" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.mainframe.MainFramePm" scope="prototype"/>
+    <bean class="org.pgptool.gui.ui.mainframe.MainFrameView" scope="prototype"/>
+    <bean class="org.pgptool.gui.hintsforusage.ui.HintView" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.hintsforusage.impl.HintsCoordinatorImpl" />
-	<bean class="org.pgptool.gui.hintsforusage.hints.CreateOrImportPrivateKeyHint" />
-	<bean class="org.pgptool.gui.hintsforusage.hints.MightNeedPublicKeysHint" />
-	<bean class="org.pgptool.gui.hintsforusage.hints.PrivateKeyBackupHint" />
-	<bean class="org.pgptool.gui.hintsforusage.hints.BuyMeCoffeeHint" />
+    <bean class="org.pgptool.gui.hintsforusage.impl.HintsCoordinatorImpl"/>
+    <bean class="org.pgptool.gui.hintsforusage.hints.CreateOrImportPrivateKeyHint"/>
+    <bean class="org.pgptool.gui.hintsforusage.hints.MightNeedPublicKeysHint"/>
+    <bean class="org.pgptool.gui.hintsforusage.hints.PrivateKeyBackupHint"/>
+    <bean class="org.pgptool.gui.hintsforusage.hints.BuyMeCoffeeHint"/>
 
-	<bean class="org.pgptool.gui.ui.about.AboutView" lazy-init="true" scope="singleton" />
-	<bean class="org.pgptool.gui.ui.about.AboutPm" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.about.AboutView" lazy-init="true" scope="singleton"/>
+    <bean class="org.pgptool.gui.ui.about.AboutPm" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.ui.importkey.KeyImporterView" lazy-init="true" scope="singleton" />
-	<bean class="org.pgptool.gui.ui.importkey.KeyImporterPm" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.importkey.KeyImporterView" lazy-init="true" scope="singleton"/>
+    <bean class="org.pgptool.gui.ui.importkey.KeyImporterPm" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.ui.keyslist.KeysListView" lazy-init="true" scope="singleton" />
-	<bean class="org.pgptool.gui.ui.keyslist.KeysListPm" scope="prototype" />
-	<bean class="org.pgptool.gui.ui.keyslist.KeysExporterUiImpl" />
+    <bean class="org.pgptool.gui.ui.keyslist.KeysListView" lazy-init="true" scope="singleton"/>
+    <bean class="org.pgptool.gui.ui.keyslist.KeysListPm" scope="prototype"/>
+    <bean class="org.pgptool.gui.ui.keyslist.KeysExporterUiImpl"/>
 
-	<bean class="org.pgptool.gui.ui.encryptone.EncryptOnePm" lazy-init="true" scope="prototype" />
-	<bean class="org.pgptool.gui.ui.encryptone.EncryptOneView" lazy-init="true" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.encryptone.EncryptOnePm" lazy-init="true" scope="prototype"/>
+    <bean class="org.pgptool.gui.ui.encryptone.EncryptOneView" lazy-init="true" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.ui.decryptone.DecryptOnePm" lazy-init="true" scope="prototype" />
-	<bean class="org.pgptool.gui.ui.decryptone.DecryptOneView" lazy-init="true" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.decryptone.DecryptOnePm" lazy-init="true" scope="prototype"/>
+    <bean class="org.pgptool.gui.ui.decryptone.DecryptOneView" lazy-init="true" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogPm" lazy-init="true" scope="prototype" />
-	<bean class="org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogView" lazy-init="true" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogPm" lazy-init="true" scope="prototype"/>
+    <bean class="org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogView" lazy-init="true" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.ui.tempfolderfordecrypted.TempFolderChooserPm" lazy-init="true" scope="singleton" />
+    <bean class="org.pgptool.gui.ui.tempfolderfordecrypted.TempFolderChooserPm" lazy-init="true" scope="singleton"/>
 
-	<bean class="org.pgptool.gui.ui.createkey.CreateKeyView" lazy-init="true" scope="singleton" />
-	<bean class="org.pgptool.gui.ui.createkey.CreateKeyPm" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.createkey.CreateKeyView" lazy-init="true" scope="singleton"/>
+    <bean class="org.pgptool.gui.ui.createkey.CreateKeyPm" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.ui.changekeypassword.ChangeKeyPasswordView" lazy-init="true" scope="singleton" />
-	<bean class="org.pgptool.gui.ui.changekeypassword.ChangeKeyPasswordPm" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.changekeypassword.ChangeKeyPasswordView" lazy-init="true" scope="singleton"/>
+    <bean class="org.pgptool.gui.ui.changekeypassword.ChangeKeyPasswordPm" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.ui.keyslist.KeysTableView" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.keyslist.KeysTableView" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleView" lazy-init="true" scope="singleton" />
-	<bean class="org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultiplePm" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleView" lazy-init="true" scope="singleton"/>
+    <bean class="org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultiplePm" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPm" scope="prototype" />
-	<bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordManyKeysView" scope="prototype" />
-	<bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordOneKeyView" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPm" scope="prototype"/>
+    <bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordManyKeysView" scope="prototype"/>
+    <bean class="org.pgptool.gui.ui.getkeypassword.GetKeyPasswordOneKeyView" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.ui.encrypttext.EncryptTextPm" lazy-init="true" scope="prototype" />
-	<bean class="org.pgptool.gui.ui.encrypttext.EncryptTextView" lazy-init="true" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.encrypttext.EncryptTextPm" lazy-init="true" scope="prototype"/>
+    <bean class="org.pgptool.gui.ui.encrypttext.EncryptTextView" lazy-init="true" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.ui.decrypttext.DecryptTextPm" lazy-init="true" scope="prototype" />
-	<bean class="org.pgptool.gui.ui.decrypttext.DecryptTextView" lazy-init="true" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.decrypttext.DecryptTextPm" lazy-init="true" scope="prototype"/>
+    <bean class="org.pgptool.gui.ui.decrypttext.DecryptTextView" lazy-init="true" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm" scope="prototype" />
-	<bean class="org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogView" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm" scope="prototype"/>
+    <bean class="org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogView" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesPm" lazy-init="true" />
-	<bean class="org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesView" scope="prototype" />
+    <bean class="org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesPm" lazy-init="true"/>
+    <bean class="org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesView" scope="prototype"/>
 
-	<bean class="org.pgptool.gui.ui.historyquicksearch.HistoryQuickSearchPm" scope="prototype" />
-	<bean class="org.pgptool.gui.ui.historyquicksearch.HistoryQuickSearchView" lazy-init="true" scope="singleton" />
+    <bean class="org.pgptool.gui.ui.historyquicksearch.HistoryQuickSearchPm" scope="prototype"/>
+    <bean class="org.pgptool.gui.ui.historyquicksearch.HistoryQuickSearchView" lazy-init="true" scope="singleton"/>
 
-	<bean class="org.pgptool.gui.autoupdate.impl.NewVersionCheckerGitHubImpl">
-		<property name="configuredVersion" value="${configuredVersion}" />
-	</bean>
+    <bean class="org.pgptool.gui.autoupdate.impl.NewVersionCheckerGitHubImpl">
+        <property name="configuredVersion" value="${configuredVersion}"/>
+    </bean>
 
-	<bean class="org.pgptool.gui.ui.checkForUpdates.UpdatesPolicy" />
-	<bean class="org.pgptool.gui.usage.api.Usage" />
+    <bean class="org.pgptool.gui.ui.checkForUpdates.UpdatesPolicy"/>
+    <bean class="org.pgptool.gui.usage.api.Usage"/>
 
 </beans>

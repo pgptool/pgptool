@@ -1,36 +1,30 @@
 package org.pgptool.gui.usage.api;
 
 import java.io.Serializable;
-
 import org.summerb.utils.DtoBase;
 
 public class UsageEvent implements DtoBase {
-	private static final long serialVersionUID = -2469884370085267887L;
+  private static final long serialVersionUID = -2469884370085267887L;
 
-	/**
-	 * Event parameters
-	 */
-	private Serializable p;
+  /** Event parameters */
+  private Serializable p;
 
-	/**
-	 * @deprecated do not use this manually. Empty constructor is only for IO
-	 *             purposes
-	 */
-	@Deprecated
-	public UsageEvent() {
-	}
+  /**
+   * @deprecated do not use this manually. Empty constructor is only for IO purposes
+   */
+  @Deprecated
+  public UsageEvent() {}
 
-	public UsageEvent(Serializable parameters) {
-		super();
-		this.p = parameters;
-	}
+  public UsageEvent(Serializable parameters) {
+    super();
+    this.p = parameters;
+  }
 
-	public Serializable getP() {
-		return p;
-	}
+  public Serializable getP() {
+    return p;
+  }
 
-	public void setP(Serializable parameters) {
-		this.p = parameters;
-	}
-
+  public void setP(Serializable parameters) {
+    this.p = parameters;
+  }
 }

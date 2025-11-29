@@ -1,24 +1,23 @@
 /*******************************************************************************
  * PGPTool is a desktop application for pgp encryption/decryption
  * Copyright (C) 2019 Sergey Karpushin
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  ******************************************************************************/
 package org.pgptool.gui.ui.tools;
 
 import java.awt.event.ActionEvent;
-
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JPopupMenu;
@@ -31,126 +30,134 @@ import javax.swing.text.TextAction;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
-
 import org.pgptool.gui.app.Messages;
 
 public class TextEditUxUtils {
 
-	public static class Cut extends TextAction {
-		private static final long serialVersionUID = 1L;
-		private JTextComponent component;
+  public static class Cut extends TextAction {
+    private static final long serialVersionUID = 1L;
+    private JTextComponent component;
 
-		public Cut(JTextComponent component) {
-			super(Messages.get("text.edit.cut"));
-			this.component = component;
-			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
-		}
+    public Cut(JTextComponent component) {
+      super(Messages.get("text.edit.cut"));
+      this.component = component;
+      putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
+    }
 
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			component.cut();
-		}
-	}
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      component.cut();
+    }
+  }
 
-	public static class Copy extends TextAction {
-		private static final long serialVersionUID = 1L;
-		private JTextComponent component;
+  public static class Copy extends TextAction {
+    private static final long serialVersionUID = 1L;
+    private JTextComponent component;
 
-		public Copy(JTextComponent component) {
-			super(Messages.get("text.edit.copy"));
-			this.component = component;
-			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
-		}
+    public Copy(JTextComponent component) {
+      super(Messages.get("text.edit.copy"));
+      this.component = component;
+      putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
+    }
 
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			component.copy();
-		}
-	}
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      component.copy();
+    }
+  }
 
-	public static class Paste extends TextAction {
-		private static final long serialVersionUID = 1L;
-		private JTextComponent component;
+  public static class Paste extends TextAction {
+    private static final long serialVersionUID = 1L;
+    private JTextComponent component;
 
-		public Paste(JTextComponent component) {
-			super(Messages.get("text.edit.paste"));
-			this.component = component;
-			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
-		}
+    public Paste(JTextComponent component) {
+      super(Messages.get("text.edit.paste"));
+      this.component = component;
+      putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
+    }
 
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			component.paste();
-		}
-	}
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      component.paste();
+    }
+  }
 
-	public static class SelectAll extends TextAction {
-		private static final long serialVersionUID = 1L;
-		private JTextComponent component;
+  public static class SelectAll extends TextAction {
+    private static final long serialVersionUID = 1L;
+    private JTextComponent component;
 
-		public SelectAll(JTextComponent component) {
-			super(Messages.get("text.edit.selectAll"));
-			this.component = component;
-			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control A"));
-		}
+    public SelectAll(JTextComponent component) {
+      super(Messages.get("text.edit.selectAll"));
+      this.component = component;
+      putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control A"));
+    }
 
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			component.selectAll();
-			component.requestFocusInWindow();
-		}
-	}
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      component.selectAll();
+      component.requestFocusInWindow();
+    }
+  }
 
-	public static void setCommonTextEditorActions(JTextComponent textComponent) {
-		JPopupMenu menu = new JPopupMenu();
-		menu.add(new Cut(textComponent));
-		menu.add(new Copy(textComponent));
-		menu.add(new Paste(textComponent));
-		menu.addSeparator();
-		menu.add(new SelectAll(textComponent));
-		textComponent.setComponentPopupMenu(menu);
+  public static void setCommonTextEditorActions(JTextComponent textComponent) {
+    JPopupMenu menu = new JPopupMenu();
+    menu.add(new Cut(textComponent));
+    menu.add(new Copy(textComponent));
+    menu.add(new Paste(textComponent));
+    menu.addSeparator();
+    menu.add(new SelectAll(textComponent));
+    textComponent.setComponentPopupMenu(menu);
 
-		setHistoryActions(textComponent);
-	}
+    setHistoryActions(textComponent);
+  }
 
-	private static void setHistoryActions(JTextComponent textComponent) {
-		Document doc = textComponent.getDocument();
-		UndoManager undo = new UndoManager();
-		doc.addUndoableEditListener(new UndoableEditListener() {
-			@Override
-			public void undoableEditHappened(UndoableEditEvent evt) {
-				undo.addEdit(evt.getEdit());
-			}
-		});
+  private static void setHistoryActions(JTextComponent textComponent) {
+    Document doc = textComponent.getDocument();
+    UndoManager undo = new UndoManager();
+    doc.addUndoableEditListener(
+        new UndoableEditListener() {
+          @Override
+          public void undoableEditHappened(UndoableEditEvent evt) {
+            undo.addEdit(evt.getEdit());
+          }
+        });
 
-		textComponent.getActionMap().put("Undo", new AbstractAction("Undo") {
-			private static final long serialVersionUID = 2048749213313143683L;
+    textComponent
+        .getActionMap()
+        .put(
+            "Undo",
+            new AbstractAction("Undo") {
+              private static final long serialVersionUID = 2048749213313143683L;
 
-			@Override
-			public void actionPerformed(ActionEvent evt) {
-				try {
-					if (undo.canUndo()) {
-						undo.undo();
-					}
-				} catch (CannotUndoException e) {
-				}
-			}
-		});
-		textComponent.getInputMap().put(KeyStroke.getKeyStroke("control Z"), "Undo");
+              @Override
+              public void actionPerformed(ActionEvent evt) {
+                try {
+                  if (undo.canUndo()) {
+                    undo.undo();
+                  }
+                } catch (CannotUndoException e) {
+                }
+              }
+            });
+    textComponent.getInputMap().put(KeyStroke.getKeyStroke("control Z"), "Undo");
 
-		textComponent.getActionMap().put("Redo", new AbstractAction("Redo") {
-			private static final long serialVersionUID = 2048749213313143683L;
+    textComponent
+        .getActionMap()
+        .put(
+            "Redo",
+            new AbstractAction("Redo") {
+              private static final long serialVersionUID = 2048749213313143683L;
 
-			@Override
-			public void actionPerformed(ActionEvent evt) {
-				try {
-					if (undo.canRedo()) {
-						undo.redo();
-					}
-				} catch (CannotRedoException e) {
-				}
-			}
-		});
-		textComponent.getInputMap().put(KeyStroke.getKeyStroke("control Y"), "Redo");
-	}
+              @Override
+              public void actionPerformed(ActionEvent evt) {
+                try {
+                  if (undo.canRedo()) {
+                    undo.redo();
+                  }
+                } catch (CannotRedoException e) {
+                }
+              }
+            });
+    textComponent.getInputMap().put(KeyStroke.getKeyStroke("control Y"), "Redo");
+  }
 }

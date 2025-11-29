@@ -17,29 +17,29 @@
  ******************************************************************************/
 package org.pgptool.gui.encryption.implpgp;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import integr.org.pgptool.gui.TestTools;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.pgptool.gui.encryption.api.dto.Key;
 
 public class KeyFilesOperationsPgpImplTest {
   private static String tempFolder;
 
-  @BeforeClass
+  @BeforeAll
   public static void beforeAll() {
     tempFolder = TestTools.getTempDir();
   }
 
-  @AfterClass
+  @AfterAll
   public static void afterAll() throws IOException {
     FileUtils.deleteDirectory(new File(tempFolder));
   }
@@ -131,6 +131,6 @@ public class KeyFilesOperationsPgpImplTest {
         fixture.readKeysFromFile(
             new File(TestTools.getFileNameForResource("keys/public-and-private.asc")));
     assertEquals(1, keys.size());
-    assertEquals(true, keys.get(0).getKeyData().isCanBeUsedForDecryption());
+    assertTrue(keys.get(0).getKeyData().isCanBeUsedForDecryption());
   }
 }

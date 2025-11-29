@@ -17,8 +17,6 @@
  ******************************************************************************/
 package org.pgptool.gui.tempfolderfordecrypted.api;
 
-import org.summerb.validation.FieldValidationException;
-
 /**
  * This interface provides methods to work with temporary folder for temporarily decrypted files
  *
@@ -27,5 +25,5 @@ import org.summerb.validation.FieldValidationException;
 public interface DecryptedTempFolder {
   String getTempFolderBasePath();
 
-  void setTempFolderBasePath(String newValue) throws FieldValidationException;
+  void setTempFolderBasePath(String newValue);
 }

@@ -7,7 +7,6 @@ import javax.swing.JFrame;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.ui.root.RootPm;
 import org.pgptool.gui.ui.tools.UiUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 
 /**
@@ -15,10 +14,8 @@ import ru.skarpushin.swingpm.base.PresentationModelBase;
  * @param <P> Parameter Object type used to initialize the PresentationModelBase via calling {@link
  *     #init(ActionEvent, Object, Object)}
  */
-public class PresentationModelBaseEx<H, P> extends PresentationModelBase {
-  private Logger log = Logger.getLogger(getClass());
-
-  @Autowired private RootPm rootPm;
+public class PresentationModelBaseEx<H, P> extends PresentationModelBase<H, P> {
+  private final Logger log = Logger.getLogger(getClass());
 
   /** Action that resulted in invocation of this PresentationModelBase */
   protected ActionEvent originAction;
@@ -43,7 +40,7 @@ public class PresentationModelBaseEx<H, P> extends PresentationModelBase {
       }
     }
 
-    ret = rootPm.findMainFrameWindow();
+    ret = RootPm.INSTANCE.findMainFrameWindow();
     if (ret != null && ret.isVisible()) {
       log.debug("findRegisteredWindowIfAny returning window from rootPm: " + getWindowName(ret));
       return ret;

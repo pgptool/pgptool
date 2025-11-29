@@ -136,7 +136,9 @@ public class BindingContext {
   }
 
   public void setupBinding(
-      Action action, ModelPropertyAccessor<Boolean> booleanProperty, JToggleButton toggleButton) {
-    add(new ToggleButtonBinding(action, booleanProperty, toggleButton));
+      Action optionalAction,
+      ModelPropertyAccessor<Boolean> booleanProperty,
+      JToggleButton toggleButton) {
+    add(new ToggleButtonBinding(optionalAction, booleanProperty, toggleButton));
   }
 }

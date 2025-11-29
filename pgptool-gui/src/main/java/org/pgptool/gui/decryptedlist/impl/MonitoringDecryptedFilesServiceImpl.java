@@ -36,27 +36,30 @@ import org.pgptool.gui.tools.fileswatcher.FilesWatcherHandler;
 import org.pgptool.gui.tools.fileswatcher.MultipleFilesWatcher;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class MonitoringDecryptedFilesServiceImpl
     implements MonitoringDecryptedFilesService, InitializingBean, DisposableBean {
-  private static Logger log = Logger.getLogger(MonitoringDecryptedFilesServiceImpl.class);
+  private static final Logger log = Logger.getLogger(MonitoringDecryptedFilesServiceImpl.class);
 
   protected static final long TIME_TO_ENSURE_FILE_WAS_DELETED_MS = 2000;
 
   public static final String PREFIX = "decrhist:";
 
-  @Autowired private ConfigPairs monitoredDecrypted;
+  private final ConfigPairs monitoredDecrypted;
 
   private MultipleFilesWatcher multipleFilesWatcher;
 
-  private Cache<String, DecryptedFile> recentlyRemoved =
+  private final Cache<String, DecryptedFile> recentlyRemoved =
       CacheBuilder.newBuilder()
           .expireAfterWrite(TIME_TO_ENSURE_FILE_WAS_DELETED_MS, TimeUnit.MILLISECONDS)
           .build();
 
+  public MonitoringDecryptedFilesServiceImpl(ConfigPairs monitoredDecrypted) {
+    this.monitoredDecrypted = monitoredDecrypted;
+  }
+
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     setupFileWatcher();
   }
 
@@ -83,7 +86,7 @@ public class MonitoringDecryptedFilesServiceImpl
     multipleFilesWatcher.stopWatcher();
   }
 
-  private FilesWatcherHandler dirWatcherHandler =
+  private final FilesWatcherHandler dirWatcherHandler =
       new FilesWatcherHandler() {
         @Override
         public void handleFileChanged(Kind<?> operation, String fileAbsolutePathname) {

@@ -21,9 +21,9 @@ import org.pgptool.gui.configpairs.api.ConfigPairs;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
 
 public class ValueAdapterPersistentPropertyImpl<T> implements ValueAdapter<T> {
-  private ConfigPairs configPairs;
-  private String propertyName;
-  private T defaultValue;
+  private final ConfigPairs configPairs;
+  private final String propertyName;
+  private final T defaultValue;
 
   public ValueAdapterPersistentPropertyImpl(
       ConfigPairs configPairs, String propertyName, T defaultValue) {

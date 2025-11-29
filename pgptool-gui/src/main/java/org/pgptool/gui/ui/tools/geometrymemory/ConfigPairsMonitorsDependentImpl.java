@@ -39,7 +39,7 @@ public class ConfigPairsMonitorsDependentImpl implements ConfigPairs {
   // private static Logger log =
   // Logger.getLogger(ConfigPairsMonitorsDependentImpl.class);
 
-  private ConfigPairs configPairs;
+  private final ConfigPairs configPairs;
 
   public ConfigPairsMonitorsDependentImpl(ConfigPairs configPairs) {
     Preconditions.checkArgument(configPairs != null);
@@ -52,7 +52,7 @@ public class ConfigPairsMonitorsDependentImpl implements ConfigPairs {
     GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
     for (GraphicsDevice gd : ge.getScreenDevices()) {
       DisplayMode dm = gd.getDisplayMode();
-      if (sb.length() > 0) {
+      if (!sb.isEmpty()) {
         sb.append(",");
       }
       sb.append("\'");

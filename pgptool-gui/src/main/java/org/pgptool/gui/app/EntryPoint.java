@@ -44,11 +44,10 @@ import org.pgptool.gui.ui.tools.BindingContextFactoryImpl;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.api.UsageLoggerNoOpImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 import ru.skarpushin.swingpm.tools.SwingPmSettings;
 import ru.skarpushin.swingpm.tools.edt.Edt;
 
@@ -58,10 +57,7 @@ public class EntryPoint {
   public static UsageLogger usageLoggerStatic = new UsageLoggerNoOpImpl();
 
   private static AbstractApplicationContext currentApplicationContext;
-  private RootPm rootPm;
-  private static SingleInstance singleInstance;
-  private static Queue<String[]> postponedArgsFromSecondaryInstances = new ArrayDeque<>();
-  public static RootPm rootPmStatic;
+  private static final Queue<String[]> postponedArgsFromSecondaryInstances = new ArrayDeque<>();
 
   public static void main(String[] args) {
     DOMConfigurator.configure(
@@ -81,8 +77,7 @@ public class EntryPoint {
       SwingPmSettings.setBindingContextFactory(new BindingContextFactoryImpl());
 
       // Startup application context
-      String[] contextPaths = new String[] {"app-context.xml"};
-      currentApplicationContext = new ClassPathXmlApplicationContext(contextPaths);
+      currentApplicationContext = new AnnotationConfigApplicationContext("org.pgptool.gui");
       log.debug("App context loaded");
       LocaleContextHolder.setLocale(new Locale(System.getProperty("user.language")));
       currentApplicationContext.registerShutdownHook();
@@ -96,9 +91,8 @@ public class EntryPoint {
       splashScreenView.close();
       splashScreenView = null;
       entryPoint.startUp(args);
-      rootPmStatic = entryPoint.getRootPm();
       log.debug("RootPM bean resolved");
-      processPendingArgsIfAny(rootPmStatic);
+      processPendingArgsIfAny(RootPm.INSTANCE);
     } catch (Throwable t) {
       log.error("Failed to startup application", t);
       reportAppInitFailureMessageToUser(determineWindowForGeneralFailure(splashScreenView), t);
@@ -112,8 +106,8 @@ public class EntryPoint {
   }
 
   private static Window determineWindowForGeneralFailure(SplashScreenView splashScreenView) {
-    if (rootPmStatic != null) {
-      return rootPmStatic.findMainFrameWindow();
+    if (RootPm.INSTANCE != null) {
+      return RootPm.INSTANCE.findMainFrameWindow();
     }
 
     if (splashScreenView != null) {
@@ -149,7 +143,7 @@ public class EntryPoint {
   }
 
   private static boolean isContinueStartupSequence(String[] args) {
-    singleInstance = new SingleInstanceFileBasedImpl("pgptool-si");
+    SingleInstance singleInstance = new SingleInstanceFileBasedImpl("pgptool-si");
     if (!singleInstance.tryClaimPrimaryInstanceRole(primaryInstanceListener)) {
       boolean result = singleInstance.sendArgumentsToOtherInstance(args);
       if (result) {
@@ -167,17 +161,17 @@ public class EntryPoint {
     return true;
   }
 
-  private static PrimaryInstanceListener primaryInstanceListener =
+  private static final PrimaryInstanceListener primaryInstanceListener =
       new PrimaryInstanceListener() {
         @Override
         public void handleArgsFromOtherInstance(String[] args) {
-          if (rootPmStatic != null) {
+          if (RootPm.INSTANCE != null) {
             log.debug("Processing arguments from secondary instance: " + Arrays.toString(args));
             Edt.invokeOnEdtAsync(
                 new Runnable() {
                   @Override
                   public void run() {
-                    rootPmStatic.processCommandLine(args);
+                    RootPm.INSTANCE.processCommandLine(args);
                   }
                 });
           } else {
@@ -193,7 +187,7 @@ public class EntryPoint {
   }
 
   private void startUp(String[] args) {
-    rootPm.present(args);
+    RootPm.INSTANCE.present(args);
     log.debug("entryPoint.startUp() finished");
   }
 
@@ -206,15 +200,6 @@ public class EntryPoint {
     } catch (Throwable t) {
       log.error("Failed to tear down context", t);
     }
-  }
-
-  public RootPm getRootPm() {
-    return rootPm;
-  }
-
-  @Autowired
-  public void setRootPm(RootPm rootPm) {
-    this.rootPm = rootPm;
   }
 
   private static void reportAppInitFailureMessageToUser(Window window, Throwable t) {

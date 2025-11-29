@@ -27,16 +27,16 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.log4j.Logger;
 
 public class ChecksumCalcInputStream extends FilterInputStream {
-  private static Logger log = Logger.getLogger(ChecksumCalcInputStream.class);
+  private static final Logger log = Logger.getLogger(ChecksumCalcInputStream.class);
 
   private long size;
   private long mark = -1;
   private MessageDigest messageDigestMark;
 
   private MessageDigest messageDigest;
-  private String fileName;
+  private final String fileName;
   private boolean closed = false;
-  private CompletableFuture<Fingerprint> reportTo;
+  private final CompletableFuture<Fingerprint> reportTo;
 
   public ChecksumCalcInputStream(
       MessageDigest messageDigest, String fileName, CompletableFuture<Fingerprint> reportTo)

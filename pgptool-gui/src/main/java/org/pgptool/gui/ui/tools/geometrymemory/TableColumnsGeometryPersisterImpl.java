@@ -38,9 +38,9 @@ public class TableColumnsGeometryPersisterImpl
   private static final long DELAY = 500;
   private static final TimeUnit DELAY_TIME_UNIT = TimeUnit.MILLISECONDS;
 
-  private ConfigPairs configPairs;
-  private ScheduledExecutorService scheduledExecutorService;
-  private String keyId;
+  private final ConfigPairs configPairs;
+  private final ScheduledExecutorService scheduledExecutorService;
+  private final String keyId;
   private JTable table;
 
   private ArrayList<Pair<Integer, Integer>> prevColumnsConfig;

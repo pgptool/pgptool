@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.pgptool.gui.hintsforusage.hints;
 
+import static org.summerb.utils.easycrud.api.dto.EntityChangedEvent.*;
+
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import java.awt.Desktop;
@@ -35,35 +37,48 @@ import org.pgptool.gui.hintsforusage.ui.HintPm;
 import org.pgptool.gui.ui.root.GlobalAppActions;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.easycrud.api.dto.EntityChangedEvent;
-import org.summerb.easycrud.api.dto.EntityChangedEvent.ChangeType;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 
-@SuppressWarnings("serial")
 public class MightNeedPublicKeysHint extends HintPm implements InitializingBean {
   private static final String CONFIG_SUPPRESS_HINT = "MightNeedPublicKeysHint.supress";
 
-  @Autowired private ConfigPairs hintsProps;
-  @Autowired private HintsCoordinator hintsCoordinator;
-  @Autowired private EventBus eventBus;
-  @Autowired private KeyRingService keyRingService;
-  @Autowired private GlobalAppActions globalAppActions;
-  @Autowired private ExecutorService executorService;
+  private final ConfigPairs hintsProps;
+  private final HintsCoordinator hintsCoordinator;
+  private final EventBus eventBus;
+  private final KeyRingService keyRingService;
+  private final GlobalAppActions globalAppActions;
+  private final ExecutorService executorService;
+
+  public MightNeedPublicKeysHint(
+      ConfigPairs hintsProps,
+      HintsCoordinator hintsCoordinator,
+      EventBus eventBus,
+      KeyRingService keyRingService,
+      GlobalAppActions globalAppActions,
+      ExecutorService executorService) {
+    this.hintsProps = hintsProps;
+    this.hintsCoordinator = hintsCoordinator;
+    this.eventBus = eventBus;
+    this.keyRingService = keyRingService;
+    this.globalAppActions = globalAppActions;
+    this.executorService = executorService;
+  }
 
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     setMessage(Messages.text("hint.needPublicKeys"));
     eventBus.register(this);
     executorService.execute(think);
   }
 
-  private Runnable think =
-      () -> {
-        if (isHintApplicable()
-            && !hintsCoordinator.isHintScheduled(CreateOrImportPrivateKeyHint.class)) {
-          hintsCoordinator.scheduleHint(this);
-        }
-      };
+  private final Runnable think = this::doThink;
+
+  private void doThink() {
+    if (isHintApplicable()
+        && !hintsCoordinator.isHintScheduled(CreateOrImportPrivateKeyHint.class)) {
+      hintsCoordinator.scheduleHint(this);
+    }
+  }
 
   private boolean isHintApplicable() {
     if (hintsProps.find(CONFIG_SUPPRESS_HINT, false)) {
@@ -108,7 +123,7 @@ public class MightNeedPublicKeysHint extends HintPm implements InitializingBean 
     }
   }
 
-  private Action actionTellMeMore =
+  private final Action actionTellMeMore =
       new LocalizedActionEx("action.openFaq", this) {
         @Override
         public void actionPerformed(ActionEvent e) {

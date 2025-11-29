@@ -36,7 +36,7 @@ public class TextEditUxUtils {
 
   public static class Cut extends TextAction {
     private static final long serialVersionUID = 1L;
-    private JTextComponent component;
+    private final JTextComponent component;
 
     public Cut(JTextComponent component) {
       super(Messages.get("text.edit.cut"));
@@ -52,7 +52,7 @@ public class TextEditUxUtils {
 
   public static class Copy extends TextAction {
     private static final long serialVersionUID = 1L;
-    private JTextComponent component;
+    private final JTextComponent component;
 
     public Copy(JTextComponent component) {
       super(Messages.get("text.edit.copy"));
@@ -68,7 +68,7 @@ public class TextEditUxUtils {
 
   public static class Paste extends TextAction {
     private static final long serialVersionUID = 1L;
-    private JTextComponent component;
+    private final JTextComponent component;
 
     public Paste(JTextComponent component) {
       super(Messages.get("text.edit.paste"));
@@ -84,7 +84,7 @@ public class TextEditUxUtils {
 
   public static class SelectAll extends TextAction {
     private static final long serialVersionUID = 1L;
-    private JTextComponent component;
+    private final JTextComponent component;
 
     public SelectAll(JTextComponent component) {
       super(Messages.get("text.edit.selectAll"));

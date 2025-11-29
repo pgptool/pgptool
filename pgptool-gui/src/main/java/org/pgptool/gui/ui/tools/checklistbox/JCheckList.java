@@ -57,13 +57,13 @@ public class JCheckList<E> extends JList<E> {
    *
    * <p>TBD: Maybe refactor it someday
    */
-  private List<Integer> recentSelection = new ArrayList<>();
+  private final List<Integer> recentSelection = new ArrayList<>();
 
   public JCheckList() {
     super();
     setCheckState(null);
 
-    setCellRenderer(new CheckListCellRenderer<E>(x -> getCheckState().contains(x)));
+    setCellRenderer(new CheckListCellRenderer<>(x -> getCheckState().contains(x)));
     addListSelectionListener(selectionTracker);
     addMouseListener(mouseListener);
     addSpaceActionhandler(this);
@@ -184,8 +184,8 @@ public class JCheckList<E> extends JList<E> {
     repaint(rect);
   }
 
-  private ListExEventListener<E> checkStateListener =
-      new ListExEventListener<E>() {
+  private final ListExEventListener<E> checkStateListener =
+      new ListExEventListener<>() {
         @Override
         public void onItemAdded(E item, int atIndex) {
           repaintRowForItem(item);

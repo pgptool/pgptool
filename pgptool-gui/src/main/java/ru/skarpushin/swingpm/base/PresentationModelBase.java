@@ -11,7 +11,6 @@ import org.pgptool.gui.ui.root.RootPm;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @param <H> type of host
@@ -26,7 +25,6 @@ public class PresentationModelBase<H, P> implements PresentationModel {
   protected H host;
   protected P initParams;
   protected List<View<?>> views = new ArrayList<>();
-  @Autowired private RootPm rootPm;
 
   @Override
   public boolean isAttached() {
@@ -66,7 +64,7 @@ public class PresentationModelBase<H, P> implements PresentationModel {
       }
     }
 
-    Window ret = rootPm.findMainFrameWindow();
+    Window ret = RootPm.INSTANCE.findMainFrameWindow();
     if (ret != null && ret.isVisible()) {
       log.debug("findRegisteredWindowIfAny returning window from rootPm: {}", getWindowName(ret));
       return ret;

@@ -66,7 +66,6 @@ import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.EncryptBackAllIterationUsage;
 import org.pgptool.gui.usage.dto.EncryptBackAllUsage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.summerb.utils.objectcopy.DeepCopy;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
@@ -74,17 +73,17 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class EncryptBackMultiplePm
     extends PresentationModelBaseEx<EncryptBackMultipleHost, Set<String>> {
-  private static Logger log = Logger.getLogger(EncryptBackMultiplePm.class);
+  private static final Logger log = Logger.getLogger(EncryptBackMultiplePm.class);
 
-  @Autowired private EncryptionParamsStorage encryptionParamsStorage;
-  @Autowired private ConfigPairs appProps;
-  @Autowired private KeyRingService keyRingService;
-  @Autowired private EncryptionService encryptionService;
-  @Autowired private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
-  @Autowired private MessageDigestFactory messageDigestFactory;
-  @Autowired private UsageLogger usageLogger;
+  private final EncryptionParamsStorage encryptionParamsStorage;
+  private final ConfigPairs appProps;
+  private final KeyRingService keyRingService;
+  private final EncryptionService encryptionService;
+  private final MonitoringDecryptedFilesService monitoringDecryptedFilesService;
+  private final MessageDigestFactory messageDigestFactory;
+  private final UsageLogger usageLogger;
 
-  private Map<String, EncryptionDialogParameters> mapFileToEncryptionParams = new HashMap<>();
+  private final Map<String, EncryptionDialogParameters> mapFileToEncryptionParams = new HashMap<>();
 
   private ModelProperty<String> sourceFilesSummary;
   private ModelProperty<String> recipientsSummary;
@@ -98,13 +97,30 @@ public class EncryptBackMultiplePm
   private ModelProperty<String> progressNote;
   private ModelProperty<Boolean> isDisableControls;
 
+  public EncryptBackMultiplePm(
+      EncryptionParamsStorage encryptionParamsStorage,
+      ConfigPairs appProps,
+      KeyRingService keyRingService,
+      EncryptionService encryptionService,
+      MonitoringDecryptedFilesService monitoringDecryptedFilesService,
+      MessageDigestFactory messageDigestFactory,
+      UsageLogger usageLogger) {
+    this.encryptionParamsStorage = encryptionParamsStorage;
+    this.appProps = appProps;
+    this.keyRingService = keyRingService;
+    this.encryptionService = encryptionService;
+    this.monitoringDecryptedFilesService = monitoringDecryptedFilesService;
+    this.messageDigestFactory = messageDigestFactory;
+    this.usageLogger = usageLogger;
+  }
+
   @Override
   public boolean init(
       ActionEvent originAction, EncryptBackMultipleHost host, Set<String> decryptedFiles) {
     super.init(originAction, host, decryptedFiles);
     Preconditions.checkArgument(host != null, "host required");
     Preconditions.checkArgument(
-        decryptedFiles != null && decryptedFiles.size() > 0,
+        decryptedFiles != null && !decryptedFiles.isEmpty(),
         "decryptedFiles array must not be empty");
 
     if (!doWeHaveKeysToEncryptWith()) {
@@ -198,7 +214,6 @@ public class EncryptBackMultiplePm
     return allRecipients;
   }
 
-  @SuppressWarnings("serial")
   protected final Action actionDoOperation =
       new LocalizedActionEx("action.encrypt", this) {
         @Override
@@ -210,7 +225,6 @@ public class EncryptBackMultiplePm
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionCancel =
       new LocalizedActionEx("action.cancel", this) {
         @Override
@@ -232,7 +246,7 @@ public class EncryptBackMultiplePm
     public Multimap<EncryptBackResult, String> categories = ArrayListMultimap.create();
   }
 
-  private Thread encryptionThread =
+  private final Thread encryptionThread =
       new Thread("BkgOpEncryptBackAll") {
         private int totalFiles = 0;
         private int filesProcessed = 0;
@@ -271,7 +285,7 @@ public class EncryptBackMultiplePm
           }
         }
 
-        private ProgressHandler progressHandler =
+        private final ProgressHandler progressHandler =
             new ProgressHandler() {
               @Override
               public void onProgressUpdated(Progress progress) {
@@ -352,7 +366,7 @@ public class EncryptBackMultiplePm
             Collection<Key> recipients =
                 keyRingService.findMatchingKeys(
                     new HashSet<>(encryptionParams.getRecipientsKeysIds()));
-            Preconditions.checkState(recipients.size() > 0, text("error.noRecipientsFound"));
+            Preconditions.checkState(!recipients.isEmpty(), text("error.noRecipientsFound"));
 
             // Check if changed
             DecryptedFile decryptedFileDto =
@@ -470,14 +484,14 @@ public class EncryptBackMultiplePm
           }
           sb.append("\n");
 
-          if (ret.warnings.size() > 0) {
+          if (!ret.warnings.isEmpty()) {
             sb.append("\n");
             sb.append(text("term.warnings").toUpperCase());
             sb.append("\n");
             listExceptions(ret.warnings, sb);
           }
 
-          if (ret.errors.size() > 0) {
+          if (!ret.errors.isEmpty()) {
             sb.append("\n");
             sb.append(text("term.errors").toUpperCase());
             sb.append("\n");

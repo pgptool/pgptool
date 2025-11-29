@@ -35,13 +35,10 @@ import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordOneKeyView;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPm;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.swingpm.DialogViewBaseEx;
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import ru.skarpushin.swingpm.base.ViewBase;
 
-public class GetKeyPasswordDialogView extends DialogViewBaseEx<GetKeyPasswordDialogPm>
-    implements ApplicationContextAware {
+public class GetKeyPasswordDialogView extends DialogViewBaseEx<GetKeyPasswordDialogPm> {
   private ViewBase<GetKeyPasswordPm> passwordView;
 
   private JPanel pnl;
@@ -50,7 +47,11 @@ public class GetKeyPasswordDialogView extends DialogViewBaseEx<GetKeyPasswordDia
   private JButton buttonOk;
   private Component requestFocusFor;
 
-  private ApplicationContext applicationContext;
+  private final ApplicationContext applicationContext;
+
+  public GetKeyPasswordDialogView(ApplicationContext applicationContext) {
+    this.applicationContext = applicationContext;
+  }
 
   @Override
   protected void internalInitComponents() {
@@ -62,13 +63,11 @@ public class GetKeyPasswordDialogView extends DialogViewBaseEx<GetKeyPasswordDia
     super.internalBindToPm();
 
     getPasswordView().renderTo(pnl, BorderLayout.CENTER);
-    if (getPasswordView() instanceof GetKeyPasswordOneKeyView) {
-      GetKeyPasswordOneKeyView subView = (GetKeyPasswordOneKeyView) getPasswordView();
+    if (getPasswordView() instanceof GetKeyPasswordOneKeyView subView) {
       buttonCancel = subView.btnCancel;
       buttonOk = subView.btnPerformOperation;
       requestFocusFor = subView.edPassword;
-    } else if (getPasswordView() instanceof GetKeyPasswordManyKeysView) {
-      GetKeyPasswordManyKeysView subView = (GetKeyPasswordManyKeysView) getPasswordView();
+    } else if (getPasswordView() instanceof GetKeyPasswordManyKeysView subView) {
       buttonCancel = subView.btnCancel;
       buttonOk = subView.btnPerformOperation;
       requestFocusFor = subView.edPassword;
@@ -123,11 +122,6 @@ public class GetKeyPasswordDialogView extends DialogViewBaseEx<GetKeyPasswordDia
   @Override
   protected void dispatchWindowCloseEvent(ActionEvent originAction) {
     buttonCancel.getAction().actionPerformed(originAction);
-  }
-
-  @Override
-  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-    this.applicationContext = applicationContext;
   }
 
   public ViewBase<GetKeyPasswordPm> getPasswordView() {

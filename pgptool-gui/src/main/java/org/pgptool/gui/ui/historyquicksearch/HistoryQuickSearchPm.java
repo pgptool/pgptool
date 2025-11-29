@@ -45,21 +45,20 @@ import org.pgptool.gui.ui.decryptone.DecryptionDialogParameters;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
-import org.summerb.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSearchHost, Void>
     implements InitializingBean {
-  private static Logger log = Logger.getLogger(HistoryQuickSearchPm.class);
+  private static final Logger log = Logger.getLogger(HistoryQuickSearchPm.class);
 
-  private EventBus eventBus;
-  private ExecutorService executorService;
-  @Autowired private ConfigPairs decryptionParams;
+  private final EventBus eventBus;
+  private final ExecutorService executorService;
+  private final ConfigPairs decryptionParams;
 
   @SuppressWarnings("rawtypes")
   private Future refreshRecentlyUsedBkgFuture;
@@ -74,32 +73,37 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
   private boolean listenerRegistered;
   private DecryptionDialogParameters selectedRow;
 
+  public HistoryQuickSearchPm(
+      EventBus eventBus, ExecutorService executorService, ConfigPairs decryptionParams) {
+    this.eventBus = eventBus;
+    this.executorService = executorService;
+    this.decryptionParams = decryptionParams;
+  }
+
   @Override
   public boolean init(ActionEvent originAction, HistoryQuickSearchHost host, Void initParams) {
     super.init(originAction, host, initParams);
     Preconditions.checkArgument(host != null);
 
-    rowsTableModel =
-        new ModelProperty<TableModel>(
-            this, new ValueAdapterHolderImpl<TableModel>(), "rowsTableModel");
+    rowsTableModel = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "rowsTableModel");
 
     tableLabel =
-        new ModelProperty<String>(
+        new ModelProperty<>(
             this,
-            new ValueAdapterHolderImpl<String>(Messages.get("term.recentlyDecrypted")),
+            new ValueAdapterHolderImpl<>(Messages.get("term.recentlyDecrypted")),
             "tableLabel");
     refreshRecentlyUsed();
     return true;
   }
 
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     eventBus.register(this);
     listenerRegistered = true;
   }
 
-  private ModelProperty<String> quickSearch =
-      new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "quickSearch") {
+  private final ModelProperty<String> quickSearch =
+      new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "quickSearch") {
         @Override
         public boolean setValueByOwner(String value) {
           if (!super.setValueByOwner(value)) {
@@ -129,8 +133,8 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
     }
   }
 
-  private Callable<TableModel> quickSearchBkgWorker =
-      new Callable<TableModel>() {
+  private final Callable<TableModel> quickSearchBkgWorker =
+      new Callable<>() {
         @Override
         public TableModel call() {
           try {
@@ -146,12 +150,12 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
                      * TBD: Some weird thing happening here, records are getting duplicated, would
                      * be great to understand WHY ???. In a mean time we'll just de-duplicate them.
                      */
-                    .filter(distinctByKey(x -> x.getSourceFile()))
+                    .filter(distinctByKey(DecryptionDialogParameters::getSourceFile))
                     .filter(x -> x.getSourceFile().toLowerCase().contains(query.toLowerCase()))
                     .sorted(byTimestampDesc)
                     .map(x -> Pair.of(x, new File(x.getSourceFile())))
                     .filter(x -> x.getRight().isFile() && x.getRight().exists())
-                    .map(x -> x.getLeft())
+                    .map(Pair::getLeft)
                     .collect(Collectors.toList());
 
             HistoryQuickSearchTableModel tableModel =
@@ -205,8 +209,8 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
     return t -> seen.add(keyExtractor.apply(t));
   }
 
-  private Callable<TableModel> refreshSubjectsBkgWorker =
-      new Callable<TableModel>() {
+  private final Callable<TableModel> refreshSubjectsBkgWorker =
+      new Callable<>() {
         @Override
         public TableModel call() {
           try {
@@ -215,11 +219,11 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
             List<DecryptionDialogParameters> topRecords =
                 decryptionParams.getAll().stream()
                     .map(x -> (DecryptionDialogParameters) x.getValue())
-                    .filter(distinctByKey(x -> x.getSourceFile()))
+                    .filter(distinctByKey(DecryptionDialogParameters::getSourceFile))
                     .sorted(byTimestampDesc)
                     .map(x -> Pair.of(x, new File(x.getSourceFile())))
                     .filter(x -> x.getRight().isFile() && x.getRight().exists())
-                    .map(x -> x.getLeft())
+                    .map(Pair::getLeft)
                     .limit(15)
                     .collect(Collectors.toList());
 
@@ -262,7 +266,7 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
       };
 
   protected Comparator<DecryptionDialogParameters> byTimestampDesc =
-      new Comparator<DecryptionDialogParameters>() {
+      new Comparator<>() {
         @Override
         public int compare(DecryptionDialogParameters o1, DecryptionDialogParameters o2) {
           if (o2.getCreatedAt() < o1.getCreatedAt()) {
@@ -314,7 +318,6 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
         }
       };
 
-  @SuppressWarnings("serial")
   private final Action actionCancel =
       new LocalizedActionEx("action.cancel", this) {
         @Override
@@ -325,7 +328,7 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
         }
       };
 
-  private Action actionOpenLocation =
+  private final Action actionOpenLocation =
       new LocalizedActionEx("action.openLocation", this) {
         private static final long serialVersionUID = -3192304131437449088L;
 
@@ -342,24 +345,6 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
       };
 
   protected Action[] contextMenuActions = new Action[] {actionOpenLocation};
-
-  public EventBus getEventBus() {
-    return eventBus;
-  }
-
-  @Autowired
-  public void setEventBus(EventBus eventBus) {
-    this.eventBus = eventBus;
-  }
-
-  public ExecutorService getExecutorService() {
-    return executorService;
-  }
-
-  @Autowired
-  public void setExecutorService(ExecutorService executorService) {
-    this.executorService = executorService;
-  }
 
   protected ModelPropertyAccessor<TableModel> getRowsTableModel() {
     return rowsTableModel.getModelPropertyAccessor();

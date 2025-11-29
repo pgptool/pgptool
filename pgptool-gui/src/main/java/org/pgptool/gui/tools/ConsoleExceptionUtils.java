@@ -25,8 +25,8 @@ import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.summerb.i18n.HasMessageCode;
 import org.summerb.i18n.I18nUtils;
-import org.summerb.validation.FieldValidationException;
 import org.summerb.validation.ValidationError;
+import org.summerb.validation.ValidationException;
 
 public class ConsoleExceptionUtils {
   public static String getAllMessages(Throwable t) {
@@ -34,19 +34,18 @@ public class ConsoleExceptionUtils {
       return "";
     }
 
-    StringBuffer ret = new StringBuffer();
+    StringBuilder ret = new StringBuilder();
     Locale locale = LocaleContextHolder.getLocale();
 
     Throwable cur = t;
     while (cur != null) {
       if (cur == cur.getCause()) break;
 
-      if (ret.length() > 0) {
+      if (!ret.isEmpty()) {
         ret.append(" -> ");
       }
 
-      if (cur instanceof FieldValidationException) {
-        FieldValidationException fve = (FieldValidationException) cur;
+      if (cur instanceof ValidationException fve) {
         ret.append(buildMessageForFve(fve, locale));
       } else if (cur instanceof HasMessageCode) {
         ret.append(I18nUtils.buildMessage((HasMessageCode) cur, ac(), locale));
@@ -73,7 +72,7 @@ public class ConsoleExceptionUtils {
     return EntryPoint.INSTANCE.getApplicationContext();
   }
 
-  protected static StringBuilder buildMessageForFve(FieldValidationException fve, Locale locale) {
+  protected static StringBuilder buildMessageForFve(ValidationException fve, Locale locale) {
     StringBuilder ret = new StringBuilder();
     ret.append(I18nUtils.buildMessage(fve, ac(), locale));
     ret.append(": ");
@@ -82,7 +81,7 @@ public class ConsoleExceptionUtils {
       if (!first) {
         ret.append(", ");
       }
-      ret.append("\"" + tryFindTranslation(ve.getFieldToken(), locale) + "\"");
+      ret.append("\"" + tryFindTranslation(ve.getPropertyName(), locale) + "\"");
       ret.append(" - ");
       ret.append(I18nUtils.buildMessage(ve, ac(), locale));
       first = false;

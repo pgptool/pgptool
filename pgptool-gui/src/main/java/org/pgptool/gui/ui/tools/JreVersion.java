@@ -35,7 +35,7 @@ public class JreVersion implements Comparable<JreVersion> {
 
   public static JreVersion parseString(String versionStr) {
     JreVersion ret = new JreVersion();
-    if (versionStr == null || versionStr.trim().length() == 0) {
+    if (versionStr == null || versionStr.trim().isEmpty()) {
       return ret;
     }
     if (!versionStr.matches(VERSION_PATTERN)) {

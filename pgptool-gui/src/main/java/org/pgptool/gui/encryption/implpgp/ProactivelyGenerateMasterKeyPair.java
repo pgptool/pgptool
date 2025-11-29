@@ -10,7 +10,7 @@ import org.pgptool.gui.encryption.implpgp.KeyGeneratorServicePgpImpl.KeyPairPara
 public class ProactivelyGenerateMasterKeyPair implements Callable<KeyPair> {
   static final Logger log = Logger.getLogger(ProactivelyGenerateMasterKeyPair.class);
 
-  private KeyPairParams keyPairParams;
+  private final KeyPairParams keyPairParams;
 
   public ProactivelyGenerateMasterKeyPair(KeyPairParams keyPairParams) {
     this.keyPairParams = keyPairParams;

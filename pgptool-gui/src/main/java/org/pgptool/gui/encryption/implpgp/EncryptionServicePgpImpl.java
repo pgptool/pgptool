@@ -88,7 +88,7 @@ import org.summerb.users.api.exceptions.InvalidPasswordException;
  * @author Sergey Karpushin
  */
 public class EncryptionServicePgpImpl implements EncryptionService {
-  private static Logger log = Logger.getLogger(EncryptionServicePgpImpl.class);
+  private static final Logger log = Logger.getLogger(EncryptionServicePgpImpl.class);
   private static final int BUFFER_SIZE = 1 << 16;
 
   @Override
@@ -311,8 +311,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
         Object section = iter.next();
         log.debug(section);
 
-        if (section instanceof PGPEncryptedDataList) {
-          PGPEncryptedDataList d = (PGPEncryptedDataList) section;
+        if (section instanceof PGPEncryptedDataList d) {
           HashSet<String> ret = new HashSet<>();
           for (Iterator dataIter = d.getEncryptedDataObjects(); dataIter.hasNext(); ) {
             Object next = dataIter.next();
@@ -463,8 +462,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
       }
 
       BcPGPObjectFactory pgpFactory = null;
-      if (message instanceof PGPCompressedData) {
-        PGPCompressedData cData = (PGPCompressedData) message;
+      if (message instanceof PGPCompressedData cData) {
         pgpFactory = new BcPGPObjectFactory(cData.getDataStream());
         message = pgpFactory.nextObject();
       }
@@ -473,8 +471,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
       while (message != null) {
         Preconditions.checkState(watchDog++ < 100, "Inifinite loop watch dog just hit");
 
-        if (message instanceof PGPLiteralData) {
-          PGPLiteralData ld = (PGPLiteralData) message;
+        if (message instanceof PGPLiteralData ld) {
 
           // NOTE: We know initial file name (in case we need it):
           // ld.getFileName();
@@ -529,8 +526,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 
       for (Iterator iter = factory.iterator(); iter.hasNext(); ) {
         Object section = iter.next();
-        if (section instanceof PGPEncryptedDataList) {
-          PGPEncryptedDataList d = (PGPEncryptedDataList) section;
+        if (section instanceof PGPEncryptedDataList d) {
           for (Iterator dataIter = d.getEncryptedDataObjects(); dataIter.hasNext(); ) {
             PGPPublicKeyEncryptedData data = (PGPPublicKeyEncryptedData) dataIter.next();
             if (data.getKeyID() == secretKey.getKeyID()) {
@@ -616,8 +612,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
       }
 
       BcPGPObjectFactory pgpFactory = null;
-      if (message instanceof PGPCompressedData) {
-        PGPCompressedData cData = (PGPCompressedData) message;
+      if (message instanceof PGPCompressedData cData) {
         pgpFactory = new BcPGPObjectFactory(cData.getDataStream());
         message = pgpFactory.nextObject();
       }
@@ -625,8 +620,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
       int watchDog = 0;
       while (message != null) {
         Preconditions.checkState(watchDog++ < 100, "Inifinite loop watch dog just hit");
-        if (message instanceof PGPLiteralData) {
-          PGPLiteralData ld = (PGPLiteralData) message;
+        if (message instanceof PGPLiteralData ld) {
           return ld.getFileName();
         } else if (message instanceof PGPOnePassSignatureList) {
           Preconditions.checkState(pgpFactory != null, "pgpFactory supposed to be not null");

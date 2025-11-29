@@ -17,14 +17,14 @@
  ******************************************************************************/
 package integr.org.pgptool.gui.encryption;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.google.common.eventbus.EventBus;
 import integr.org.pgptool.gui.TestTools;
 import java.util.List;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
@@ -34,25 +34,23 @@ import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl;
 import org.pgptool.gui.usage.api.UsageLogger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.annotation.ProfileValueSourceConfiguration;
-import org.springframework.test.annotation.SystemProfileValueSource;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration("classpath:integr-test-context.xml")
-@ProfileValueSourceConfiguration(SystemProfileValueSource.class)
+@ProfileValueSourceConfiguration()
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
 public class KeyRingServiceTest {
-  @Autowired private KeyFilesOperations keyFilesOperations;
-  @Autowired private KeyGeneratorService keyGeneratorService;
+  private final KeyFilesOperations keyFilesOperations;
+  private final KeyGeneratorService keyGeneratorService;
 
-  @Autowired private ConfigRepository configRepository;
-  @Autowired private EventBus eventBus;
-  @Autowired private UsageLogger usageLogger;
+  private final ConfigRepository configRepository;
+  private final EventBus eventBus;
+  private final UsageLogger usageLogger;
 
   @Test
   public void testKeyRingServiceExpectCanFindKeyAfterSerialization() throws Exception {

@@ -18,7 +18,6 @@
 package org.pgptool.gui.configpairs.impl;
 
 import java.util.HashMap;
-
 import org.summerb.utils.DtoBase;
 
 public class ConfigPairsEnvelop extends HashMap<String, Object> implements DtoBase {

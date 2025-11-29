@@ -28,8 +28,8 @@ import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
  * Helper class that will disable all controls on a panel when property value will change to true
  */
 public class ControlsDisabler implements TypedPropertyChangeListener<Boolean> {
-  private List<Component> disabledComponents = new ArrayList<>();
-  private JPanel rootPanelToDisable;
+  private final List<Component> disabledComponents = new ArrayList<>();
+  private final JPanel rootPanelToDisable;
 
   public ControlsDisabler(JPanel rootPanelToDisable) {
     this.rootPanelToDisable = rootPanelToDisable;

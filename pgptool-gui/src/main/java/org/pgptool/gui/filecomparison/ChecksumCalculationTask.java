@@ -34,8 +34,8 @@ import org.pgptool.gui.bkgoperation.UserRequestedCancellationException;
 public class ChecksumCalculationTask implements Callable<Fingerprint> {
   private static final int READ_BUF_SIZE = 4096;
 
-  private String filePathName;
-  private MessageDigest messageDigest;
+  private final String filePathName;
+  private final MessageDigest messageDigest;
   private ProgressHandler progressHandler;
 
   public ChecksumCalculationTask(String filePathName, MessageDigest messageDigest) {

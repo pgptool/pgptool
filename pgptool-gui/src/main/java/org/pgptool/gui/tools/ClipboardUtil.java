@@ -27,7 +27,7 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 
 public class ClipboardUtil {
-  private static Logger log = Logger.getLogger(ClipboardUtil.class);
+  private static final Logger log = Logger.getLogger(ClipboardUtil.class);
 
   public static String tryGetClipboardText() {
     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();

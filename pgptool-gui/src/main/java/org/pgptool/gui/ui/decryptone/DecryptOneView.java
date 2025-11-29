@@ -51,7 +51,7 @@ public class DecryptOneView extends ViewBaseEx<DecryptOnePm> implements HasWindo
   private JTextField edSourceFile;
   private JButton btnBrowseSource;
 
-  private ButtonGroup btnGroupTargetFolder = new ButtonGroup();
+  private final ButtonGroup btnGroupTargetFolder = new ButtonGroup();
   private JRadioButton chkUseSameFolder;
   private JRadioButton chkUseTempFolder;
   private JRadioButton chkUseBrowseFolder;
@@ -161,18 +161,19 @@ public class DecryptOneView extends ViewBaseEx<DecryptOnePm> implements HasWindo
     bindingContext.setupBinding(pm.getSourceFile(), edSourceFile);
     bindingContext.setupBinding(pm.actionBrowseSource, btnBrowseSource);
 
-    bindingContext.setupBinding(pm.getIsUseSameFolder(), chkUseSameFolder);
-    bindingContext.setupBinding(pm.getIsUseTempFolder(), chkUseTempFolder);
-    bindingContext.setupBinding(pm.getIsUseBrowseFolder(), chkUseBrowseFolder);
+    bindingContext.setupBinding(null, pm.getIsUseSameFolder(), chkUseSameFolder);
+    bindingContext.setupBinding(null, pm.getIsUseTempFolder(), chkUseTempFolder);
+    bindingContext.setupBinding(null, pm.getIsUseBrowseFolder(), chkUseBrowseFolder);
 
     bindingContext.setupBinding(pm.getTargetFile(), edTargetFile);
     bindingContext.registerPropertyValuePropagation(
         pm.getTargetFileEnabled(), edTargetFile, "enabled");
     bindingContext.setupBinding(pm.actionBrowseTarget, btnBrowseTarget);
 
-    bindingContext.setupBinding(pm.getIsDeleteSourceAfter(), chkDeleteSourceAfter);
-    bindingContext.setupBinding(pm.getIsOpenTargetFolderAfter(), chkOpenTargetFolderAfter);
-    bindingContext.setupBinding(pm.getIsOpenAssociatedApplication(), chkOpenAssociatedApplication);
+    bindingContext.setupBinding(null, pm.getIsDeleteSourceAfter(), chkDeleteSourceAfter);
+    bindingContext.setupBinding(null, pm.getIsOpenTargetFolderAfter(), chkOpenTargetFolderAfter);
+    bindingContext.setupBinding(
+        null, pm.getIsOpenAssociatedApplication(), chkOpenAssociatedApplication);
 
     bindingContext.setupBinding(pm.actionDoOperation, btnPerformOperation);
     bindingContext.setupBinding(pm.actionCancel, btnCancel);

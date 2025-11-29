@@ -29,7 +29,7 @@ import java.math.BigInteger;
  * @author Sergey Karpushin
  */
 public class Progress {
-  private String operationCode;
+  private final String operationCode;
   private String stepCode;
   private Object[] stepArgs;
 
@@ -38,9 +38,9 @@ public class Progress {
   private Integer percentage;
   private boolean isCompleted;
 
-  private long startedAt;
+  private final long startedAt;
   private Long toBeFinishedBy;
-  private ProgressHandler progressHandler;
+  private final ProgressHandler progressHandler;
   private boolean isCancellationRequested;
 
   public static Updater create(String operationCode, ProgressHandler progressHandler) {

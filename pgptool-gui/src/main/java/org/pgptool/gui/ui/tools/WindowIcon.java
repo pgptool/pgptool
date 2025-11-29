@@ -43,7 +43,7 @@ public class WindowIcon {
 
   public static List<Image> getWindowIcon() {
     if (windowIcon == null) {
-      ArrayList<Image> temp = new ArrayList<Image>();
+      ArrayList<Image> temp = new ArrayList<>();
       addImageIfFound(temp, "/icons/icon-16.png");
       addImageIfFound(temp, "/icons/icon-32.png");
       addImageIfFound(temp, "/icons/icon-64.png");

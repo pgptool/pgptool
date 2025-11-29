@@ -55,11 +55,11 @@ import org.pgptool.gui.encryption.api.dto.KeyTypeEnum;
 import org.pgptool.gui.tools.IoStreamUtils;
 import org.springframework.util.StringUtils;
 import org.summerb.users.api.exceptions.InvalidPasswordException;
-import org.summerb.validation.FieldValidationException;
 import org.summerb.validation.ValidationError;
+import org.summerb.validation.ValidationException;
 
 public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
-  private static Logger log = Logger.getLogger(KeyFilesOperationsPgpImpl.class);
+  private static final Logger log = Logger.getLogger(KeyFilesOperationsPgpImpl.class);
 
   /**
    * Considering this as not a violation to DI since I don't see scenarios when we'll need to change
@@ -77,7 +77,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
         while (subStream.hasNextSubStream()) {
           ret.add(readFromStream(subStream));
         }
-        Preconditions.checkArgument(ret.size() > 0, "No keys found");
+        Preconditions.checkArgument(!ret.isEmpty(), "No keys found");
         ret = combinePrivateAndPublicIfAny(ret);
       } else {
         ret.add(readFromStream(fis));
@@ -325,19 +325,18 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
   }
 
   @Override
-  public void validateDecryptionKeyPassword(String secretKeyId, Key key, String password)
-      throws FieldValidationException {
+  public void validateDecryptionKeyPassword(String secretKeyId, Key key, String password) {
     try {
       validatePasswordUnchecked(secretKeyId, key, password);
     } catch (InvalidPasswordException pe) {
-      throw new FieldValidationException(new ValidationError(pe.getMessageCode(), FN_PASSWORD));
+      throw new ValidationException(new ValidationError(pe.getMessageCode(), FN_PASSWORD));
     } catch (Throwable t) {
       throw new RuntimeException("Failed to verify key password", t);
     }
   }
 
   @Override
-  public void validateKeyPassword(Key key, String passphrase) throws FieldValidationException {
+  public void validateKeyPassword(Key key, String passphrase) {
     try {
       KeyDataPgp keyData = (KeyDataPgp) key.getKeyData();
       for (PGPSecretKey secretKey : keyData.getSecretKeyRing()) {
@@ -345,7 +344,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
         KeyFilesOperationsPgpImpl.validatePasswordUnchecked(keyIdStr, key, passphrase);
       }
     } catch (InvalidPasswordException pe) {
-      throw new FieldValidationException(
+      throw new ValidationException(
           new ValidationError(pe.getMessageCode(), CreateKeyParams.FN_PASSPHRASE));
     } catch (Throwable t) {
       throw new RuntimeException(

@@ -35,10 +35,10 @@ public class WindowGeometryPersisterImpl extends ComponentAdapter
   private static final long DELAY = 500;
   private static final TimeUnit DELAY_TIME_UNIT = TimeUnit.MILLISECONDS;
 
-  private ConfigPairs configPairs;
-  private ScheduledExecutorService scheduledExecutorService;
+  private final ConfigPairs configPairs;
+  private final ScheduledExecutorService scheduledExecutorService;
   private Window window;
-  private String keyId;
+  private final String keyId;
 
   private ScheduledFuture<?> sizeSetter;
 

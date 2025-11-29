@@ -118,7 +118,7 @@ public abstract class ViewBase<TPM extends PresentationModel>
   }
 
   protected Runnable buildUnrenderRunnable() {
-    return () -> internalUnrender();
+    return this::internalUnrender;
   }
 
   /** Most likely will be overridden by subclass in order to bind to PM */

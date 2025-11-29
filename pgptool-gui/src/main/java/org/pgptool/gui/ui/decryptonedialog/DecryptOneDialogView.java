@@ -35,14 +35,14 @@ import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordOneKeyView;
 import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPm;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.swingpm.DialogViewBaseEx;
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import ru.skarpushin.swingpm.base.ViewBase;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 
-public class DecryptOneDialogView extends DialogViewBaseEx<DecryptOneDialogPm>
-    implements ApplicationContextAware {
+public class DecryptOneDialogView extends DialogViewBaseEx<DecryptOneDialogPm> {
+
+  private final ApplicationContext applicationContext;
+
   private DecryptOneView decryptOneView;
   private ViewBase<GetKeyPasswordPm> passwordView;
 
@@ -53,7 +53,9 @@ public class DecryptOneDialogView extends DialogViewBaseEx<DecryptOneDialogPm>
   private JButton currentOkButton;
   private Component requestFocusFor;
 
-  private ApplicationContext applicationContext;
+  public DecryptOneDialogView(ApplicationContext applicationContext) {
+    this.applicationContext = applicationContext;
+  }
 
   @Override
   protected void internalInitComponents() {
@@ -82,8 +84,8 @@ public class DecryptOneDialogView extends DialogViewBaseEx<DecryptOneDialogPm>
     super.unrender();
   }
 
-  private TypedPropertyChangeListener<Intent> intentChanged =
-      new TypedPropertyChangeListener<DecryptOneDialogPm.Intent>() {
+  private final TypedPropertyChangeListener<Intent> intentChanged =
+      new TypedPropertyChangeListener<>() {
         @Override
         public void handlePropertyChanged(
             Object source, String propertyName, Intent oldValue, Intent newValue) {
@@ -107,13 +109,11 @@ public class DecryptOneDialogView extends DialogViewBaseEx<DecryptOneDialogPm>
               decryptOneView = null;
             }
             getPasswordView().renderTo(pnl, BorderLayout.CENTER);
-            if (getPasswordView() instanceof GetKeyPasswordOneKeyView) {
-              GetKeyPasswordOneKeyView subView = (GetKeyPasswordOneKeyView) getPasswordView();
+            if (getPasswordView() instanceof GetKeyPasswordOneKeyView subView) {
               currentCancelButton = subView.btnCancel;
               currentOkButton = subView.btnPerformOperation;
               requestFocusFor = subView.edPassword;
-            } else if (getPasswordView() instanceof GetKeyPasswordManyKeysView) {
-              GetKeyPasswordManyKeysView subView = (GetKeyPasswordManyKeysView) getPasswordView();
+            } else if (getPasswordView() instanceof GetKeyPasswordManyKeysView subView) {
               currentCancelButton = subView.btnCancel;
               currentOkButton = subView.btnPerformOperation;
               requestFocusFor = subView.edPassword;
@@ -172,11 +172,6 @@ public class DecryptOneDialogView extends DialogViewBaseEx<DecryptOneDialogPm>
     if (currentCancelButton != null) {
       currentCancelButton.getAction().actionPerformed(originAction);
     }
-  }
-
-  @Override
-  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-    this.applicationContext = applicationContext;
   }
 
   public DecryptOneView getDecryptOneView() {

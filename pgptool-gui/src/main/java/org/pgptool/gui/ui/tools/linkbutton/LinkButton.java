@@ -34,7 +34,7 @@ public class LinkButton extends JLabel implements HasAction {
   private static final long serialVersionUID = 9012537495123322302L;
 
   public static final BiConsumer<LinkButton, Boolean> ENABLED_OR_DISABLED =
-      new BiConsumer<LinkButton, Boolean>() {
+      new BiConsumer<>() {
         @Override
         public void accept(LinkButton t, Boolean enabled) {
           if (enabled) {
@@ -49,7 +49,7 @@ public class LinkButton extends JLabel implements HasAction {
       };
 
   public static final BiConsumer<LinkButton, Boolean> VISIBLE_OR_INVISIBLE =
-      new BiConsumer<LinkButton, Boolean>() {
+      new BiConsumer<>() {
         @Override
         public void accept(LinkButton t, Boolean u) {
           t.setVisible(u);
@@ -58,7 +58,7 @@ public class LinkButton extends JLabel implements HasAction {
 
   private Action action;
   private BiConsumer<LinkButton, Boolean> enabledBehavior = ENABLED_OR_DISABLED;
-  private Cursor defaultCursor;
+  private final Cursor defaultCursor;
 
   public LinkButton() {
     super();
@@ -85,7 +85,7 @@ public class LinkButton extends JLabel implements HasAction {
     }
   }
 
-  private PropertyChangeListener listener =
+  private final PropertyChangeListener listener =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -95,7 +95,7 @@ public class LinkButton extends JLabel implements HasAction {
         }
       };
 
-  private MouseListener filterClickListener =
+  private final MouseListener filterClickListener =
       new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {

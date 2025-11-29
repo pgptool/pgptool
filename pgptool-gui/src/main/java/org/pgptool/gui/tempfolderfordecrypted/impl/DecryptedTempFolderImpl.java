@@ -33,24 +33,30 @@ import org.pgptool.gui.tools.TextFile;
 import org.pgptool.gui.ui.root.RootPm;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import org.summerb.validation.FieldValidationException;
 import org.summerb.validation.ValidationError;
-import org.summerb.validation.errors.FieldRequiredValidationError;
+import org.summerb.validation.ValidationException;
+import org.summerb.validation.errors.MustNotBeNull;
 
 public class DecryptedTempFolderImpl implements DecryptedTempFolder, InitializingBean {
   public static final String CONFIG_DECRYPTED_TEMP_FOLDER = "tempFolderForDecrypted";
-  private static Logger log = Logger.getLogger(DecryptedTempFolderImpl.class);
+  private static final Logger log = Logger.getLogger(DecryptedTempFolderImpl.class);
 
-  @Autowired private ConfigsBasePathResolver configsBasePathResolver;
-  @Autowired private ConfigPairs appProps;
-  @Autowired private RootPm rootPm;
+  private final ConfigsBasePathResolver configsBasePathResolver;
+  private final ConfigPairs appProps;
+  private final RootPm rootPm;
 
   private String tempFolderBasePath;
 
+  public DecryptedTempFolderImpl(
+      ConfigsBasePathResolver configsBasePathResolver, ConfigPairs appProps, RootPm rootPm) {
+    this.configsBasePathResolver = configsBasePathResolver;
+    this.appProps = appProps;
+    this.rootPm = rootPm;
+  }
+
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     String defaultValue1 =
         configsBasePathResolver.getConfigsBasePath() + File.separator + "decrypted";
     String defaultValue2 =
@@ -100,25 +106,24 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
   }
 
   @Override
-  public void setTempFolderBasePath(String newValue) throws FieldValidationException {
+  public void setTempFolderBasePath(String newValue) {
     validate(newValue);
     tempFolderBasePath = newValue;
     appProps.put(CONFIG_DECRYPTED_TEMP_FOLDER, tempFolderBasePath);
   }
 
-  private void validate(String newValue) throws FieldValidationException {
+  private void validate(String newValue) {
     try {
       if (!StringUtils.hasText(newValue)) {
-        throw new FieldValidationException(
-            new FieldRequiredValidationError(CONFIG_DECRYPTED_TEMP_FOLDER));
+        throw new ValidationException(new MustNotBeNull(CONFIG_DECRYPTED_TEMP_FOLDER));
       }
       ensureDirExists(newValue);
       ensureWeCanCreateFilesThere(newValue);
     } catch (Throwable t) {
-      Throwables.throwIfInstanceOf(t, FieldValidationException.class);
+      Throwables.throwIfInstanceOf(t, ValidationException.class);
       log.error(
           "Exception during validation of target folder for temp decrypted files " + newValue, t);
-      throw new FieldValidationException(
+      throw new ValidationException(
           new ValidationError(
               "error.temporaryFolderCannotbeUsed",
               CONFIG_DECRYPTED_TEMP_FOLDER,

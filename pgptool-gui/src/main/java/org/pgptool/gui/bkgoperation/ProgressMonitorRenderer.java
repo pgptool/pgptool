@@ -30,7 +30,7 @@ import javax.swing.ProgressMonitor;
  */
 public class ProgressMonitorRenderer implements ProgressHandler {
   private ProgressMonitor progressMonitor;
-  private Component parentComponent;
+  private final Component parentComponent;
 
   public ProgressMonitorRenderer(Component parentComponent) {
     this.parentComponent = parentComponent;

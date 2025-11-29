@@ -29,26 +29,37 @@ import org.pgptool.gui.hintsforusage.ui.HintPm;
 import org.pgptool.gui.ui.tools.UrlOpener;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 
-@SuppressWarnings("serial")
 public class BuyMeCoffeeHint extends HintPm implements InitializingBean {
   public static final String BUYMEACOFFEE_LINK = "https://www.buymeacoffee.com/skarpushind";
   private static final String CONFIG_SUPPRESS_HINT = "BuyMeCoffeeHint.supress";
   private static final String CONFIG_ELIGIBLE_SINCE = "BuyMeCoffeeHint.eligibleSince";
   private static final long LEAD_TIME = Duration.ofDays(14).toMillis();
 
-  @Autowired private ConfigPairs hintsProps;
+  private final ConfigPairs hintsProps;
+  private final ConfigPairs encryptionParams;
+  private final ConfigPairs decryptionParams;
+  private final HintsCoordinator hintsCoordinator;
+  private final KeyRingService keyRingService;
+  private final ExecutorService executorService;
 
-  @Autowired private ConfigPairs encryptionParams;
-  @Autowired private ConfigPairs decryptionParams;
-
-  @Autowired private HintsCoordinator hintsCoordinator;
-  @Autowired private KeyRingService keyRingService;
-  @Autowired private ExecutorService executorService;
+  public BuyMeCoffeeHint(
+      ConfigPairs hintsProps,
+      ConfigPairs encryptionParams,
+      ConfigPairs decryptionParams,
+      HintsCoordinator hintsCoordinator,
+      KeyRingService keyRingService,
+      ExecutorService executorService) {
+    this.hintsProps = hintsProps;
+    this.encryptionParams = encryptionParams;
+    this.decryptionParams = decryptionParams;
+    this.hintsCoordinator = hintsCoordinator;
+    this.keyRingService = keyRingService;
+    this.executorService = executorService;
+  }
 
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     setMessage(Messages.text("hint.buyMeCoffee"));
 
     actionClose =
@@ -66,22 +77,23 @@ public class BuyMeCoffeeHint extends HintPm implements InitializingBean {
     executorService.execute(think);
   }
 
-  private Runnable think =
-      () -> {
-        if (isHintApplicable()
-            && !hintsCoordinator.isHintScheduled(CreateOrImportPrivateKeyHint.class)) {
-          hintsCoordinator.scheduleHint(this);
-        }
-      };
+  private final Runnable think = this::doThink;
+
+  private void doThink() {
+    if (isHintApplicable()
+        && !hintsCoordinator.isHintScheduled(CreateOrImportPrivateKeyHint.class)) {
+      hintsCoordinator.scheduleHint(this);
+    }
+  }
 
   private boolean isHintApplicable() {
     if (hintsProps.find(CONFIG_SUPPRESS_HINT, false)) {
       return false;
     }
 
-    boolean hasKeys = keyRingService.readKeys().size() > 0;
+    boolean hasKeys = !keyRingService.readKeys().isEmpty();
     boolean processedEnoughFiles =
-        encryptionParams.getAll().size() > 0 && decryptionParams.getAll().size() > 0;
+        !encryptionParams.getAll().isEmpty() && !decryptionParams.getAll().isEmpty();
     if (!hasKeys || !processedEnoughFiles) {
       return false;
     }
@@ -99,7 +111,7 @@ public class BuyMeCoffeeHint extends HintPm implements InitializingBean {
     return false;
   }
 
-  private Action buyMeCoffeeAction =
+  private final Action buyMeCoffeeAction =
       new LocalizedActionEx("action.buyMeCoffee", this) {
         @Override
         public void actionPerformed(ActionEvent e) {

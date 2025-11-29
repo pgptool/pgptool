@@ -8,7 +8,7 @@ public abstract class ViewBaseEx<TPM extends PresentationModel> extends ViewBase
     implements InitializingBean {
 
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     super.afterPropertiesSet();
   }
 }

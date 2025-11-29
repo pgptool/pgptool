@@ -22,7 +22,7 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 
 public class IoStreamUtils {
-  private static Logger log = Logger.getLogger(IoStreamUtils.class);
+  private static final Logger log = Logger.getLogger(IoStreamUtils.class);
 
   public static void safeClose(Closeable stream) {
     if (stream == null) {

@@ -31,15 +31,18 @@ import javax.swing.JPanel;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.ui.keyslist.KeysTableView;
 import org.pgptool.gui.ui.tools.swingpm.DialogViewBaseEx;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class KeyImporterView extends DialogViewBaseEx<KeyImporterPm> {
   private JPanel pnl;
 
-  @Autowired private KeysTableView keysTableView;
+  private final KeysTableView keysTableView;
 
   private JButton btnImport;
   private JButton btnCancel;
+
+  public KeyImporterView(KeysTableView keysTableView) {
+    this.keysTableView = keysTableView;
+  }
 
   @Override
   protected void internalInitComponents() {

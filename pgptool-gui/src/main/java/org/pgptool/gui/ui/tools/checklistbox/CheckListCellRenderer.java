@@ -46,7 +46,7 @@ public class CheckListCellRenderer<E> extends JPanel implements ListCellRenderer
   protected Border checkedBorder;
   protected Border focusedBorder;
 
-  private Function<E, Boolean> checkStateSupplier;
+  private final Function<E, Boolean> checkStateSupplier;
 
   public CheckListCellRenderer(Function<E, Boolean> checkStateSupplier) {
     this.checkStateSupplier = checkStateSupplier;

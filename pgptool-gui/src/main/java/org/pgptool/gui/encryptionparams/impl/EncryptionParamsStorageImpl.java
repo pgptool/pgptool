@@ -21,10 +21,13 @@ import org.apache.commons.io.FilenameUtils;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class EncryptionParamsStorageImpl implements EncryptionParamsStorage {
-  @Autowired private ConfigPairs encryptionParams;
+  private final ConfigPairs encryptionParams;
+
+  public EncryptionParamsStorageImpl(ConfigPairs encryptionParams) {
+    this.encryptionParams = encryptionParams;
+  }
 
   @Override
   public void persistDialogParametersForCurrentInputs(

@@ -30,10 +30,10 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.util.StringUtils;
 
 public class ExistingFileChooserDialog {
-  private static Logger log = Logger.getLogger(ExistingFileChooserDialog.class);
+  private static final Logger log = Logger.getLogger(ExistingFileChooserDialog.class);
 
-  private ConfigPairs configPairs;
-  private String configPairNameToRemember;
+  private final ConfigPairs configPairs;
+  private final String configPairNameToRemember;
 
   public ExistingFileChooserDialog(ConfigPairs configPairs, String configPairNameToRemember) {
     this.configPairs = configPairs;

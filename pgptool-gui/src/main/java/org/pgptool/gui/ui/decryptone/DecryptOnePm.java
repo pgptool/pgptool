@@ -63,11 +63,10 @@ import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.summerb.validation.ValidationError;
 import org.summerb.validation.ValidationErrorsUtils;
-import org.summerb.validation.errors.FieldRequiredValidationError;
+import org.summerb.validation.errors.MustNotBeNull;
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.collections.ListExImpl;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
@@ -78,22 +77,22 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
   private static final String FN_SOURCE_FILE = "sourceFile";
   private static final String FN_TARGET_FILE = "targetFile";
 
-  private static Logger log = Logger.getLogger(DecryptOnePm.class);
+  private static final Logger log = Logger.getLogger(DecryptOnePm.class);
 
   private static final String SOURCE_FOLDER = "DecryptOnePm.SOURCE_FOLDER";
   public static final String CONFIG_PAIR_BASE = "Decrypt:";
 
   private static final String[] EXTENSIONS = new String[] {"gpg", "pgp", "asc"};
 
-  @Autowired private ConfigPairs appProps;
-  @Autowired private ConfigPairs decryptionParams;
-  @Autowired private ExecutorService executorService;
-  @Autowired private EncryptionParamsStorage encryptionParamsStorage;
-  @Autowired private DecryptedTempFolder decryptedTempFolder;
-  @Autowired private KeyRingService keyRingService;
-  @Autowired private EncryptionService encryptionService;
-  @Autowired private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
-  @Autowired private MessageDigestFactory messageDigestFactory;
+  private final ConfigPairs appProps;
+  private final ConfigPairs decryptionParams;
+  private final ExecutorService executorService;
+  private final EncryptionParamsStorage encryptionParamsStorage;
+  private final DecryptedTempFolder decryptedTempFolder;
+  private final KeyRingService keyRingService;
+  private final EncryptionService encryptionService;
+  private final MonitoringDecryptedFilesService monitoringDecryptedFilesService;
+  private final MessageDigestFactory messageDigestFactory;
 
   private ModelProperty<String> sourceFile;
   private ModelProperty<Boolean> isUseSameFolder;
@@ -104,7 +103,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
   private ModelProperty<Boolean> isDeleteSourceAfter;
   private ModelProperty<Boolean> isOpenTargetFolderAfter;
   private ModelProperty<Boolean> isOpenAssociatedApplication;
-  private ListEx<ValidationError> validationErrors = new ListExImpl<ValidationError>();
+  private final ListEx<ValidationError> validationErrors = new ListExImpl<>();
 
   private ExistingFileChooserDialog sourceFileChooser;
   private SaveFileChooserDialog targetFileChooser;
@@ -120,6 +119,27 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
   private ModelProperty<Boolean> isDisableControls;
   private ProgressHandlerPmMixinImpl progressHandler;
   private Thread operationThread;
+
+  public DecryptOnePm(
+      ConfigPairs appProps,
+      ConfigPairs decryptionParams,
+      ExecutorService executorService,
+      EncryptionParamsStorage encryptionParamsStorage,
+      DecryptedTempFolder decryptedTempFolder,
+      KeyRingService keyRingService,
+      EncryptionService encryptionService,
+      MonitoringDecryptedFilesService monitoringDecryptedFilesService,
+      MessageDigestFactory messageDigestFactory) {
+    this.appProps = appProps;
+    this.decryptionParams = decryptionParams;
+    this.executorService = executorService;
+    this.encryptionParamsStorage = encryptionParamsStorage;
+    this.decryptedTempFolder = decryptedTempFolder;
+    this.keyRingService = keyRingService;
+    this.encryptionService = encryptionService;
+    this.monitoringDecryptedFilesService = monitoringDecryptedFilesService;
+    this.messageDigestFactory = messageDigestFactory;
+  }
 
   @Override
   public boolean init(ActionEvent originAction, DecryptOneHost host, String optionalSource) {
@@ -278,7 +298,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
     return sourceFileChooser;
   }
 
-  private PropertyChangeListener onTargetFileModified =
+  private final PropertyChangeListener onTargetFileModified =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -292,7 +312,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
       return true;
     }
     if (!StringUtils.hasText(targetFile.getValue())) {
-      validationErrors.add(new FieldRequiredValidationError(FN_TARGET_FILE));
+      validationErrors.add(new MustNotBeNull(FN_TARGET_FILE));
       return false;
     }
     return true;
@@ -303,7 +323,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
         ValidationErrorsUtils.findErrorsForField(FN_TARGET_FILE, validationErrors));
   }
 
-  private PropertyChangeListener onSourceFileModified =
+  private final PropertyChangeListener onSourceFileModified =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -315,7 +335,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
           try {
             String sourceFileStr = sourceFile.getValue();
             if (!StringUtils.hasText(sourceFileStr)) {
-              validationErrors.add(new FieldRequiredValidationError(FN_SOURCE_FILE));
+              validationErrors.add(new MustNotBeNull(FN_SOURCE_FILE));
               return;
             }
 
@@ -356,35 +376,38 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
           }
         }
 
-        private KeyAndPasswordCallback keyAndPasswordCallback =
-            (PasswordDeterminedForKey keyAndPassword) -> {
-              try {
-                DecryptOnePm.this.keyAndPassword = keyAndPassword;
-                if (keyAndPassword == null) {
+        private final KeyAndPasswordCallback keyAndPasswordCallback =
+            new KeyAndPasswordCallback() {
+              @Override
+              public void onKeyPasswordResult(PasswordDeterminedForKey keyAndPassword) {
+                try {
+                  DecryptOnePm.this.keyAndPassword = keyAndPassword;
+                  if (keyAndPassword == null) {
+                    validationErrors.add(
+                        new ValidationError("error.noMatchingKeysRegistered", FN_SOURCE_FILE));
+                    return;
+                  }
+
+                  String sourceFileStr = sourceFile.getValue();
+                  // Get target file name ("pre-decrypt")
+                  String targetFileName =
+                      encryptionService.getNameOfFileEncrypted(sourceFileStr, keyAndPassword);
+                  anticipatedTargetFileName =
+                      patchTargetFilenameIfNeeded(sourceFileStr, targetFileName);
+
+                  // Continue with source file change handling
+                  decryptionDialogParameters = findParamsBasedOnSourceFile(sourceFile.getValue());
+                  if (decryptionDialogParameters != null) {
+                    useSugestedParameters(decryptionDialogParameters);
+                  }
+                } catch (Throwable t) {
+                  log.error("Failed to find decryption keys", t);
                   validationErrors.add(
-                      new ValidationError("error.noMatchingKeysRegistered", FN_SOURCE_FILE));
-                  return;
+                      new ValidationError(
+                          "error.failedToDetermineDecryptionMetodsForGivenFile", FN_SOURCE_FILE));
+                } finally {
+                  updatePrimaryOperationAvailability();
                 }
-
-                String sourceFileStr = sourceFile.getValue();
-                // Get target file name ("pre-decrypt")
-                String targetFileName =
-                    encryptionService.getNameOfFileEncrypted(sourceFileStr, keyAndPassword);
-                anticipatedTargetFileName =
-                    patchTargetFilenameIfNeeded(sourceFileStr, targetFileName);
-
-                // Continue with source file change handling
-                decryptionDialogParameters = findParamsBasedOnSourceFile(sourceFile.getValue());
-                if (decryptionDialogParameters != null) {
-                  useSugestedParameters(decryptionDialogParameters);
-                }
-              } catch (Throwable t) {
-                log.error("Failed to find decryption keys", t);
-                validationErrors.add(
-                    new ValidationError(
-                        "error.failedToDetermineDecryptionMetodsForGivenFile", FN_SOURCE_FILE));
-              } finally {
-                updatePrimaryOperationAvailability();
               }
             };
 
@@ -453,7 +476,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
         }
       };
 
-  private PropertyChangeListener onUseBrowseFolderChanged =
+  private final PropertyChangeListener onUseBrowseFolderChanged =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -478,11 +501,10 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
     result &=
         StringUtils.hasText(sourceFile.getValue()) && new File(sourceFile.getValue()).exists();
     result &= keyAndPassword != null;
-    result &= validationErrors.size() == 0;
+    result &= validationErrors.isEmpty();
     actionDoOperation.setEnabled(result);
   }
 
-  @SuppressWarnings("serial")
   protected final Action actionDoOperation =
       new LocalizedActionEx("action.decrypt", this) {
         @Override
@@ -496,7 +518,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
       };
 
   private class OperationWorker implements Runnable {
-    private ActionEvent workerOriginEvent;
+    private final ActionEvent workerOriginEvent;
 
     public OperationWorker(ActionEvent workerOriginEvent) {
       this.workerOriginEvent = workerOriginEvent;
@@ -744,7 +766,6 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
     return targetBasedPath + File.separator + anticipatedTargetFileName;
   }
 
-  @SuppressWarnings("serial")
   protected final Action actionCancel =
       new LocalizedActionEx("action.cancel", this) {
         @Override
@@ -758,7 +779,6 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionBrowseSource =
       new LocalizedActionEx("action.browse", "DecryptOnePm.source") {
         @Override
@@ -768,7 +788,6 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionBrowseTarget =
       new LocalizedActionEx("action.browse", "DecryptOnePm.target") {
         @Override

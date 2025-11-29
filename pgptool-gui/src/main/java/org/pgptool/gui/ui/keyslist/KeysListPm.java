@@ -34,8 +34,7 @@ import org.pgptool.gui.tools.ClipboardUtil;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.table.ModelTableProperty;
@@ -45,15 +44,26 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
   // private static Logger log = Logger.getLogger(KeysListPm.class);
 
-  @Autowired private EventBus eventBus;
-  @Autowired private KeyRingService keyRingService;
-  @Autowired private KeysExporterUi keysExporterUi;
-  @Autowired private KeyFilesOperations keyFilesOperations;
+  private final EventBus eventBus;
+  private final KeyRingService keyRingService;
+  private final KeysExporterUi keysExporterUi;
+  private final KeyFilesOperations keyFilesOperations;
 
   private ModelTableProperty<Key> tableModelProp;
   private ModelProperty<Boolean> hasData;
 
-  private Comparator<Key> keySorterByNameAsc = new ComparatorKeyByNameImpl();
+  private final Comparator<Key> keySorterByNameAsc = new ComparatorKeyByNameImpl();
+
+  public KeysListPm(
+      EventBus eventBus,
+      KeyRingService keyRingService,
+      KeysExporterUi keysExporterUi,
+      KeyFilesOperations keyFilesOperations) {
+    this.eventBus = eventBus;
+    this.keyRingService = keyRingService;
+    this.keysExporterUi = keysExporterUi;
+    this.keyFilesOperations = keyFilesOperations;
+  }
 
   @Override
   public boolean init(ActionEvent originAction, KeysListHost host, Void initParams) {
@@ -74,7 +84,7 @@ public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
     return true;
   }
 
-  private PropertyChangeListener onSelectionChangedHandler =
+  private final PropertyChangeListener onSelectionChangedHandler =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -117,8 +127,7 @@ public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
     eventBus.unregister(this);
   }
 
-  @SuppressWarnings("serial")
-  private Action actionClose =
+  private final Action actionClose =
       new LocalizedActionEx("action.close", this) {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -127,8 +136,7 @@ public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
         }
       };
 
-  @SuppressWarnings("serial")
-  private Action actionActivate =
+  private final Action actionActivate =
       new LocalizedActionEx("action.activate", this) {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -137,8 +145,7 @@ public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
         }
       };
 
-  @SuppressWarnings("serial")
-  private Action actionDeleteKey =
+  private final Action actionDeleteKey =
       new LocalizedActionEx("action.deleteKey", this) {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -158,8 +165,7 @@ public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
         }
       };
 
-  @SuppressWarnings("serial")
-  private Action actionExportPublicKey =
+  private final Action actionExportPublicKey =
       new LocalizedActionEx("action.exportPublicKey", this) {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -172,8 +178,7 @@ public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
         }
       };
 
-  @SuppressWarnings("serial")
-  private Action actionExportPublicKeyToClipboard =
+  private final Action actionExportPublicKeyToClipboard =
       new LocalizedActionEx("action.exportPublicKeyToClipboard", this) {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -187,8 +192,7 @@ public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
         }
       };
 
-  @SuppressWarnings("serial")
-  private Action actionExportPrivateKey =
+  private final Action actionExportPrivateKey =
       new LocalizedActionEx("action.exportPrivateKey", this) {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -201,8 +205,7 @@ public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
         }
       };
 
-  @SuppressWarnings("serial")
-  private Action actionChangePassphrase =
+  private final Action actionChangePassphrase =
       new LocalizedActionEx("action.changePassphrase", this) {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -215,7 +218,6 @@ public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
         }
       };
 
-  @SuppressWarnings("serial")
   public Action actionExportAllPublicKeys =
       new LocalizedActionEx("keys.exportAllPublic", this) {
         @Override
@@ -223,14 +225,14 @@ public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
           super.actionPerformed(e);
           ArrayList<Key> keys = new ArrayList<>(tableModelProp.getList());
           Preconditions.checkState(
-              keys.size() > 0,
+              !keys.isEmpty(),
               "Export all public keys action was triggered while there is no keys to export");
 
           keysExporterUi.exportPublicKeys(keys, e);
         }
       };
 
-  private Action[] contextMenuActions =
+  private final Action[] contextMenuActions =
       new Action[] {
         actionExportPublicKey,
         actionExportPrivateKey,
@@ -241,7 +243,7 @@ public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
         actionDeleteKey
       };
 
-  private KeysTablePm keysTablePm =
+  private final KeysTablePm keysTablePm =
       new KeysTablePm() {
         @Override
         public Action getActionForRowDoubleClick() {

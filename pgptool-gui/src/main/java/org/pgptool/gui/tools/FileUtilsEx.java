@@ -27,7 +27,7 @@ import org.pgptool.gui.bkgoperation.UserRequestedCancellationException;
 import org.springframework.util.StringUtils;
 
 public class FileUtilsEx {
-  private static Logger log = Logger.getLogger(FileUtilsEx.class);
+  private static final Logger log = Logger.getLogger(FileUtilsEx.class);
 
   /** bruteforce filename adding index to base filename until vacant filename found. */
   public static String ensureFileNameVacant(String requestedTargetFile) {

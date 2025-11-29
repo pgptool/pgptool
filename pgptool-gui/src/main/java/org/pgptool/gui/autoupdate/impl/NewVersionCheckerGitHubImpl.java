@@ -38,14 +38,15 @@ import org.springframework.util.StringUtils;
 public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
   public static final String DEV_VERSION = "0.0.0.0";
 
-  private static Logger log = Logger.getLogger(NewVersionCheckerGitHubImpl.class);
+  private static final Logger log = Logger.getLogger(NewVersionCheckerGitHubImpl.class);
 
   private String configuredVersion = null;
 
-  private String latestVersionUrl = "https://api.github.com/repos/pgptool/pgptool/releases/latest";
-  private Map<String, String> headers =
+  private final String latestVersionUrl =
+      "https://api.github.com/repos/pgptool/pgptool/releases/latest";
+  private final Map<String, String> headers =
       Collections.singletonMap("Accept", "application/vnd.github.v3+json");
-  private Gson gson =
+  private final Gson gson =
       new GsonBuilder()
           .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
           .create();

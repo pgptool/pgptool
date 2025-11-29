@@ -21,7 +21,7 @@ import org.summerb.i18n.HasMessageArgs;
 import org.summerb.i18n.HasMessageCode;
 
 public class Message implements HasMessageCode, HasMessageArgs {
-  private String code;
+  private final String code;
   private Object[] args;
 
   public Message(String code, Object[] args) {

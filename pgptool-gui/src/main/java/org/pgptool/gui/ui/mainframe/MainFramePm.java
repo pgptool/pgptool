@@ -47,12 +47,9 @@ import org.pgptool.gui.ui.historyquicksearch.HistoryQuickSearchView;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.summerb.easycrud.api.dto.EntityChangedEvent;
-import org.summerb.easycrud.api.dto.EntityChangedEvent.ChangeType;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent.ChangeType;
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
@@ -61,21 +58,34 @@ import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesPolicy>
-    implements ApplicationContextAware, HintsHolder {
-  // private static Logger log = Logger.getLogger(MainFramePm.class);
+    implements HintsHolder {
 
-  @Autowired private EventBus eventBus;
-  @Autowired private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
-  @Autowired private DecryptedTempFolder decryptedTempFolder;
+  private final EventBus eventBus;
+  private final MonitoringDecryptedFilesService monitoringDecryptedFilesService;
+  private final DecryptedTempFolder decryptedTempFolder;
+  private final HistoryQuickSearchPm historyQuickSearchPm;
+  private final ApplicationContext applicationContext;
 
   private HistoryQuickSearchView historyQuickSearchView;
-  private HistoryQuickSearchPm historyQuickSearchPm;
 
   private ModelTableProperty<DecryptedFile> rows;
   private ModelProperty<Boolean> hasData;
 
-  private ModelProperty<HintPm> hint =
+  private final ModelProperty<HintPm> hint =
       new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "hint");
+
+  public MainFramePm(
+      EventBus eventBus,
+      MonitoringDecryptedFilesService monitoringDecryptedFilesService,
+      DecryptedTempFolder decryptedTempFolder,
+      HistoryQuickSearchPm historyQuickSearchPm,
+      ApplicationContext applicationContext) {
+    this.eventBus = eventBus;
+    this.monitoringDecryptedFilesService = monitoringDecryptedFilesService;
+    this.decryptedTempFolder = decryptedTempFolder;
+    this.historyQuickSearchPm = historyQuickSearchPm;
+    this.applicationContext = applicationContext;
+  }
 
   @Override
   public boolean init(ActionEvent originAction, MainFrameHost host, UpdatesPolicy updatesPolicy) {
@@ -90,8 +100,7 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         new ModelTableProperty<>(
             this, initialKeys, "decryptedFiles", new DecryptedFilesModel(decryptedTempFolder));
     hasData =
-        new ModelProperty<Boolean>(
-            this, new ValueAdapterHolderImpl<>(!initialKeys.isEmpty()), "hasData") {
+        new ModelProperty<>(this, new ValueAdapterHolderImpl<>(!initialKeys.isEmpty()), "hasData") {
           @Override
           public boolean setValueByOwner(Boolean value) {
             actionEncryptBackAll.setEnabled(value);
@@ -106,7 +115,7 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
     return true;
   }
 
-  private PropertyChangeListener onSelectionChangedHandler =
+  private final PropertyChangeListener onSelectionChangedHandler =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -166,7 +175,6 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
     historyQuickSearchPm.detach();
   }
 
-  @SuppressWarnings("serial")
   protected Action actionOpen =
       new RowContextAction("action.openFile") {
         @Override
@@ -179,7 +187,6 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  @SuppressWarnings("serial")
   protected Action actionOpenSourceFolder =
       new RowContextAction("action.openSourceFolder") {
         @Override
@@ -192,7 +199,6 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  @SuppressWarnings("serial")
   protected Action actionOpenTargetFolder =
       new RowContextAction("action.openTargetFolder") {
         @Override
@@ -205,7 +211,6 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  @SuppressWarnings("serial")
   protected Action actionEncryptBack =
       new RowContextAction("action.encryptBack") {
         @Override
@@ -214,7 +219,6 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  @SuppressWarnings("serial")
   protected Action actionDelete =
       new RowContextAction("action.deleteUnencryptedFile") {
         @Override
@@ -253,7 +257,6 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  @SuppressWarnings("serial")
   protected Action actionForget =
       new RowContextAction("action.forgetDecrypted") {
         @Override
@@ -274,7 +277,6 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         actionDelete
       };
 
-  @SuppressWarnings("serial")
   private final Action actionConfigExit =
       new LocalizedActionEx("action.exit", this) {
         @Override
@@ -284,7 +286,6 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  @SuppressWarnings("serial")
   protected Action actionEncryptBackAll =
       new LocalizedActionEx("encrypBackMany.encryptBackAll", this) {
         @Override
@@ -292,16 +293,14 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
           super.actionPerformed(e);
           ArrayList<DecryptedFile> files = new ArrayList<>(rows.getList());
           Preconditions.checkState(
-              files.size() > 0,
+              !files.isEmpty(),
               "This action supposed to be available only when ther is at least one decrypted file monitored");
 
           Set<String> fileNames =
-              files.stream().map(x -> x.getDecryptedFile()).collect(Collectors.toSet());
+              files.stream().map(DecryptedFile::getDecryptedFile).collect(Collectors.toSet());
           host.openEncryptBackMultipleFor(fileNames, e);
         }
       };
-
-  private ApplicationContext applicationContext;
 
   protected Action getActionConfigExit() {
     return actionConfigExit;
@@ -313,10 +312,6 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
 
   public Action getActionBuyMeCoffee() {
     return host.getActionBuyMeCoffee();
-  }
-
-  public Action getActionAskQuestionInChat() {
-    return host.getAskQuestionInChat();
   }
 
   public Action getActionReportIssue() {
@@ -384,8 +379,6 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
   }
 
   private abstract class RowContextAction extends LocalizedActionEx {
-    private static final long serialVersionUID = -1541017110511442732L;
-
     public RowContextAction(String actionCode) {
       super(actionCode, MainFramePm.this);
     }
@@ -412,7 +405,7 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
     return initParams.getIsAutoUpdatesEnabled();
   }
 
-  private HistoryQuickSearchHost historyQuickSearchHost =
+  private final HistoryQuickSearchHost historyQuickSearchHost =
       new HistoryQuickSearchHost() {
         @Override
         public void handleChosen(
@@ -434,14 +427,13 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  @SuppressWarnings("serial")
   protected Action actionHistoryQuickSearch =
       new LocalizedActionEx("term.history", this) {
         @Override
         public void actionPerformed(ActionEvent e) {
           super.actionPerformed(e);
-          getHistoryQuickSearchPm()
-              .refreshRecentlyUsed(); // this was added to address #168. Doesn't feel like the
+          historyQuickSearchPm.refreshRecentlyUsed();
+          // this was added to address #168. Doesn't feel like the
           // best approach, but I cannot find any better at this
           // moment. One of the options would be to monitor all
           // files using FileWatcher and refresh this list in case
@@ -457,23 +449,9 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
   private HistoryQuickSearchView getHistoryQuickSearchView() {
     if (historyQuickSearchView == null) {
       historyQuickSearchView = applicationContext.getBean(HistoryQuickSearchView.class);
-      historyQuickSearchView.setPm(getHistoryQuickSearchPm());
+      historyQuickSearchView.setPm(historyQuickSearchPm);
     }
     return historyQuickSearchView;
-  }
-
-  @Override
-  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-    this.applicationContext = applicationContext;
-  }
-
-  public HistoryQuickSearchPm getHistoryQuickSearchPm() {
-    return historyQuickSearchPm;
-  }
-
-  @Autowired
-  public void setHistoryQuickSearchPm(HistoryQuickSearchPm historyQuickSearchPm) {
-    this.historyQuickSearchPm = historyQuickSearchPm;
   }
 
   public ModelPropertyAccessor<HintPm> getHintPm() {

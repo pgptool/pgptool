@@ -19,7 +19,7 @@ package org.pgptool.gui.tools.osnative;
 
 public class OsNativeApiResolver {
   private static OsNativeApi INSTANCE;
-  private static Object SYNC = new Object();
+  private static final Object SYNC = new Object();
 
   public static OsNativeApi resolve() {
     if (INSTANCE != null) {

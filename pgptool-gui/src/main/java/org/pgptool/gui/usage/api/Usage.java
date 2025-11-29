@@ -13,15 +13,14 @@ import org.apache.log4j.Logger;
  * @author sergeyk
  */
 public class Usage implements UsageLogger {
-  private static Logger log = Logger.getLogger("USAGE");
+  private static final Logger log = Logger.getLogger("USAGE");
 
-  private Gson gson;
+  private final Gson gson;
 
   public Usage() {
     GsonBuilder b = new GsonBuilder();
     b.registerTypeAdapter(
-        Serializable.class,
-        new SubclassAwareJsonSerializationAdapter<Serializable>(Serializable.class));
+        Serializable.class, new SubclassAwareJsonSerializationAdapter<>(Serializable.class));
     gson = b.create();
   }
 

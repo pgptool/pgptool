@@ -22,16 +22,14 @@ import com.sun.jna.Pointer;
 import com.sun.jna.WString;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.win32.StdCallLibrary;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import org.apache.log4j.Logger;
 
 /**
  * @author Sergey Karpushin
  */
 public class OsNativeApiWindowsImpl implements OsNativeApi {
-  private static Logger log = Logger.getLogger(OsNativeApiWindowsImpl.class);
+  private static final Logger log = Logger.getLogger(OsNativeApiWindowsImpl.class);
 
   private Kernel32 kernel32;
   private Shell32 shell32;
@@ -43,24 +41,22 @@ public class OsNativeApiWindowsImpl implements OsNativeApi {
   @Override
   public String[] getCommandLineArguments(String[] fallBackTo) {
     try {
+      if (fallBackTo == null || fallBackTo.length == 0) {
+        return fallBackTo;
+      }
+
       log.debug("In case we fail fallback would happen to: " + Arrays.toString(fallBackTo));
-      String[] ret = getFullCommandLine();
+      String[] nativeCommandLine = getFullCommandLine();
       log.debug(
-          "According to Windows API programm was started with arguments: " + Arrays.toString(ret));
+          "According to Windows API, program was started with arguments: "
+              + Arrays.toString(nativeCommandLine));
 
-      List<String> argsOnly = null;
-      for (int i = 0; i < ret.length; i++) {
-        if (argsOnly != null) {
-          argsOnly.add(ret[i]);
-        } else if (ret[i].toLowerCase().endsWith(".jar")) {
-          argsOnly = new ArrayList<>();
-        }
-      }
-      if (argsOnly != null) {
-        ret = argsOnly.toArray(new String[0]);
-      }
+      String[] ret = new String[fallBackTo.length];
 
-      log.debug("These arguments will be used: " + Arrays.toString(ret));
+      System.arraycopy(
+          nativeCommandLine, nativeCommandLine.length - fallBackTo.length, ret, 0, ret.length);
+
+      log.debug("These arguments will be used: " + Arrays.toString(nativeCommandLine));
       return ret;
     } catch (Throwable t) {
       log.error("Failed to use JNA to get current program command line arguments", t);

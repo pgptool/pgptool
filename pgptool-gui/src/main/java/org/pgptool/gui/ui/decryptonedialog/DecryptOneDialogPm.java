@@ -30,10 +30,7 @@ import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm.GetKeyPasswordPo;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
@@ -42,20 +39,27 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
  * This component is a container that will change it's appearance on the fly between {@link
  * GetKeyPasswordPm} and {@link DecryptOnePm} to provide more streamlined UX
  */
-public class DecryptOneDialogPm extends PresentationModelBaseEx<DecryptOneDialogHost, String>
-    implements ApplicationContextAware {
-  public static enum Intent {
+public class DecryptOneDialogPm extends PresentationModelBaseEx<DecryptOneDialogHost, String> {
+
+  public enum Intent {
     Decrypt,
     PasswordRequest;
   };
 
-  @Autowired private DecryptOnePm decryptOnePm;
+  private final DecryptOnePm decryptOnePm;
+  private final ApplicationContext applicationContext;
+
   private GetKeyPasswordPm getKeyPasswordPm;
 
   private ModelProperty<Intent> intent;
 
   private KeyAndPasswordCallback keyAndPasswordCallback;
   private PasswordDeterminedForKey passwordDeterminedForKey;
+
+  public DecryptOneDialogPm(DecryptOnePm decryptOnePm, ApplicationContext applicationContext) {
+    this.decryptOnePm = decryptOnePm;
+    this.applicationContext = applicationContext;
+  }
 
   @Override
   public boolean init(ActionEvent originAction, DecryptOneDialogHost host, String optionalSource) {
@@ -64,7 +68,7 @@ public class DecryptOneDialogPm extends PresentationModelBaseEx<DecryptOneDialog
     return decryptOnePm.init(originAction, decryptOneHost, optionalSource);
   }
 
-  private DecryptOneHost decryptOneHost =
+  private final DecryptOneHost decryptOneHost =
       new DecryptOneHost() {
         @Override
         public void handleClose() {
@@ -108,7 +112,7 @@ public class DecryptOneDialogPm extends PresentationModelBaseEx<DecryptOneDialog
         }
       };
 
-  private GetKeyPasswordHost getPasswordHost =
+  private final GetKeyPasswordHost getPasswordHost =
       new GetKeyPasswordHost() {
         @Override
         public void onPasswordDeterminedForKey(PasswordDeterminedForKey result) {
@@ -124,8 +128,6 @@ public class DecryptOneDialogPm extends PresentationModelBaseEx<DecryptOneDialog
         }
       };
 
-  private ApplicationContext applicationContext;
-
   public ModelPropertyAccessor<Intent> getIntent() {
     return intent.getModelPropertyAccessor();
   }
@@ -139,10 +141,5 @@ public class DecryptOneDialogPm extends PresentationModelBaseEx<DecryptOneDialog
       getKeyPasswordPm = applicationContext.getBean(GetKeyPasswordPm.class);
     }
     return getKeyPasswordPm;
-  }
-
-  @Override
-  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-    this.applicationContext = applicationContext;
   }
 }

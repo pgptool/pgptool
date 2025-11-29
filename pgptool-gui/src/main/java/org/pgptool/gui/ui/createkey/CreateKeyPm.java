@@ -33,12 +33,11 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.UsageLogger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import org.summerb.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 import org.summerb.utils.exceptions.ExceptionUtils;
-import org.summerb.validation.FieldValidationException;
 import org.summerb.validation.ValidationError;
+import org.summerb.validation.ValidationException;
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.collections.ListExImpl;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
@@ -47,13 +46,13 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReflectionImpl;
 
 public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
-  @Autowired private KeyRingService keyRingService;
-  @Autowired private KeyGeneratorService keyGeneratorService;
-  @Autowired private ExecutorService executorService;
-  @Autowired private EventBus eventBus;
-  @Autowired private UsageLogger usageLogger;
+  private final KeyRingService keyRingService;
+  private final KeyGeneratorService keyGeneratorService;
+  private final ExecutorService executorService;
+  private final EventBus eventBus;
+  private final UsageLogger usageLogger;
 
-  private CreateKeyParams createKeyParams = new CreateKeyParams();
+  private final CreateKeyParams createKeyParams = new CreateKeyParams();
 
   private ModelProperty<String> fullName;
   private ModelProperty<String> email;
@@ -63,9 +62,22 @@ public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
 
   private ModelProperty<Boolean> progressBarVisible;
 
-  private ListEx<ValidationError> validationErrors = new ListExImpl<ValidationError>();
+  private final ListEx<ValidationError> validationErrors = new ListExImpl<>();
 
   protected Future<?> keyGenerationFuture;
+
+  public CreateKeyPm(
+      KeyRingService keyRingService,
+      KeyGeneratorService keyGeneratorService,
+      ExecutorService executorService,
+      EventBus eventBus,
+      UsageLogger usageLogger) {
+    this.keyRingService = keyRingService;
+    this.keyGeneratorService = keyGeneratorService;
+    this.executorService = executorService;
+    this.eventBus = eventBus;
+    this.usageLogger = usageLogger;
+  }
 
   @Override
   public boolean init(ActionEvent originAction, CreateKeyHost host, Void initParams) {
@@ -85,19 +97,18 @@ public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
     isDisableControls =
         new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "isDisableControls");
     progressBarVisible =
-        new ModelProperty<>(this, new ValueAdapterHolderImpl<Boolean>(false), "progressBarVisible");
+        new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "progressBarVisible");
   }
 
   private ModelProperty<String> initStringModelProp(String fieldName) {
-    return new ModelProperty<String>(
+    return new ModelProperty<>(
         this,
         new NullToEmptyStringConverter(
-            new ValueAdapterReflectionImpl<String>(createKeyParams, fieldName)),
+            new ValueAdapterReflectionImpl<>(createKeyParams, fieldName)),
         fieldName,
         validationErrors);
   }
 
-  @SuppressWarnings("serial")
   protected Action actionCreate =
       new LocalizedActionEx("action.create", this) {
         @Override
@@ -111,7 +122,7 @@ public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
       };
 
   private class KeyGenerationRunnable implements Runnable {
-    private ActionEvent runnableOriginEvent;
+    private final ActionEvent runnableOriginEvent;
 
     public KeyGenerationRunnable(ActionEvent runnableOriginEvent) {
       this.runnableOriginEvent = runnableOriginEvent;
@@ -135,7 +146,7 @@ public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
         eventBus.post(EntityChangedEvent.added(new KeyCreatedEvent(key)));
         usageLogger.write(new KeyCreatedUsage(key.getKeyInfo()));
         host.handleClose();
-      } catch (FieldValidationException fve) {
+      } catch (ValidationException fve) {
         validationErrors.addAll(fve.getErrors());
       } catch (Throwable t) {
         if (ExceptionUtils.findExceptionOfType(t, InterruptedException.class) != null) {
@@ -152,7 +163,6 @@ public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
     }
   }
 
-  @SuppressWarnings("serial")
   protected Action actionCancel =
       new LocalizedActionEx("action.cancel", this) {
         @Override

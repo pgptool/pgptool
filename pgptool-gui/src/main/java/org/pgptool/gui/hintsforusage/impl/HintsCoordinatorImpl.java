@@ -25,8 +25,7 @@ import org.pgptool.gui.hintsforusage.api.HintsCoordinator;
 import org.pgptool.gui.hintsforusage.api.HintsHolder;
 import org.pgptool.gui.hintsforusage.ui.HintHost;
 import org.pgptool.gui.hintsforusage.ui.HintPm;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 
 /**
  * This class will basically show hints one after another. It wont know any details regarding
@@ -36,9 +35,13 @@ import org.summerb.easycrud.api.dto.EntityChangedEvent;
  */
 public class HintsCoordinatorImpl implements HintsCoordinator {
   private HintsHolder hintsHolder;
-  private List<HintPm> scheduledHints = new LinkedList<>();
+  private final List<HintPm> scheduledHints = new LinkedList<>();
 
-  @Autowired private EventBus eventBus;
+  private final EventBus eventBus;
+
+  public HintsCoordinatorImpl(EventBus eventBus) {
+    this.eventBus = eventBus;
+  }
 
   @Override
   public synchronized void scheduleHint(HintPm hintPm) {
@@ -79,14 +82,10 @@ public class HintsCoordinatorImpl implements HintsCoordinator {
         && hintClazz.equals(hintsHolder.getHint().getClass())) {
       return true;
     }
-    return scheduledHints.stream()
-            .map(x -> hintClazz.equals(x.getClass()))
-            .filter(x -> x == true)
-            .count()
-        > 0;
+    return scheduledHints.stream().anyMatch(x -> hintClazz.equals(x.getClass()));
   }
 
-  private HintHost hintHost =
+  private final HintHost hintHost =
       new HintHost() {
         @Override
         public void onClose() {
@@ -100,7 +99,7 @@ public class HintsCoordinatorImpl implements HintsCoordinator {
     }
 
     HintPm current = hintsHolder.getHint();
-    hintsHolder.setHint(scheduledHints.size() == 0 ? null : scheduledHints.remove(0));
+    hintsHolder.setHint(scheduledHints.isEmpty() ? null : scheduledHints.remove(0));
 
     if (current != null) {
       eventBus.post(EntityChangedEvent.removedObject(current));

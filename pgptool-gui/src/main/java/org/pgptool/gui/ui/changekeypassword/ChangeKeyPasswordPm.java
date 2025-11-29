@@ -31,10 +31,9 @@ import org.pgptool.gui.ui.createkey.NullToEmptyStringConverter;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import org.summerb.validation.FieldValidationException;
 import org.summerb.validation.ValidationError;
+import org.summerb.validation.ValidationException;
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.collections.ListExImpl;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
@@ -43,19 +42,28 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReflectionImpl;
 
 public class ChangeKeyPasswordPm extends PresentationModelBaseEx<ChangeKeyPasswordHost, Key> {
-  @Autowired private KeyRingService keyRingService;
-  @Autowired private KeyGeneratorService keyGeneratorService;
-  @Autowired private KeyFilesOperations keyFilesOperations;
+  private final KeyRingService keyRingService;
+  private final KeyGeneratorService keyGeneratorService;
+  private final KeyFilesOperations keyFilesOperations;
 
   private Key key;
 
-  private ChangePasswordParams changePasswordParams = new ChangePasswordParams();
+  private final ChangePasswordParams changePasswordParams = new ChangePasswordParams();
   private ModelProperty<String> fullName;
   private ModelProperty<String> passphrase;
   private ModelProperty<String> newPassphrase;
   private ModelProperty<String> newPassphraseAgain;
 
-  private ListEx<ValidationError> validationErrors = new ListExImpl<ValidationError>();
+  private final ListEx<ValidationError> validationErrors = new ListExImpl<>();
+
+  public ChangeKeyPasswordPm(
+      KeyRingService keyRingService,
+      KeyGeneratorService keyGeneratorService,
+      KeyFilesOperations keyFilesOperations) {
+    this.keyRingService = keyRingService;
+    this.keyGeneratorService = keyGeneratorService;
+    this.keyFilesOperations = keyFilesOperations;
+  }
 
   @Override
   public boolean init(ActionEvent originAction, ChangeKeyPasswordHost host, Key key) {
@@ -80,15 +88,14 @@ public class ChangeKeyPasswordPm extends PresentationModelBaseEx<ChangeKeyPasswo
   }
 
   private ModelProperty<String> initStringModelProp(String fieldName) {
-    return new ModelProperty<String>(
+    return new ModelProperty<>(
         this,
         new NullToEmptyStringConverter(
-            new ValueAdapterReflectionImpl<String>(changePasswordParams, fieldName)),
+            new ValueAdapterReflectionImpl<>(changePasswordParams, fieldName)),
         fieldName,
         validationErrors);
   }
 
-  @SuppressWarnings("serial")
   protected Action actionChange =
       new LocalizedActionEx("action.ok", this) {
         @Override
@@ -115,7 +122,7 @@ public class ChangeKeyPasswordPm extends PresentationModelBaseEx<ChangeKeyPasswo
 
             // x.
             host.handleClose();
-          } catch (FieldValidationException fve) {
+          } catch (ValidationException fve) {
             validationErrors.addAll(fve.getErrors());
           } catch (Throwable t) {
             EntryPoint.reportExceptionToUser(e, "exception.failedToChangeKey", t);
@@ -125,7 +132,6 @@ public class ChangeKeyPasswordPm extends PresentationModelBaseEx<ChangeKeyPasswo
         }
       };
 
-  @SuppressWarnings("serial")
   protected Action actionCancel =
       new LocalizedActionEx("action.cancel", this) {
         @Override

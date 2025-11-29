@@ -28,10 +28,10 @@ import java.nio.file.WatchService;
 import org.apache.log4j.Logger;
 
 public class SingleDirWatcher {
-  private static Logger log = Logger.getLogger(SingleDirWatcher.class);
+  private static final Logger log = Logger.getLogger(SingleDirWatcher.class);
 
-  private String dirToWatch;
-  private DirWatcherHandler dirWatcherHandler;
+  private final String dirToWatch;
+  private final DirWatcherHandler dirWatcherHandler;
   private WatchService watcher;
   private Path path;
   private Thread workerThread;

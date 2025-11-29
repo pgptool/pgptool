@@ -70,7 +70,6 @@ import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersister;
 import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersisterImpl;
 import org.pgptool.gui.ui.tools.linkbutton.LinkButton;
 import org.pgptool.gui.ui.tools.swingpm.ViewBaseEx;
-import org.springframework.beans.factory.annotation.Autowired;
 import ru.skarpushin.swingpm.base.HasWindow;
 import ru.skarpushin.swingpm.bindings.HasActionBinding;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
@@ -81,9 +80,9 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
   private static final String DELETE = "Delete";
   private static final String CHOOSE = "Choose";
 
-  @Autowired private HintView hintView;
-  @Autowired private ScheduledExecutorService scheduledExecutorService;
-  @Autowired private ConfigPairs uiGeom;
+  private final HintView hintView;
+  private final ScheduledExecutorService scheduledExecutorService;
+  private final ConfigPairs uiGeom;
 
   private JFrame frame;
   private WindowGeometryPersister windowGeometryPersister;
@@ -100,7 +99,6 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
   private JMenuItem miFaq;
   private JMenuItem miHelp;
   private JMenuItem miReportAnIssue;
-  private JMenuItem miAskQuestionInChat;
   private JMenuItem miAbout;
   private JMenuItem miCheckForUpdates;
   private JCheckBoxMenuItem miAutoCheckForUpdates;
@@ -123,6 +121,13 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
   private JToolBar toolbar;
 
   private JPanel hintsPanel;
+
+  public MainFrameView(
+      HintView hintView, ScheduledExecutorService scheduledExecutorService, ConfigPairs uiGeom) {
+    this.hintView = hintView;
+    this.scheduledExecutorService = scheduledExecutorService;
+    this.uiGeom = uiGeom;
+  }
 
   @Override
   protected void internalInitComponents() {
@@ -165,8 +170,8 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
     panelRoot.add(hintsPanel, sgl.cs(0, row));
   }
 
-  private TypedPropertyChangeListener<HintPm> onHintPmChanged =
-      new TypedPropertyChangeListener<HintPm>() {
+  private final TypedPropertyChangeListener<HintPm> onHintPmChanged =
+      new TypedPropertyChangeListener<>() {
         @Override
         public void handlePropertyChanged(
             Object source, String propertyName, HintPm oldValue, HintPm newValue) {
@@ -197,8 +202,7 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
     toolbar.add(new JButton(actionKeyring));
   }
 
-  @SuppressWarnings("serial")
-  private Action actionEncrypt =
+  private final Action actionEncrypt =
       new ToolbarAction("action.encryptFile", "/icons/encrypt.png") {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -208,8 +212,7 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
         }
       };
 
-  @SuppressWarnings("serial")
-  private Action actionEncryptText =
+  private final Action actionEncryptText =
       new ToolbarAction("term.text", "/icons/encrypt.png") {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -219,8 +222,7 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
         }
       };
 
-  @SuppressWarnings("serial")
-  private Action actionDecryptText =
+  private final Action actionDecryptText =
       new ToolbarAction("term.text", "/icons/decrypt.png") {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -230,8 +232,7 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
         }
       };
 
-  @SuppressWarnings("serial")
-  private Action actionDecrypt =
+  private final Action actionDecrypt =
       new ToolbarAction("action.decryptFile", "/icons/decrypt.png") {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -241,8 +242,7 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
         }
       };
 
-  @SuppressWarnings("serial")
-  private Action actionHistory =
+  private final Action actionHistory =
       new ToolbarAction("term.history", "/icons/search-48.png") {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -252,8 +252,7 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
         }
       };
 
-  @SuppressWarnings("serial")
-  private Action actionKeyring =
+  private final Action actionKeyring =
       new ToolbarAction("term.keyring", "/icons/keyring.png") {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -286,7 +285,7 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
     return scrollPane;
   }
 
-  private MouseAdapter encrBackClickHandler =
+  private final MouseAdapter encrBackClickHandler =
       new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
@@ -305,7 +304,6 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
         }
       };
 
-  @SuppressWarnings("serial")
   private void initTableKeyListener() {
     InputMap inputMap = table.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
     inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), DELETE);
@@ -414,8 +412,8 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
     return pm.getRows().findRowByIdx(row);
   }
 
-  private TypedPropertyChangeListener<DecryptedFile> rowPmSelectionListener =
-      new TypedPropertyChangeListener<DecryptedFile>() {
+  private final TypedPropertyChangeListener<DecryptedFile> rowPmSelectionListener =
+      new TypedPropertyChangeListener<>() {
         @Override
         public void handlePropertyChanged(
             Object source, String propertyName, DecryptedFile oldValue, DecryptedFile newValue) {
@@ -450,7 +448,6 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
     menuFile.addSeparator();
     menuFile.add(miFaq = new JMenuItem());
     menuFile.add(miHelp = new JMenuItem());
-    menuFile.add(miAskQuestionInChat = new JMenuItem());
     menuFile.add(miReportAnIssue = new JMenuItem());
     menuFile.addSeparator();
     menuFile.add(miBmc = new JMenuItem());
@@ -522,8 +519,8 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
     }
   }
 
-  private TypedPropertyChangeListener<Boolean> hasDataChangeHandler =
-      new TypedPropertyChangeListener<Boolean>() {
+  private final TypedPropertyChangeListener<Boolean> hasDataChangeHandler =
+      new TypedPropertyChangeListener<>() {
         @Override
         public void handlePropertyChanged(
             Object source, String propertyName, Boolean oldValue, Boolean newValue) {
@@ -558,7 +555,6 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
   private void bindToActions() {
     bindingContext.setupBinding(pm.getActionConfigExit(), miConfigExit);
 
-    bindingContext.setupBinding(pm.getActionAskQuestionInChat(), miAskQuestionInChat);
     bindingContext.setupBinding(pm.getActionReportIssue(), miReportAnIssue);
     bindingContext.setupBinding(pm.getActionBuyMeCoffee(), miBmc);
     bindingContext.setupBinding(pm.getActionFaq(), miFaq);

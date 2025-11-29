@@ -57,34 +57,10 @@ import java.lang.ref.SoftReference;
  * @author rbair
  */
 public abstract class AbstractPainter<T> extends AbstractBean implements Painter<T> {
-  /**
-   * An enum representing the possible interpolation values of Bicubic, Bilinear, and Nearest
-   * Neighbor. These map to the underlying RenderingHints, but are easier to use and serialization
-   * safe.
-   */
-  public enum Interpolation {
-    /** use bicubic interpolation */
-    Bicubic(RenderingHints.VALUE_INTERPOLATION_BICUBIC),
-    /** use bilinear interpolation */
-    Bilinear(RenderingHints.VALUE_INTERPOLATION_BILINEAR),
-    /** use nearest neighbor interpolation */
-    NearestNeighbor(RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-
-    private Object value;
-
-    Interpolation(Object value) {
-      this.value = value;
-    }
-
-    private void configureGraphics(Graphics2D g) {
-      g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, value);
-    }
-  }
-
-  // --------------------------------------------------- Instance Variables
   /** The cached image, if shouldUseCache() returns true */
   private transient SoftReference<BufferedImage> cachedImage;
 
+  // --------------------------------------------------- Instance Variables
   private boolean cacheCleared = true;
   private boolean cacheable = false;
   private boolean dirty = false;
@@ -398,7 +374,7 @@ public abstract class AbstractPainter<T> extends AbstractBean implements Painter
 
         // only save the temporary image as the cacheable if I'm caching
         if (shouldUseCache()) {
-          cachedImage = new SoftReference<BufferedImage>(cache);
+          cachedImage = new SoftReference<>(cache);
           cacheCleared = false;
         }
       }
@@ -411,5 +387,29 @@ public abstract class AbstractPainter<T> extends AbstractBean implements Painter
 
     // painting has occured, so restore the dirty bit to false
     setDirty(false);
+  }
+
+  /**
+   * An enum representing the possible interpolation values of Bicubic, Bilinear, and Nearest
+   * Neighbor. These map to the underlying RenderingHints, but are easier to use and serialization
+   * safe.
+   */
+  public enum Interpolation {
+    /** use bicubic interpolation */
+    Bicubic(RenderingHints.VALUE_INTERPOLATION_BICUBIC),
+    /** use bilinear interpolation */
+    Bilinear(RenderingHints.VALUE_INTERPOLATION_BILINEAR),
+    /** use nearest neighbor interpolation */
+    NearestNeighbor(RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+
+    private final Object value;
+
+    Interpolation(Object value) {
+      this.value = value;
+    }
+
+    private void configureGraphics(Graphics2D g) {
+      g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, value);
+    }
   }
 }

@@ -21,8 +21,8 @@ import java.awt.event.ActionEvent;
 import javax.swing.Action;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
-import org.summerb.easycrud.api.dto.EntityChangedEvent;
 import org.summerb.utils.DtoBase;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
@@ -40,7 +40,6 @@ public class HintPm extends PresentationModelBaseEx<HintHost, Void> implements D
       new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "message");
   protected Action[] actions;
 
-  @SuppressWarnings("serial")
   protected Action actionClose =
       new LocalizedActionEx("action.close", this) {
         @Override

@@ -143,14 +143,14 @@ public class EncryptBackMultipleView extends DialogViewBaseEx<EncryptBackMultipl
   protected void internalBindToPm() {
     super.internalBindToPm();
 
-    bindingContext.setupBinding(pm.getIsDeleteSourceAfter(), chkDeleteSourceAfter);
+    bindingContext.setupBinding(null, pm.getIsDeleteSourceAfter(), chkDeleteSourceAfter);
 
     bindingContext.setupBinding(pm.getSourceFilesSummary(), lblSourceFilesSummaru);
-    bindingContext.setupBinding(pm.getIsEncryptOnlyChanged(), chkEncryptOnlyChanged);
+    bindingContext.setupBinding(null, pm.getIsEncryptOnlyChanged(), chkEncryptOnlyChanged);
 
     bindingContext.setupBinding(pm.getRecipientsSummary(), lblRecipientsSummary);
     bindingContext.setupBinding(
-        pm.getIsIgnoreMissingRecipientsWarning(), chkIgnoreMissingRecipients);
+        null, pm.getIsIgnoreMissingRecipientsWarning(), chkIgnoreMissingRecipients);
     bindingContext.registerPropertyValuePropagation(
         pm.getIsHasMissingRecipients(), chkIgnoreMissingRecipients, "enabled");
 

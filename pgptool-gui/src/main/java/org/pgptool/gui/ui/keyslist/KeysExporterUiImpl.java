@@ -40,18 +40,28 @@ import org.pgptool.gui.ui.tools.browsefs.FolderChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
 import org.pgptool.gui.usage.api.UsageLogger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 
 public class KeysExporterUiImpl implements KeysExporterUi {
-  private static Logger log = Logger.getLogger(KeysExporterUiImpl.class);
+  private static final Logger log = Logger.getLogger(KeysExporterUiImpl.class);
 
-  @Autowired private KeyFilesOperations keyFilesOperations;
-  @Autowired private EventBus eventBus;
-  @Autowired private ConfigPairs appProps;
-  @Autowired private UsageLogger usageLogger;
+  private final KeyFilesOperations keyFilesOperations;
+  private final EventBus eventBus;
+  private final ConfigPairs appProps;
+  private final UsageLogger usageLogger;
 
   private FolderChooserDialog folderChooserDialog;
+
+  public KeysExporterUiImpl(
+      KeyFilesOperations keyFilesOperations,
+      EventBus eventBus,
+      ConfigPairs appProps,
+      UsageLogger usageLogger) {
+    this.keyFilesOperations = keyFilesOperations;
+    this.eventBus = eventBus;
+    this.appProps = appProps;
+    this.usageLogger = usageLogger;
+  }
 
   @Override
   public void exportPublicKey(Key key, ActionEvent originEvent) {
@@ -213,7 +223,7 @@ public class KeysExporterUiImpl implements KeysExporterUi {
   public FolderChooserDialog getFolderChooserDialog() {
     if (folderChooserDialog == null) {
       ValueAdapterPersistentPropertyImpl<String> exportedKeysLocation =
-          new ValueAdapterPersistentPropertyImpl<String>(
+          new ValueAdapterPersistentPropertyImpl<>(
               appProps, "KeysListPm.exportedKeysLocation", null);
       folderChooserDialog =
           new FolderChooserDialog(text("keys.chooseFolderForKeysExport"), exportedKeysLocation);

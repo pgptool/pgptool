@@ -170,8 +170,8 @@ public class DecryptTextView extends DialogViewBaseEx<DecryptTextPm> {
         pm.getIsShowMissingPrivateKeyWarning().getValue());
   }
 
-  private TypedPropertyChangeListener<Boolean> onShowMissingPrivateKeyWarning =
-      new TypedPropertyChangeListener<Boolean>() {
+  private final TypedPropertyChangeListener<Boolean> onShowMissingPrivateKeyWarning =
+      new TypedPropertyChangeListener<>() {
         @Override
         public void handlePropertyChanged(
             Object source, String propertyName, Boolean oldValue, Boolean newValue) {

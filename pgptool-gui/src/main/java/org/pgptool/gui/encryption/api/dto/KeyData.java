@@ -24,7 +24,6 @@ import java.io.Serializable;
  *
  * @author Sergey Karpushin
  */
-@SuppressWarnings("serial")
 public abstract class KeyData implements Serializable {
   public abstract boolean isCanBeUsedForDecryption();
 

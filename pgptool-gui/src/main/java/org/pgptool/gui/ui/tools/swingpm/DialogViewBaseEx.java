@@ -3,8 +3,6 @@ package org.pgptool.gui.ui.tools.swingpm;
 import java.awt.Dialog.ModalityType;
 import java.awt.Image;
 import java.awt.Window;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.swing.JDialog;
@@ -23,10 +21,11 @@ public abstract class DialogViewBaseEx<TPM extends PresentationModel> extends Di
 
   @Autowired protected ScheduledExecutorService scheduledExecutorService;
   @Autowired protected ConfigPairs uiGeom;
+
   protected WindowGeometryPersister windowGeometryPersister;
 
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     super.afterPropertiesSet();
   }
 
@@ -39,20 +38,6 @@ public abstract class DialogViewBaseEx<TPM extends PresentationModel> extends Di
     if (dialog.getModalityType() == ModalityType.MODELESS) {
       UiUtils.makeSureWindowBroughtToFront(dialog);
     }
-  }
-
-  @Override
-  protected WindowAdapter buildWindowAdapter() {
-    return new WindowAdapter() {
-      @Override
-      public void windowClosing(WindowEvent e) {
-        super.windowClosing(e);
-        if (isAttached()) {
-          dispatchWindowCloseEvent(UiUtils.actionEvent(e.getSource(), "windowClosing"));
-        }
-      }
-      ;
-    };
   }
 
   public static int spacing(int lettersCount) {

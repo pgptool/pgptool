@@ -45,18 +45,18 @@ import ru.skarpushin.swingpm.collections.ListExEventListener;
 public class ValidationErrorsBalloonView
     implements View<ListEx<ValidationError>>, ListExEventListener<ValidationError>, Binding {
 
-  private static Color errorBackgroundColor = new Color(255, 230, 230);
-  private RoundedBalloonStyle balloonStyle;
+  private static final Color errorBackgroundColor = new Color(255, 230, 230);
+  private final RoundedBalloonStyle balloonStyle;
 
   private JComponent component;
   private Border originalBorder;
   private Border errorBorder;
 
   private BalloonTip balloon;
-  private JPanel panelMessages;
+  private final JPanel panelMessages;
 
   private ListEx<ValidationError> pm;
-  private HashMap<ValidationError, JComponent> veToComp = new HashMap<>();
+  private final HashMap<ValidationError, JComponent> veToComp = new HashMap<>();
 
   private boolean contentsInitedAfterErrorsUpdate;
 
@@ -143,7 +143,7 @@ public class ValidationErrorsBalloonView
     }
   }
 
-  private MouseAdapter toolTipMouseAdapter =
+  private final MouseAdapter toolTipMouseAdapter =
       new MouseAdapter() {
         @Override
         public void mouseEntered(MouseEvent e) {
@@ -218,7 +218,7 @@ public class ValidationErrorsBalloonView
     }
 
     panelMessages.remove(comp);
-    if (pm.size() == 0) {
+    if (pm.isEmpty()) {
       onAllItemsRemoved(1);
     }
   }

@@ -21,10 +21,10 @@ public class UsageLoggerDelegator implements UsageLogger, HasUsageRecordingSetti
 
   public static final String IS_USAGE_RECORDING_ENABLED = "IS_USAGE_RECORDING_ENABLED";
 
-  private UsageLogger noOpImpl;
-  private UsageLogger actualImpl;
+  private final UsageLogger noOpImpl;
+  private final UsageLogger actualImpl;
 
-  private ModelProperty<Boolean> isUsageRecordingEnabled;
+  private final ModelProperty<Boolean> isUsageRecordingEnabled;
 
   public UsageLoggerDelegator(ConfigPairs appProps, UsageLogger noOpImpl, UsageLogger actualImpl) {
     super();
@@ -34,8 +34,7 @@ public class UsageLoggerDelegator implements UsageLogger, HasUsageRecordingSetti
     isUsageRecordingEnabled =
         new ModelProperty<>(
             this,
-            new ValueAdapterPersistentPropertyImpl<Boolean>(
-                appProps, IS_USAGE_RECORDING_ENABLED, null),
+            new ValueAdapterPersistentPropertyImpl<>(appProps, IS_USAGE_RECORDING_ENABLED, null),
             IS_USAGE_RECORDING_ENABLED);
     if (isUsageRecordingEnabled.getValue() == null) {
       isUsageRecordingEnabled.setValueByOwner(
@@ -53,7 +52,6 @@ public class UsageLoggerDelegator implements UsageLogger, HasUsageRecordingSetti
     }
   }
 
-  @SuppressWarnings("serial")
   private final Action actionToggleUsageRecording =
       new LocalizedActionEx("action.recordUsageInfo", this) {
         @Override

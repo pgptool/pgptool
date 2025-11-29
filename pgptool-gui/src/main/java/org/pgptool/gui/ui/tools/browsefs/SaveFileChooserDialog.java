@@ -32,10 +32,10 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.util.StringUtils;
 
 public class SaveFileChooserDialog {
-  private static Logger log = Logger.getLogger(SaveFileChooserDialog.class);
+  private static final Logger log = Logger.getLogger(SaveFileChooserDialog.class);
 
-  private String dialogTitleCode;
-  private String approvalButtonTextCode;
+  private final String dialogTitleCode;
+  private final String approvalButtonTextCode;
   private ConfigPairs configPairs;
   private String configId;
 

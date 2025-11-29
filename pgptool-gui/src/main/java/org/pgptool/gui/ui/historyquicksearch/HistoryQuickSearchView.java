@@ -65,14 +65,19 @@ import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersisterImpl
 import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersister;
 import org.pgptool.gui.ui.tools.geometrymemory.WindowGeometryPersisterImpl;
 import org.pgptool.gui.ui.tools.swingpm.ViewBaseEx;
-import org.springframework.beans.factory.annotation.Autowired;
 import ru.skarpushin.swingpm.base.DialogViewBase;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
 public class HistoryQuickSearchView extends ViewBaseEx<HistoryQuickSearchPm> {
-  @Autowired private ScheduledExecutorService scheduledExecutorService;
-  @Autowired private ConfigPairs uiGeom;
+  private final ScheduledExecutorService scheduledExecutorService;
+  private final ConfigPairs uiGeom;
+
+  public HistoryQuickSearchView(
+      ScheduledExecutorService scheduledExecutorService, ConfigPairs uiGeom) {
+    this.scheduledExecutorService = scheduledExecutorService;
+    this.uiGeom = uiGeom;
+  }
 
   private JFrame window;
   private WindowGeometryPersister windowGeometryPersister;
@@ -137,7 +142,7 @@ public class HistoryQuickSearchView extends ViewBaseEx<HistoryQuickSearchPm> {
     lblNoDataToDisplay.setHorizontalAlignment(JLabel.CENTER);
   }
 
-  private KeyListener quickSearchKeyListener =
+  private final KeyListener quickSearchKeyListener =
       new KeyAdapter() {
         @Override
         public void keyPressed(KeyEvent e) {
@@ -173,8 +178,7 @@ public class HistoryQuickSearchView extends ViewBaseEx<HistoryQuickSearchPm> {
         }
       };
 
-  @SuppressWarnings("serial")
-  private Action enterAction =
+  private final Action enterAction =
       new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -205,7 +209,7 @@ public class HistoryQuickSearchView extends ViewBaseEx<HistoryQuickSearchPm> {
     return scrollPane;
   }
 
-  private MouseAdapter listMouseListener =
+  private final MouseAdapter listMouseListener =
       new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
@@ -298,8 +302,8 @@ public class HistoryQuickSearchView extends ViewBaseEx<HistoryQuickSearchPm> {
     }
   }
 
-  private TypedPropertyChangeListener<TableModel> tableModelChangeHandler =
-      new TypedPropertyChangeListener<TableModel>() {
+  private final TypedPropertyChangeListener<TableModel> tableModelChangeHandler =
+      new TypedPropertyChangeListener<>() {
         @Override
         public void handlePropertyChanged(
             Object source, String propertyName, TableModel oldValue, TableModel newValue) {
@@ -372,7 +376,7 @@ public class HistoryQuickSearchView extends ViewBaseEx<HistoryQuickSearchPm> {
     window.setAlwaysOnTop(true);
   }
 
-  private WindowAdapter windowAdapter =
+  private final WindowAdapter windowAdapter =
       new WindowAdapter() {
         @Override
         public void windowDeactivated(java.awt.event.WindowEvent e) {
@@ -386,7 +390,7 @@ public class HistoryQuickSearchView extends ViewBaseEx<HistoryQuickSearchPm> {
         ;
       };
 
-  private ComponentListener componentAdapter =
+  private final ComponentListener componentAdapter =
       new ComponentAdapter() {
         @Override
         public void componentHidden(ComponentEvent e) {}

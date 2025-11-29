@@ -30,7 +30,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.ui.tools.swingpm.DialogViewBaseEx;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class KeysListView extends DialogViewBaseEx<KeysListPm> {
   private JPanel panelRoot;
@@ -42,7 +41,11 @@ public class KeysListView extends DialogViewBaseEx<KeysListPm> {
   private JMenuItem miExportPublicKeys;
   private JMenuItem miClose;
 
-  @Autowired private KeysTableView keysTableView;
+  private final KeysTableView keysTableView;
+
+  public KeysListView(KeysTableView keysTableView) {
+    this.keysTableView = keysTableView;
+  }
 
   @Override
   protected void internalInitComponents() {

@@ -38,7 +38,7 @@ public class EncryptBackActionCellRenderer extends JPanel implements TableCellRe
   private static final Border DEFAULT_NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
   protected static Border noFocusBorder = DEFAULT_NO_FOCUS_BORDER;
 
-  private JLabel lbl;
+  private final JLabel lbl;
 
   private Color unselectedForeground;
   private Color unselectedBackground;

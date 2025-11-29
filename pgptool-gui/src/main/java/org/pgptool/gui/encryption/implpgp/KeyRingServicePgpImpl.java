@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.apache.log4j.Logger;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.pgptool.gui.config.api.ConfigRepository;
@@ -36,20 +35,19 @@ import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.KeyAddedUsage;
 import org.pgptool.gui.usage.dto.KeyRemovedUsage;
 import org.pgptool.gui.usage.dto.KeyRingUsage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.summerb.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 
 public class KeyRingServicePgpImpl implements KeyRingService {
-  private static Logger log = Logger.getLogger(KeyRingServicePgpImpl.class);
+  private static final Logger log = Logger.getLogger(KeyRingServicePgpImpl.class);
 
-  private ConfigRepository configRepository;
-  private EventBus eventBus;
-  private KeyGeneratorService keyGeneratorService;
+  private final ConfigRepository configRepository;
+  private final EventBus eventBus;
+  private final KeyGeneratorService keyGeneratorService;
+  private final UsageLogger usageLogger;
 
   private PgpKeysRing pgpKeysRing;
-  private UsageLogger usageLogger;
 
   static {
     Security.addProvider(new BouncyCastleProvider());
@@ -58,7 +56,16 @@ public class KeyRingServicePgpImpl implements KeyRingService {
   /** This method is created to ensure static constructor of this class was called */
   public static synchronized void touch() {}
 
-  public KeyRingServicePgpImpl() {}
+  public KeyRingServicePgpImpl(
+      ConfigRepository configRepository,
+      EventBus eventBus,
+      KeyGeneratorService keyGeneratorService,
+      UsageLogger usageLogger) {
+    this.configRepository = configRepository;
+    this.eventBus = eventBus;
+    this.keyGeneratorService = keyGeneratorService;
+    this.usageLogger = usageLogger;
+  }
 
   @Override
   public synchronized List<Key> readKeys() {
@@ -79,13 +86,13 @@ public class KeyRingServicePgpImpl implements KeyRingService {
       pgpKeysRing = configRepository.readOrConstruct(PgpKeysRing.class);
 
       // dumpKeys();
-      if (pgpKeysRing.size() == 0) {
+      if (pgpKeysRing.isEmpty()) {
         log.info(
             "User doesn't seem to have private key pair. Proactively generating one so that key creation will happen faster");
         keyGeneratorService.expectNewKeyCreation();
       }
 
-      if (pgpKeysRing.size() > 0) {
+      if (!pgpKeysRing.isEmpty()) {
         usageLogger.write(new KeyRingUsage(pgpKeysRing));
       }
     }
@@ -172,24 +179,6 @@ public class KeyRingServicePgpImpl implements KeyRingService {
     }
   }
 
-  public ConfigRepository getConfigRepository() {
-    return configRepository;
-  }
-
-  @Autowired
-  public void setConfigRepository(ConfigRepository configRepository) {
-    this.configRepository = configRepository;
-  }
-
-  public EventBus getEventBus() {
-    return eventBus;
-  }
-
-  @Autowired
-  public void setEventBus(EventBus eventBus) {
-    this.eventBus = eventBus;
-  }
-
   /** keyIds passed here MIGHT NOT match key id from keyInfo */
   @Override
   public List<MatchedKey> findMatchingDecryptionKeys(Set<String> keysIds) {
@@ -198,9 +187,7 @@ public class KeyRingServicePgpImpl implements KeyRingService {
     List<MatchedKey> ret = new ArrayList<>(keysIds.size());
     List<Key> allKeys = readKeys();
     List<Key> decryptionKeys =
-        allKeys.stream()
-            .filter(x -> x.getKeyData().isCanBeUsedForDecryption())
-            .collect(Collectors.toList());
+        allKeys.stream().filter(x -> x.getKeyData().isCanBeUsedForDecryption()).toList();
 
     for (String neededKeyId : keysIds) {
       log.debug("Trying to find decryption key by id: " + neededKeyId);
@@ -237,23 +224,5 @@ public class KeyRingServicePgpImpl implements KeyRingService {
       }
     }
     return ret;
-  }
-
-  public KeyGeneratorService getKeyGeneratorService() {
-    return keyGeneratorService;
-  }
-
-  @Autowired
-  public void setKeyGeneratorService(KeyGeneratorService keyGeneratorService) {
-    this.keyGeneratorService = keyGeneratorService;
-  }
-
-  public UsageLogger getUsageLogger() {
-    return usageLogger;
-  }
-
-  @Autowired
-  public void setUsageLogger(UsageLogger usageLogger) {
-    this.usageLogger = usageLogger;
   }
 }

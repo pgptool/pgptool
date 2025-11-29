@@ -14,7 +14,7 @@ public class KeyRingUsage implements Serializable {
   public KeyRingUsage() {}
 
   public KeyRingUsage(List<Key> keyRing) {
-    keys = keyRing.stream().map(x -> x.getKeyInfo()).collect(Collectors.toList());
+    keys = keyRing.stream().map(Key::getKeyInfo).collect(Collectors.toList());
   }
 
   public List<KeyInfo> getKeys() {

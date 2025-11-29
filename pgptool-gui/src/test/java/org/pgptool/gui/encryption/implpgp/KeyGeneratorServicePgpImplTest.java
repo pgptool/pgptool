@@ -1,9 +1,10 @@
 package org.pgptool.gui.encryption.implpgp;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class KeyGeneratorServicePgpImplTest {
 
@@ -12,8 +13,10 @@ public class KeyGeneratorServicePgpImplTest {
     assertEquals(PGPPublicKey.DSA, KeyGeneratorServicePgpImpl.algorithmNameToTag("DSA"));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testAlgorithmNameToTagExpectFail() {
-    KeyGeneratorServicePgpImpl.algorithmNameToTag("invalid");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> KeyGeneratorServicePgpImpl.algorithmNameToTag("invalid"));
   }
 }

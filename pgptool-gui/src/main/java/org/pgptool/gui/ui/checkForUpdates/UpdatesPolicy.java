@@ -26,37 +26,39 @@ import org.pgptool.gui.ui.root.RootPm.CheckForUpdatesDialog;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.StringUtils;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
 
-public class UpdatesPolicy implements ApplicationContextAware {
+public class UpdatesPolicy {
   public static final String UPDATES_POLICY = "UpdatesPolicy:";
   public static final String PROP_IS_AUTO = UPDATES_POLICY + "IsAuto";
   public static final String PROP_SNOOZED_VERSION = UPDATES_POLICY + "SnoozedVersion";
 
-  @Autowired private ConfigPairs appProps;
-  private ApplicationContext applicationContext;
+  private final ConfigPairs appProps;
+  private final ApplicationContext applicationContext;
   private CheckForUpdatesPm checkForUpdatesPm;
   private CheckForUpdatesDialog checkForUpdatesDialog;
 
   private ModelProperty<Boolean> isAutoUpdatesEnabled;
   private ValueAdapter<String> snoozedVersion;
 
+  public UpdatesPolicy(ConfigPairs appProps, ApplicationContext applicationContext) {
+    this.appProps = appProps;
+    this.applicationContext = applicationContext;
+  }
+
   public void start(CheckForUpdatesDialog checkForUpdatesDialog) {
     this.checkForUpdatesDialog = checkForUpdatesDialog;
     this.snoozedVersion =
-        new ValueAdapterPersistentPropertyImpl<String>(appProps, PROP_SNOOZED_VERSION, null);
+        new ValueAdapterPersistentPropertyImpl<>(appProps, PROP_SNOOZED_VERSION, null);
 
     isAutoUpdatesEnabled =
         new ModelProperty<>(
             this,
-            new ValueAdapterPersistentPropertyImpl<Boolean>(appProps, PROP_IS_AUTO, null),
+            new ValueAdapterPersistentPropertyImpl<>(appProps, PROP_IS_AUTO, null),
             PROP_IS_AUTO);
     if (isAutoUpdatesEnabled.getValue() == null) {
       isAutoUpdatesEnabled.setValueByOwner(
@@ -76,7 +78,6 @@ public class UpdatesPolicy implements ApplicationContextAware {
     }
   }
 
-  @SuppressWarnings("serial")
   public final Action actionAutoCheckForUpdates =
       new LocalizedActionEx("action.toggleAutoCheckUpdates", this) {
         @Override
@@ -86,7 +87,7 @@ public class UpdatesPolicy implements ApplicationContextAware {
         }
       };
 
-  private PropertyChangeListener onNewVersionLinkChanged =
+  private final PropertyChangeListener onNewVersionLinkChanged =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -102,11 +103,6 @@ public class UpdatesPolicy implements ApplicationContextAware {
 
   public void snoozeVersion(String versionToSnooze) {
     snoozedVersion.setValue(versionToSnooze);
-  }
-
-  @Override
-  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-    this.applicationContext = applicationContext;
   }
 
   public ModelPropertyAccessor<Boolean> getIsAutoUpdatesEnabled() {

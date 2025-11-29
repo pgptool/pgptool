@@ -17,8 +17,8 @@
  ******************************************************************************/
 package integr.org.pgptool.gui;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.springframework.test.util.AssertionErrors.assertNotNull;
+import static org.springframework.test.util.AssertionErrors.assertTrue;
 
 import java.io.File;
 import java.net.URISyntaxException;

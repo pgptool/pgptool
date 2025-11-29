@@ -39,7 +39,7 @@ import org.pgptool.gui.ui.tools.FileBasedLock;
  * @author Sergey Karpushin
  */
 public class SingleInstanceFileBasedImpl implements SingleInstance {
-  private static Logger log = Logger.getLogger(SingleInstanceFileBasedImpl.class);
+  private static final Logger log = Logger.getLogger(SingleInstanceFileBasedImpl.class);
 
   private static final int LOCK_ARGS_SUBMISSION_TIMEOUT = 3000;
   private static final String ROLE_LOCK_FILE_EXTENSION = ".role-lock";
@@ -47,7 +47,7 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
   private static final String PARAMS_FILE_EXTENSION = "args";
   private static final String PARAMS_FILE_EXTENSION_TEMP = "temp";
 
-  private String tagName;
+  private final String tagName;
   private PrimaryInstanceListener primaryInstanceListener;
 
   private FileBasedLock lockRole;
@@ -56,10 +56,10 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
    * This additional lock will be used by parties to enter critical section before writing any
    * changes to this directory. It will help us avoid any race conditions
    */
-  private FileBasedLock lockNewArgsSubmissons;
+  private final FileBasedLock lockNewArgsSubmissons;
 
   private SingleDirWatcher singleDirWatcher;
-  private String basePathForCommands;
+  private final String basePathForCommands;
 
   /**
    * @param tagName must be a valid folder name
@@ -116,7 +116,7 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
     return ret;
   }
 
-  private DirWatcherHandler dirWatcherHandler =
+  private final DirWatcherHandler dirWatcherHandler =
       new DirWatcherHandler() {
         @Override
         public void handleEvent(WatchEvent<?> event, Path node) {
@@ -165,7 +165,7 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
         }
       };
 
-  private Thread shutDownHook =
+  private final Thread shutDownHook =
       new Thread() {
         @Override
         public void run() {

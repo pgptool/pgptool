@@ -16,7 +16,7 @@ public abstract class LocalizedActionEx extends AbstractAction {
   public LocalizedActionEx(String actionNameMessageCode, Object context) {
     this.context =
         context instanceof String ? (String) context : context.getClass().getSimpleName();
-    if (this.context.length() == 0) {
+    if (this.context.isEmpty()) {
       this.context = context.getClass().getEnclosingClass().getSimpleName();
     }
 

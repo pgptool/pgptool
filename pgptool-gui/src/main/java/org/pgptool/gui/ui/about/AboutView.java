@@ -113,7 +113,7 @@ public class AboutView extends DialogViewBaseEx<AboutPm> {
     protected abstract void triggerAction(ActionEvent originEvent);
   }
 
-  private MouseListener siteLinkClickListener =
+  private final MouseListener siteLinkClickListener =
       new LinkMouseListener() {
         @Override
         protected void triggerAction(ActionEvent originEvent) {
@@ -121,7 +121,7 @@ public class AboutView extends DialogViewBaseEx<AboutPm> {
         }
       };
 
-  private MouseListener newVersionLinkClickListener =
+  private final MouseListener newVersionLinkClickListener =
       new LinkMouseListener() {
         @Override
         protected void triggerAction(ActionEvent originEvent) {

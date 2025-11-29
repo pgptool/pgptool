@@ -26,7 +26,7 @@ import org.apache.log4j.Logger;
 public class ChecksumCalcOutputStreamSupervisorImpl implements ChecksumCalcOutputStreamSupervisor {
   static Logger log = Logger.getLogger(ChecksumCalcOutputStreamSupervisorImpl.class);
 
-  private MessageDigestFactory messageDigestFactory;
+  private final MessageDigestFactory messageDigestFactory;
   private Fingerprint fingerprint;
   private CompletableFuture<Fingerprint> fingerprintFuture;
   private String fileName;

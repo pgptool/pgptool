@@ -25,8 +25,8 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
 
 public class FolderChooserDialog {
-  private ValueAdapter<String> optionalRecentlyUsedFolder;
-  private String title;
+  private final ValueAdapter<String> optionalRecentlyUsedFolder;
+  private final String title;
 
   public FolderChooserDialog(
       String optionalTitle, ValueAdapter<String> optionalRecentlyUsedFolder) {

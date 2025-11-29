@@ -18,20 +18,20 @@
 package org.pgptool.gui.app;
 
 import org.apache.log4j.Logger;
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.i18n.LocaleContextHolder;
 import ru.skarpushin.swingpm.tools.SwingPmSettings;
 import ru.skarpushin.swingpm.tools.i18n.MessagesProvider;
 
-public class Messages implements ApplicationContextAware {
-  private static Logger log = Logger.getLogger(Messages.class);
+public class Messages {
+  private static final Logger log = Logger.getLogger(Messages.class);
 
-  private ApplicationContext applicationContext;
+  private final ApplicationContext applicationContext;
+
   private static Messages INSTANCE;
 
-  public Messages() {
+  public Messages(ApplicationContext applicationContext) {
+    this.applicationContext = applicationContext;
     // NOTE: It's ok, because we have only one singleton this bean instance
     INSTANCE = this;
     SwingPmSettings.setMessages(messagesProvider);
@@ -75,7 +75,7 @@ public class Messages implements ApplicationContextAware {
     }
   }
 
-  private static MessagesProvider messagesProvider =
+  private static final MessagesProvider messagesProvider =
       new MessagesProvider() {
         @Override
         public String get(String messageCode, Object... args) {
@@ -87,9 +87,4 @@ public class Messages implements ApplicationContextAware {
           return Messages.get(messageCode);
         }
       };
-
-  @Override
-  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-    this.applicationContext = applicationContext;
-  }
 }

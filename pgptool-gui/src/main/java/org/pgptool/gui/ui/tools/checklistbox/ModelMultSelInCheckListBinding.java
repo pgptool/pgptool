@@ -21,19 +21,19 @@ import com.google.common.base.Preconditions;
 import javax.swing.DefaultListModel;
 import ru.skarpushin.swingpm.bindings.Binding;
 import ru.skarpushin.swingpm.bindings.BindingContext;
-import ru.skarpushin.swingpm.modelprops.lists.ModelMultSelInListProperty;
-import ru.skarpushin.swingpm.modelprops.lists.ModelMultSelInListPropertyAccessor;
+import ru.skarpushin.swingpm.modelprops.lists.ModelMultiSelInListProperty;
+import ru.skarpushin.swingpm.modelprops.lists.ModelMultiSelInListPropertyAccessor;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class ModelMultSelInCheckListBinding<E> implements Binding {
-  private ModelMultSelInListPropertyAccessor<E> modelProperty;
+  private ModelMultiSelInListPropertyAccessor<E> modelProperty;
   private JCheckList list;
 
   public ModelMultSelInCheckListBinding(
       BindingContext bindingContext,
-      ModelMultSelInListProperty<E> modelPropertyA,
+      ModelMultiSelInListProperty<E> modelPropertyA,
       JCheckList list) {
-    modelProperty = modelPropertyA.getModelMultSelInListPropertyAccessor();
+    modelProperty = modelPropertyA.getModelMultiSelInListPropertyAccessor();
     this.list = list;
 
     list.setModel(modelProperty.getOptions());

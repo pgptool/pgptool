@@ -43,14 +43,13 @@ import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.KeyUsage;
 import org.pgptool.gui.usage.api.UsageLogger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import org.summerb.easycrud.api.dto.EntityChangedEvent;
-import org.summerb.easycrud.api.dto.EntityChangedEvent.ChangeType;
-import org.summerb.validation.FieldValidationException;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent.ChangeType;
 import org.summerb.validation.ValidationError;
 import org.summerb.validation.ValidationErrorsUtils;
-import org.summerb.validation.errors.FieldRequiredValidationError;
+import org.summerb.validation.ValidationException;
+import org.summerb.validation.errors.MustNotBeNull;
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.collections.ListExImpl;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
@@ -73,25 +72,36 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
  */
 public class GetKeyPasswordPm
     extends PresentationModelBaseEx<GetKeyPasswordHost, GetKeyPasswordPo> {
-  private static Logger log = Logger.getLogger(GetKeyPasswordPm.class);
+  private static final Logger log = Logger.getLogger(GetKeyPasswordPm.class);
 
   private static final String FN_PASSWORD = "password";
   private static final Map<String, PasswordDeterminedForKey> CACHE_KEYID_TO_PASSWORD =
       new HashMap<>();
 
-  @Autowired private KeyRingService keyRingService;
-  @Autowired private KeyFilesOperations keyFilesOperations;
-  @Autowired private EventBus eventBus;
-  @Autowired private UsageLogger usageLogger;
+  private final KeyRingService keyRingService;
+  private final KeyFilesOperations keyFilesOperations;
+  private final EventBus eventBus;
+  private final UsageLogger usageLogger;
 
   private ModelSelInComboBoxProperty<Key> selectedKey;
   private ModelListProperty<Key> decryptionKeys;
   private ModelProperty<String> password;
   private ModelProperty<String> purpose;
-  private ListEx<ValidationError> validationErrors = new ListExImpl<ValidationError>();
+  private final ListEx<ValidationError> validationErrors = new ListExImpl<>();
 
   private List<MatchedKey> matchedKeys;
   private boolean registeredOnEventBus;
+
+  public GetKeyPasswordPm(
+      KeyRingService keyRingService,
+      KeyFilesOperations keyFilesOperations,
+      EventBus eventBus,
+      UsageLogger usageLogger) {
+    this.keyRingService = keyRingService;
+    this.keyFilesOperations = keyFilesOperations;
+    this.eventBus = eventBus;
+    this.usageLogger = usageLogger;
+  }
 
   @Override
   public boolean init(
@@ -109,7 +119,7 @@ public class GetKeyPasswordPm
     matchedKeys = keyRingService.findMatchingDecryptionKeys(initParams.keysIds);
     // NOTE: We're assuming here keys are distinct meaning same key will not
     // appear 2 times
-    if (matchedKeys.size() == 0) {
+    if (matchedKeys.isEmpty()) {
       // UiUtils.messageBox(text("error.noMatchingKeysRegistered"),
       // text("term.attention"), MessageSeverity.WARNING);
       return GetKeyPasswordPmInitResult.NoMatchingKeys;
@@ -121,7 +131,7 @@ public class GetKeyPasswordPm
     }
 
     initModelProperties(
-        matchedKeys.stream().map(x -> x.getMatchedKey()).collect(Collectors.toList()));
+        matchedKeys.stream().map(MatchedKey::getMatchedKey).collect(Collectors.toList()));
     eventBus.register(this);
     registeredOnEventBus = true;
 
@@ -157,7 +167,7 @@ public class GetKeyPasswordPm
         CACHE_KEYID_TO_PASSWORD.put(k.getRequestedKeyId(), ret);
         host.onPasswordDeterminedForKey(ret);
         return true;
-      } catch (FieldValidationException e) {
+      } catch (ValidationException e) {
         // nope, empty password doesn't work.
       }
     }
@@ -173,17 +183,16 @@ public class GetKeyPasswordPm
             "purpose",
             validationErrors);
     decryptionKeys =
-        new ModelListProperty<Key>(
-            this, new ValueAdapterReadonlyImpl<List<Key>>(keys), "decryptionKeys");
+        new ModelListProperty<>(this, new ValueAdapterReadonlyImpl<>(keys), "decryptionKeys");
     selectedKey =
-        new ModelSelInComboBoxProperty<Key>(
-            this, new ValueAdapterHolderImpl<Key>(keys.get(0)), "selectedKey", decryptionKeys);
+        new ModelSelInComboBoxProperty<>(
+            this, new ValueAdapterHolderImpl<>(keys.get(0)), "selectedKey", decryptionKeys);
     password =
         new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), FN_PASSWORD, validationErrors);
     password.getModelPropertyAccessor().addPropertyChangeListener(onPasswordChanged);
   }
 
-  private PropertyChangeListener onPasswordChanged =
+  private final PropertyChangeListener onPasswordChanged =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -200,12 +209,11 @@ public class GetKeyPasswordPm
             // done he just press enter and finf out whether password was
             // correct
           } else {
-            validationErrors.add(new FieldRequiredValidationError(FN_PASSWORD));
+            validationErrors.add(new MustNotBeNull(FN_PASSWORD));
           }
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionCancel =
       new LocalizedActionEx("action.cancel", this) {
         @Override
@@ -215,7 +223,6 @@ public class GetKeyPasswordPm
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionChooseKey =
       new LocalizedActionEx("action.ok", this) {
         @Override
@@ -234,12 +241,12 @@ public class GetKeyPasswordPm
             validationErrors.removeAll(
                 ValidationErrorsUtils.findErrorsForField(FN_PASSWORD, validationErrors));
             if (!StringUtils.hasText(password.getValue())) {
-              validationErrors.add(new FieldRequiredValidationError(FN_PASSWORD));
+              validationErrors.add(new MustNotBeNull(FN_PASSWORD));
               return;
             }
 
             keyFilesOperations.validateDecryptionKeyPassword(requestedKeyId, key, passwordStr);
-          } catch (FieldValidationException fve) {
+          } catch (ValidationException fve) {
             validationErrors.addAll(fve.getErrors());
             return;
           }

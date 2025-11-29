@@ -27,13 +27,13 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.log4j.Logger;
 
 public class ChecksumCalcOutputStream extends FilterOutputStream {
-  private static Logger log = Logger.getLogger(ChecksumCalcOutputStream.class);
+  private static final Logger log = Logger.getLogger(ChecksumCalcOutputStream.class);
 
   private long size;
-  private MessageDigest messageDigest;
-  private String fileName;
+  private final MessageDigest messageDigest;
+  private final String fileName;
   private boolean closed = false;
-  private CompletableFuture<Fingerprint> result;
+  private final CompletableFuture<Fingerprint> result;
 
   public ChecksumCalcOutputStream(
       MessageDigest messageDigest, String fileName, CompletableFuture<Fingerprint> result)

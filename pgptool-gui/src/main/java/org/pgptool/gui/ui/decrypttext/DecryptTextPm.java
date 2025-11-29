@@ -49,7 +49,6 @@ import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.DecryptTextRecipientsIdentifiedUsage;
 import org.pgptool.gui.usage.dto.DecryptedTextUsage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
@@ -57,11 +56,11 @@ import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void> {
-  private static Logger log = Logger.getLogger(DecryptTextPm.class);
+  private static final Logger log = Logger.getLogger(DecryptTextPm.class);
 
-  @Autowired private KeyRingService keyRingService;
-  @Autowired private EncryptionService encryptionService;
-  @Autowired private UsageLogger usageLogger;
+  private final KeyRingService keyRingService;
+  private final EncryptionService encryptionService;
+  private final UsageLogger usageLogger;
 
   private Set<String> keysIds;
   private PasswordDeterminedForKey keyAndPassword;
@@ -71,6 +70,13 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
   protected Set<String> recipientsList;
   private ModelProperty<String> targetText;
   private ModelProperty<Boolean> isShowMissingPrivateKeyWarning;
+
+  public DecryptTextPm(
+      KeyRingService keyRingService, EncryptionService encryptionService, UsageLogger usageLogger) {
+    this.keyRingService = keyRingService;
+    this.encryptionService = encryptionService;
+    this.usageLogger = usageLogger;
+  }
 
   @Override
   public boolean init(ActionEvent originAction, DecryptTextHost host, Void initParams) {
@@ -93,15 +99,15 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
   }
 
   private void initModelProperties() {
-    sourceText = new ModelProperty<>(this, new ValueAdapterHolderImpl<String>(""), "textToEncrypt");
+    sourceText = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "textToEncrypt");
     sourceText.getModelPropertyAccessor().addPropertyChangeListener(onSourceTextChanged);
     actionDecrypt.setEnabled(false);
 
-    targetText = new ModelProperty<>(this, new ValueAdapterHolderImpl<String>(""), "encryptedText");
+    targetText = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "encryptedText");
     targetText.getModelPropertyAccessor().addPropertyChangeListener(onTargetTextChanged);
     actionCopyTargetToClipboard.setEnabled(false);
 
-    recipients = new ModelProperty<>(this, new ValueAdapterHolderImpl<String>(""), "recipients");
+    recipients = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "recipients");
     actionReply.setEnabled(false);
 
     isShowMissingPrivateKeyWarning =
@@ -109,7 +115,7 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
             this, new ValueAdapterHolderImpl<>(false), "isShowMissingPrivateKeyWarning");
   }
 
-  private PropertyChangeListener onSourceTextChanged =
+  private final PropertyChangeListener onSourceTextChanged =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -135,7 +141,7 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
         }
       };
 
-  private PropertyChangeListener onTargetTextChanged =
+  private final PropertyChangeListener onTargetTextChanged =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -233,7 +239,7 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
   private String collectRecipientsNames(Set<String> keysIds) {
     StringBuilder ret = new StringBuilder();
     for (String keyId : keysIds) {
-      if (ret.length() > 0) {
+      if (!ret.isEmpty()) {
         ret.append(", ");
       }
       Key key = keyRingService.findKeyById(keyId);
@@ -254,7 +260,7 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
     return isShowMissingPrivateKeyWarning.getModelPropertyAccessor();
   }
 
-  private KeyAndPasswordCallback keyAndPasswordCallback =
+  private final KeyAndPasswordCallback keyAndPasswordCallback =
       new KeyAndPasswordCallback() {
         @Override
         public void onKeyPasswordResult(PasswordDeterminedForKey keyAndPassword) {
@@ -288,7 +294,6 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionReply =
       new LocalizedActionEx("action.reply", this) {
         @Override
@@ -299,7 +304,6 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionCopyTargetToClipboard =
       new LocalizedActionEx("action.copyToClipboard", this) {
         @Override
@@ -309,7 +313,6 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionPasteAndDecrypt =
       new LocalizedActionEx("action.decryptFromClipboard", this) {
         @Override
@@ -327,7 +330,6 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionDecrypt =
       new LocalizedActionEx("action.decrypt", this) {
         @Override
@@ -344,7 +346,6 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionCancel =
       new LocalizedActionEx("action.close", this) {
         @Override

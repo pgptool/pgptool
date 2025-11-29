@@ -17,10 +17,10 @@
  ******************************************************************************/
 package org.pgptool.gui.autoupdate.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.pgptool.gui.autoupdate.api.UpdatePackageInfo;
 
 public class NewVersionCheckerGitHubImplTest {
@@ -37,13 +37,13 @@ public class NewVersionCheckerGitHubImplTest {
   @Test
   public void testGetCurrentVersion_ExpectNullByDefault() {
     NewVersionCheckerGitHubImpl f = new NewVersionCheckerGitHubImpl();
-    assertEquals(f.getCurrentVersion(), NewVersionCheckerGitHubImpl.VERSION_UNRESOLVED);
+    assertEquals(NewVersionCheckerGitHubImpl.VERSION_UNRESOLVED, f.getCurrentVersion());
   }
 
   @Test
   public void testGetCurrentVersion_ExpectHardcoded() {
     NewVersionCheckerGitHubImpl f = new NewVersionCheckerGitHubImpl();
     f.setConfiguredVersion("0.0.0.0");
-    assertEquals(f.getCurrentVersion(), "0.0.0.0");
+    assertEquals("0.0.0.0", f.getCurrentVersion());
   }
 }

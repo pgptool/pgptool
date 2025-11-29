@@ -1,25 +1,35 @@
 package EXPORT.org.summerb.validation;
 
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import org.summerb.methodCapturers.PropertyNameResolver;
 import org.summerb.validation.ValidationContext;
-import org.summerb.validation.errors.InvalidEmailValidationError;
+import org.summerb.validation.ValidationContextFactory;
+import org.summerb.validation.errors.MustBeValidEmail;
+import org.summerb.validation.jakarta.JakartaValidator;
 
-public class ValidationContextEx extends ValidationContext {
-
+public class ValidationContextEx<T> extends ValidationContext<T> {
   public static final Predicate<String> EMAIL_REGEXP =
       Pattern.compile(
               "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])")
           .asPredicate();
 
-  /** IMPORTANT !!! See doc of {@link #isValidEmail(String)} method */
+  public ValidationContextEx(
+      T bean,
+      PropertyNameResolver<T> propertyNameResolver,
+      JakartaValidator jakartaValidator,
+      ValidationContextFactory validationContextFactory) {
+    super(bean, propertyNameResolver, jakartaValidator, validationContextFactory);
+  }
+
   @Override
-  public boolean validateEmailFormat(String email, String fieldToken) {
-    if (isValidEmail(email)) {
+  public boolean validEmail(String value, Supplier<String> propertyName) {
+    if (isValidEmail(value)) {
       return true;
     }
 
-    add(new InvalidEmailValidationError(fieldToken));
+    add(new MustBeValidEmail(propertyName.get()));
     return false;
   }
 

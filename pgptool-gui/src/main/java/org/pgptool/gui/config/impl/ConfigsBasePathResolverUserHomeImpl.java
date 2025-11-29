@@ -27,7 +27,7 @@ import org.pgptool.gui.tools.TextFile;
 import org.springframework.util.StringUtils;
 
 public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResolver {
-  private static Logger log = Logger.getLogger(ConfigsBasePathResolverUserHomeImpl.class);
+  private static final Logger log = Logger.getLogger(ConfigsBasePathResolverUserHomeImpl.class);
   private String chosenLocation;
   private String configFolderName = ".pgptool";
 

@@ -26,8 +26,7 @@ import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.FolderChooserDialog;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.validation.FieldValidationException;
+import org.summerb.validation.ValidationException;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
 
 /**
@@ -37,9 +36,13 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
  * @author Sergey Karpushin
  */
 public class TempFolderChooserPm extends PresentationModelBaseEx<Void, Void> {
-  @Autowired private DecryptedTempFolder decryptedTempFolder;
+  private final DecryptedTempFolder decryptedTempFolder;
 
   private FolderChooserDialog folderChooserDialog;
+
+  public TempFolderChooserPm(DecryptedTempFolder decryptedTempFolder) {
+    this.decryptedTempFolder = decryptedTempFolder;
+  }
 
   public void present(ActionEvent originEvent) {
     try {
@@ -60,12 +63,12 @@ public class TempFolderChooserPm extends PresentationModelBaseEx<Void, Void> {
   public FolderChooserDialog getFolderChooserDialog() {
     if (folderChooserDialog == null) {
       ValueAdapter<String> recentlyUsedFolder =
-          new ValueAdapter<String>() {
+          new ValueAdapter<>() {
             @Override
             public void setValue(String value) {
               try {
                 decryptedTempFolder.setTempFolderBasePath(value);
-              } catch (FieldValidationException e) {
+              } catch (ValidationException e) {
                 throw new RuntimeException("Failed to persist temp folder location", e);
               }
             }

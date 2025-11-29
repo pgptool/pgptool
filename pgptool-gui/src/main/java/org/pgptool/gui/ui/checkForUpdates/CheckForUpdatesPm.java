@@ -29,7 +29,6 @@ import org.pgptool.gui.ui.tools.UrlOpener;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
@@ -37,9 +36,9 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
 public class CheckForUpdatesPm extends PresentationModelBaseEx<CheckForUpdatesHost, UpdatesPolicy>
     implements InitializingBean {
-  private static Logger log = Logger.getLogger(CheckForUpdatesPm.class);
+  private static final Logger log = Logger.getLogger(CheckForUpdatesPm.class);
 
-  @Autowired private NewVersionChecker newVersionChecker;
+  private final NewVersionChecker newVersionChecker;
 
   private ModelProperty<String> currentVersion;
   private ModelProperty<String> versionCheckStatus;
@@ -50,26 +49,26 @@ public class CheckForUpdatesPm extends PresentationModelBaseEx<CheckForUpdatesHo
 
   private String updatePackageUrl;
 
+  public CheckForUpdatesPm(NewVersionChecker newVersionChecker) {
+    this.newVersionChecker = newVersionChecker;
+  }
+
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     currentVersion =
-        new ModelProperty<String>(
-            this,
-            new ValueAdapterReadonlyImpl<String>(newVersionChecker.getCurrentVersion()),
-            "version");
+        new ModelProperty<>(
+            this, new ValueAdapterReadonlyImpl<>(newVersionChecker.getCurrentVersion()), "version");
 
     versionCheckStatus =
-        new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "versionStatus");
+        new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "versionStatus");
     linkToNewVersion =
-        new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "linkToNewVersion");
+        new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "linkToNewVersion");
 
     newVersionTitle =
-        new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "newVersionTitle");
-    newVersion =
-        new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "newVersionId");
+        new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "newVersionTitle");
+    newVersion = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "newVersionId");
     newVersionReleaseNotes =
-        new ModelProperty<String>(
-            this, new ValueAdapterHolderImpl<String>(""), "newVersionReleaseNotes");
+        new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "newVersionReleaseNotes");
   }
 
   @Override
@@ -82,7 +81,7 @@ public class CheckForUpdatesPm extends PresentationModelBaseEx<CheckForUpdatesHo
     return true;
   }
 
-  private Runnable checkForNewVersion =
+  private final Runnable checkForNewVersion =
       new Runnable() {
         @Override
         public void run() {
@@ -112,7 +111,6 @@ public class CheckForUpdatesPm extends PresentationModelBaseEx<CheckForUpdatesHo
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionClose =
       new LocalizedActionEx("action.close", this) {
         @Override
@@ -122,7 +120,6 @@ public class CheckForUpdatesPm extends PresentationModelBaseEx<CheckForUpdatesHo
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionSnoozeVersion =
       new LocalizedActionEx("action.snoozeVersion", this) {
         @Override
@@ -133,7 +130,6 @@ public class CheckForUpdatesPm extends PresentationModelBaseEx<CheckForUpdatesHo
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionDownloadNewVersion =
       new LocalizedActionEx("action.actionDownloadNewVersion", this) {
         @Override

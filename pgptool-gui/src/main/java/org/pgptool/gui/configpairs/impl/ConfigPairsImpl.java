@@ -27,9 +27,8 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.easycrud.api.dto.EntityChangedEvent;
 import org.summerb.utils.DtoBase;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 
 /**
  * This is VERY simple map-based impl of this storage. It uses config repo and performs write
@@ -38,16 +37,19 @@ import org.summerb.utils.DtoBase;
  * @author Sergey Karpushin
  */
 public class ConfigPairsImpl implements ConfigPairs {
-  private static Logger log = Logger.getLogger(ConfigPairsImpl.class);
+  private static final Logger log = Logger.getLogger(ConfigPairsImpl.class);
 
-  @Autowired private ConfigRepository configRepository;
-  @Autowired private EventBus eventBus;
+  private final ConfigRepository configRepository;
+  private final EventBus eventBus;
 
   private ConfigPairsEnvelop configPairsEnvelop;
-  private String clarification;
+  private final String clarification;
   private Gson gson = new Gson();
 
-  public ConfigPairsImpl(String clarification) {
+  public ConfigPairsImpl(
+      ConfigRepository configRepository, EventBus eventBus, String clarification) {
+    this.configRepository = configRepository;
+    this.eventBus = eventBus;
     this.clarification = clarification;
   }
 
@@ -69,7 +71,7 @@ public class ConfigPairsImpl implements ConfigPairs {
 
       if (previous != null & value instanceof DtoBase) {
         eventBus.post(EntityChangedEvent.updated((DtoBase) value));
-      } else if (value != null & value instanceof DtoBase) {
+      } else if (value instanceof DtoBase) {
         eventBus.post(EntityChangedEvent.added((DtoBase) value));
       }
     }

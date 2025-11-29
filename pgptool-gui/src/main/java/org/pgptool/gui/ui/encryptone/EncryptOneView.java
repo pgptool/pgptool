@@ -199,7 +199,7 @@ public class EncryptOneView extends DialogViewBaseEx<EncryptOnePm> {
     bindingContext.setupBinding(pm.getSourceFile(), edSourceFile);
     bindingContext.setupBinding(pm.actionBrowseSource, btnBrowseSource);
 
-    bindingContext.setupBinding(pm.getIsUseSameFolder(), chkUseSameFolder);
+    bindingContext.setupBinding(null, pm.getIsUseSameFolder(), chkUseSameFolder);
     bindingContext.setupBinding(pm.getTargetFile(), edTargetFile);
     bindingContext.registerPropertyValuePropagation(
         pm.getTargetFileEnabled(), edTargetFile, "enabled");
@@ -209,8 +209,8 @@ public class EncryptOneView extends DialogViewBaseEx<EncryptOnePm> {
         new ModelMultSelInCheckListBinding<>(
             bindingContext, pm.getSelectedRecipients(), recipients));
 
-    bindingContext.setupBinding(pm.getIsDeleteSourceAfter(), chkDeleteSourceAfter);
-    bindingContext.setupBinding(pm.getIsOpenTargetFolderAfter(), chkOpenTargetFolderAfter);
+    bindingContext.setupBinding(null, pm.getIsDeleteSourceAfter(), chkDeleteSourceAfter);
+    bindingContext.setupBinding(null, pm.getIsOpenTargetFolderAfter(), chkOpenTargetFolderAfter);
 
     bindingContext.setupBinding(pm.actionDoOperation, btnPerformOperation);
     bindingContext.setupBinding(pm.actionCancel, btnCancel);
@@ -235,8 +235,8 @@ public class EncryptOneView extends DialogViewBaseEx<EncryptOnePm> {
         pm.getIsNoPrivateKeysSelected().getValue());
   }
 
-  private TypedPropertyChangeListener<Boolean> onNoPrivateKeysSelected =
-      new TypedPropertyChangeListener<Boolean>() {
+  private final TypedPropertyChangeListener<Boolean> onNoPrivateKeysSelected =
+      new TypedPropertyChangeListener<>() {
         @Override
         public void handlePropertyChanged(
             Object source, String propertyName, Boolean oldValue, Boolean newValue) {

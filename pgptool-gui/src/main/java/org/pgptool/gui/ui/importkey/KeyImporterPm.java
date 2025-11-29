@@ -48,7 +48,6 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.MultipleFilesChooserDialog;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import ru.skarpushin.swingpm.base.View;
@@ -56,17 +55,24 @@ import ru.skarpushin.swingpm.modelprops.table.ModelTableProperty;
 import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
 
 public class KeyImporterPm extends PresentationModelBaseEx<KeyImporterHost, List<Key>> {
-  private static Logger log = Logger.getLogger(KeyImporterPm.class);
+  private static final Logger log = Logger.getLogger(KeyImporterPm.class);
   private static final String BROWSE_FOLDER = "KeyImporterPm.BROWSE_FOLDER";
   private static final String[] EXTENSIONS = new String[] {"asc", "bpg"};
 
-  @Autowired private ConfigPairs appProps;
-  @Autowired private KeyFilesOperations keyFilesOperations;
-  @Autowired private KeyRingService keyRingService;
+  private final ConfigPairs appProps;
+  private final KeyFilesOperations keyFilesOperations;
+  private final KeyRingService keyRingService;
 
   private ModelTableProperty<Key> keys;
   private MultipleFilesChooserDialog sourceFileChooser;
-  private Comparator<Key> keySorterByNameAsc = new ComparatorKeyByNameImpl();
+  private final Comparator<Key> keySorterByNameAsc = new ComparatorKeyByNameImpl();
+
+  public KeyImporterPm(
+      ConfigPairs appProps, KeyFilesOperations keyFilesOperations, KeyRingService keyRingService) {
+    this.appProps = appProps;
+    this.keyFilesOperations = keyFilesOperations;
+    this.keyRingService = keyRingService;
+  }
 
   @Override
   public boolean init(ActionEvent originAction, KeyImporterHost host, List<Key> preloadedKeys) {
@@ -129,7 +135,7 @@ public class KeyImporterPm extends PresentationModelBaseEx<KeyImporterHost, List
               ofd.setFileFilter(ofd.getChoosableFileFilters()[0]);
             }
 
-            private FileFilter keyFilesFilter =
+            private final FileFilter keyFilesFilter =
                 new FileFilter() {
                   @Override
                   public boolean accept(File f) {
@@ -200,14 +206,14 @@ public class KeyImporterPm extends PresentationModelBaseEx<KeyImporterHost, List
       Map<String, Throwable> exceptions = new HashMap<>();
       List<Key> loadedKeys = loadKeysSafe(filesToLoad, exceptions);
 
-      if (exceptions.size() > 0) {
+      if (!exceptions.isEmpty()) {
         String msg =
             buildSummaryMessage("error.keysLoadedStatistics", loadedKeys.size(), exceptions);
         UiUtils.messageBox(
             originAction, msg, Messages.get("term.attention"), JOptionPane.ERROR_MESSAGE);
       }
 
-      if (loadedKeys.size() > 0) {
+      if (!loadedKeys.isEmpty()) {
         initLoadedKeys(loadedKeys);
         return true;
       }
@@ -253,19 +259,18 @@ public class KeyImporterPm extends PresentationModelBaseEx<KeyImporterHost, List
     return sb.toString();
   }
 
-  @SuppressWarnings("serial")
-  private Action actionDoImport =
+  private final Action actionDoImport =
       new LocalizedActionEx("action.import", this) {
         @Override
         public void actionPerformed(ActionEvent e) {
           super.actionPerformed(e);
           try {
-            Preconditions.checkState(keys.getList().size() > 0, "No keys loaded");
+            Preconditions.checkState(!keys.getList().isEmpty(), "No keys loaded");
 
             Map<String, Throwable> exceptions = new HashMap<>();
             int loadedCount = importKeysSafe(exceptions);
 
-            if (exceptions.size() > 0) {
+            if (!exceptions.isEmpty()) {
               String msg =
                   buildSummaryMessage("error.keysImportStatistics", loadedCount, exceptions);
               UiUtils.messageBox(e, msg, Messages.get("term.attention"), JOptionPane.ERROR_MESSAGE);
@@ -293,8 +298,7 @@ public class KeyImporterPm extends PresentationModelBaseEx<KeyImporterHost, List
         }
       };
 
-  @SuppressWarnings("serial")
-  private Action actionCancel =
+  private final Action actionCancel =
       new LocalizedActionEx("action.cancel", this) {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -303,7 +307,7 @@ public class KeyImporterPm extends PresentationModelBaseEx<KeyImporterHost, List
         }
       };
 
-  private KeysTablePm keysTablePm =
+  private final KeysTablePm keysTablePm =
       new KeysTablePm() {
         @Override
         public ModelTablePropertyAccessor<Key> getKeys() {

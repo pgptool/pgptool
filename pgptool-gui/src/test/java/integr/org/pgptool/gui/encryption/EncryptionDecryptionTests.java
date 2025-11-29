@@ -17,8 +17,8 @@
  ******************************************************************************/
 package integr.org.pgptool.gui.encryption;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import integr.org.pgptool.gui.TestTools;
 import java.io.File;
@@ -31,30 +31,30 @@ import java.util.Optional;
 import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgptool.gui.encryption.api.EncryptionService;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.implpgp.SymmetricEncryptionIsNotSupportedException;
+import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.tools.TextFile;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.annotation.ProfileValueSourceConfiguration;
-import org.springframework.test.annotation.SystemProfileValueSource;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.summerb.validation.FieldValidationException;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.summerb.validation.ValidationException;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration("classpath:integr-test-context.xml")
-@ProfileValueSourceConfiguration(SystemProfileValueSource.class)
+@ProfileValueSourceConfiguration()
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class EncryptionDecryptionTests {
@@ -62,14 +62,18 @@ public class EncryptionDecryptionTests {
   @Autowired private KeyRingService keyRingService;
   @Autowired private EncryptionService encryptionService;
   @Autowired private KeyGeneratorService keyGeneratorService;
-  @Autowired private String tempDirPath;
+  @Autowired private DecryptedTempFolder decryptedTempFolder;
+
+  private String tempDirPath;
 
   private Map<String, Key> keys = new HashMap<>();
   private String testSubjectFilename;
   private String testSubjectContents;
 
-  @Before
+  @BeforeEach
   public void prepareForTests() throws Exception {
+    tempDirPath = decryptedTempFolder.getTempFolderBasePath();
+
     testSubjectFilename = TestTools.getFileNameForResource("testsubject.txt");
     testSubjectContents = TextFile.read(testSubjectFilename);
 
@@ -79,13 +83,13 @@ public class EncryptionDecryptionTests {
     importKeyFromResources("Paul.asc");
   }
 
-  @After
+  @AfterEach
   public void cleanUpTempDir() throws Exception {
     FileUtils.deleteDirectory(new File(tempDirPath));
   }
 
   private Key importKeyFromResources(String keyFileName)
-      throws URISyntaxException, FieldValidationException {
+      throws URISyntaxException, ValidationException {
     Key key =
         keyFilesOperations.readKeyFromFile(TestTools.getFileNameForResource("keys/" + keyFileName));
     keyRingService.addKey(key);

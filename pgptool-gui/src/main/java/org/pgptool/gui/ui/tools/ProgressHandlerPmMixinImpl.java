@@ -23,9 +23,9 @@ import org.pgptool.gui.bkgoperation.ProgressHandler;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 
 public class ProgressHandlerPmMixinImpl implements ProgressHandler {
-  private ModelProperty<Boolean> isProgressVisible;
-  private ModelProperty<Integer> progressValue;
-  private ModelProperty<String> progressNote;
+  private final ModelProperty<Boolean> isProgressVisible;
+  private final ModelProperty<Integer> progressValue;
+  private final ModelProperty<String> progressNote;
 
   public ProgressHandlerPmMixinImpl(
       ModelProperty<Boolean> isProgressVisible,

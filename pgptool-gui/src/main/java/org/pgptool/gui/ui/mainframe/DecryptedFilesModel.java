@@ -31,14 +31,14 @@ public class DecryptedFilesModel implements LightweightTableModel<DecryptedFile>
   public static final int COLUMN_DECRYPTED_FILE = 1;
   public static final int COLUMN_ENCRYPT_BACK_ACTION = 2;
 
-  private DecryptedTempFolder decryptedTempFolder;
+  private final DecryptedTempFolder decryptedTempFolder;
 
   public DecryptedFilesModel(DecryptedTempFolder decryptedTempFolder) {
     this.decryptedTempFolder = decryptedTempFolder;
   }
 
   /** Absoilute pathname to File object */
-  private Map<String, File> cache = new HashMap<>();
+  private final Map<String, File> cache = new HashMap<>();
 
   @Override
   public int getColumnCount() {

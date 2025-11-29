@@ -66,6 +66,11 @@ public class CompoundPainter<T> extends AbstractPainter<T> {
   private boolean clipPreserved = false;
 
   private boolean checkForDirtyChildPainters = true;
+  // indicates whether the local cache should be cleared only, as opposed to the
+  // cache's of all of the children. This is needed to optimize the caching
+  // strategy
+  // when, during validate, the CompoundPainter is marked as dirty
+  private boolean clearLocalCacheOnly = false;
 
   /** Creates a new instance of CompoundPainter */
   public CompoundPainter() {}
@@ -85,6 +90,17 @@ public class CompoundPainter<T> extends AbstractPainter<T> {
   }
 
   /**
+   * Gets the array of painters used by this CompoundPainter
+   *
+   * @return a defensive copy of the painters used by this CompoundPainter. This will never be null.
+   */
+  public final Painter[] getPainters() {
+    Painter[] results = new Painter[painters.length];
+    System.arraycopy(painters, 0, results, 0, results.length);
+    return results;
+  }
+
+  /**
    * Sets the array of Painters to use. These painters will be executed in order. A null value will
    * be treated as an empty array. To prevent unexpected behavior all values in provided array are
    * copied to internally held array. Any changes to the original array will not be reflected.
@@ -99,17 +115,6 @@ public class CompoundPainter<T> extends AbstractPainter<T> {
     }
     setDirty(true);
     firePropertyChange("painters", old, getPainters());
-  }
-
-  /**
-   * Gets the array of painters used by this CompoundPainter
-   *
-   * @return a defensive copy of the painters used by this CompoundPainter. This will never be null.
-   */
-  public final Painter[] getPainters() {
-    Painter[] results = new Painter[painters.length];
-    System.arraycopy(painters, 0, results, 0, results.length);
-    return results;
   }
 
   /**
@@ -169,8 +174,7 @@ public class CompoundPainter<T> extends AbstractPainter<T> {
   protected void validate(T object) {
     boolean dirty = false;
     for (Painter p : painters) {
-      if (p instanceof AbstractPainter) {
-        AbstractPainter ap = (AbstractPainter) p;
+      if (p instanceof AbstractPainter ap) {
         ap.validate(object);
         if (ap.isDirty()) {
           dirty = true;
@@ -182,12 +186,6 @@ public class CompoundPainter<T> extends AbstractPainter<T> {
     setDirty(dirty); // super will call clear cache
     clearLocalCacheOnly = false;
   }
-
-  // indicates whether the local cache should be cleared only, as opposed to the
-  // cache's of all of the children. This is needed to optimize the caching
-  // strategy
-  // when, during validate, the CompoundPainter is marked as dirty
-  private boolean clearLocalCacheOnly = false;
 
   /**
    * Used by {@link #isDirty()} to check if the child <code>Painter</code>s should be checked for
@@ -233,8 +231,7 @@ public class CompoundPainter<T> extends AbstractPainter<T> {
       return true;
     } else if (isCheckingDirtyChildPainters()) {
       for (Painter p : painters) {
-        if (p instanceof AbstractPainter) {
-          AbstractPainter ap = (AbstractPainter) p;
+        if (p instanceof AbstractPainter ap) {
           if (ap.isDirty()) {
             return true;
           }
@@ -256,8 +253,7 @@ public class CompoundPainter<T> extends AbstractPainter<T> {
   public void clearCache() {
     if (!clearLocalCacheOnly) {
       for (Painter p : painters) {
-        if (p instanceof AbstractPainter) {
-          AbstractPainter ap = (AbstractPainter) p;
+        if (p instanceof AbstractPainter ap) {
           ap.clearCache();
         }
       }

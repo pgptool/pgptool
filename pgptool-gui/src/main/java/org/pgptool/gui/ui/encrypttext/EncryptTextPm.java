@@ -24,7 +24,6 @@ import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -45,27 +44,33 @@ import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.EncryptTextRecipientsUsage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.summerb.validation.ValidationContext;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.lists.ModelListProperty;
-import ru.skarpushin.swingpm.modelprops.lists.ModelMultSelInListProperty;
+import ru.skarpushin.swingpm.modelprops.lists.ModelMultiSelInListProperty;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
 public class EncryptTextPm extends PresentationModelBaseEx<EncryptTextHost, Set<String>> {
-  @Autowired private KeyRingService keyRingService;
-  @Autowired private EncryptionService encryptionService;
-  @Autowired private UsageLogger usageLogger;
+  private final KeyRingService keyRingService;
+  private final EncryptionService encryptionService;
+  private final UsageLogger usageLogger;
 
-  private ModelMultSelInListProperty<Key> selectedRecipients;
+  private ModelMultiSelInListProperty<Key> selectedRecipients;
   private ModelListProperty<Key> availabileRecipients;
 
   private ModelProperty<String> sourceText;
   private ModelProperty<String> targetText;
+
+  public EncryptTextPm(
+      KeyRingService keyRingService, EncryptionService encryptionService, UsageLogger usageLogger) {
+    this.keyRingService = keyRingService;
+    this.encryptionService = encryptionService;
+    this.usageLogger = usageLogger;
+  }
 
   @Override
   public boolean init(
@@ -111,7 +116,7 @@ public class EncryptTextPm extends PresentationModelBaseEx<EncryptTextHost, Set<
 
     UiUtils.messageBox(
         originAction,
-        text("error.notAllRecipientsAvailable", Arrays.asList(missedKeys)),
+        text("error.notAllRecipientsAvailable", List.of(missedKeys)),
         text("term.attention"),
         JOptionPane.WARNING_MESSAGE);
   }
@@ -136,28 +141,28 @@ public class EncryptTextPm extends PresentationModelBaseEx<EncryptTextHost, Set<
     List<Key> allKeys = keyRingService.readKeys();
     allKeys.sort(new ComparatorKeyByNameImpl());
     availabileRecipients =
-        new ModelListProperty<Key>(
-            this, new ValueAdapterReadonlyImpl<List<Key>>(allKeys), "availabileRecipients");
+        new ModelListProperty<>(
+            this, new ValueAdapterReadonlyImpl<>(allKeys), "availabileRecipients");
     selectedRecipients =
-        new ModelMultSelInListProperty<Key>(
+        new ModelMultiSelInListProperty<>(
             this,
-            new ValueAdapterHolderImpl<List<Key>>(new ArrayList<Key>()),
+            new ValueAdapterHolderImpl<>(new ArrayList<>()),
             "projects",
             availabileRecipients);
     selectedRecipients
-        .getModelMultSelInListPropertyAccessor()
+        .getModelMultiSelInListPropertyAccessor()
         .addListExEventListener(onRecipientsSelectionChanged);
     onRecipientsSelectionChanged.onListChanged();
 
-    sourceText = new ModelProperty<>(this, new ValueAdapterHolderImpl<String>(""), "textToEncrypt");
+    sourceText = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "textToEncrypt");
     sourceText.getModelPropertyAccessor().addPropertyChangeListener(onSourceTextChanged);
     actionDoOperation.setEnabled(false);
-    targetText = new ModelProperty<>(this, new ValueAdapterHolderImpl<String>(""), "encryptedText");
+    targetText = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "encryptedText");
     targetText.getModelPropertyAccessor().addPropertyChangeListener(onTargetTextChanged);
     actionCopyTargetToClipboard.setEnabled(false);
   }
 
-  private PropertyChangeListener onSourceTextChanged =
+  private final PropertyChangeListener onSourceTextChanged =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -165,7 +170,7 @@ public class EncryptTextPm extends PresentationModelBaseEx<EncryptTextHost, Set<
         }
       };
 
-  private PropertyChangeListener onTargetTextChanged =
+  private final PropertyChangeListener onTargetTextChanged =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -181,15 +186,14 @@ public class EncryptTextPm extends PresentationModelBaseEx<EncryptTextHost, Set<
     actionDoOperation.setEnabled(result);
   }
 
-  private ListChangeListenerAnyEventImpl<Key> onRecipientsSelectionChanged =
-      new ListChangeListenerAnyEventImpl<Key>() {
+  private final ListChangeListenerAnyEventImpl<Key> onRecipientsSelectionChanged =
+      new ListChangeListenerAnyEventImpl<>() {
         @Override
         public void onListChanged() {
           refreshPrimaryOperationAvailability();
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionDoOperation =
       new LocalizedActionEx("action.encrypt", this) {
         @Override
@@ -210,7 +214,6 @@ public class EncryptTextPm extends PresentationModelBaseEx<EncryptTextHost, Set<
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionSelectRecipientsFromClipboard =
       new LocalizedActionEx("action.selectKeysFromClipboard", this) {
         @Override
@@ -276,7 +279,7 @@ public class EncryptTextPm extends PresentationModelBaseEx<EncryptTextHost, Set<
 
           UiUtils.messageBox(
               e,
-              text("error.notAllEmailsAvailable", Arrays.asList(missedKeys)),
+              text("error.notAllEmailsAvailable", List.of(missedKeys)),
               text("term.attention"),
               JOptionPane.WARNING_MESSAGE);
         }
@@ -295,13 +298,12 @@ public class EncryptTextPm extends PresentationModelBaseEx<EncryptTextHost, Set<
       }
     }
 
-    if (ret.size() == 0) {
+    if (ret.isEmpty()) {
       return null;
     }
     return ret;
   }
 
-  @SuppressWarnings("serial")
   protected final Action actionPasteSourceFromClipboard =
       new LocalizedActionEx("action.pasteFromClipboard", this) {
         @Override
@@ -321,7 +323,6 @@ public class EncryptTextPm extends PresentationModelBaseEx<EncryptTextHost, Set<
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionCopyTargetToClipboard =
       new LocalizedActionEx("action.copyToClipboard", this) {
         @Override
@@ -331,7 +332,6 @@ public class EncryptTextPm extends PresentationModelBaseEx<EncryptTextHost, Set<
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionClose =
       new LocalizedActionEx("action.close", this) {
         @Override
@@ -341,7 +341,7 @@ public class EncryptTextPm extends PresentationModelBaseEx<EncryptTextHost, Set<
         }
       };
 
-  public ModelMultSelInListProperty<Key> getSelectedRecipients() {
+  public ModelMultiSelInListProperty<Key> getSelectedRecipients() {
     return selectedRecipients;
   }
 

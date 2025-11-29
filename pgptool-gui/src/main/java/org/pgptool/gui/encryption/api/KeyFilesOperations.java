@@ -21,7 +21,6 @@ import java.io.File;
 import java.util.List;
 import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.summerb.validation.FieldValidationException;
 
 public interface KeyFilesOperations {
   final String FN_PASSWORD = "password";
@@ -36,10 +35,9 @@ public interface KeyFilesOperations {
 
   void exportPrivateKey(Key key, String targetFilePathname);
 
-  void validateDecryptionKeyPassword(String secretKeyId, Key key, String password)
-      throws FieldValidationException;
+  void validateDecryptionKeyPassword(String secretKeyId, Key key, String password);
 
-  void validateKeyPassword(Key key, String passphrase) throws FieldValidationException;
+  void validateKeyPassword(Key key, String passphrase);
 
   Key readKeyFromFile(String fileName);
 }

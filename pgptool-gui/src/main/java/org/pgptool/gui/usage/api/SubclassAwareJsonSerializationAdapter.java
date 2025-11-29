@@ -22,9 +22,9 @@ public class SubclassAwareJsonSerializationAdapter<T>
    * have adapter for. If we reuse context to work with instances - it will fail. So we need
    * separata Gson which is unaware of this custom SubclassAwareJsonSerializationAdapter
    */
-  private Gson simpleGson = new Gson();
+  private final Gson simpleGson = new Gson();
 
-  private Class<T> abstractBaseClass;
+  private final Class<T> abstractBaseClass;
 
   public SubclassAwareJsonSerializationAdapter(Class<T> abstractBaseClass) {
     this.abstractBaseClass = abstractBaseClass;

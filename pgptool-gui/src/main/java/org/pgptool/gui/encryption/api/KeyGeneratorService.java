@@ -20,7 +20,6 @@ package org.pgptool.gui.encryption.api;
 import org.pgptool.gui.encryption.api.dto.ChangePasswordParams;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.summerb.validation.FieldValidationException;
 
 public interface KeyGeneratorService {
   /**
@@ -35,9 +34,7 @@ public interface KeyGeneratorService {
    * @param emptyPassphraseConsent must be explicitly specified if user agreed to use empty
    *     passphrase
    */
-  Key createNewKey(CreateKeyParams params, boolean emptyPassphraseConsent)
-      throws FieldValidationException;
+  Key createNewKey(CreateKeyParams params, boolean emptyPassphraseConsent);
 
-  Key changeKeyPassword(Key key, ChangePasswordParams params, boolean emptyPasswordConsent)
-      throws FieldValidationException;
+  Key changeKeyPassword(Key key, ChangePasswordParams params, boolean emptyPasswordConsent);
 }

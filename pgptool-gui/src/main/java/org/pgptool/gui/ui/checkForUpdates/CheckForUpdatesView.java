@@ -128,7 +128,7 @@ public class CheckForUpdatesView extends DialogViewBaseEx<CheckForUpdatesPm> {
     protected abstract void triggerAction(ActionEvent originEvent);
   }
 
-  private MouseListener newVersionLinkClickListener =
+  private final MouseListener newVersionLinkClickListener =
       new LinkMouseListener() {
         @Override
         protected void triggerAction(ActionEvent originEvent) {
@@ -136,8 +136,8 @@ public class CheckForUpdatesView extends DialogViewBaseEx<CheckForUpdatesPm> {
         }
       };
 
-  private TypedPropertyChangeListener<String> onReleaseNotesChanged =
-      new TypedPropertyChangeListener<String>() {
+  private final TypedPropertyChangeListener<String> onReleaseNotesChanged =
+      new TypedPropertyChangeListener<>() {
         @Override
         public void handlePropertyChanged(
             Object source, String propertyName, String oldValue, String newValue) {

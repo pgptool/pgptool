@@ -29,7 +29,6 @@ import org.pgptool.gui.ui.tools.UrlOpener;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
@@ -37,12 +36,12 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
 public class AboutPm extends PresentationModelBaseEx<AboutHost, Void> implements InitializingBean {
-  private static Logger log = Logger.getLogger(AboutPm.class);
+  private static final Logger log = Logger.getLogger(AboutPm.class);
 
   @Value("${net.ts.baseUrl}")
   private String urlToSite;
 
-  @Autowired private NewVersionChecker newVersionChecker;
+  private final NewVersionChecker newVersionChecker;
 
   private ModelProperty<String> version;
   private ModelProperty<String> linkToSite;
@@ -52,21 +51,20 @@ public class AboutPm extends PresentationModelBaseEx<AboutHost, Void> implements
 
   private String updatePackageUrl;
 
-  @Override
-  public void afterPropertiesSet() throws Exception {
-    version =
-        new ModelProperty<String>(
-            this,
-            new ValueAdapterReadonlyImpl<String>(newVersionChecker.getCurrentVersion()),
-            "version");
-    linkToSite =
-        new ModelProperty<String>(
-            this, new ValueAdapterReadonlyImpl<String>(urlToSite), "linkToSite");
+  public AboutPm(NewVersionChecker newVersionChecker) {
+    this.newVersionChecker = newVersionChecker;
+  }
 
-    versionStatus =
-        new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "versionStatus");
+  @Override
+  public void afterPropertiesSet() {
+    version =
+        new ModelProperty<>(
+            this, new ValueAdapterReadonlyImpl<>(newVersionChecker.getCurrentVersion()), "version");
+    linkToSite = new ModelProperty<>(this, new ValueAdapterReadonlyImpl<>(urlToSite), "linkToSite");
+
+    versionStatus = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "versionStatus");
     linkToNewVersion =
-        new ModelProperty<String>(this, new ValueAdapterHolderImpl<String>(""), "linkToNewVersion");
+        new ModelProperty<>(this, new ValueAdapterHolderImpl<>(""), "linkToNewVersion");
   }
 
   @Override
@@ -76,7 +74,7 @@ public class AboutPm extends PresentationModelBaseEx<AboutHost, Void> implements
     return true;
   }
 
-  private Runnable checkForNewVersion =
+  private final Runnable checkForNewVersion =
       new Runnable() {
         @Override
         public void run() {
@@ -100,7 +98,6 @@ public class AboutPm extends PresentationModelBaseEx<AboutHost, Void> implements
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionClose =
       new LocalizedActionEx("action.close", this) {
         @Override
@@ -110,7 +107,6 @@ public class AboutPm extends PresentationModelBaseEx<AboutHost, Void> implements
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionOpenSite =
       new LocalizedActionEx("term.linkToSite", this) {
         @Override
@@ -121,7 +117,6 @@ public class AboutPm extends PresentationModelBaseEx<AboutHost, Void> implements
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionDownloadNewVersion =
       new LocalizedActionEx("term.actionDownloadNewVersion", this) {
         @Override

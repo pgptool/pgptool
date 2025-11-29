@@ -49,14 +49,13 @@ import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersister;
 import org.pgptool.gui.ui.tools.geometrymemory.TableColumnsGeometryPersisterImpl;
 import org.pgptool.gui.ui.tools.swingpm.ViewBaseEx;
-import org.springframework.beans.factory.annotation.Autowired;
 import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 
 public class KeysTableView extends ViewBaseEx<KeysTablePm> {
   private static final String DELETE = "Delete";
 
-  @Autowired private ScheduledExecutorService scheduledExecutorService;
-  @Autowired private ConfigPairs uiGeom;
+  private final ScheduledExecutorService scheduledExecutorService;
+  private final ConfigPairs uiGeom;
 
   private JPanel panelRoot;
 
@@ -72,6 +71,11 @@ public class KeysTableView extends ViewBaseEx<KeysTablePm> {
 
   /** Code used to store and retrieve table layout */
   private String persistenceCode = "keyList";
+
+  public KeysTableView(ScheduledExecutorService scheduledExecutorService, ConfigPairs uiGeom) {
+    this.scheduledExecutorService = scheduledExecutorService;
+    this.uiGeom = uiGeom;
+  }
 
   @Override
   protected void internalInitComponents() {
@@ -111,7 +115,6 @@ public class KeysTableView extends ViewBaseEx<KeysTablePm> {
     return scrollPane;
   }
 
-  @SuppressWarnings("serial")
   private void initTableKeyListener() {
     int condition = JComponent.WHEN_IN_FOCUSED_WINDOW;
     InputMap inputMap = table.getInputMap(condition);
@@ -209,8 +212,8 @@ public class KeysTableView extends ViewBaseEx<KeysTablePm> {
     return pm.getKeys().findRowByIdx(row);
   }
 
-  private TypedPropertyChangeListener<Key> rowPmSelectionListener =
-      new TypedPropertyChangeListener<Key>() {
+  private final TypedPropertyChangeListener<Key> rowPmSelectionListener =
+      new TypedPropertyChangeListener<>() {
         @Override
         public void handlePropertyChanged(
             Object source, String propertyName, Key oldValue, Key newValue) {
@@ -265,8 +268,8 @@ public class KeysTableView extends ViewBaseEx<KeysTablePm> {
     }
   }
 
-  private TypedPropertyChangeListener<Boolean> hasDataChangeHandler =
-      new TypedPropertyChangeListener<Boolean>() {
+  private final TypedPropertyChangeListener<Boolean> hasDataChangeHandler =
+      new TypedPropertyChangeListener<>() {
         @Override
         public void handlePropertyChanged(
             Object source, String propertyName, Boolean oldValue, Boolean newValue) {

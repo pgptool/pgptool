@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -72,35 +71,34 @@ import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.summerb.utils.objectcopy.DeepCopy;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.modelprops.lists.ModelListProperty;
-import ru.skarpushin.swingpm.modelprops.lists.ModelMultSelInListProperty;
+import ru.skarpushin.swingpm.modelprops.lists.ModelMultiSelInListProperty;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
 public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String> {
-  private static Logger log = Logger.getLogger(EncryptOnePm.class);
+  private static final Logger log = Logger.getLogger(EncryptOnePm.class);
 
   private static final String ENCRYPTED_FILE_EXTENSION = "pgp";
   private static final String SOURCE_FOLDER = "EncryptOnePm.SOURCE_FOLDER";
 
-  @Autowired private ConfigPairs appProps;
-  @Autowired private EncryptionParamsStorage encryptionParamsStorage;
-  @Autowired private MessageDigestFactory messageDigestFactory;
-  @Autowired private MonitoringDecryptedFilesService monitoringDecryptedFilesService;
-  @Autowired private KeyRingService keyRingService;
-  @Autowired private EncryptionService encryptionService;
+  private final ConfigPairs appProps;
+  private final EncryptionParamsStorage encryptionParamsStorage;
+  private final MessageDigestFactory messageDigestFactory;
+  private final MonitoringDecryptedFilesService monitoringDecryptedFilesService;
+  private final KeyRingService keyRingService;
+  private final EncryptionService encryptionService;
 
   private ModelProperty<String> sourceFile;
   private ModelProperty<Boolean> isUseSameFolder;
   private ModelProperty<String> targetFile;
   private ModelProperty<Boolean> targetFileEnabled;
-  private ModelMultSelInListProperty<Key> selectedRecipients;
+  private ModelMultiSelInListProperty<Key> selectedRecipients;
   private ModelListProperty<Key> availabileRecipients;
   private ModelProperty<Boolean> isNoPrivateKeysSelected;
   private ModelProperty<Boolean> isDeleteSourceAfter;
@@ -116,6 +114,21 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
   private ModelProperty<Boolean> isDisableControls;
   private ProgressHandler progressHandler;
   private Thread operationThread;
+
+  public EncryptOnePm(
+      ConfigPairs appProps,
+      EncryptionParamsStorage encryptionParamsStorage,
+      MessageDigestFactory messageDigestFactory,
+      MonitoringDecryptedFilesService monitoringDecryptedFilesService,
+      KeyRingService keyRingService,
+      EncryptionService encryptionService) {
+    this.appProps = appProps;
+    this.encryptionParamsStorage = encryptionParamsStorage;
+    this.messageDigestFactory = messageDigestFactory;
+    this.monitoringDecryptedFilesService = monitoringDecryptedFilesService;
+    this.keyRingService = keyRingService;
+    this.encryptionService = encryptionService;
+  }
 
   @Override
   public boolean init(ActionEvent originAction, EncryptOneHost host, String optionalSource) {
@@ -235,16 +248,16 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
     List<Key> allKeys = keyRingService.readKeys();
     allKeys.sort(new ComparatorKeyByNameImpl());
     availabileRecipients =
-        new ModelListProperty<Key>(
-            this, new ValueAdapterReadonlyImpl<List<Key>>(allKeys), "availabileRecipients");
+        new ModelListProperty<>(
+            this, new ValueAdapterReadonlyImpl<>(allKeys), "availabileRecipients");
     selectedRecipients =
-        new ModelMultSelInListProperty<Key>(
+        new ModelMultiSelInListProperty<>(
             this,
-            new ValueAdapterHolderImpl<List<Key>>(new ArrayList<Key>()),
+            new ValueAdapterHolderImpl<>(new ArrayList<>()),
             "projects",
             availabileRecipients);
     selectedRecipients
-        .getModelMultSelInListPropertyAccessor()
+        .getModelMultiSelInListPropertyAccessor()
         .addListExEventListener(onRecipientsSelectionChanged);
     isNoPrivateKeysSelected =
         new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "isNoPrivateKeysSelected");
@@ -267,7 +280,7 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
         new ProgressHandlerPmMixinImpl(isProgressVisible, progressValue, progressNote);
   }
 
-  private PropertyChangeListener onTargetFileChanged =
+  private final PropertyChangeListener onTargetFileChanged =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -290,7 +303,7 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
               ofd.setFileFilter(ofd.getChoosableFileFilters()[0]);
             }
 
-            private FileFilter notEncryptedFiles =
+            private final FileFilter notEncryptedFiles =
                 new FileFilter() {
                   @Override
                   public boolean accept(File f) {
@@ -307,7 +320,7 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
     return sourceFileChooser;
   }
 
-  private PropertyChangeListener onSourceFileModified =
+  private final PropertyChangeListener onSourceFileModified =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -396,13 +409,13 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
 
           UiUtils.messageBox(
               UiUtils.actionEvent(evt),
-              text("error.notAllRecipientsAvailable", Arrays.asList(missedKeys)),
+              text("error.notAllRecipientsAvailable", List.of(missedKeys)),
               text("term.attention"),
               JOptionPane.WARNING_MESSAGE);
         }
       };
 
-  private PropertyChangeListener onUseSameFolderChanged =
+  private final PropertyChangeListener onUseSameFolderChanged =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -437,22 +450,19 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
     actionDoOperation.setEnabled(result);
   }
 
-  private ListChangeListenerAnyEventImpl<Key> onRecipientsSelectionChanged =
-      new ListChangeListenerAnyEventImpl<Key>() {
+  private final ListChangeListenerAnyEventImpl<Key> onRecipientsSelectionChanged =
+      new ListChangeListenerAnyEventImpl<>() {
         @Override
         public void onListChanged() {
           refreshPrimaryOperationAvailability();
 
           isNoPrivateKeysSelected.setValueByOwner(
-              selectedRecipients.getList().size() == 0
+              selectedRecipients.getList().isEmpty()
                   || selectedRecipients.getList().stream()
-                          .filter(x -> x.getKeyData().isCanBeUsedForDecryption())
-                          .count()
-                      == 0);
+                      .noneMatch(x -> x.getKeyData().isCanBeUsedForDecryption()));
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionDoOperation =
       new LocalizedActionEx("action.encrypt", this) {
         @Override
@@ -466,7 +476,7 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
       };
 
   private class OperationWorker implements Runnable {
-    private ActionEvent workerOriginEvent;
+    private final ActionEvent workerOriginEvent;
 
     public OperationWorker(ActionEvent workerOriginEvent) {
       this.workerOriginEvent = workerOriginEvent;
@@ -694,7 +704,6 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
         + ENCRYPTED_FILE_EXTENSION;
   }
 
-  @SuppressWarnings("serial")
   protected final Action actionCancel =
       new LocalizedActionEx("action.cancel", this) {
         @Override
@@ -708,7 +717,6 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionBrowseSource =
       new LocalizedActionEx("action.browse", "EncryptOnePm.source") {
         @Override
@@ -718,7 +726,6 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
         }
       };
 
-  @SuppressWarnings("serial")
   protected final Action actionBrowseTarget =
       new LocalizedActionEx("action.browse", "EncryptOnePm.target") {
         @Override
@@ -741,7 +748,7 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
     return isUseSameFolder.getModelPropertyAccessor();
   }
 
-  public ModelMultSelInListProperty<Key> getSelectedRecipients() {
+  public ModelMultiSelInListProperty<Key> getSelectedRecipients() {
     // NOTE: I did sort of exception here. Instead of providing accessor I'm
     // prvoding model property itself so that JCheckList can bind directly to list
     // of checked recipients

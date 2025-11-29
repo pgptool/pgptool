@@ -57,9 +57,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.jdesktop.swingx.imported.JXLabel;
-import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
+import org.pgptool.gui.ui.root.RootPm;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import ru.skarpushin.swingpm.tools.edt.Edt;
 
@@ -489,8 +489,8 @@ public class UiUtils {
 
   public static Window findWindow(ActionEvent event) {
     Window defaultValue = null;
-    if (EntryPoint.rootPmStatic != null) {
-      defaultValue = EntryPoint.rootPmStatic.findMainFrameWindow();
+    if (RootPm.INSTANCE != null) {
+      defaultValue = RootPm.INSTANCE.findMainFrameWindow();
     }
 
     if (event == null) {
@@ -520,8 +520,8 @@ public class UiUtils {
 
   public static Window findWindow(Component c) {
     Window defaultValue = null;
-    if (EntryPoint.rootPmStatic != null) {
-      defaultValue = EntryPoint.rootPmStatic.findMainFrameWindow();
+    if (RootPm.INSTANCE != null) {
+      defaultValue = RootPm.INSTANCE.findMainFrameWindow();
     }
     if (c == null) {
       return defaultValue;

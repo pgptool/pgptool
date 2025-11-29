@@ -27,19 +27,21 @@ import org.pgptool.gui.ui.getkeypassword.GetKeyPasswordPmInitResult;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
 import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm.GetKeyPasswordPo;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 
 /**
  * This component is a container that will change it's appearance on the fly between {@link
  * GetKeyPasswordPm} and {@link GetKeyPasswordPm} to provide more streamlined UX
  */
 public class GetKeyPasswordDialogPm
-    extends PresentationModelBaseEx<GetKeyPasswordDialogHost, GetKeyPasswordPo>
-    implements ApplicationContextAware {
-  @Autowired private GetKeyPasswordPm getKeyPasswordPm;
+    extends PresentationModelBaseEx<GetKeyPasswordDialogHost, GetKeyPasswordPo> {
+
+  private final ApplicationContext applicationContext;
+  private GetKeyPasswordPm getKeyPasswordPm;
+
+  public GetKeyPasswordDialogPm(ApplicationContext applicationContext) {
+    this.applicationContext = applicationContext;
+  }
 
   public static class GetKeyPasswordPo {
     public Set<String> keysIds;
@@ -77,7 +79,7 @@ public class GetKeyPasswordDialogPm
     getKeyPasswordPm.detach();
   }
 
-  private GetKeyPasswordHost getPasswordHost =
+  private final GetKeyPasswordHost getPasswordHost =
       new GetKeyPasswordHost() {
         @Override
         public void onPasswordDeterminedForKey(PasswordDeterminedForKey result) {
@@ -92,17 +94,10 @@ public class GetKeyPasswordDialogPm
         }
       };
 
-  private ApplicationContext applicationContext;
-
   public GetKeyPasswordPm getGetKeyPasswordPm() {
     if (getKeyPasswordPm == null) {
       getKeyPasswordPm = applicationContext.getBean(GetKeyPasswordPm.class);
     }
     return getKeyPasswordPm;
-  }
-
-  @Override
-  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-    this.applicationContext = applicationContext;
   }
 }

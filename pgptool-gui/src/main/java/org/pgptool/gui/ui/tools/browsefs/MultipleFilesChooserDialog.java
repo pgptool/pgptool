@@ -29,10 +29,10 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.springframework.util.StringUtils;
 
 public class MultipleFilesChooserDialog {
-  private static Logger log = Logger.getLogger(MultipleFilesChooserDialog.class);
+  private static final Logger log = Logger.getLogger(MultipleFilesChooserDialog.class);
 
-  private ConfigPairs configPairs;
-  private String configPairNameToRemember;
+  private final ConfigPairs configPairs;
+  private final String configPairNameToRemember;
 
   public MultipleFilesChooserDialog(ConfigPairs configPairs, String configPairNameToRemember) {
     this.configPairs = configPairs;

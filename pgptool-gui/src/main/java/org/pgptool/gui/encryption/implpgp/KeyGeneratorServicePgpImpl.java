@@ -17,7 +17,6 @@
  ******************************************************************************/
 package org.pgptool.gui.encryption.implpgp;
 
-import EXPORT.org.summerb.validation.ValidationContextEx;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import java.math.BigInteger;
@@ -51,46 +50,72 @@ import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.dto.ChangePasswordParams;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.util.StringUtils;
 import org.summerb.utils.objectcopy.DeepCopy;
-import org.summerb.validation.FieldValidationException;
 import org.summerb.validation.ValidationContext;
+import org.summerb.validation.ValidationContextFactory;
+import org.summerb.validation.ValidationException;
 
 public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
   private static final Logger log = Logger.getLogger(KeyGeneratorServicePgpImpl.class);
   private static final String PROVIDER = "BC";
 
-  @Autowired private ExecutorService executorService;
+  private final ExecutorService executorService;
+  private final ValidationContextFactory validationContextFactory;
 
   // Master key params
-  private String masterKeyAlgorithm;
-  private String masterKeyPurpose;
-  private int masterKeySize;
-  private KeyPairParams masterKeyParameters;
-  private String masterKeySignerAlgorithm;
-  private String masterKeySignerHashingAlgorithm;
+  private final String masterKeyAlgorithm;
+  private final String masterKeyPurpose;
+  private final int masterKeySize;
+  private final String masterKeySignerAlgorithm;
+  private final String masterKeySignerHashingAlgorithm;
 
   // Secret Key encryption
-  private String secretKeyHashingAlgorithm;
-  private String secretKeyEncryptionAlgorithm;
+  private final String secretKeyHashingAlgorithm;
+  private final String secretKeyEncryptionAlgorithm;
 
   // Encryption key params
-  private String encryptionKeyAlgorithm;
-  private String encryptionKeyPurpose;
-  private BigInteger dhParamsPrimeModulus;
-  private BigInteger dhParamsBaseGenerator;
+  private final String encryptionKeyAlgorithm;
+  private final String encryptionKeyPurpose;
+  private final BigInteger dhParamsPrimeModulus;
+  private final BigInteger dhParamsBaseGenerator;
 
-  private Map<KeyPairParams, Future<KeyPair>> pregeneratedKeyPairs = new ConcurrentHashMap<>();
+  private KeyPairParams masterKeyParameters;
+  private final Map<KeyPairParams, Future<KeyPair>> pregeneratedKeyPairs =
+      new ConcurrentHashMap<>();
 
-  public KeyGeneratorServicePgpImpl() {
+  public KeyGeneratorServicePgpImpl(
+      ExecutorService executorService,
+      ValidationContextFactory validationContextFactory,
+      String masterKeyAlgorithm,
+      String masterKeyPurpose,
+      int masterKeySize,
+      String masterKeySignerAlgorithm,
+      String masterKeySignerHashingAlgorithm,
+      String secretKeyHashingAlgorithm,
+      String secretKeyEncryptionAlgorithm,
+      String encryptionKeyAlgorithm,
+      String encryptionKeyPurpose,
+      BigInteger dhParamsPrimeModulus,
+      BigInteger dhParamsBaseGenerator) {
+    this.executorService = executorService;
+    this.validationContextFactory = validationContextFactory;
+    this.masterKeyAlgorithm = masterKeyAlgorithm;
+    this.masterKeyPurpose = masterKeyPurpose;
+    this.masterKeySize = masterKeySize;
+    this.masterKeySignerAlgorithm = masterKeySignerAlgorithm;
+    this.masterKeySignerHashingAlgorithm = masterKeySignerHashingAlgorithm;
+    this.secretKeyHashingAlgorithm = secretKeyHashingAlgorithm;
+    this.secretKeyEncryptionAlgorithm = secretKeyEncryptionAlgorithm;
+    this.encryptionKeyAlgorithm = encryptionKeyAlgorithm;
+    this.encryptionKeyPurpose = encryptionKeyPurpose;
+    this.dhParamsPrimeModulus = dhParamsPrimeModulus;
+    this.dhParamsBaseGenerator = dhParamsBaseGenerator;
     KeyRingServicePgpImpl.touch();
   }
 
   @Override
-  public Key createNewKey(CreateKeyParams params, boolean emptyPassphraseConsent)
-      throws FieldValidationException {
+  public Key createNewKey(CreateKeyParams params, boolean emptyPassphraseConsent) {
     try {
       Preconditions.checkArgument(params != null, "params must not be null");
       assertParamsValid(params, emptyPassphraseConsent);
@@ -152,7 +177,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
       // building ret
       return buildKey(keyPairGeneratorBc);
     } catch (Throwable t) {
-      Throwables.throwIfInstanceOf(t, FieldValidationException.class);
+      Throwables.throwIfInstanceOf(t, ValidationException.class);
       throw new RuntimeException("Failed to generate key", t);
     }
   }
@@ -235,26 +260,23 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
     return ret;
   }
 
-  private void assertParamsValid(CreateKeyParams params, boolean emptyPassphraseConsent)
-      throws FieldValidationException {
-    ValidationContext ctx = new ValidationContextEx();
+  private void assertParamsValid(CreateKeyParams params, boolean emptyPassphraseConsent) {
+    ValidationContext<CreateKeyParams> ctx = validationContextFactory.buildFor(params);
 
-    ctx.validateNotEmpty(params.getFullName(), CreateKeyParams.FN_FULL_NAME);
-    if (ctx.validateNotEmpty(params.getEmail(), CreateKeyParams.FN_EMAIL)) {
-      ctx.validateEmailFormat(params.getEmail(), CreateKeyParams.FN_EMAIL);
+    // TODO: Migrate all validations to new approach using lambdas for property names resulutions
+
+    ctx.hasText(params.getFullName(), CreateKeyParams.FN_FULL_NAME);
+    if (ctx.hasText(params.getEmail(), CreateKeyParams.FN_EMAIL)) {
+      ctx.validEmail(params.getEmail(), CreateKeyParams.FN_EMAIL);
     }
 
     if (!emptyPassphraseConsent) {
-      ctx.validateNotEmpty(params.getPassphrase(), CreateKeyParams.FN_PASSPHRASE);
+      ctx.hasText(params.getPassphrase(), CreateKeyParams.FN_PASSPHRASE);
     }
     if (StringUtils.hasText(params.getPassphrase())
-        && ctx.validateNotEmpty(params.getPassphraseAgain(), CreateKeyParams.FN_PASSPHRASE_AGAIN)) {
-      ctx.equals(
-          params.getPassphrase(),
-          "term." + CreateKeyParams.FN_PASSPHRASE,
-          params.getPassphraseAgain(),
-          "term." + CreateKeyParams.FN_PASSPHRASE_AGAIN,
-          CreateKeyParams.FN_PASSPHRASE_AGAIN);
+        && ctx.hasText(params.getPassphraseAgain(), CreateKeyParams.FN_PASSPHRASE_AGAIN)) {
+
+      ctx.eq(CreateKeyParams::getPassphraseAgain, params.getPassphrase());
     }
 
     ctx.throwIfHasErrors();
@@ -273,8 +295,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
   }
 
   @Override
-  public Key changeKeyPassword(Key key, ChangePasswordParams params, boolean emptyPasswordConsent)
-      throws FieldValidationException {
+  public Key changeKeyPassword(Key key, ChangePasswordParams params, boolean emptyPasswordConsent) {
     assertParamsValid(key, params, emptyPasswordConsent);
 
     try {
@@ -299,46 +320,30 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
   }
 
   protected PBESecretKeyEncryptor buildKeyEncryptor(
-      PGPDigestCalculator digestCalc, String password, boolean emptyPasswordConsent)
-      throws PGPException {
+      PGPDigestCalculator digestCalc, String password, boolean emptyPasswordConsent) {
     BcPBESecretKeyEncryptorBuilder encryptorBuilderBC =
         new BcPBESecretKeyEncryptorBuilder(
             symmetricKeyAlgorithmNameToTag(
                 getSecretKeyEncryptionAlgorithmForOptionalPassphrase(emptyPasswordConsent)),
             digestCalc);
-    PBESecretKeyEncryptor keyEncryptorBc = encryptorBuilderBC.build(toCharArray(password));
-    return keyEncryptorBc;
+    return encryptorBuilderBC.build(toCharArray(password));
   }
 
   private void assertParamsValid(
-      Key key, ChangePasswordParams params, boolean emptyPassphraseConsent)
-      throws FieldValidationException {
-    ValidationContext ctx = new ValidationContext();
+      Key key, ChangePasswordParams params, boolean emptyPassphraseConsent) {
+    ValidationContext<ChangePasswordParams> ctx = validationContextFactory.buildFor(params);
 
     if (!emptyPassphraseConsent) {
-      ctx.validateNotEmpty(params.getNewPassphrase(), ChangePasswordParams.FN_NEW_PASSPHRASE);
+      ctx.hasText(params.getNewPassphrase(), ChangePasswordParams.FN_NEW_PASSPHRASE);
     }
     if (StringUtils.hasText(params.getNewPassphrase())
-        && ctx.validateNotEmpty(
+        && ctx.hasText(
             params.getNewPassphraseAgain(), ChangePasswordParams.FN_NEW_PASSPHRASE_AGAIN)) {
-      ctx.equals(
-          params.getNewPassphrase(),
-          "term." + ChangePasswordParams.FN_NEW_PASSPHRASE,
-          params.getNewPassphraseAgain(),
-          "term." + ChangePasswordParams.FN_NEW_PASSPHRASE_AGAIN,
-          ChangePasswordParams.FN_NEW_PASSPHRASE_AGAIN);
+
+      ctx.eq(ChangePasswordParams::getNewPassphraseAgain, params.getPassphrase());
     }
 
     ctx.throwIfHasErrors();
-  }
-
-  public String getEncryptionKeyAlgorithm() {
-    return encryptionKeyAlgorithm;
-  }
-
-  @Required
-  public void setEncryptionKeyAlgorithm(String encryptionKeyAlgorithm) {
-    this.encryptionKeyAlgorithm = encryptionKeyAlgorithm;
   }
 
   public KeyPairParams getMasterKeyParameters() {
@@ -346,98 +351,6 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
       masterKeyParameters = new KeyPairParams(masterKeyAlgorithm, PROVIDER, masterKeySize);
     }
     return masterKeyParameters;
-  }
-
-  public String getMasterKeyAlgorithm() {
-    return masterKeyAlgorithm;
-  }
-
-  @Required
-  public void setMasterKeyAlgorithm(String masterKeyAlgorithm) {
-    this.masterKeyAlgorithm = masterKeyAlgorithm;
-    masterKeyParameters = null;
-  }
-
-  public int getMasterKeySize() {
-    return masterKeySize;
-  }
-
-  @Required
-  public void setMasterKeySize(int masterKeySize) {
-    this.masterKeySize = masterKeySize;
-    masterKeyParameters = null;
-  }
-
-  public BigInteger getDhParamsPrimeModulus() {
-    return dhParamsPrimeModulus;
-  }
-
-  @Required
-  public void setDhParamsPrimeModulus(BigInteger dhParamsPrimeModulus) {
-    this.dhParamsPrimeModulus = dhParamsPrimeModulus;
-  }
-
-  public BigInteger getDhParamsBaseGenerator() {
-    return dhParamsBaseGenerator;
-  }
-
-  @Required
-  public void setDhParamsBaseGenerator(BigInteger dhParamsBaseGenerator) {
-    this.dhParamsBaseGenerator = dhParamsBaseGenerator;
-  }
-
-  public String getEncryptionKeyPurpose() {
-    return encryptionKeyPurpose;
-  }
-
-  @Required
-  public void setEncryptionKeyPurpose(String encryptionKeyPurpose) {
-    this.encryptionKeyPurpose = encryptionKeyPurpose;
-  }
-
-  public String getMasterKeySignerHashingAlgorithm() {
-    return masterKeySignerHashingAlgorithm;
-  }
-
-  @Required
-  public void setMasterKeySignerHashingAlgorithm(String masterKeySignerHashingAlgorithm) {
-    this.masterKeySignerHashingAlgorithm = masterKeySignerHashingAlgorithm;
-  }
-
-  public String getSecretKeyHashingAlgorithm() {
-    return secretKeyHashingAlgorithm;
-  }
-
-  @Required
-  public void setSecretKeyHashingAlgorithm(String secretKeyHashingAlgorithm) {
-    this.secretKeyHashingAlgorithm = secretKeyHashingAlgorithm;
-  }
-
-  public String getSecretKeyEncryptionAlgorithm() {
-    return secretKeyEncryptionAlgorithm;
-  }
-
-  @Required
-  public void setSecretKeyEncryptionAlgorithm(String secretKeyEncryptionAlgorithm) {
-    this.secretKeyEncryptionAlgorithm = secretKeyEncryptionAlgorithm;
-  }
-
-  public String getMasterKeySignerAlgorithm() {
-    return masterKeySignerAlgorithm;
-  }
-
-  @Required
-  public void setMasterKeySignerAlgorithm(String masterKeySignerAlgorithm) {
-    this.masterKeySignerAlgorithm = masterKeySignerAlgorithm;
-  }
-
-  public String getMasterKeyPurpose() {
-    return masterKeyPurpose;
-  }
-
-  @Required
-  public void setMasterKeyPurpose(String masterKeyPurpose) {
-    this.masterKeyPurpose = masterKeyPurpose;
   }
 
   public static class KeyPairParams {

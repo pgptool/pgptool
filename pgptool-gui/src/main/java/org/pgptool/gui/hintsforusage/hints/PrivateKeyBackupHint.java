@@ -35,49 +35,63 @@ import org.pgptool.gui.hintsforusage.ui.HintPm;
 import org.pgptool.gui.ui.root.GlobalAppActions;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.summerb.easycrud.api.dto.EntityChangedEvent;
-import org.summerb.easycrud.api.dto.EntityChangedEvent.ChangeType;
 import org.summerb.utils.DtoBase;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent.ChangeType;
 
-@SuppressWarnings("serial")
 public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
   private static final String CONFIG_PREFIX = "PrivateKeyBackupReminderData:";
 
-  @Autowired private ConfigPairs hintsProps;
-  @Autowired private HintsCoordinator hintsCoordinator;
-  @Autowired private EventBus eventBus;
-  @Autowired private KeyRingService keyRingService;
-  @Autowired private GlobalAppActions globalAppActions;
-  @Autowired private ExecutorService executorService;
+  private final ConfigPairs hintsProps;
+  private final HintsCoordinator hintsCoordinator;
+  private final EventBus eventBus;
+  private final KeyRingService keyRingService;
+  private final GlobalAppActions globalAppActions;
+  private final ExecutorService executorService;
 
   private String lastHintForKeyId;
-  private long reminderTriggerDelay = DateUtils.MILLIS_PER_DAY * 5;
+  private final long reminderTriggerDelay = DateUtils.MILLIS_PER_DAY * 5;
+
+  public PrivateKeyBackupHint(
+      ConfigPairs hintsProps,
+      HintsCoordinator hintsCoordinator,
+      EventBus eventBus,
+      KeyRingService keyRingService,
+      GlobalAppActions globalAppActions,
+      ExecutorService executorService) {
+    this.hintsProps = hintsProps;
+    this.hintsCoordinator = hintsCoordinator;
+    this.eventBus = eventBus;
+    this.keyRingService = keyRingService;
+    this.globalAppActions = globalAppActions;
+    this.executorService = executorService;
+  }
 
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     setMessage(Messages.text("hint.privateKeyBackup", "TBD"));
     eventBus.register(this);
     executorService.execute(think);
   }
 
-  private Runnable think =
-      () -> {
-        // See if there is a key we need to remind
-        PrivateKeyBackupReminderData keyToBeExported = findKeyWhichBackupIsDue();
-        if (keyToBeExported == null) {
-          return;
-        }
+  private final Runnable think = this::doThink;
 
-        lastHintForKeyId = keyToBeExported.keyId;
-        Key key = keyRingService.findKeyById(lastHintForKeyId);
-        setMessage(Messages.text("hint.privateKeyBackup", key.getKeyInfo().getUser()));
-        hintsCoordinator.scheduleHint(this);
-      };
+  private void doThink() {
+    // See if there is a key we need to remind
+    PrivateKeyBackupReminderData keyToBeExported = findKeyWhichBackupIsDue();
+    if (keyToBeExported == null) {
+      return;
+    }
+
+    lastHintForKeyId = keyToBeExported.keyId;
+    Key key = keyRingService.findKeyById(lastHintForKeyId);
+    setMessage(Messages.text("hint.privateKeyBackup", key.getKeyInfo().getUser()));
+    hintsCoordinator.scheduleHint(this);
+  }
 
   private PrivateKeyBackupReminderData findKeyWhichBackupIsDue() {
     List<PrivateKeyBackupReminderData> reminders = hintsProps.findAllWithPrefixedKey(CONFIG_PREFIX);
-    if (reminders.size() == 0) {
+    if (reminders.isEmpty()) {
       return null;
     }
 
@@ -85,7 +99,7 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
         keyRingService.readKeys().stream()
             .map(x -> x.getKeyInfo().getKeyId())
             .collect(Collectors.toSet());
-    if (presentKeys.size() == 0) {
+    if (presentKeys.isEmpty()) {
       return null;
     }
 

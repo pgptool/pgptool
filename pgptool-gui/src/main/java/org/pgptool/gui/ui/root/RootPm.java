@@ -93,11 +93,8 @@ import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.ApplicationExitUsage;
 import org.pgptool.gui.usage.dto.ApplicationStartUsage;
 import org.pgptool.gui.usage.dto.CommandLineArgsUsage;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.StringUtils;
 import ru.skarpushin.swingpm.base.HasWindow;
 import ru.skarpushin.swingpm.base.ViewBase;
@@ -108,30 +105,50 @@ import ru.skarpushin.swingpm.tools.edt.Edt;
  *
  * @author Sergey Karpushin
  */
-public class RootPm implements ApplicationContextAware, InitializingBean, GlobalAppActions {
-  private static Logger log = Logger.getLogger(RootPm.class);
+public class RootPm implements InitializingBean, GlobalAppActions {
+  private static final Logger log = Logger.getLogger(RootPm.class);
 
-  @Autowired private EntryPoint entryPoint;
-  private ApplicationContext applicationContext;
-  private EventBus eventBus;
-  private UpdatesPolicy updatesPolicy;
+  public static RootPm INSTANCE;
+
+  private final EntryPoint entryPoint;
+  private final ApplicationContext applicationContext;
+  private final EventBus eventBus;
+  private final UpdatesPolicy updatesPolicy;
 
   private MainFramePm mainFramePm;
   private MainFrameView mainFrameView;
-  @Autowired private HintsCoordinator hintsCoordinator;
-  @Autowired private KeysExporterUi keysExporterUi;
-  @Autowired private KeyFilesOperations keyFilesOperations;
-  @Autowired private UsageLogger usageLogger;
-  @Autowired private BuyMeCoffeeHint buyMeCoffeeHint;
+  private final HintsCoordinator hintsCoordinator;
+  private final KeysExporterUi keysExporterUi;
+  private final KeyFilesOperations keyFilesOperations;
+  private final UsageLogger usageLogger;
+  private final BuyMeCoffeeHint buyMeCoffeeHint;
   private TempFolderChooserPm tempFolderChooserPm;
 
-  @Override
-  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+  public RootPm(
+      EntryPoint entryPoint,
+      ApplicationContext applicationContext,
+      EventBus eventBus,
+      UpdatesPolicy updatesPolicy,
+      HintsCoordinator hintsCoordinator,
+      KeysExporterUi keysExporterUi,
+      KeyFilesOperations keyFilesOperations,
+      UsageLogger usageLogger,
+      BuyMeCoffeeHint buyMeCoffeeHint) {
+    this.entryPoint = entryPoint;
     this.applicationContext = applicationContext;
+    this.eventBus = eventBus;
+    this.updatesPolicy = updatesPolicy;
+    this.hintsCoordinator = hintsCoordinator;
+    this.keysExporterUi = keysExporterUi;
+    this.keyFilesOperations = keyFilesOperations;
+    this.usageLogger = usageLogger;
+    this.buyMeCoffeeHint = buyMeCoffeeHint;
+
+    INSTANCE = this;
   }
 
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     eventBus.register(this);
   }
 
@@ -234,20 +251,15 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
     System.exit(statusCode);
   }
 
-  private MainFrameHost mainFrameHost =
+  private final MainFrameHost mainFrameHost =
       new MainFrameHost() {
-        private Action openHelp =
+        private final Action openHelp =
             UrlOpener.buildAction("action.openHelp", "https://pgptool.github.io/#help", this);
-        private Action openFaq =
+        private final Action openFaq =
             UrlOpener.buildAction("action.openFaq", "https://pgptool.github.io/#faq", this);
-        private Action reportIssue =
+        private final Action reportIssue =
             UrlOpener.buildAction(
                 "action.reportIssue", "https://github.com/pgptool/pgptool/issues", this);
-        private Action askQuestionInChat =
-            UrlOpener.buildAction(
-                "action.askQuestionInChat",
-                "https://app.gitter.im/#/room/#pgptool_Lobby:gitter.im",
-                this);
 
         @Override
         public void handleExitApp() {
@@ -346,11 +358,6 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
         public Action getActionReportIssue() {
           return reportIssue;
         }
-
-        @Override
-        public Action getAskQuestionInChat() {
-          return askQuestionInChat;
-        }
       };
 
   private void openMainFrameWindow() {
@@ -364,7 +371,6 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
     hintsCoordinator.setHintsHolder(mainFramePm);
   }
 
-  @SuppressWarnings("serial")
   protected Action actionShowTempFolderChooser =
       new LocalizedActionEx("term.changeTempFolderForDecrypted", this) {
         @Override
@@ -436,13 +442,13 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
     }
   }
 
-  private ImportKeyDialogOpener importKeyWindowHost = new ImportKeyDialogOpener();
+  private final ImportKeyDialogOpener importKeyWindowHost = new ImportKeyDialogOpener();
 
   protected EncryptTextDialogOpener encryptTextHost = new EncryptTextDialogOpener(new HashSet<>());
 
   class EncryptTextDialogOpener
       extends DialogOpener<EncryptTextHost, Set<String>, EncryptTextPm, EncryptTextView> {
-    private Set<String> preselectedKeyIds;
+    private final Set<String> preselectedKeyIds;
 
     public EncryptTextDialogOpener(Set<String> preselectedKeyIds) {
       super(EncryptTextPm.class, EncryptTextView.class, "action.encryptText");
@@ -483,9 +489,9 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
           GetKeyPasswordPo,
           GetKeyPasswordDialogPm,
           GetKeyPasswordDialogView> {
-    private Set<String> keysIds;
-    private Message purpose;
-    private KeyAndPasswordCallback keyAndPasswordCallback;
+    private final Set<String> keysIds;
+    private final Message purpose;
+    private final KeyAndPasswordCallback keyAndPasswordCallback;
 
     public GetKeyPasswordDialogOpener(
         Set<String> keysIds, Message purpose, KeyAndPasswordCallback keyAndPasswordCallback) {
@@ -527,59 +533,59 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
   }
   ;
 
-  private DialogOpener<DecryptTextHost, Void, DecryptTextPm, DecryptTextView> decryptTextHost =
-      new DialogOpener<DecryptTextHost, Void, DecryptTextPm, DecryptTextView>(
-          DecryptTextPm.class, DecryptTextView.class, "action.decryptText") {
+  private final DialogOpener<DecryptTextHost, Void, DecryptTextPm, DecryptTextView>
+      decryptTextHost =
+          new DialogOpener<>(DecryptTextPm.class, DecryptTextView.class, "action.decryptText") {
 
-        class DecryptTextHostImpl implements DecryptTextHost {
-          @Override
-          public void handleClose() {
-            view.unrender();
-            pm.detach();
-            pm = null;
-          }
+            class DecryptTextHostImpl implements DecryptTextHost {
+              @Override
+              public void handleClose() {
+                view.unrender();
+                pm.detach();
+                pm = null;
+              }
 
-          @Override
-          public Action getActionToOpenCertificatesList() {
-            return keysListWindowHost.actionToOpenWindow;
-          }
+              @Override
+              public Action getActionToOpenCertificatesList() {
+                return keysListWindowHost.actionToOpenWindow;
+              }
 
-          @Override
-          public void askUserForKeyAndPassword(
-              Set<String> keysIds,
-              Message purpose,
-              KeyAndPasswordCallback keyAndPasswordCallback,
-              ActionEvent originEvent) {
-            new GetKeyPasswordDialogOpener(keysIds, purpose, keyAndPasswordCallback)
-                .actionToOpenWindow.actionPerformed(originEvent);
-          }
+              @Override
+              public void askUserForKeyAndPassword(
+                  Set<String> keysIds,
+                  Message purpose,
+                  KeyAndPasswordCallback keyAndPasswordCallback,
+                  ActionEvent originEvent) {
+                new GetKeyPasswordDialogOpener(keysIds, purpose, keyAndPasswordCallback)
+                    .actionToOpenWindow.actionPerformed(originEvent);
+              }
 
-          @Override
-          public void openEncryptText(Set<String> recipientsList, ActionEvent originEvent) {
-            new EncryptTextDialogOpener(recipientsList)
-                .actionToOpenWindow.actionPerformed(originEvent);
-          }
-        }
-        ;
+              @Override
+              public void openEncryptText(Set<String> recipientsList, ActionEvent originEvent) {
+                new EncryptTextDialogOpener(recipientsList)
+                    .actionToOpenWindow.actionPerformed(originEvent);
+              }
+            }
+            ;
 
-        private DecryptTextHostImpl host = new DecryptTextHostImpl();
+            private final DecryptTextHostImpl host = new DecryptTextHostImpl();
 
-        @Override
-        protected DecryptTextHost getHost() {
-          return host;
-        }
+            @Override
+            protected DecryptTextHost getHost() {
+              return host;
+            }
 
-        @Override
-        protected Void getInitParams() {
-          return null;
-        }
-        ;
-      };
+            @Override
+            protected Void getInitParams() {
+              return null;
+            }
+            ;
+          };
 
   private class EncryptBackManyWindowOpener
       extends DialogOpener<
           EncryptBackMultipleHost, Set<String>, EncryptBackMultiplePm, EncryptBackMultipleView> {
-    private Set<String> decryptedFiles;
+    private final Set<String> decryptedFiles;
 
     public EncryptBackManyWindowOpener(Set<String> decryptedFiles) {
       super(EncryptBackMultiplePm.class, EncryptBackMultipleView.class, "encrypBackMany.action");
@@ -614,11 +620,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
   }
   ;
 
-  private EncryptionWindowOpener encryptionWindowHost = new EncryptionWindowOpener(null);
+  private final EncryptionWindowOpener encryptionWindowHost = new EncryptionWindowOpener(null);
 
   private class EncryptionWindowOpener
       extends DialogOpener<EncryptOneHost, String, EncryptOnePm, EncryptOneView> {
-    private String sourceFile;
+    private final String sourceFile;
 
     public EncryptionWindowOpener(String sourceFile) {
       super(EncryptOnePm.class, EncryptOneView.class, "action.encrypt");
@@ -653,11 +659,11 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
   }
   ;
 
-  private DecryptionWindowOpener decryptionWindowHost = new DecryptionWindowOpener(null);
+  private final DecryptionWindowOpener decryptionWindowHost = new DecryptionWindowOpener(null);
 
   private class DecryptionWindowOpener
       extends DialogOpener<DecryptOneDialogHost, String, DecryptOneDialogPm, DecryptOneDialogView> {
-    private String sourceFile;
+    private final String sourceFile;
 
     public DecryptionWindowOpener(String sourceFile) {
       super(DecryptOneDialogPm.class, DecryptOneDialogView.class, "action.decrypt");
@@ -692,9 +698,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
   }
   ;
 
-  private DialogOpener<CreateKeyHost, Void, CreateKeyPm, CreateKeyView> createKeyWindowHost =
-      new DialogOpener<CreateKeyHost, Void, CreateKeyPm, CreateKeyView>(
-          CreateKeyPm.class, CreateKeyView.class, "action.createPgpKey") {
+  private final DialogOpener<CreateKeyHost, Void, CreateKeyPm, CreateKeyView> createKeyWindowHost =
+      new DialogOpener<>(CreateKeyPm.class, CreateKeyView.class, "action.createPgpKey") {
         @Override
         protected CreateKeyHost getHost() {
           return new CreateKeyHost() {
@@ -716,7 +721,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
 
   private class ChangeKeyPasswordDialogOpener
       extends DialogOpener<ChangeKeyPasswordHost, Key, ChangeKeyPasswordPm, ChangeKeyPasswordView> {
-    private Key key;
+    private final Key key;
 
     public ChangeKeyPasswordDialogOpener(Key key) {
       super(ChangeKeyPasswordPm.class, ChangeKeyPasswordView.class, "action.changePassphrase");
@@ -742,9 +747,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
     ;
   }
 
-  private DialogOpener<KeysListHost, Void, KeysListPm, KeysListView> keysListWindowHost =
-      new DialogOpener<KeysListHost, Void, KeysListPm, KeysListView>(
-          KeysListPm.class, KeysListView.class, "action.showKeysList") {
+  private final DialogOpener<KeysListHost, Void, KeysListPm, KeysListView> keysListWindowHost =
+      new DialogOpener<>(KeysListPm.class, KeysListView.class, "action.showKeysList") {
 
         @Override
         protected KeysListHost getHost() {
@@ -786,7 +790,7 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
         ;
       };
 
-  private Action importKeyFromClipboard =
+  private final Action importKeyFromClipboard =
       new LocalizedActionEx("action.importKeyFromText", this) {
         private static final long serialVersionUID = -3347918300952342578L;
 
@@ -850,11 +854,10 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
     ;
   }
 
-  private CheckForUpdatesDialog checkForUpdatesDialog = new CheckForUpdatesDialog();
+  private final CheckForUpdatesDialog checkForUpdatesDialog = new CheckForUpdatesDialog();
 
-  private DialogOpener<AboutHost, Void, AboutPm, AboutView> aboutWindowHost =
-      new DialogOpener<AboutHost, Void, AboutPm, AboutView>(
-          AboutPm.class, AboutView.class, "term.aboutApp") {
+  private final DialogOpener<AboutHost, Void, AboutPm, AboutView> aboutWindowHost =
+      new DialogOpener<>(AboutPm.class, AboutView.class, "term.aboutApp") {
         @Override
         protected AboutHost getHost() {
           return new AboutHost() {
@@ -886,8 +889,8 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
       PMPO,
       TPmType extends PresentationModelBaseEx<PMHT, PMPO>,
       TViewType extends ViewBase<TPmType>> {
-    private Class<TPmType> pmClass;
-    private Class<TViewType> viewClass;
+    private final Class<TPmType> pmClass;
+    private final Class<TViewType> viewClass;
 
     public final Action actionToOpenWindow;
     protected TPmType pm;
@@ -966,24 +969,6 @@ public class RootPm implements ApplicationContextAware, InitializingBean, Global
     protected abstract PMHT getHost();
 
     protected abstract PMPO getInitParams();
-  }
-
-  public EventBus getEventBus() {
-    return eventBus;
-  }
-
-  @Autowired
-  public void setEventBus(EventBus eventBus) {
-    this.eventBus = eventBus;
-  }
-
-  public UpdatesPolicy getUpdatesPolicy() {
-    return updatesPolicy;
-  }
-
-  @Autowired
-  public void setUpdatesPolicy(UpdatesPolicy updatesPolicy) {
-    this.updatesPolicy = updatesPolicy;
   }
 
   @Override

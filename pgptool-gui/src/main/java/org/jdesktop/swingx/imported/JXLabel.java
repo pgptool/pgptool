@@ -97,40 +97,14 @@ import javax.swing.text.WrappedPlainView;
  */
 @SuppressWarnings({"rawtypes", "deprecation", "static-access", "unchecked"})
 public class JXLabel extends JLabel {
-  private static final long serialVersionUID = 5722946193954123862L;
-
-  /** Text alignment enums. Controls alignment of the text when line wrapping is enabled. */
-  public enum TextAlignment implements IValue {
-    LEFT(StyleConstants.ALIGN_LEFT),
-    CENTER(StyleConstants.ALIGN_CENTER),
-    RIGHT(StyleConstants.ALIGN_RIGHT),
-    JUSTIFY(StyleConstants.ALIGN_JUSTIFIED);
-
-    private int value;
-
-    private TextAlignment(int val) {
-      value = val;
-    }
-
-    @Override
-    public int getValue() {
-      return value;
-    }
-  }
-
-  protected interface IValue {
-    int getValue();
-  }
-
   // textOrientation value declarations...
   public static final double NORMAL = 0;
-
   public static final double INVERTED = Math.PI;
-
   public static final double VERTICAL_LEFT = 3 * Math.PI / 2;
-
   public static final double VERTICAL_RIGHT = Math.PI / 2;
-
+  private static final long serialVersionUID = 5722946193954123862L;
+  private static final String oldRendererKey = "was" + BasicHTML.propertyKey;
+  public boolean painted;
   private double textRotation = NORMAL;
 
   private boolean painting = false;
@@ -151,13 +125,14 @@ public class JXLabel extends JLabel {
   private boolean dontIgnoreRepaint = false;
 
   private int occupiedWidth;
-
-  private static final String oldRendererKey = "was" + BasicHTML.propertyKey;
+  private boolean paintBorderInsets = true;
 
   // private static final Logger log = Logger.getAnonymousLogger();
   // static {
   // log.setLevel(Level.FINEST);
   // }
+  private int maxLineSpan = -1;
+  private TextAlignment textAlignment = TextAlignment.LEFT;
 
   /** Create a new JXLabel. This has the same semantics as creating a new JLabel. */
   public JXLabel() {
@@ -232,6 +207,18 @@ public class JXLabel extends JLabel {
     initLineWrapSupport();
   }
 
+  private static int rotateWidth(Dimension size, double theta) {
+    return (int)
+        Math.round(
+            size.width * Math.abs(Math.cos(theta)) + size.height * Math.abs(Math.sin(theta)));
+  }
+
+  private static int rotateHeight(Dimension size, double theta) {
+    return (int)
+        Math.round(
+            size.width * Math.abs(Math.sin(theta)) + size.height * Math.abs(Math.cos(theta)));
+  }
+
   private void initPainterSupport() {
     foregroundPainter =
         new AbstractPainter<JXLabel>() {
@@ -302,6 +289,24 @@ public class JXLabel extends JLabel {
     return foregroundPainter;
   }
 
+  /**
+   * Sets a new foregroundPainter on the label. This will replace the existing foreground painter.
+   * Existing painters can be wrapped by using a CompoundPainter.
+   *
+   * @param painter
+   */
+  public void setForegroundPainter(Painter painter) {
+    Painter old = this.getForegroundPainter();
+    if (painter == null) {
+      // restore default painter
+      initPainterSupport();
+    } else {
+      this.foregroundPainter = painter;
+    }
+    firePropertyChange("foregroundPainter", old, getForegroundPainter());
+    repaint();
+  }
+
   @Override
   public void reshape(int x, int y, int w, int h) {
     int oldH = getHeight();
@@ -322,21 +327,14 @@ public class JXLabel extends JLabel {
   }
 
   /**
-   * Sets a new foregroundPainter on the label. This will replace the existing foreground painter.
-   * Existing painters can be wrapped by using a CompoundPainter.
+   * Returns the current background painter. The default value of this property is a painter which
+   * draws the normal JPanel background according to the current look and feel.
    *
-   * @param painter
+   * @return the current painter
+   * @see #setBackgroundPainter(Painter)
    */
-  public void setForegroundPainter(Painter painter) {
-    Painter old = this.getForegroundPainter();
-    if (painter == null) {
-      // restore default painter
-      initPainterSupport();
-    } else {
-      this.foregroundPainter = painter;
-    }
-    firePropertyChange("foregroundPainter", old, getForegroundPainter());
-    repaint();
+  public final Painter getBackgroundPainter() {
+    return backgroundPainter;
   }
 
   /**
@@ -356,17 +354,6 @@ public class JXLabel extends JLabel {
   }
 
   /**
-   * Returns the current background painter. The default value of this property is a painter which
-   * draws the normal JPanel background according to the current look and feel.
-   *
-   * @return the current painter
-   * @see #setBackgroundPainter(Painter)
-   */
-  public final Painter getBackgroundPainter() {
-    return backgroundPainter;
-  }
-
-  /**
    * Gets current value of text rotation in rads.
    *
    * @return a double representing the current rotation of the text
@@ -374,6 +361,24 @@ public class JXLabel extends JLabel {
    */
   public double getTextRotation() {
     return textRotation;
+  }
+
+  /**
+   * Sets new value for text rotation. The value can be anything in range <0,2PI>. Note that
+   * although property name suggests only text rotation, the whole foreground painter is rotated in
+   * fact. Due to various reasons it is strongly discouraged to access any size related properties
+   * of the label from other threads then EDT when this property is set.
+   *
+   * @param textOrientation Value for text rotation in range <0,2PI>
+   * @see #getTextRotation()
+   */
+  public void setTextRotation(double textOrientation) {
+    double old = getTextRotation();
+    this.textRotation = textOrientation;
+    if (old != getTextRotation()) {
+      firePropertyChange("textRotation", old, getTextRotation());
+    }
+    repaint();
   }
 
   @Override
@@ -432,8 +437,7 @@ public class JXLabel extends JLabel {
 
         occupiedWidth = dx + iconR.width + gap;
         Object parent = getParent();
-        if (parent != null && (parent instanceof JPanel)) {
-          JPanel panel = ((JPanel) parent);
+        if (parent != null && (parent instanceof JPanel panel)) {
           Border b = panel.getBorder();
           if (b != null) {
             Insets in = b.getBorderInsets(panel);
@@ -573,34 +577,14 @@ public class JXLabel extends JLabel {
     firePropertyChange("maxLineSpan", old, getMaxLineSpan());
   }
 
-  private static int rotateWidth(Dimension size, double theta) {
-    return (int)
-        Math.round(
-            size.width * Math.abs(Math.cos(theta)) + size.height * Math.abs(Math.sin(theta)));
-  }
-
-  private static int rotateHeight(Dimension size, double theta) {
-    return (int)
-        Math.round(
-            size.width * Math.abs(Math.sin(theta)) + size.height * Math.abs(Math.cos(theta)));
-  }
-
   /**
-   * Sets new value for text rotation. The value can be anything in range <0,2PI>. Note that
-   * although property name suggests only text rotation, the whole foreground painter is rotated in
-   * fact. Due to various reasons it is strongly discouraged to access any size related properties
-   * of the label from other threads then EDT when this property is set.
+   * Returns the current status of line wrap support. The default value of this property is false to
+   * mimic default JLabel behavior. Value of this property has no effect on HTML text.
    *
-   * @param textOrientation Value for text rotation in range <0,2PI>
-   * @see #getTextRotation()
+   * @return the current multiple line splitting status
    */
-  public void setTextRotation(double textOrientation) {
-    double old = getTextRotation();
-    this.textRotation = textOrientation;
-    if (old != getTextRotation()) {
-      firePropertyChange("textRotation", old, getTextRotation());
-    }
-    repaint();
+  public boolean isLineWrap() {
+    return this.multiLine;
   }
 
   /**
@@ -615,31 +599,13 @@ public class JXLabel extends JLabel {
     if (isLineWrap() != old) {
       firePropertyChange("lineWrap", old, isLineWrap());
       if (getForegroundPainter() != null) {
-        // NOTE: There is a bug here. In order to make painter work with this, caching has
+        // XXX There is a bug here. In order to make painter work with this, caching has
         // to be disabled
         ((AbstractPainter) getForegroundPainter()).setCacheable(!b);
       }
       // repaint();
     }
   }
-
-  /**
-   * Returns the current status of line wrap support. The default value of this property is false to
-   * mimic default JLabel behavior. Value of this property has no effect on HTML text.
-   *
-   * @return the current multiple line splitting status
-   */
-  public boolean isLineWrap() {
-    return this.multiLine;
-  }
-
-  private boolean paintBorderInsets = true;
-
-  private int maxLineSpan = -1;
-
-  public boolean painted;
-
-  private TextAlignment textAlignment = TextAlignment.LEFT;
 
   /**
    * Gets current text wrapping style.
@@ -673,11 +639,6 @@ public class JXLabel extends JLabel {
     return paintBorderInsets;
   }
 
-  @Override
-  public boolean isOpaque() {
-    return painting ? false : super.isOpaque();
-  }
-
   /**
    * Sets the paintBorderInsets property. Set to true if the background painter should paint where
    * the border is or false if it should only paint inside the border. This property is true by
@@ -692,6 +653,11 @@ public class JXLabel extends JLabel {
     boolean old = this.isPaintBorderInsets();
     this.paintBorderInsets = paintBorderInsets;
     firePropertyChange("paintBorderInsets", old, isPaintBorderInsets());
+  }
+
+  @Override
+  public boolean isOpaque() {
+    return painting ? false : super.isOpaque();
   }
 
   /**
@@ -915,6 +881,29 @@ public class JXLabel extends JLabel {
     return new MultiLineSupport();
   }
 
+  protected int getOccupiedWidth() {
+    return occupiedWidth;
+  }
+
+  /** Text alignment enums. Controls alignment of the text when line wrapping is enabled. */
+  public enum TextAlignment implements IValue {
+    LEFT(StyleConstants.ALIGN_LEFT),
+    CENTER(StyleConstants.ALIGN_CENTER),
+    RIGHT(StyleConstants.ALIGN_RIGHT),
+    JUSTIFY(StyleConstants.ALIGN_JUSTIFIED);
+
+    private final int value;
+
+    private TextAlignment(int val) {
+      value = val;
+    }
+
+    @Override
+    public int getValue() {
+      return value;
+    }
+  }
+
   // ----------------------------------------------------------
   // WARNING:
   // Anything below this line is related to lineWrap support and can be safely
@@ -938,6 +927,10 @@ public class JXLabel extends JLabel {
   // since
   // JLabel/JXLabel does not support selection of the text.
 
+  protected interface IValue {
+    int getValue();
+  }
+
   public static class MultiLineSupport implements PropertyChangeListener {
 
     private static final String HTML = "<html>";
@@ -945,50 +938,6 @@ public class JXLabel extends JLabel {
     private static ViewFactory basicViewFactory;
 
     private static BasicEditorKit basicFactory;
-
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-      String name = evt.getPropertyName();
-      JXLabel src = (JXLabel) evt.getSource();
-      if ("ancestor".equals(name)) {
-        src.dontIgnoreRepaint = true;
-      }
-      if (src.isLineWrap()) {
-        if ("font".equals(name)
-            || "foreground".equals(name)
-            || "maxLineSpan".equals(name)
-            || "textAlignment".equals(name)
-            || "icon".equals(name)
-            || "iconTextGap".equals(name)) {
-          if (evt.getOldValue() != null && !isHTML(src.getText())) {
-            updateRenderer(src);
-          }
-        } else if ("text".equals(name)) {
-          if (isHTML((String) evt.getOldValue())
-              && evt.getNewValue() != null
-              && !isHTML((String) evt.getNewValue())) {
-            // was html , but is not
-            if (src.getClientProperty(oldRendererKey) == null
-                && src.getClientProperty(BasicHTML.propertyKey) != null) {
-              src.putClientProperty(oldRendererKey, src.getClientProperty(BasicHTML.propertyKey));
-            }
-            src.putClientProperty(BasicHTML.propertyKey, createView(src));
-          } else if (!isHTML((String) evt.getOldValue())
-              && evt.getNewValue() != null
-              && !isHTML((String) evt.getNewValue())) {
-            // wasn't html and isn't
-            updateRenderer(src);
-          } else {
-            // either was html and is html or wasn't html, but is html
-            restoreHtmlRenderer(src);
-          }
-        } else if ("lineWrap".equals(name) && !isHTML(src.getText())) {
-          src.putClientProperty(BasicHTML.propertyKey, createView(src));
-        }
-      } else if ("lineWrap".equals(name) && !((Boolean) evt.getNewValue())) {
-        restoreHtmlRenderer(src);
-      }
-    }
 
     private static void restoreHtmlRenderer(JXLabel src) {
       Object current = src.getClientProperty(BasicHTML.propertyKey);
@@ -1041,6 +990,50 @@ public class JXLabel extends JLabel {
         basicFactory = new BasicEditorKit();
       }
       return basicFactory;
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+      String name = evt.getPropertyName();
+      JXLabel src = (JXLabel) evt.getSource();
+      if ("ancestor".equals(name)) {
+        src.dontIgnoreRepaint = true;
+      }
+      if (src.isLineWrap()) {
+        if ("font".equals(name)
+            || "foreground".equals(name)
+            || "maxLineSpan".equals(name)
+            || "textAlignment".equals(name)
+            || "icon".equals(name)
+            || "iconTextGap".equals(name)) {
+          if (evt.getOldValue() != null && !isHTML(src.getText())) {
+            updateRenderer(src);
+          }
+        } else if ("text".equals(name)) {
+          if (isHTML((String) evt.getOldValue())
+              && evt.getNewValue() != null
+              && !isHTML((String) evt.getNewValue())) {
+            // was html , but is not
+            if (src.getClientProperty(oldRendererKey) == null
+                && src.getClientProperty(BasicHTML.propertyKey) != null) {
+              src.putClientProperty(oldRendererKey, src.getClientProperty(BasicHTML.propertyKey));
+            }
+            src.putClientProperty(BasicHTML.propertyKey, createView(src));
+          } else if (!isHTML((String) evt.getOldValue())
+              && evt.getNewValue() != null
+              && !isHTML((String) evt.getNewValue())) {
+            // wasn't html and isn't
+            updateRenderer(src);
+          } else {
+            // either was html and is html or wasn't html, but is html
+            restoreHtmlRenderer(src);
+          }
+        } else if ("lineWrap".equals(name) && !isHTML(src.getText())) {
+          src.putClientProperty(BasicHTML.propertyKey, createView(src));
+        }
+      } else if ("lineWrap".equals(name) && !((Boolean) evt.getNewValue())) {
+        restoreHtmlRenderer(src);
+      }
     }
 
     private static class BasicEditorKit extends StyledEditorKit {
@@ -1142,6 +1135,8 @@ public class JXLabel extends JLabel {
     private float width;
 
     private float height;
+    private final View view;
+    private final ViewFactory factory;
 
     Renderer(JXLabel c, ViewFactory f, View v, boolean wordWrap) {
       super(null, wordWrap);
@@ -1331,10 +1326,6 @@ public class JXLabel extends JLabel {
       return factory;
     }
 
-    private View view;
-
-    private ViewFactory factory;
-
     @Override
     public int getWidth() {
       return (int) width;
@@ -1344,9 +1335,5 @@ public class JXLabel extends JLabel {
     public int getHeight() {
       return (int) height;
     }
-  }
-
-  protected int getOccupiedWidth() {
-    return occupiedWidth;
   }
 }

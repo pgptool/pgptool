@@ -27,9 +27,9 @@ import org.apache.log4j.Logger;
 import org.pgptool.gui.tools.IoStreamUtils;
 
 public class FileBasedLock implements Closeable {
-  private static Logger log = Logger.getLogger(FileBasedLock.class);
+  private static final Logger log = Logger.getLogger(FileBasedLock.class);
 
-  private File file;
+  private final File file;
   private RandomAccessFile randomAccessFile;
   private FileLock fileLock;
 

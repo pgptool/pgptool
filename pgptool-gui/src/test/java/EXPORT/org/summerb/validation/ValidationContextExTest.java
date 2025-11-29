@@ -1,10 +1,10 @@
 package EXPORT.org.summerb.validation;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.summerb.validation.FieldValidationException;
 
 /**
  * See for valid and invalid examples https://en.wikipedia.org/wiki/Email_address
@@ -32,9 +32,8 @@ public class ValidationContextExTest {
         "user-@example.org",
         "postmaster@[123.123.123.123]"
       })
-  public void testValidateEmailFormat_expectOkForUsualEmail(String email)
-      throws FieldValidationException {
-    assertEquals(true, ValidationContextEx.isValidEmail(email));
+  public void testValidateEmailFormat_expectOkForUsualEmail(String email) {
+    assertTrue(ValidationContextEx.isValidEmail(email));
   }
 
   /** Examples are taken from https://en.wikipedia.org/wiki/Email_address */
@@ -49,8 +48,7 @@ public class ValidationContextExTest {
         "this\\ still\\\"not\\\\allowed@example.com",
         "i_like_underscore@but_its_not_allowed_in_this_part.example.com"
       })
-  public void testValidateEmailFormat_expectFailForInvalidEmails(String email)
-      throws FieldValidationException {
-    assertEquals(false, ValidationContextEx.isValidEmail(email));
+  public void testValidateEmailFormat_expectFailForInvalidEmails(String email) {
+    assertFalse(ValidationContextEx.isValidEmail(email));
   }
 }

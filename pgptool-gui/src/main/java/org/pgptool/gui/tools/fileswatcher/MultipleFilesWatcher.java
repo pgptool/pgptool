@@ -41,13 +41,13 @@ import org.summerb.utils.threads.RecurringBackgroundTask;
 // introduced bycle here
 
 public class MultipleFilesWatcher {
-  private static Logger log = Logger.getLogger(MultipleFilesWatcher.class);
+  private static final Logger log = Logger.getLogger(MultipleFilesWatcher.class);
 
-  private FilesWatcherHandler dirWatcherHandler;
-  private String watcherName;
+  private final FilesWatcherHandler dirWatcherHandler;
+  private final String watcherName;
 
-  private Map<WatchKey, BaseFolder> keys = new HashMap<>();
-  private Map<String, BaseFolder> baseFolders = new HashMap<>();
+  private final Map<WatchKey, BaseFolder> keys = new HashMap<>();
+  private final Map<String, BaseFolder> baseFolders = new HashMap<>();
 
   private Thread workerThread;
   private WatchService watcher;
@@ -75,7 +75,7 @@ public class MultipleFilesWatcher {
     }
   }
 
-  private Runnable dirsExistanceWatcher =
+  private final Runnable dirsExistanceWatcher =
       new Runnable() {
         @Override
         public void run() {
@@ -145,7 +145,7 @@ public class MultipleFilesWatcher {
         baseFolder.interestedFiles.remove(relativeFilename);
         log.debug(
             "File is no longer watched in folder " + baseFolderStr + " file " + relativeFilename);
-        if (baseFolder.interestedFiles.size() > 0) {
+        if (!baseFolder.interestedFiles.isEmpty()) {
           return;
         }
 

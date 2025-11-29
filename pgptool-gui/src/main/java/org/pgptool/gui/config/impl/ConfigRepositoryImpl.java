@@ -29,19 +29,24 @@ import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.config.api.ConfigsBasePathResolver;
 import org.pgptool.gui.tools.FileUtilsEx;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import org.summerb.easycrud.api.dto.EntityChangedEvent;
 import org.summerb.utils.DtoBase;
+import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 
 public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean {
-  private static Logger log = Logger.getLogger(ConfigRepositoryImpl.class);
-  private ConfigsBasePathResolver configsBasePathResolver;
-  private String configsBasepath = File.separator + "configs";
-  private EventBus eventBus;
+  private static final Logger log = Logger.getLogger(ConfigRepositoryImpl.class);
+  private final String configsBasepath = File.separator + "configs";
+
+  private final ConfigsBasePathResolver configsBasePathResolver;
+  private final EventBus eventBus;
+
+  public ConfigRepositoryImpl(ConfigsBasePathResolver configsBasePathResolver, EventBus eventBus) {
+    this.configsBasePathResolver = configsBasePathResolver;
+    this.eventBus = eventBus;
+  }
 
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     ensureAllDirsCreated();
   }
 
@@ -185,23 +190,5 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
         // don't care
       }
     }
-  }
-
-  public ConfigsBasePathResolver getConfigsBasePathResolver() {
-    return configsBasePathResolver;
-  }
-
-  @Autowired
-  public void setConfigsBasePathResolver(ConfigsBasePathResolver configsBasePathResolver) {
-    this.configsBasePathResolver = configsBasePathResolver;
-  }
-
-  public EventBus getEventBus() {
-    return eventBus;
-  }
-
-  @Autowired
-  public void setEventBus(EventBus eventBus) {
-    this.eventBus = eventBus;
   }
 }

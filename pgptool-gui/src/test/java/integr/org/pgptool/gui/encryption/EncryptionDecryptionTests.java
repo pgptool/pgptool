@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import integr.org.pgptool.gui.TestTools;
+import integr.org.pgptool.gui.config.IntegrTestConfig;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -53,7 +54,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.summerb.validation.ValidationException;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration("classpath:integr-test-context.xml")
+@ContextConfiguration(classes = {IntegrTestConfig.class})
 @ProfileValueSourceConfiguration()
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
 @SuppressWarnings({"rawtypes", "unchecked"})

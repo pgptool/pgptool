@@ -33,7 +33,8 @@ public class ValidationContextExTest {
         "postmaster@[123.123.123.123]"
       })
   public void testValidateEmailFormat_expectOkForUsualEmail(String email) {
-    assertTrue(ValidationContextEx.isValidEmail(email));
+    assertTrue(
+        ValidationContextEx.isValidEmail(email), "Email '" + email + "' must be considered valid");
   }
 
   /** Examples are taken from https://en.wikipedia.org/wiki/Email_address */
@@ -49,6 +50,8 @@ public class ValidationContextExTest {
         "i_like_underscore@but_its_not_allowed_in_this_part.example.com"
       })
   public void testValidateEmailFormat_expectFailForInvalidEmails(String email) {
-    assertFalse(ValidationContextEx.isValidEmail(email));
+    assertFalse(
+        ValidationContextEx.isValidEmail(email),
+        "Email '" + email + "' must be considered invalid");
   }
 }

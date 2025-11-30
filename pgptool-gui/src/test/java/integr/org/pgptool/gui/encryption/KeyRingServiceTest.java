@@ -22,10 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.google.common.eventbus.EventBus;
 import integr.org.pgptool.gui.TestTools;
+import integr.org.pgptool.gui.config.IntegrTestConfig;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyGeneratorService;
@@ -34,6 +34,7 @@ import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl;
 import org.pgptool.gui.usage.api.UsageLogger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.annotation.ProfileValueSourceConfiguration;
@@ -41,16 +42,15 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration("classpath:integr-test-context.xml")
+@ContextConfiguration(classes = {IntegrTestConfig.class})
 @ProfileValueSourceConfiguration()
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
 public class KeyRingServiceTest {
-  private final KeyFilesOperations keyFilesOperations;
-  private final KeyGeneratorService keyGeneratorService;
-
-  private final ConfigRepository configRepository;
-  private final EventBus eventBus;
-  private final UsageLogger usageLogger;
+  @Autowired KeyFilesOperations keyFilesOperations;
+  @Autowired KeyGeneratorService keyGeneratorService;
+  @Autowired ConfigRepository configRepository;
+  @Autowired EventBus eventBus;
+  @Autowired UsageLogger usageLogger;
 
   @Test
   public void testKeyRingServiceExpectCanFindKeyAfterSerialization() throws Exception {
@@ -72,12 +72,7 @@ public class KeyRingServiceTest {
   }
 
   private KeyRingService buildAnotherKeyRingService() {
-    KeyRingServicePgpImpl keyRingService1 = new KeyRingServicePgpImpl();
-    keyRingService1.setConfigRepository(configRepository);
-    keyRingService1.setEventBus(eventBus);
-    keyRingService1.setKeyGeneratorService(Mockito.mock(KeyGeneratorService.class));
-    keyRingService1.setUsageLogger(usageLogger);
-    return (KeyRingService) keyRingService1;
+    return new KeyRingServicePgpImpl(configRepository, eventBus, keyGeneratorService, usageLogger);
   }
 
   @Test

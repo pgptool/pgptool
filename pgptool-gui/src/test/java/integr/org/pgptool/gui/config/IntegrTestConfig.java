@@ -5,15 +5,21 @@ import integr.org.pgptool.gui.TestTools;
 import java.math.BigInteger;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.mockito.Mockito;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.config.api.ConfigsBasePathResolver;
 import org.pgptool.gui.config.impl.ConfigRepositoryImpl;
+import org.pgptool.gui.configpairs.api.ConfigPairs;
+import org.pgptool.gui.configpairs.impl.ConfigPairsImpl;
 import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.implpgp.EncryptionServicePgpImpl;
 import org.pgptool.gui.encryption.implpgp.KeyFilesOperationsPgpImpl;
 import org.pgptool.gui.encryption.implpgp.KeyGeneratorServicePgpImpl;
 import org.pgptool.gui.encryption.implpgp.KeyRingServicePgpImpl;
+import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
+import org.pgptool.gui.tempfolderfordecrypted.impl.DecryptedTempFolderImpl;
+import org.pgptool.gui.ui.root.RootPm;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.api.UsageLoggerNoOpImpl;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,17 +27,21 @@ import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
+import org.summerb.validation.ValidationContextConfig;
 import org.summerb.validation.ValidationContextFactory;
-import org.summerb.validation.ValidationContextFactoryImpl;
 
 // @TestConfiguration
+@Configuration
+@Import({ValidationContextConfig.class})
 public class IntegrTestConfig {
 
   @Bean
-  public static PropertyPlaceholderConfigurer propertyPlaceholderConfigurer() {
+  static PropertyPlaceholderConfigurer propertyPlaceholderConfigurer() {
     PropertyPlaceholderConfigurer cfg = new PropertyPlaceholderConfigurer();
     cfg.setIgnoreResourceNotFound(true);
     cfg.setSystemPropertiesMode(PropertyPlaceholderConfigurer.SYSTEM_PROPERTIES_MODE_OVERRIDE);
@@ -45,7 +55,7 @@ public class IntegrTestConfig {
   }
 
   @Bean
-  public MessageSource messageSource() {
+  MessageSource messageSource() {
     ReloadableResourceBundleMessageSource ms = new ReloadableResourceBundleMessageSource();
     ms.setBasenames("classpath:pgptool-gui-messages", "classpath:summerb-messages");
     ms.setCacheSeconds(60);
@@ -60,22 +70,34 @@ public class IntegrTestConfig {
   }
 
   @Bean
-  public Messages messages(ApplicationContext applicationContext) {
+  Messages messages(ApplicationContext applicationContext) {
     return new Messages(applicationContext);
   }
 
   @Bean
-  public EventBus eventBus() {
+  EventBus eventBus() {
     return new EventBus();
   }
 
   @Bean
-  public String tempDirPath() {
+  String tempDirPath() {
     return TestTools.buildNewTempDir();
   }
 
   @Bean
-  public ConfigsBasePathResolver configsBasePathResolver(@Value("#{tempDirPath}") String tempDir) {
+  ConfigPairsImpl appProps(ConfigRepository configRepository, EventBus eventBus) {
+    return new ConfigPairsImpl(configRepository, eventBus, "app-props");
+  }
+
+  @Bean
+  DecryptedTempFolder decryptedTempFolder(
+      ConfigsBasePathResolver configsBasePathResolver, ConfigPairs appProps) {
+    return new DecryptedTempFolderImpl(
+        configsBasePathResolver, appProps, Mockito.mock(RootPm.class));
+  }
+
+  @Bean
+  ConfigsBasePathResolver configsBasePathResolver(@Value("#{tempDirPath}") String tempDir) {
     // For tests use temp directory directly as configs base path
     return new ConfigsBasePathResolver() {
       @Override
@@ -90,18 +112,18 @@ public class IntegrTestConfig {
   }
 
   @Bean
-  public ConfigRepositoryImpl configRepository(
+  ConfigRepositoryImpl configRepository(
       ConfigsBasePathResolver configsBasePathResolver, EventBus eventBus) {
     return new ConfigRepositoryImpl(configsBasePathResolver, eventBus);
   }
 
   @Bean
-  public KeyFilesOperationsPgpImpl keyFilesOperations() {
+  KeyFilesOperationsPgpImpl keyFilesOperations() {
     return new KeyFilesOperationsPgpImpl();
   }
 
   @Bean
-  public KeyRingServicePgpImpl keyRingService(
+  KeyRingServicePgpImpl keyRingService(
       ConfigRepository configRepository,
       EventBus eventBus,
       KeyGeneratorService keyGeneratorService,
@@ -110,17 +132,12 @@ public class IntegrTestConfig {
   }
 
   @Bean
-  public EncryptionServicePgpImpl encryptionService() {
+  EncryptionServicePgpImpl encryptionService() {
     return new EncryptionServicePgpImpl();
   }
 
   @Bean
-  public ValidationContextFactory validationContextFactory() {
-    return new ValidationContextFactoryImpl();
-  }
-
-  @Bean
-  public KeyGeneratorServicePgpImpl keyGeneratorService(
+  KeyGeneratorServicePgpImpl keyGeneratorService(
       ExecutorService executorService,
       ValidationContextFactory validationContextFactory,
       @Value("${keygen.masterKey.algorithm}") String masterKeyAlgorithm,
@@ -156,7 +173,7 @@ public class IntegrTestConfig {
   }
 
   @Bean
-  public UsageLoggerNoOpImpl usageLogger() {
+  UsageLoggerNoOpImpl usageLogger() {
     return new UsageLoggerNoOpImpl();
   }
 }

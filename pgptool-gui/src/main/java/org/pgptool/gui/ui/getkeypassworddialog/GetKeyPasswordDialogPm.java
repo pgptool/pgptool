@@ -61,7 +61,7 @@ public class GetKeyPasswordDialogPm
       ActionEvent originAction, GetKeyPasswordDialogHost host, GetKeyPasswordPo initParams) {
     super.init(originAction, host, initParams);
     GetKeyPasswordPmInitResult result =
-        getKeyPasswordPm.initEx(originAction, getPasswordHost, initParams);
+        getGetKeyPasswordPm().initEx(originAction, getPasswordHost, initParams);
     if (result == GetKeyPasswordPmInitResult.NoMatchingKeys) {
       initParams.keyAndPasswordCallback.onKeyPasswordResult(null);
       return false;
@@ -76,7 +76,10 @@ public class GetKeyPasswordDialogPm
   @Override
   public void detach() {
     super.detach();
-    getKeyPasswordPm.detach();
+    if (getKeyPasswordPm != null) {
+      getKeyPasswordPm.detach();
+      getKeyPasswordPm = null;
+    }
   }
 
   private final GetKeyPasswordHost getPasswordHost =

@@ -8,7 +8,7 @@ import org.summerb.validation.ValidationError;
 import org.summerb.validation.ValidationException;
 
 public class ExceptionTranslatorFveImpl implements ExceptionTranslator {
-  protected MessageSource messageSource;
+  protected final MessageSource messageSource;
 
   public ExceptionTranslatorFveImpl(MessageSource messageSource) {
     this.messageSource = messageSource;

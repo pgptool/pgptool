@@ -105,7 +105,7 @@ public class ChangeKeyPasswordPm extends PresentationModelBaseEx<ChangeKeyPasswo
         validationErrors);
   }
 
-  protected Action actionChange =
+  protected final Action actionChange =
       new LocalizedActionEx("action.ok", this) {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -141,7 +141,7 @@ public class ChangeKeyPasswordPm extends PresentationModelBaseEx<ChangeKeyPasswo
         }
       };
 
-  protected Action actionCancel =
+  protected final Action actionCancel =
       new LocalizedActionEx("action.cancel", this) {
         @Override
         public void actionPerformed(ActionEvent e) {

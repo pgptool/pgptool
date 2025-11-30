@@ -18,10 +18,10 @@ public class BkgTaskInvalidateCache<E> extends BkgTask<E> implements Runnable {
     firstPage = loader.virtualTableDataSource.loadData(new PagerParams(0, loader.pageSize));
     currentPage = null;
     if (loader.lastPageRequested > 0
-        && firstPage.getTotalResults() > loader.lastPageRequested * loader.pageSize) {
+        && firstPage.getTotalResults() > (long) loader.lastPageRequested * loader.pageSize) {
       currentPage =
           loader.virtualTableDataSource.loadData(
-              new PagerParams(loader.lastPageRequested * loader.pageSize, loader.pageSize));
+              new PagerParams((long) loader.lastPageRequested * loader.pageSize, loader.pageSize));
     } else {
       loader.lastPageRequested = -1;
     }

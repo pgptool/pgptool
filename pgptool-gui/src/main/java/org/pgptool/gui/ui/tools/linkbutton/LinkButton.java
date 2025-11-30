@@ -24,6 +24,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.Serial;
 import java.util.function.BiConsumer;
 import javax.swing.Action;
 import javax.swing.JLabel;
@@ -31,7 +32,7 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import ru.skarpushin.swingpm.bindings.HasAction;
 
 public class LinkButton extends JLabel implements HasAction {
-  private static final long serialVersionUID = 9012537495123322302L;
+  @Serial private static final long serialVersionUID = 9012537495123322302L;
 
   public static final BiConsumer<LinkButton, Boolean> ENABLED_OR_DISABLED =
       new BiConsumer<>() {
@@ -126,5 +127,4 @@ public class LinkButton extends JLabel implements HasAction {
   public void setEnabledBehavior(BiConsumer<LinkButton, Boolean> enabledBehavior) {
     this.enabledBehavior = enabledBehavior;
   }
-  ;
 }

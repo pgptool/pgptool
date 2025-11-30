@@ -23,7 +23,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.GenericException;
-import org.pgptool.gui.bkgoperation.UserRequestedCancellationException;
 import org.springframework.util.StringUtils;
 
 public class FileUtilsEx {
@@ -58,7 +57,7 @@ public class FileUtilsEx {
    * @param fileCreatorLogic operation which will create the file
    */
   public static void baitAndSwitch(String targetFile, FileCreatorLogic fileCreatorLogic)
-      throws Exception, UserRequestedCancellationException {
+      throws Exception {
 
     File targetFileFile = new File(targetFile);
     File targetFolder = targetFileFile.getParentFile();
@@ -93,7 +92,7 @@ public class FileUtilsEx {
     }
   }
 
-  public static interface FileCreatorLogic {
-    void createFile(String fileName) throws Exception, UserRequestedCancellationException;
+  public interface FileCreatorLogic {
+    void createFile(String fileName) throws Exception;
   }
 }

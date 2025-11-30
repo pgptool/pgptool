@@ -35,7 +35,7 @@ import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -64,7 +64,7 @@ import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import ru.skarpushin.swingpm.tools.edt.Edt;
 
 public class UiUtils {
-  public static Logger log = Logger.getLogger(UiUtils.class);
+  public static final Logger log = Logger.getLogger(UiUtils.class);
 
   /**
    * By default window will be placed at 0x0 coordinates, which is not pretty. We have to position
@@ -137,8 +137,7 @@ public class UiUtils {
               + format(i, graphicsDevice, graphicsDevice.getDefaultConfiguration()));
       GraphicsConfiguration[] graphicsConfigurations = graphicsDevice.getConfigurations();
       Set<Rectangle> seen = new HashSet<>();
-      for (int j = 0; j < graphicsConfigurations.length; ++j) {
-        GraphicsConfiguration graphicsConfiguration = graphicsConfigurations[j];
+      for (GraphicsConfiguration graphicsConfiguration : graphicsConfigurations) {
         Rectangle graphicsBounds = graphicsConfiguration.getBounds();
         if (!seen.add(graphicsBounds)) {
           continue;
@@ -158,16 +157,16 @@ public class UiUtils {
   }
 
   private static String formatMonitorSizes(List<GraphicsDevice> graphicsDevices) {
-    String ret = "";
+    StringBuilder ret = new StringBuilder();
     for (int i = 0; i < graphicsDevices.size(); i++) {
       if (i > 0) {
-        ret += ", ";
+        ret.append(", ");
       }
 
       GraphicsDevice graphicsDevice = graphicsDevices.get(i);
-      ret += format(i, graphicsDevice, graphicsDevice.getDefaultConfiguration());
+      ret.append(format(i, graphicsDevice, graphicsDevice.getDefaultConfiguration()));
     }
-    return ret;
+    return ret.toString();
   }
 
   private static String format(
@@ -207,7 +206,7 @@ public class UiUtils {
 
   private static boolean confirm(
       ActionEvent originEvent, String userPromptMessageCode, Object[] messageArgs, int severity) {
-    int response = JOptionPane.OK_OPTION;
+    int response;
 
     String msg = Messages.get(userPromptMessageCode, messageArgs);
     if (msg.length() > 70) {
@@ -243,11 +242,7 @@ public class UiUtils {
   }
 
   public static int getFontRelativeSize(int size) {
-    StringBuilder sb = new StringBuilder(size);
-    for (int i = 0; i < size; i++) {
-      sb.append("W");
-    }
-    JLabel lbl = new JLabel(sb.toString());
+    JLabel lbl = new JLabel("W".repeat(Math.max(0, size)));
     return (int) lbl.getPreferredSize().getWidth();
   }
 
@@ -341,23 +336,24 @@ public class UiUtils {
 
           public void setDefaultSize(int size) {
             Set<Object> keySet = UIManager.getLookAndFeelDefaults().keySet();
-            Object[] keys = keySet.toArray(new Object[keySet.size()]);
-            for (Object key : keys) {
-              if (key != null && key.toString().toLowerCase().contains("font")) {
-                Font font = UIManager.getDefaults().getFont(key);
-                if (font != null) {
-                  Font changedFont = font.deriveFont((float) size);
-                  UIManager.put(key, changedFont);
-                  Font doubleCheck = UIManager.getDefaults().getFont(key);
-                  log.debug(
-                      "Font size changed for "
-                          + key
-                          + ". From "
-                          + font.getSize()
-                          + " to "
-                          + doubleCheck.getSize());
-                }
+            for (Object key : keySet) {
+              if (key == null || !key.toString().toLowerCase().contains("font")) {
+                continue;
               }
+              Font font = UIManager.getDefaults().getFont(key);
+              if (font == null) {
+                continue;
+              }
+              Font changedFont = font.deriveFont((float) size);
+              UIManager.put(key, changedFont);
+              Font doubleCheck = UIManager.getDefaults().getFont(key);
+              log.debug(
+                  "Font size changed for "
+                      + key
+                      + ". From "
+                      + font.getSize()
+                      + " to "
+                      + doubleCheck.getSize());
             }
           }
         });
@@ -394,8 +390,6 @@ public class UiUtils {
       messageType = JOptionPane.ERROR_MESSAGE;
     } else if (messageSeverity == MessageSeverity.WARNING) {
       messageType = JOptionPane.WARNING_MESSAGE;
-    } else if (messageSeverity == MessageSeverity.INFO) {
-      messageType = JOptionPane.INFORMATION_MESSAGE;
     }
     UiUtils.messageBox(originEvent, messageText, messageTitle, messageType);
   }
@@ -446,7 +440,7 @@ public class UiUtils {
 
     File file = fileChooser.getSelectedFile();
     try {
-      FileUtils.write(file, msg, Charset.forName("UTF-8"), false);
+      FileUtils.write(file, msg, StandardCharsets.UTF_8, false);
     } catch (IOException e) {
       log.error("Failed to save error message to file: " + file, e);
       JOptionPane.showMessageDialog(
@@ -456,7 +450,7 @@ public class UiUtils {
   }
 
   private static Object buildMessageContentDependingOnLength(String msg) {
-    Object content = "";
+    Object content;
     if (msg.length() > 300 || msg.split("\n").length > 2) {
       content = getScrollableMessage(msg);
     } else if (msg.length() > 100) {

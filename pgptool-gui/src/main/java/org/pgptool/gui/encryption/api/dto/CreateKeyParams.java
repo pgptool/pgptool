@@ -17,10 +17,11 @@
  ******************************************************************************/
 package org.pgptool.gui.encryption.api.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class CreateKeyParams implements Serializable {
-  private static final long serialVersionUID = 4508794770144261040L;
+  @Serial private static final long serialVersionUID = 4508794770144261040L;
 
   private String fullName;
   private String email;

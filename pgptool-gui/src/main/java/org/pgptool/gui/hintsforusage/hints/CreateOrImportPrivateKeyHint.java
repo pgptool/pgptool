@@ -139,5 +139,4 @@ public class CreateOrImportPrivateKeyHint extends HintPm implements Initializing
 
     return new Action[] {actionCreate, actionImport, actionTellMeMore, actionClose};
   }
-  ;
 }

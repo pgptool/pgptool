@@ -23,6 +23,7 @@ import com.google.common.eventbus.Subscribe;
 import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.Serial;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -173,10 +174,9 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
             // EntryPoint.reportExceptionToUser("exception.unexpected", t);
             return null;
           } finally {
-            if (!isQuickSearchMode()) {
-              return null;
+            if (isQuickSearchMode()) {
+              tableLabel.setValueByOwner(Messages.get("term.searchResults"));
             }
-            tableLabel.setValueByOwner(Messages.get("term.searchResults"));
           }
         }
       };
@@ -265,19 +265,8 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
         }
       };
 
-  protected Comparator<DecryptionDialogParameters> byTimestampDesc =
-      new Comparator<>() {
-        @Override
-        public int compare(DecryptionDialogParameters o1, DecryptionDialogParameters o2) {
-          if (o2.getCreatedAt() < o1.getCreatedAt()) {
-            return -1;
-          }
-          if (o2.getCreatedAt() > o1.getCreatedAt()) {
-            return 1;
-          }
-          return 0;
-        }
-      };
+  protected final Comparator<DecryptionDialogParameters> byTimestampDesc =
+      (o1, o2) -> Long.compare(o2.getCreatedAt(), o1.getCreatedAt());
 
   protected boolean isQuickSearchMode() {
     return !"".equals(quickSearch.getValue());
@@ -307,7 +296,7 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
 
   protected final Action actionOpen =
       new LocalizedActionEx("action.open", this) {
-        private static final long serialVersionUID = -6923195112372446340L;
+        @Serial private static final long serialVersionUID = -6923195112372446340L;
 
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -330,7 +319,7 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
 
   private final Action actionOpenLocation =
       new LocalizedActionEx("action.openLocation", this) {
-        private static final long serialVersionUID = -3192304131437449088L;
+        @Serial private static final long serialVersionUID = -3192304131437449088L;
 
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -344,7 +333,7 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
         }
       };
 
-  protected Action[] contextMenuActions = new Action[] {actionOpenLocation};
+  protected final Action[] contextMenuActions = new Action[] {actionOpenLocation};
 
   protected ModelPropertyAccessor<TableModel> getRowsTableModel() {
     return rowsTableModel.getModelPropertyAccessor();

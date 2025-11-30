@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.filecomparison;
 
+import java.io.Serial;
 import org.summerb.utils.DtoBase;
 
 /**
@@ -26,7 +27,7 @@ import org.summerb.utils.DtoBase;
  * @author sergeyk
  */
 public class Fingerprint implements DtoBase {
-  private static final long serialVersionUID = -3893655717810653990L;
+  @Serial private static final long serialVersionUID = -3893655717810653990L;
 
   private long size;
   private String checksum;

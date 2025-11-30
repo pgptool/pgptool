@@ -26,7 +26,7 @@ import javax.swing.ImageIcon;
 import org.apache.log4j.Logger;
 
 public class WindowIcon {
-  protected static Logger log = Logger.getLogger(WindowIcon.class);
+  protected static final Logger log = Logger.getLogger(WindowIcon.class);
 
   private static List<Image> windowIcon;
 

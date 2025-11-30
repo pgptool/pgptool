@@ -17,14 +17,14 @@ import org.slf4j.LoggerFactory;
  * @param <P> type of init params. Could be Void
  */
 public class PresentationModelBase<H, P> implements PresentationModel {
-  protected Logger log = LoggerFactory.getLogger(getClass());
+  protected final Logger log = LoggerFactory.getLogger(getClass());
 
   /** Action that resulted in invocation of this PresentationModelBase */
   protected ActionEvent originAction;
 
   protected H host;
   protected P initParams;
-  protected List<View<?>> views = new ArrayList<>();
+  protected final List<View<?>> views = new ArrayList<>();
 
   @Override
   public boolean isAttached() {

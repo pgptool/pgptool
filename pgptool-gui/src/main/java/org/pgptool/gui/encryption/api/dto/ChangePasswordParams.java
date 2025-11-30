@@ -17,10 +17,11 @@
  ******************************************************************************/
 package org.pgptool.gui.encryption.api.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class ChangePasswordParams implements Serializable {
-  private static final long serialVersionUID = -1722195689488854053L;
+  @Serial private static final long serialVersionUID = -1722195689488854053L;
 
   private String passphrase;
   private String newPassphrase;

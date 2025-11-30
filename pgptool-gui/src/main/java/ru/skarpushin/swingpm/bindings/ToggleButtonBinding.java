@@ -68,7 +68,7 @@ public class ToggleButtonBinding implements Binding {
       return propName;
     }
 
-    log.error("No message code defined for property name: " + propName);
+    log.error("No message code defined for property name: {}", propName);
     return propName;
   }
 

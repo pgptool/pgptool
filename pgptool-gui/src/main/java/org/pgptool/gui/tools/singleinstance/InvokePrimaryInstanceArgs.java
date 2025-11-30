@@ -17,10 +17,11 @@
  ******************************************************************************/
 package org.pgptool.gui.tools.singleinstance;
 
+import java.io.Serial;
 import org.summerb.utils.DtoBase;
 
 public class InvokePrimaryInstanceArgs implements DtoBase {
-  private static final long serialVersionUID = -1935402056245763044L;
+  @Serial private static final long serialVersionUID = -1935402056245763044L;
 
   private String[] commandLineArgs;
 

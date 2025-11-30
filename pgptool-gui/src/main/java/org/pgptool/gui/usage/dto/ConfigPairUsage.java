@@ -1,9 +1,10 @@
 package org.pgptool.gui.usage.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class ConfigPairUsage implements Serializable {
-  private static final long serialVersionUID = -200170723205714555L;
+  @Serial private static final long serialVersionUID = -200170723205714555L;
   private String storage;
   private String key;
   private Object value;

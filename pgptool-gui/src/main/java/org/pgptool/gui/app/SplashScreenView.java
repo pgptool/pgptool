@@ -18,13 +18,14 @@
 package org.pgptool.gui.app;
 
 import java.awt.BorderLayout;
+import java.io.Serial;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 import org.pgptool.gui.ui.tools.UiUtils;
 
 public class SplashScreenView extends JFrame {
-  private static final long serialVersionUID = -1059755470997596254L;
+  @Serial private static final long serialVersionUID = -1059755470997596254L;
 
   public SplashScreenView() {
     SwingUtilities.invokeLater(

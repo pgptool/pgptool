@@ -19,5 +19,5 @@ package org.pgptool.gui.encryption.api.dto;
 
 public enum KeyTypeEnum {
   KeyPair,
-  Public;
+  Public
 }

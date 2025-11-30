@@ -202,15 +202,15 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
     return secretKeyEncryptionAlgorithm;
   }
 
-  protected static final int symmetricKeyAlgorithmNameToTag(String algorithmName) {
+  protected static int symmetricKeyAlgorithmNameToTag(String algorithmName) {
     return getStaticFieldValue(algorithmName, SymmetricKeyAlgorithmTags.class);
   }
 
-  protected static final int hashAlgorithmNameToTag(String algorithmName) {
+  protected static int hashAlgorithmNameToTag(String algorithmName) {
     return getStaticFieldValue(algorithmName, HashAlgorithmTags.class);
   }
 
-  protected static final int algorithmNameToTag(String algorithmName) {
+  protected static int algorithmNameToTag(String algorithmName) {
     return getStaticFieldValue(algorithmName, PublicKeyAlgorithmTags.class);
   }
 
@@ -349,9 +349,9 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
   }
 
   public static class KeyPairParams {
-    String algorithm;
-    String provider;
-    int keysize;
+    final String algorithm;
+    final String provider;
+    final int keysize;
 
     public KeyPairParams(String algorithm, String provider, int keysize) {
       this.algorithm = algorithm;

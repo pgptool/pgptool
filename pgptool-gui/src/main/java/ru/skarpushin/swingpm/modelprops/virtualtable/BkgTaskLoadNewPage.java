@@ -5,7 +5,7 @@ import org.summerb.utils.easycrud.api.dto.PaginatedList;
 
 public class BkgTaskLoadNewPage<E> extends BkgTask<E> implements Runnable, HasPageIdx {
 
-  protected int pageIdx;
+  protected final int pageIdx;
   private PaginatedList<E> page;
 
   public BkgTaskLoadNewPage(AsyncDataLoaderImpl<E> loader, Object statusId, int pageIdx) {
@@ -17,7 +17,7 @@ public class BkgTaskLoadNewPage<E> extends BkgTask<E> implements Runnable, HasPa
   public void perform() {
     page =
         loader.virtualTableDataSource.loadData(
-            new PagerParams(pageIdx * loader.pageSize, loader.pageSize));
+            new PagerParams((long) pageIdx * loader.pageSize, loader.pageSize));
     loader.edtInvoker.invoke(this);
   }
 

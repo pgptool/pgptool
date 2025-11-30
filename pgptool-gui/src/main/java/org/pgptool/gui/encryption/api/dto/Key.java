@@ -17,10 +17,11 @@
  ******************************************************************************/
 package org.pgptool.gui.encryption.api.dto;
 
+import java.io.Serial;
 import org.summerb.utils.DtoBase;
 
 public class Key implements DtoBase {
-  private static final long serialVersionUID = 1614562515516152578L;
+  @Serial private static final long serialVersionUID = 1614562515516152578L;
 
   /**
    * This field contains some parts of parsed data. It's intended for read-only use, do not change

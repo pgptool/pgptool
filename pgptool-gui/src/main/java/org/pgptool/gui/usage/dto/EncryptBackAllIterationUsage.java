@@ -1,10 +1,11 @@
 package org.pgptool.gui.usage.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 
 public class EncryptBackAllIterationUsage implements Serializable {
-  private static final long serialVersionUID = 5640310966571733889L;
+  @Serial private static final long serialVersionUID = 5640310966571733889L;
   private EncryptionDialogParameters encryptionParams;
 
   public EncryptBackAllIterationUsage() {}

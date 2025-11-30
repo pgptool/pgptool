@@ -4,19 +4,21 @@ import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 
 public class UrlOpener {
-  private static final Charset UTF_8 = Charset.forName("UTF-8");
+  private static final Charset UTF_8 = StandardCharsets.UTF_8;
 
   public static LocalizedActionEx buildAction(String messageCode, String url, Object context) {
     return new LocalizedActionEx(messageCode, context) {
-      private static final long serialVersionUID = 8967629059243288916L;
+      @Serial private static final long serialVersionUID = 8967629059243288916L;
 
       @Override
       public void actionPerformed(ActionEvent e) {

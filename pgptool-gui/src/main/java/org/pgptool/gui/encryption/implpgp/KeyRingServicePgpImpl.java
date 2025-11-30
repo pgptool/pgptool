@@ -191,8 +191,7 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 
     for (String neededKeyId : keysIds) {
       log.debug("Trying to find decryption key by id: " + neededKeyId);
-      for (Iterator<Key> iter = decryptionKeys.iterator(); iter.hasNext(); ) {
-        Key existingKey = iter.next();
+      for (Key existingKey : decryptionKeys) {
         String user = existingKey.getKeyInfo().getUser();
         if (existingKey.getKeyData().isHasAlternativeId(neededKeyId)) {
           log.debug("Found matching key: " + user);
@@ -213,8 +212,7 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 
     for (String neededKeyId : keysIds) {
       log.debug("Trying to find key by id: " + neededKeyId);
-      for (Iterator<Key> iter = allKeys.iterator(); iter.hasNext(); ) {
-        Key existingKey = iter.next();
+      for (Key existingKey : allKeys) {
         String user = existingKey.getKeyInfo().getUser();
         if (existingKey.getKeyData().isHasAlternativeId(neededKeyId)) {
           log.debug("Found matching key: " + user);

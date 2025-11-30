@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -100,7 +101,8 @@ public class EncryptionServicePgpImpl implements EncryptionService {
       SourceInfo encryptionSourceInfo =
           new SourceInfo("text.asc", sourceText.length(), System.currentTimeMillis());
       ByteArrayOutputStream pOut = new ByteArrayOutputStream();
-      ByteArrayInputStream pIn = new ByteArrayInputStream(sourceText.getBytes("UTF-8"));
+      ByteArrayInputStream pIn =
+          new ByteArrayInputStream(sourceText.getBytes(StandardCharsets.UTF_8));
       ArmoredOutputStream armoredOut = new ArmoredOutputStream(pOut);
       doEncryptFile(
           pIn, encryptionSourceInfo, armoredOut, dataGenerator, null, PGPLiteralData.BINARY);
@@ -281,7 +283,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
         "filePathName has to point to existing file");
     log.debug("Looking for decryption keys for file " + filePathName);
 
-    FileInputStream stream = null;
+    FileInputStream stream;
     try {
       stream = new FileInputStream(new File(filePathName));
     } catch (Throwable t) {
@@ -307,8 +309,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
               PGPUtil.getDecoderStream(inputStream),
               KeyFilesOperationsPgpImpl.fingerprintCalculator);
 
-      for (Iterator iter = factory.iterator(); iter.hasNext(); ) {
-        Object section = iter.next();
+      for (Object section : factory) {
         log.debug(section);
 
         if (section instanceof PGPEncryptedDataList d) {
@@ -337,7 +338,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
   @Override
   public String decryptText(String encryptedText, PasswordDeterminedForKey keyAndPassword)
       throws InvalidPasswordException {
-    log.debug("Decrytping text");
+    log.debug("Decrypting text");
 
     Key decryptionKey = keyAndPassword.getMatchedKey();
     String passphrase = keyAndPassword.getPassword();
@@ -351,12 +352,12 @@ public class EncryptionServicePgpImpl implements EncryptionService {
           KeyDataPgp.get(decryptionKey).findSecretKeyById(keyAndPassword.getDecryptionKeyId());
       PGPPrivateKey privateKey = getPrivateKey(passphrase, secretKey);
 
-      in = new ByteArrayInputStream(encryptedText.getBytes("UTF-8"));
+      in = new ByteArrayInputStream(encryptedText.getBytes(StandardCharsets.UTF_8));
       PGPPublicKeyEncryptedData publicKeyEncryptedData =
           getPublicKeyEncryptedDataByKeyId(in, secretKey);
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
       decryptStream(publicKeyEncryptedData, privateKey, outputStream, null, null);
-      return outputStream.toString("UTF-8");
+      return outputStream.toString(StandardCharsets.UTF_8);
     } catch (Throwable t) {
       Throwables.throwIfInstanceOf(t, InvalidPasswordException.class);
       log.error("Text decryption failed", t);
@@ -523,8 +524,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
           new PGPObjectFactory(
               PGPUtil.getDecoderStream(in), KeyFilesOperationsPgpImpl.fingerprintCalculator);
 
-      for (Iterator iter = factory.iterator(); iter.hasNext(); ) {
-        Object section = iter.next();
+      for (Object section : factory) {
         if (section instanceof PGPEncryptedDataList d) {
           for (Iterator dataIter = d.getEncryptedDataObjects(); dataIter.hasNext(); ) {
             PGPPublicKeyEncryptedData data = (PGPPublicKeyEncryptedData) dataIter.next();
@@ -550,8 +550,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
       throws InvalidPasswordException {
     try {
       PBESecretKeyDecryptor decryptorFactory = buildKeyDecryptor(passphrase);
-      PGPPrivateKey privateKey = secretKey.extractPrivateKey(decryptorFactory);
-      return privateKey;
+      return secretKey.extractPrivateKey(decryptorFactory);
     } catch (Throwable t) {
       log.warn(
           "Failed to extract private key. Most likely it because of incorrect passphrase provided",
@@ -569,7 +568,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
   public String getNameOfFileEncrypted(
       String encryptedFile, PasswordDeterminedForKey keyAndPassword)
       throws InvalidPasswordException {
-    log.debug("Pre-Decrytping to get initial file name from " + encryptedFile);
+    log.debug("Pre-Decrypting to get initial file name from " + encryptedFile);
 
     Key decryptionKey = keyAndPassword.getMatchedKey();
     String passphrase = keyAndPassword.getPassword();

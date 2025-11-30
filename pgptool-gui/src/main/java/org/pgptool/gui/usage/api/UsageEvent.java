@@ -1,10 +1,11 @@
 package org.pgptool.gui.usage.api;
 
+import java.io.Serial;
 import java.io.Serializable;
 import org.summerb.utils.DtoBase;
 
 public class UsageEvent implements DtoBase {
-  private static final long serialVersionUID = -2469884370085267887L;
+  @Serial private static final long serialVersionUID = -2469884370085267887L;
 
   /** Event parameters */
   private Serializable p;

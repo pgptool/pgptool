@@ -202,8 +202,7 @@ public class KeysExporterUiImpl implements KeysExporterUi {
       Preconditions.checkArgument(
           folder.exists() || folder.mkdirs(),
           "Failed to verify target folder existance " + newFolder);
-      for (int i = 0; i < keys.size(); i++) {
-        Key key = keys.get(i);
+      for (Key key : keys) {
         File targetFile = suggestFileNameForKey(key, newFolder, null, true, true);
         usageLogger.write(
             new PublicKeyExportedUsage(key.getKeyInfo().getKeyId(), targetFile.getAbsolutePath()));

@@ -25,13 +25,13 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import javax.swing.Action;
 import org.apache.log4j.Logger;
@@ -54,7 +54,6 @@ import org.pgptool.gui.filecomparison.ChecksumCalcOutputStreamSupervisorImpl;
 import org.pgptool.gui.filecomparison.ChecksumCalculationTask;
 import org.pgptool.gui.filecomparison.Fingerprint;
 import org.pgptool.gui.filecomparison.MessageDigestFactory;
-import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.tools.FileUtilsEx;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 import org.pgptool.gui.ui.tools.UiUtils;
@@ -241,11 +240,11 @@ public class EncryptBackMultiplePm
       };
 
   public static class BatchEncryptionResult implements Serializable {
-    private static final long serialVersionUID = -1020511844906379809L;
+    @Serial private static final long serialVersionUID = -1020511844906379809L;
 
-    public Map<String, Throwable> errors = new HashMap<>();
-    public Map<String, Throwable> warnings = new HashMap<>();
-    public Multimap<EncryptBackResult, String> categories = ArrayListMultimap.create();
+    public final Map<String, Throwable> errors = new HashMap<>();
+    public final Map<String, Throwable> warnings = new HashMap<>();
+    public final Multimap<EncryptBackResult, String> categories = ArrayListMultimap.create();
   }
 
   private final Thread encryptionThread =
@@ -315,7 +314,7 @@ public class EncryptBackMultiplePm
             filesProcessed++;
             // Main operation
             File file = new File(decryptedFile);
-            EncryptBackResult oneResult = null;
+            EncryptBackResult oneResult;
             try {
               oneResult = encryptBackOne(skipIfissingRecipients, decryptedFile, file, ret);
               ret.categories.put(oneResult, decryptedFile);
@@ -449,56 +448,6 @@ public class EncryptBackMultiplePm
           return new ChecksumCalculationTask(
                   filePathname, messageDigestFactory.createNew(), progressHandler)
               .call();
-        }
-
-        private String buildSummaryMessage(BatchEncryptionResult ret) {
-          StringBuilder sb = new StringBuilder();
-          if (ret.errors.size() + ret.warnings.size() == 0) {
-            sb.append(text("phrase.operationCompletedWithSuccess"));
-          } else {
-            sb.append(text("phrase.operationCompletedWithErrors"));
-          }
-          sb.append("\n");
-
-          boolean first = true;
-          for (EncryptBackResult resultType : ret.categories.keySet()) {
-            if (!first) {
-              sb.append("\r\n");
-            }
-            first = false;
-
-            sb.append(" - ");
-            sb.append(text("encrBackAll." + resultType.name()));
-            sb.append(": ");
-            sb.append(ret.categories.get(resultType).size());
-          }
-          sb.append("\n");
-
-          if (!ret.warnings.isEmpty()) {
-            sb.append("\n");
-            sb.append(text("term.warnings").toUpperCase());
-            sb.append("\n");
-            listExceptions(ret.warnings, sb);
-          }
-
-          if (!ret.errors.isEmpty()) {
-            sb.append("\n");
-            sb.append(text("term.errors").toUpperCase());
-            sb.append("\n");
-            listExceptions(ret.errors, sb);
-          }
-
-          return sb.toString();
-        }
-
-        private void listExceptions(Map<String, Throwable> exceptions, StringBuilder sb) {
-          for (Entry<String, Throwable> exc : exceptions.entrySet()) {
-            sb.append("\n");
-            sb.append(exc.getKey());
-            sb.append("\n");
-            sb.append(ConsoleExceptionUtils.getAllMessages(exc.getValue()));
-            sb.append("\n");
-          }
         }
       };
 

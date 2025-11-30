@@ -151,10 +151,6 @@ public class MultipleFilesWatcher {
 
         // NOTE: Decided to turn this off, because file might re-appear in case it's app
         // re-created it. See #91, #75
-        // keys.remove(baseFolder.key);
-        // baseFolders.remove(baseFolder.folder);
-        // baseFolder.key.cancel();
-        // log.debug("Folder watch key is canceled " + baseFolderStr);
       }
     } catch (Throwable t) {
       log.error("Failed to watch file " + filePathName, t);
@@ -168,8 +164,7 @@ public class MultipleFilesWatcher {
           @Override
           public void run() {
             log.debug("FileWatcher thread started " + watcherName);
-            boolean continueWatching = true;
-            while (continueWatching) {
+            while (true) {
               WatchKey key;
               try {
                 idleIfNoKeysRegistered();
@@ -187,7 +182,7 @@ public class MultipleFilesWatcher {
                 return;
               }
 
-              BaseFolder baseFolder = null;
+              BaseFolder baseFolder;
               synchronized (watcherName) {
                 baseFolder = keys.get(key);
               }
@@ -223,7 +218,6 @@ public class MultipleFilesWatcher {
                 }
               }
             }
-            log.debug("FileWatcher thread stopped " + watcherName);
           }
 
           private void idleIfNoKeysRegistered() throws InterruptedException {
@@ -233,10 +227,10 @@ public class MultipleFilesWatcher {
                   break;
                 }
               }
+              //noinspection BusyWait
               Thread.sleep(500);
             }
           }
-          ;
         };
     ret.start();
     return ret;
@@ -260,12 +254,12 @@ public class MultipleFilesWatcher {
   }
 
   private static class BaseFolder {
-    String folder;
-    Path path;
-    List<String> interestedFiles = new ArrayList<>();
+    final String folder;
+    final Path path;
+    final List<String> interestedFiles = new ArrayList<>();
 
     @SuppressWarnings("unused")
-    WatchKey key;
+    final WatchKey key;
 
     public BaseFolder(String folder, WatchKey key, Path path, String firstFile) {
       this.folder = folder;

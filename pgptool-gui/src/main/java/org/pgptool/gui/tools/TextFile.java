@@ -28,24 +28,18 @@ public class TextFile {
 
   public static String read(String fileName) throws Exception {
     StringBuilder text = new StringBuilder();
-    String NL = System.getProperty("line.separator");
-    Scanner scanner = new Scanner(new FileInputStream(fileName), DEFAULT_ENCODING);
-    try {
+    String NL = System.lineSeparator();
+    try (Scanner scanner = new Scanner(new FileInputStream(fileName), DEFAULT_ENCODING)) {
       while (scanner.hasNextLine()) {
-        text.append(scanner.nextLine() + NL);
+        text.append(scanner.nextLine()).append(NL);
       }
-    } finally {
-      scanner.close();
     }
     return text.toString();
   }
 
   public static void write(String fileName, String configContents) throws Exception {
-    Writer out = new OutputStreamWriter(new FileOutputStream(fileName), DEFAULT_ENCODING);
-    try {
+    try (Writer out = new OutputStreamWriter(new FileOutputStream(fileName), DEFAULT_ENCODING)) {
       out.write(configContents);
-    } finally {
-      out.close();
     }
   }
 }

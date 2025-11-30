@@ -17,11 +17,12 @@
  ******************************************************************************/
 package org.pgptool.gui.decryptedlist.api;
 
+import java.io.Serial;
 import org.pgptool.gui.filecomparison.Fingerprint;
 import org.summerb.utils.DtoBase;
 
 public class DecryptedFile implements DtoBase {
-  private static final long serialVersionUID = -6339203835731870415L;
+  @Serial private static final long serialVersionUID = -6339203835731870415L;
 
   private String encryptedFile;
   private String decryptedFile;

@@ -19,6 +19,7 @@ package org.pgptool.gui.ui.tools.checklistbox;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.io.Serial;
 import java.util.function.Function;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
@@ -37,14 +38,14 @@ import javax.swing.border.Border;
  * @author sergeyk
  */
 public class CheckListCellRenderer<E> extends JPanel implements ListCellRenderer<E> {
-  private static final long serialVersionUID = 280251519708691650L;
+  @Serial private static final long serialVersionUID = 280251519708691650L;
 
-  protected JCheckBox check;
-  protected JLabel label;
+  protected final JCheckBox check;
+  protected final JLabel label;
 
-  protected Border emptyBorder;
+  protected final Border emptyBorder;
   protected Border checkedBorder;
-  protected Border focusedBorder;
+  protected final Border focusedBorder;
 
   private final Function<E, Boolean> checkStateSupplier;
 

@@ -44,9 +44,9 @@ public class GetKeyPasswordDialogPm
   }
 
   public static class GetKeyPasswordPo {
-    public Set<String> keysIds;
-    public Message purpose;
-    public KeyAndPasswordCallback keyAndPasswordCallback;
+    public final Set<String> keysIds;
+    public final Message purpose;
+    public final KeyAndPasswordCallback keyAndPasswordCallback;
 
     public GetKeyPasswordPo(
         Set<String> keysIds, Message purpose, KeyAndPasswordCallback keyAndPasswordCallback) {

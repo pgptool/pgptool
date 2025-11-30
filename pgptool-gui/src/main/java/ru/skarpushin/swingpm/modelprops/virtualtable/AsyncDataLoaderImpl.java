@@ -45,9 +45,6 @@ public class AsyncDataLoaderImpl<E> extends AsyncDataLoader<E> implements Runnab
   protected void handleRowCountChanged() {
     resetState();
 
-    // BkgTask<E> tail = queue.findTail();
-    // tail.next = new BkgTaskInvalidateCache<E>(this, currentStateId);
-    // queue = tail.next;
     queue = new BkgTaskInvalidateCache<>(this, currentStateId);
   }
 

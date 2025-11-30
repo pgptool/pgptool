@@ -1,9 +1,10 @@
 package org.pgptool.gui.usage.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class EncryptBackAllUsage implements Serializable {
-  private static final long serialVersionUID = 5212346572766253072L;
+  @Serial private static final long serialVersionUID = 5212346572766253072L;
   private int totalFiles;
 
   public EncryptBackAllUsage() {}

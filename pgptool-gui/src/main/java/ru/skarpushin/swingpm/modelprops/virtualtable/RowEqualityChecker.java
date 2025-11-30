@@ -7,5 +7,5 @@ package ru.skarpushin.swingpm.modelprops.virtualtable;
  * @param <E>
  */
 public interface RowEqualityChecker<E> {
-  public boolean areEquals(E o1, E o2);
+  boolean areEquals(E o1, E o2);
 }

@@ -43,8 +43,8 @@ public class DecryptOneDialogPm extends PresentationModelBaseEx<DecryptOneDialog
 
   public enum Intent {
     Decrypt,
-    PasswordRequest;
-  };
+    PasswordRequest
+  }
 
   private final DecryptOnePm decryptOnePm;
   private final ApplicationContext applicationContext;

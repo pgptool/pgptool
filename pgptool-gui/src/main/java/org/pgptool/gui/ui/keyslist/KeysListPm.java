@@ -90,8 +90,7 @@ public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
         public void propertyChange(PropertyChangeEvent evt) {
           Key key = tableModelProp.getValue();
           boolean hasSelection = key != null;
-          for (int i = 0; i < contextMenuActions.length; i++) {
-            Action action = contextMenuActions[i];
+          for (Action action : contextMenuActions) {
             if (action == null) {
               continue;
             }
@@ -218,7 +217,7 @@ public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
         }
       };
 
-  public Action actionExportAllPublicKeys =
+  public final Action actionExportAllPublicKeys =
       new LocalizedActionEx("keys.exportAllPublic", this) {
         @Override
         public void actionPerformed(ActionEvent e) {

@@ -693,7 +693,6 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
       return ret;
     }
   }
-  ;
 
   protected static String makeUpTargetFileName(String sourceFileName, String targetBasedPath) {
     String fileNameOnlyWoPathAndExtension = FilenameUtils.getBaseName(sourceFileName);

@@ -36,8 +36,6 @@ import org.springframework.util.StringUtils;
  * @author sergeyk
  */
 public class ConfigPairsMonitorsDependentImpl implements ConfigPairs {
-  // private static Logger log =
-  // Logger.getLogger(ConfigPairsMonitorsDependentImpl.class);
 
   private final ConfigPairs configPairs;
 
@@ -66,8 +64,7 @@ public class ConfigPairsMonitorsDependentImpl implements ConfigPairs {
       sb.append(dm.getHeight());
     }
 
-    String r = sb.toString();
-    return r;
+    return sb.toString();
   }
 
   @Override

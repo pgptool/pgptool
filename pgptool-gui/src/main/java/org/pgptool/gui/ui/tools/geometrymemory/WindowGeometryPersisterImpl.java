@@ -115,24 +115,6 @@ public class WindowGeometryPersisterImpl extends ComponentAdapter
     return keyId + "_size";
   }
 
-  // @Override
-  // public void componentMoved(ComponentEvent e) {
-  // if (window == null) {
-  // return;
-  // }
-  //
-  // if (locationSetter != null) {
-  // locationSetter.cancel(true);
-  // }
-  // locationSetter = scheduledExecutorService
-  // .schedule(() -> configPairs.put(keyLocation(), window.getLocationOnScreen()),
-  // DELAY, DELAY_TIME_UNIT);
-  // }
-
-  // private String keyLocation() {
-  // return keyId + "_location";
-  // }
-
   @Override
   public boolean isAttached() {
     return window != null;

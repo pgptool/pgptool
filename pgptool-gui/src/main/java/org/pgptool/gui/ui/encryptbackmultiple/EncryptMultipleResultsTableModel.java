@@ -59,16 +59,12 @@ public class EncryptMultipleResultsTableModel implements TableModel {
 
   @Override
   public String getColumnName(int columnIndex) {
-    switch (columnIndex) {
-      case COLUMN_FILENAME:
-        return Messages.get("term.filename");
-      case COLUMN_RESULT:
-        return Messages.get("term.result");
-      case COLUMN_DETAILS:
-        return Messages.get("term.details");
-      default:
-        throw new IllegalArgumentException("Wrong column index: " + columnIndex);
-    }
+    return switch (columnIndex) {
+      case COLUMN_FILENAME -> Messages.get("term.filename");
+      case COLUMN_RESULT -> Messages.get("term.result");
+      case COLUMN_DETAILS -> Messages.get("term.details");
+      default -> throw new IllegalArgumentException("Wrong column index: " + columnIndex);
+    };
   }
 
   @Override
@@ -84,18 +80,13 @@ public class EncryptMultipleResultsTableModel implements TableModel {
   @Override
   public Object getValueAt(int rowIndex, int columnIndex) {
     Row r = rows.get(rowIndex);
-    switch (columnIndex) {
-      case -1:
-        return r;
-      case COLUMN_FILENAME:
-        return " " + r.filename;
-      case COLUMN_RESULT:
-        return " " + r.result;
-      case COLUMN_DETAILS:
-        return " " + r.details;
-      default:
-        throw new IllegalArgumentException("Wrong column index: " + columnIndex);
-    }
+    return switch (columnIndex) {
+      case -1 -> r;
+      case COLUMN_FILENAME -> " " + r.filename;
+      case COLUMN_RESULT -> " " + r.result;
+      case COLUMN_DETAILS -> " " + r.details;
+      default -> throw new IllegalArgumentException("Wrong column index: " + columnIndex);
+    };
   }
 
   @Override

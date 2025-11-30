@@ -34,8 +34,7 @@ public class ValueAdapterPersistentPropertyImpl<T> implements ValueAdapter<T> {
 
   @Override
   public T getValue() {
-    T ret = configPairs.find(propertyName, defaultValue);
-    return ret;
+    return configPairs.find(propertyName, defaultValue);
   }
 
   @Override

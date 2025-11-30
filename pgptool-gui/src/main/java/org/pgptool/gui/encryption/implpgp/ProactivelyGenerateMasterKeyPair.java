@@ -37,10 +37,6 @@ public class ProactivelyGenerateMasterKeyPair implements Callable<KeyPair> {
       KeyPair keyPair = keyPairGenerator.generateKeyPair();
       log.info("Key generation is complete");
 
-      //			byte[] encoded = Base64.getEncoder().encode(keyPair.getPrivate().getEncoded());
-      //			String pkey = new String(encoded, "UTF-8");
-      //			log.debug("generated private key: " + pkey);
-
       return keyPair;
     } catch (Throwable t) {
       log.error("Failed to generate DSA keypair " + keyPairParams, t);

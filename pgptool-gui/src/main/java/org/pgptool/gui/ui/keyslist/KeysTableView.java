@@ -133,7 +133,7 @@ public class KeysTableView extends ViewBaseEx<KeysTablePm> {
         });
   }
 
-  MouseAdapter listMouseListener =
+  final MouseAdapter listMouseListener =
       new MouseAdapter() {
         @Override
         public void mousePressed(MouseEvent e) {
@@ -186,7 +186,7 @@ public class KeysTableView extends ViewBaseEx<KeysTablePm> {
     }
   }
 
-  protected ListSelectionListener rowSelectionListener =
+  protected final ListSelectionListener rowSelectionListener =
       new ListSelectionListener() {
         @Override
         public void valueChanged(ListSelectionEvent e) {
@@ -229,7 +229,7 @@ public class KeysTableView extends ViewBaseEx<KeysTablePm> {
           int idx = pm.getKeys().indexOf(newValue);
           if (idx < 0) {
             log.warn(
-                "Asked to select nonexistent record " + newValue + ". Skipping selection request.");
+                "Asked to select nonexistent record {}. Skipping selection request.", newValue);
             return;
           }
           table.setRowSelectionInterval(idx, idx);

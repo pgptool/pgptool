@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.encryption.api.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 import org.springframework.util.StringUtils;
 
@@ -26,7 +27,7 @@ import org.springframework.util.StringUtils;
  * @author Sergey Karpushin
  */
 public class KeyInfo implements Serializable {
-  private static final long serialVersionUID = 7017129505577264717L;
+  @Serial private static final long serialVersionUID = 7017129505577264717L;
 
   /** User name + email */
   private String user;
@@ -35,7 +36,7 @@ public class KeyInfo implements Serializable {
 
   private KeyTypeEnum keyType;
 
-  /** Algorythm info + size */
+  /** Algorithm info + size */
   private String keyAlgorithm;
 
   private java.sql.Date createdOn;

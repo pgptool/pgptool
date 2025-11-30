@@ -31,6 +31,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.Serial;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -338,7 +339,7 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
             });
   }
 
-  MouseAdapter listMouseListener =
+  final MouseAdapter listMouseListener =
       new MouseAdapter() {
         @Override
         public void mousePressed(MouseEvent e) {
@@ -388,7 +389,7 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
         }
       };
 
-  protected ListSelectionListener rowSelectionListener =
+  protected final ListSelectionListener rowSelectionListener =
       new ListSelectionListener() {
         @Override
         public void valueChanged(ListSelectionEvent e) {
@@ -429,7 +430,7 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
           int idx = pm.getRows().indexOf(newValue);
           if (idx < 0) {
             log.warn(
-                "Asked to select nonexistent record " + newValue + ". Skipping selection request.");
+                "Asked to select nonexistent record {}. Skipping selection request.", newValue);
             return;
           }
           table.setRowSelectionInterval(idx, idx);
@@ -619,8 +620,6 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
 
     if (frame == null) {
       frame = new JFrame();
-      // frame.setSize(new Dimension(UiUtils.getFontRelativeSize(90),
-      // UiUtils.getFontRelativeSize(50)));
       frame.setLayout(new BorderLayout());
       frame.setResizable(true);
       frame.setMinimumSize(
@@ -647,7 +646,7 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
     frame.setVisible(true);
   }
 
-  protected WindowAdapter windowAdapter =
+  protected final WindowAdapter windowAdapter =
       new WindowAdapter() {
         @Override
         public void windowClosing(WindowEvent e) {
@@ -656,7 +655,6 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
           }
           super.windowClosing(e);
         }
-        ;
       };
 
   @Override
@@ -677,7 +675,7 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
   }
 
   private abstract class ToolbarAction extends AbstractAction {
-    private static final long serialVersionUID = 5177364704498790332L;
+    @Serial private static final long serialVersionUID = 5177364704498790332L;
     private final String actionNameMessageCode;
     private final String iconFilepathname;
     private Icon icon;
@@ -697,7 +695,6 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
       }
       return super.getValue(key);
     }
-    ;
 
     public Icon getIcon() {
       if (icon == null) {

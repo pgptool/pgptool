@@ -161,5 +161,4 @@ public class MightNeedPublicKeysHint extends HintPm implements InitializingBean 
 
     return new Action[] {actionImport, actionTellMeMore, actionClose};
   }
-  ;
 }

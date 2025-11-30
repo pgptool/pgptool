@@ -18,6 +18,7 @@
 package org.pgptool.gui.ui.tools;
 
 import java.awt.event.ActionEvent;
+import java.io.Serial;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JPopupMenu;
@@ -35,7 +36,7 @@ import org.pgptool.gui.app.Messages;
 public class TextEditUxUtils {
 
   public static class Cut extends TextAction {
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
     private final JTextComponent component;
 
     public Cut(JTextComponent component) {
@@ -51,7 +52,7 @@ public class TextEditUxUtils {
   }
 
   public static class Copy extends TextAction {
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
     private final JTextComponent component;
 
     public Copy(JTextComponent component) {
@@ -67,7 +68,7 @@ public class TextEditUxUtils {
   }
 
   public static class Paste extends TextAction {
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
     private final JTextComponent component;
 
     public Paste(JTextComponent component) {
@@ -83,7 +84,7 @@ public class TextEditUxUtils {
   }
 
   public static class SelectAll extends TextAction {
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
     private final JTextComponent component;
 
     public SelectAll(JTextComponent component) {
@@ -127,7 +128,7 @@ public class TextEditUxUtils {
         .put(
             "Undo",
             new AbstractAction("Undo") {
-              private static final long serialVersionUID = 2048749213313143683L;
+              @Serial private static final long serialVersionUID = 2048749213313143683L;
 
               @Override
               public void actionPerformed(ActionEvent evt) {
@@ -135,7 +136,7 @@ public class TextEditUxUtils {
                   if (undo.canUndo()) {
                     undo.undo();
                   }
-                } catch (CannotUndoException e) {
+                } catch (CannotUndoException ignore) {
                 }
               }
             });
@@ -146,7 +147,7 @@ public class TextEditUxUtils {
         .put(
             "Redo",
             new AbstractAction("Redo") {
-              private static final long serialVersionUID = 2048749213313143683L;
+              @Serial private static final long serialVersionUID = 2048749213313143683L;
 
               @Override
               public void actionPerformed(ActionEvent evt) {
@@ -154,7 +155,7 @@ public class TextEditUxUtils {
                   if (undo.canRedo()) {
                     undo.redo();
                   }
-                } catch (CannotRedoException e) {
+                } catch (CannotRedoException ignore) {
                 }
               }
             });

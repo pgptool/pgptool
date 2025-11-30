@@ -1,5 +1,6 @@
 package org.pgptool.gui.usage.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -7,7 +8,7 @@ import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyInfo;
 
 public class KeyRingUsage implements Serializable {
-  private static final long serialVersionUID = 658399021937944608L;
+  @Serial private static final long serialVersionUID = 658399021937944608L;
 
   private List<KeyInfo> keys;
 

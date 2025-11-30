@@ -28,10 +28,10 @@ public class SgLayout implements LayoutManager2 {
   public static final int SIZE_TYPE_CONSTANT = 1;
   public static final int SIZE_TYPE_WEIGHTED = 2;
   public static final int SIZE_TYPE_ASKCOMPONENT = 3;
-  public static SizeResolver preferredWidth = c -> c.getPreferredSize().width;
-  public static SizeResolver preferredHeight = c -> c.getPreferredSize().height;
-  public static SizeResolver minimumWidth = c -> c.getMinimumSize().width;
-  public static SizeResolver minimumHeight = c -> c.getMinimumSize().height;
+  public static final SizeResolver preferredWidth = c -> c.getPreferredSize().width;
+  public static final SizeResolver preferredHeight = c -> c.getPreferredSize().height;
+  public static final SizeResolver minimumWidth = c -> c.getMinimumSize().width;
+  public static final SizeResolver minimumHeight = c -> c.getMinimumSize().height;
   private static final Logger log = LoggerFactory.getLogger(SgLayout.class);
   private final int rows;
   private final int cols;

@@ -11,7 +11,7 @@ public abstract class AsyncDataLoader<E> {
   protected final int pageSize;
   protected ModelVirtualTableProperty<E> modelVirtualTableProperty;
   protected VirtualTableDataSource<E> virtualTableDataSource;
-  protected EdtInvoker edtInvoker = Edt.getEdtInvoker();
+  protected final EdtInvoker edtInvoker = Edt.getEdtInvoker();
   protected DataLoadingTriggerAbstract<E> dataLoadingTriggerAbstract;
 
   protected AsyncDataLoader(

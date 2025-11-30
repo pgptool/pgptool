@@ -49,8 +49,6 @@ public abstract class DialogViewBase<TPM extends PresentationModel> extends View
 
   private final ComponentListener componentAdapter =
       new ComponentAdapter() {
-        @Override
-        public void componentHidden(ComponentEvent e) {}
 
         @Override
         public void componentShown(ComponentEvent e) {
@@ -96,7 +94,7 @@ public abstract class DialogViewBase<TPM extends PresentationModel> extends View
       initWindowIcon();
     }
 
-    Window optionalParent = owner instanceof Window ? (Window) owner : null;
+    Window optionalParent = owner != null ? (Window) owner : null;
     showDialog(optionalParent);
   }
 

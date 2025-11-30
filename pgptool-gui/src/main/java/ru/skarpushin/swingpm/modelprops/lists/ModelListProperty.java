@@ -22,7 +22,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
  */
 public class ModelListProperty<E> extends ModelProperty<List<E>> implements ListExEventListener<E> {
   protected final ListExBase<E> list;
-  protected EventListenerList listenerList = new EventListenerList();
+  protected final EventListenerList listenerList = new EventListenerList();
   private ModelListPropertyAccessor<E> modelListPropertyAccessor;
 
   public ModelListProperty(Object source, ValueAdapter<List<E>> valueAdapter, String propertyName) {

@@ -1,9 +1,10 @@
 package org.pgptool.gui.ui.keyslist;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class PublicKeyExportedUsage implements Serializable {
-  private static final long serialVersionUID = 281208410802380404L;
+  @Serial private static final long serialVersionUID = 281208410802380404L;
 
   private String keyId;
   private String targetFile;

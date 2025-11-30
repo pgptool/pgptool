@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.bkgoperation;
 
+import java.io.Serial;
 import org.summerb.i18n.HasMessageCode;
 
 /**
@@ -25,7 +26,7 @@ import org.summerb.i18n.HasMessageCode;
  * @author sergeyk
  */
 public class UserRequestedCancellationException extends Exception implements HasMessageCode {
-  private static final long serialVersionUID = 1290562826825044541L;
+  @Serial private static final long serialVersionUID = 1290562826825044541L;
 
   private final boolean softCancel;
 

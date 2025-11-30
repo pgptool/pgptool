@@ -47,16 +47,12 @@ public class DecryptedFilesModel implements LightweightTableModel<DecryptedFile>
 
   @Override
   public String getColumnName(int columnIndex) {
-    switch (columnIndex) {
-      case COLUMN_ENCRYPTED_FILE:
-        return Messages.get("term.encryptedFile");
-      case COLUMN_DECRYPTED_FILE:
-        return Messages.get("term.decryptedFile");
-      case COLUMN_ENCRYPT_BACK_ACTION:
-        return Messages.get("term.quickActions");
-      default:
-        throw new IllegalArgumentException("Wrong column index: " + columnIndex);
-    }
+    return switch (columnIndex) {
+      case COLUMN_ENCRYPTED_FILE -> Messages.get("term.encryptedFile");
+      case COLUMN_DECRYPTED_FILE -> Messages.get("term.decryptedFile");
+      case COLUMN_ENCRYPT_BACK_ACTION -> Messages.get("term.quickActions");
+      default -> throw new IllegalArgumentException("Wrong column index: " + columnIndex);
+    };
   }
 
   @Override
@@ -74,16 +70,12 @@ public class DecryptedFilesModel implements LightweightTableModel<DecryptedFile>
       return "";
     }
 
-    switch (columnIndex) {
-      case COLUMN_ENCRYPTED_FILE:
-        return " " + buildStringForEncryptedFile(r);
-      case COLUMN_DECRYPTED_FILE:
-        return " " + getTargetFileName(r);
-      case COLUMN_ENCRYPT_BACK_ACTION:
-        return new EncryptBackAction(r);
-      default:
-        throw new IllegalArgumentException("Wrong column index: " + columnIndex);
-    }
+    return switch (columnIndex) {
+      case COLUMN_ENCRYPTED_FILE -> " " + buildStringForEncryptedFile(r);
+      case COLUMN_DECRYPTED_FILE -> " " + getTargetFileName(r);
+      case COLUMN_ENCRYPT_BACK_ACTION -> new EncryptBackAction(r);
+      default -> throw new IllegalArgumentException("Wrong column index: " + columnIndex);
+    };
   }
 
   /**
@@ -117,10 +109,6 @@ public class DecryptedFilesModel implements LightweightTableModel<DecryptedFile>
   }
 
   private File getOrBuildFileFor(String filePathName) {
-    File ret = cache.get(filePathName);
-    if (ret == null) {
-      cache.put(filePathName, ret = new File(filePathName));
-    }
-    return ret;
+    return cache.computeIfAbsent(filePathName, File::new);
   }
 }

@@ -208,8 +208,10 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
 
   @SuppressWarnings("rawtypes")
   private static String resolveAlgorithm(PGPPublicKey key) throws PGPException {
-    for (Iterator iter = key.getSignatures(); iter.hasNext(); ) {
-      PGPSignature sig = (PGPSignature) iter.next();
+    // This code is effectively just picks the first one
+    // Although this is not 100% accurate... This is used only for rendering purposes
+    for (Iterator<PGPSignature> iter = key.getSignatures(); iter.hasNext(); ) {
+      PGPSignature sig = iter.next();
       return PGPUtil.getSignatureName(sig.getKeyAlgorithm(), sig.getHashAlgorithm());
     }
     return null;
@@ -238,8 +240,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
   private static void readKeyFromStream(KeyDataPgp data, InputStream stream) throws IOException {
     PGPObjectFactory factory =
         new PGPObjectFactory(PGPUtil.getDecoderStream(stream), fingerprintCalculator);
-    for (Iterator iter = factory.iterator(); iter.hasNext(); ) {
-      Object section = iter.next();
+    for (Object section : factory) {
       log.debug("Section found: " + section);
 
       if (section instanceof PGPSecretKeyRing) {

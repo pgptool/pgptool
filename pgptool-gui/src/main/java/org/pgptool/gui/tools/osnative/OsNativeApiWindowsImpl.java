@@ -78,14 +78,14 @@ public class OsNativeApiWindowsImpl implements OsNativeApi {
 
   private Kernel32 getKernel32() {
     if (kernel32 == null) {
-      kernel32 = (Kernel32) Native.loadLibrary("kernel32", Kernel32.class);
+      kernel32 = Native.loadLibrary("kernel32", Kernel32.class);
     }
     return kernel32;
   }
 
   private Shell32 getShell32() {
     if (shell32 == null) {
-      shell32 = (Shell32) Native.loadLibrary("shell32", Shell32.class);
+      shell32 = Native.loadLibrary("shell32", Shell32.class);
     }
     return shell32;
   }

@@ -63,7 +63,7 @@ public class ChecksumCalculationTask implements Callable<Fingerprint> {
     progress.updateTotalSteps(BigInteger.valueOf(new File(filePathName).length()));
 
     try (InputStream is = new ChecksumCalcInputStream(messageDigest, filePathName, future)) {
-      int readCount = 0;
+      int readCount;
       int totalReadCount = 0;
       while ((readCount = is.read(buf)) > 0) {
         totalReadCount += readCount;

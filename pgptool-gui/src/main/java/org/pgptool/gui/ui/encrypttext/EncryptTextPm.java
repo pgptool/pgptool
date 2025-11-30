@@ -223,7 +223,6 @@ public class EncryptTextPm extends PresentationModelBaseEx<EncryptTextHost, Set<
           }
           return super.getValue(key);
         }
-        ;
 
         @Override
         public void actionPerformed(ActionEvent e) {

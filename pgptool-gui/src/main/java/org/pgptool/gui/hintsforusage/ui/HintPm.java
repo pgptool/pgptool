@@ -18,6 +18,7 @@
 package org.pgptool.gui.hintsforusage.ui;
 
 import java.awt.event.ActionEvent;
+import java.io.Serial;
 import javax.swing.Action;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
@@ -34,9 +35,9 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
  * @author sergeyk
  */
 public class HintPm extends PresentationModelBaseEx<HintHost, Void> implements DtoBase {
-  private static final long serialVersionUID = -6048386647066623217L;
+  @Serial private static final long serialVersionUID = -6048386647066623217L;
 
-  protected ModelProperty<String> message =
+  protected final ModelProperty<String> message =
       new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), "message");
   protected Action[] actions;
 

@@ -17,10 +17,11 @@
  ******************************************************************************/
 package org.pgptool.gui.encryption.implpgp;
 
+import java.io.Serial;
 import org.pgptool.gui.app.GenericException;
 
 public class SymmetricEncryptionIsNotSupportedException extends GenericException {
-  private static final long serialVersionUID = 4518578937183956465L;
+  @Serial private static final long serialVersionUID = 4518578937183956465L;
 
   public SymmetricEncryptionIsNotSupportedException() {
     super("exception.symmetricEncryptionNotSupported");

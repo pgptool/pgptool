@@ -97,5 +97,5 @@ public interface Painter<T> {
    * @param width width of the area to paint.
    * @param height height of the area to paint.
    */
-  public void paint(Graphics2D g, T object, int width, int height);
+  void paint(Graphics2D g, T object, int width, int height);
 }

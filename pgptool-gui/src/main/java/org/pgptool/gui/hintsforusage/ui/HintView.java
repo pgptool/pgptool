@@ -57,10 +57,6 @@ public class HintView extends ViewBaseEx<HintPm> {
 
     pnlButtons = new JPanel(new FlowLayout(FlowLayout.TRAILING));
     pnlButtons.setOpaque(false);
-    // JButton btnOk = new JButton("Tell me more");
-    // pnlButtons.add(btnOk);
-    // JButton btnCancel = new JButton("Snooze");
-    // pnlButtons.add(btnCancel);
     pnlMsg.add(pnlButtons, BorderLayout.EAST);
 
     // gentle green
@@ -70,8 +66,6 @@ public class HintView extends ViewBaseEx<HintPm> {
     pnlPadding.setBackground(new Color(221, 253, 191));
 
     // orange envelop color
-    // pnlPadding.setBackground(new Color(255, 120, 37));
-    // message.setForeground(Color.WHITE);
   }
 
   @Override

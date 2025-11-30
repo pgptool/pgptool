@@ -6,7 +6,7 @@ import org.summerb.i18n.HasMessageCode;
 import org.summerb.i18n.I18nUtils;
 
 public class ExceptionTranslatorHasMessageImpl implements ExceptionTranslator {
-  protected MessageSource messageSource;
+  protected final MessageSource messageSource;
 
   public ExceptionTranslatorHasMessageImpl(MessageSource messageSource) {
     this.messageSource = messageSource;

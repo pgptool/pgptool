@@ -1,9 +1,10 @@
 package org.pgptool.gui.usage.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class DecryptedTextUsage implements Serializable {
-  private static final long serialVersionUID = -1912043362266429159L;
+  @Serial private static final long serialVersionUID = -1912043362266429159L;
   private String decryptionKeyId;
 
   public DecryptedTextUsage() {}

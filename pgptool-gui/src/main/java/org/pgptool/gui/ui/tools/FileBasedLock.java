@@ -99,8 +99,5 @@ public class FileBasedLock implements Closeable {
     IoStreamUtils.safeClose(randomAccessFile);
     randomAccessFile = null;
     // NOTE: Actually -- do we really need to delete this file?...
-    // if (file.exists()) {
-    // file.delete();
-    // }
   }
 }

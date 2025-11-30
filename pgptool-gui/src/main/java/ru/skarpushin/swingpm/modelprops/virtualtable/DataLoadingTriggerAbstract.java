@@ -1,6 +1,5 @@
 package ru.skarpushin.swingpm.modelprops.virtualtable;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -32,7 +31,7 @@ public abstract class DataLoadingTriggerAbstract<E> {
   }
 
   public void sort(List<HasPageIdx> loadPageTasks) {
-    Collections.sort(loadPageTasks, new PagesComparator(getHighPriorityRow()));
+    loadPageTasks.sort(new PagesComparator(getHighPriorityRow()));
   }
 
   private static class PagesComparator implements Comparator<HasPageIdx> {

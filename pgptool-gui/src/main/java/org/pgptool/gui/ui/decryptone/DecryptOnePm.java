@@ -431,7 +431,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
           return targetFilename;
         }
 
-        protected DecryptionDialogParameters findParamsBasedOnSourceFile(String sourceFile) {
+        private DecryptionDialogParameters findParamsBasedOnSourceFile(String sourceFile) {
           DecryptionDialogParameters params = decryptionParams.find(sourceFile, null);
           if (params == null) {
             params =
@@ -535,8 +535,8 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
 
       String sourceFileStr = sourceFile.getValue();
 
-      Fingerprint sourceFileFingerprint = null;
-      Fingerprint targetFileFingerprint = null;
+      Fingerprint sourceFileFingerprint;
+      Fingerprint targetFileFingerprint;
       Future<Fingerprint> sourceFileFingerprintFuture = null;
       try {
         // NOTE: In parallel we'll calculate checksum of the source. I hope IO caching
@@ -760,7 +760,6 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
       return ret;
     }
   }
-  ;
 
   private String madeUpTargetFileName(String targetBasedPath) {
     return targetBasedPath + File.separator + anticipatedTargetFileName;

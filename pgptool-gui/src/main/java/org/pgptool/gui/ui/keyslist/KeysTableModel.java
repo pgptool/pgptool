@@ -38,22 +38,15 @@ public class KeysTableModel implements LightweightTableModel<Key> {
 
   @Override
   public String getColumnName(int columnIndex) {
-    switch (columnIndex) {
-      case COLUMN_USER:
-        return Messages.get("term.user");
-      case COLUMN_KEY_ID:
-        return Messages.get("term.keyId");
-      case COLUMN_KEY_TYPE:
-        return Messages.get("term.keyType");
-      case COLUMN_ALGORITHM:
-        return Messages.get("term.keyAlgorithm");
-      case COLUMN_CREATED_ON:
-        return Messages.get("term.createdOn");
-      case COLUMN_EXPIRES_AT:
-        return Messages.get("term.expiresAt");
-      default:
-        throw new IllegalArgumentException("Wrong column index: " + columnIndex);
-    }
+    return switch (columnIndex) {
+      case COLUMN_USER -> Messages.get("term.user");
+      case COLUMN_KEY_ID -> Messages.get("term.keyId");
+      case COLUMN_KEY_TYPE -> Messages.get("term.keyType");
+      case COLUMN_ALGORITHM -> Messages.get("term.keyAlgorithm");
+      case COLUMN_CREATED_ON -> Messages.get("term.createdOn");
+      case COLUMN_EXPIRES_AT -> Messages.get("term.expiresAt");
+      default -> throw new IllegalArgumentException("Wrong column index: " + columnIndex);
+    };
   }
 
   @Override
@@ -69,21 +62,14 @@ public class KeysTableModel implements LightweightTableModel<Key> {
 
     KeyInfo info = r.getKeyInfo();
 
-    switch (columnIndex) {
-      case COLUMN_USER:
-        return " " + info.getUser();
-      case COLUMN_KEY_ID:
-        return info.getKeyId();
-      case COLUMN_KEY_TYPE:
-        return KeyInfoRendering.keyTypeToString(info);
-      case COLUMN_ALGORITHM:
-        return info.getKeyAlgorithm();
-      case COLUMN_CREATED_ON:
-        return KeyInfoRendering.dateToString(info.getCreatedOn());
-      case COLUMN_EXPIRES_AT:
-        return KeyInfoRendering.dateToString(info.getExpiresAt());
-      default:
-        throw new IllegalArgumentException("Wrong column index: " + columnIndex);
-    }
+    return switch (columnIndex) {
+      case COLUMN_USER -> " " + info.getUser();
+      case COLUMN_KEY_ID -> info.getKeyId();
+      case COLUMN_KEY_TYPE -> KeyInfoRendering.keyTypeToString(info);
+      case COLUMN_ALGORITHM -> info.getKeyAlgorithm();
+      case COLUMN_CREATED_ON -> KeyInfoRendering.dateToString(info.getCreatedOn());
+      case COLUMN_EXPIRES_AT -> KeyInfoRendering.dateToString(info.getExpiresAt());
+      default -> throw new IllegalArgumentException("Wrong column index: " + columnIndex);
+    };
   }
 }

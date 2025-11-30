@@ -22,6 +22,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.AbstractAction;
@@ -47,7 +48,7 @@ import ru.skarpushin.swingpm.modelprops.lists.ModelListProperty;
 public class JCheckList<E> extends JList<E> {
   // private static Logger log = Logger.getLogger(JCheckList.class);
 
-  private static final long serialVersionUID = 5763129241133814837L;
+  @Serial private static final long serialVersionUID = 5763129241133814837L;
   protected ListEx<E> checkState;
   protected boolean skipEventsFromListEx;
 
@@ -75,7 +76,7 @@ public class JCheckList<E> extends JList<E> {
     setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
   }
 
-  protected ListSelectionListener selectionTracker =
+  protected final ListSelectionListener selectionTracker =
       new ListSelectionListener() {
         @Override
         public void valueChanged(ListSelectionEvent e) {
@@ -104,9 +105,9 @@ public class JCheckList<E> extends JList<E> {
     actionMap.put(key, invertCheckAction);
   }
 
-  protected AbstractAction invertCheckAction =
+  protected final AbstractAction invertCheckAction =
       new AbstractAction() {
-        private static final long serialVersionUID = -6690198260921289877L;
+        @Serial private static final long serialVersionUID = -6690198260921289877L;
 
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -117,7 +118,7 @@ public class JCheckList<E> extends JList<E> {
         }
       };
 
-  protected MouseAdapter mouseListener =
+  protected final MouseAdapter mouseListener =
       new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {

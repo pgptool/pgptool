@@ -21,7 +21,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
  * @author sergeyk
  */
 public class ModelSliderProperty extends ModelProperty<Integer> {
-  protected List<ChangeListener> changeEventListeners = new ArrayList<>();
+  protected final List<ChangeListener> changeEventListeners = new ArrayList<>();
   private final int minimum;
   private final int maximum;
   private final BoundedRangeModel boundedRangeModel =

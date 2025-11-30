@@ -81,7 +81,7 @@ public class ConsoleExceptionUtils {
       if (!first) {
         ret.append(", ");
       }
-      ret.append("\"" + tryFindTranslation(ve.getPropertyName(), locale) + "\"");
+      ret.append("\"").append(tryFindTranslation(ve.getPropertyName(), locale)).append("\"");
       ret.append(" - ");
       ret.append(I18nUtils.buildMessage(ve, ac(), locale));
       first = false;

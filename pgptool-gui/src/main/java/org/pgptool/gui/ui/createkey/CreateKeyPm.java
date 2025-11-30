@@ -118,7 +118,7 @@ public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
         validationErrors);
   }
 
-  protected Action actionCreate =
+  protected final Action actionCreate =
       new LocalizedActionEx("action.create", this) {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -172,7 +172,7 @@ public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
     }
   }
 
-  protected Action actionCancel =
+  protected final Action actionCancel =
       new LocalizedActionEx("action.cancel", this) {
         @Override
         public void actionPerformed(ActionEvent e) {

@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.encryptone;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import org.pgptool.gui.encryptionparams.api.EncryptionParamsStorage;
@@ -32,7 +33,7 @@ import org.summerb.utils.DtoBase;
  *     settings!!
  */
 public class EncryptionDialogParameters implements Serializable, DtoBase {
-  private static final long serialVersionUID = -8793919231868733870L;
+  @Serial private static final long serialVersionUID = -8793919231868733870L;
 
   private String sourceFile;
 

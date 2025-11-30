@@ -17,7 +17,6 @@
  ******************************************************************************/
 package org.pgptool.gui.config.impl;
 
-import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.Arrays;
 import org.apache.commons.lang3.SystemUtils;
@@ -42,14 +41,13 @@ public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResol
           };
       log.debug("Base path options: " + Arrays.toString(options));
 
-      for (int i = 0; i < options.length; i++) {
-        if (tryAccept(options[i])) {
+      for (String option : options) {
+        if (tryAccept(option)) {
           return chosenLocation;
         }
       }
 
-      Preconditions.checkState(
-          false,
+      throw new IllegalStateException(
           "No config path was chosen as acceptable. Verify that the application has rights to write files on the disk");
     }
 

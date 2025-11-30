@@ -91,7 +91,7 @@ public class KeyImporterPm extends PresentationModelBaseEx<KeyImporterHost, List
     Preconditions.checkArgument(host != null);
     initModelProperties();
 
-    File[] filesToLoad = null;
+    File[] filesToLoad;
     if ((filesToLoad = getSourceFileChooser().askUserForMultipleFiles(originEvent)) == null) {
       return false;
     }

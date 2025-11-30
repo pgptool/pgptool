@@ -36,6 +36,7 @@ import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.Reader;
+import java.io.Serial;
 import java.io.StringReader;
 import javax.swing.Icon;
 import javax.swing.JLabel;
@@ -102,7 +103,7 @@ public class JXLabel extends JLabel {
   public static final double INVERTED = Math.PI;
   public static final double VERTICAL_LEFT = 3 * Math.PI / 2;
   public static final double VERTICAL_RIGHT = Math.PI / 2;
-  private static final long serialVersionUID = 5722946193954123862L;
+  @Serial private static final long serialVersionUID = 5722946193954123862L;
   private static final String oldRendererKey = "was" + BasicHTML.propertyKey;
   public boolean painted;
   private double textRotation = NORMAL;
@@ -127,10 +128,6 @@ public class JXLabel extends JLabel {
   private int occupiedWidth;
   private boolean paintBorderInsets = true;
 
-  // private static final Logger log = Logger.getAnonymousLogger();
-  // static {
-  // log.setLevel(Level.FINEST);
-  // }
   private int maxLineSpan = -1;
   private TextAlignment textAlignment = TextAlignment.LEFT;
 
@@ -409,8 +406,6 @@ public class JXLabel extends JLabel {
       Insets insets = getInsets();
       int dx = insets.left + insets.right;
       int dy = insets.top + insets.bottom;
-      // log.fine("INSETS:" + insets);
-      // log.fine("BORDER:" + this.getBorder());
       Rectangle textR = new Rectangle();
       Rectangle viewR = new Rectangle();
       textR.x = textR.y = textR.width = textR.height = 0;
@@ -462,9 +457,6 @@ public class JXLabel extends JLabel {
         if (textR.height == 0) {
           textR.height = getFont().getSize();
         }
-        // log.fine("atw:" + availTextWidth + ", vps:" + xPrefSpan + ", h:" +
-        // textR.height);
-
       }
       // 3) set text xy based on h/v text pos
       if (getVerticalTextPosition() == TOP) {
@@ -671,9 +663,6 @@ public class JXLabel extends JLabel {
     // computationally intensive series of repaints every call to paint is skipped
     // while top most call is being
     // executed.
-    // if (!dontIgnoreRepaint) {
-    // return;
-    // }
     painted = true;
     if (painting || backgroundPainter == null && foregroundPainter == null) {
       super.paintComponent(g);
@@ -712,11 +701,6 @@ public class JXLabel extends JLabel {
 
         painting = true;
         // uncomment to highlight text area
-        // Color c = g2.getColor();
-        // g2.setColor(Color.RED);
-        // g2.fillRect(0, 0, getWidth(), getHeight());
-        // g2.setColor(c);
-        // log.fine("PW:" + pWidth + ", PH:" + pHeight);
         foregroundPainter.paint(tmp, this, pWidth, pHeight);
         tmp.dispose();
         painting = false;
@@ -772,7 +756,7 @@ public class JXLabel extends JLabel {
       } else {
         float w = v.getPreferredSpan(View.X_AXIS);
         float h = v.getPreferredSpan(View.Y_AXIS);
-        double c = w;
+        double c;
         double alpha = textRotation; // % (Math.PI/2d);
         boolean ready = false;
         while (!ready) {
@@ -894,7 +878,7 @@ public class JXLabel extends JLabel {
 
     private final int value;
 
-    private TextAlignment(int val) {
+    TextAlignment(int val) {
       value = val;
     }
 
@@ -962,12 +946,11 @@ public class JXLabel extends JLabel {
       Reader r = new StringReader(c.getText() == null ? "" : c.getText());
       try {
         kit.read(r, doc, 0);
-      } catch (Throwable e) {
+      } catch (Throwable ignore) {
       }
       ViewFactory f = kit.getViewFactory();
       View hview = f.create(doc.getDefaultRootElement());
-      View v = new Renderer(c, f, hview, true);
-      return v;
+      return new Renderer(c, f, hview, true);
     }
 
     public static void updateRenderer(JXLabel c) {
@@ -1037,7 +1020,7 @@ public class JXLabel extends JLabel {
     }
 
     private static class BasicEditorKit extends StyledEditorKit {
-      private static final long serialVersionUID = -7652981501824001218L;
+      @Serial private static final long serialVersionUID = -7652981501824001218L;
 
       public Document createDefaultDocument(
           Font defaultFont, Color foreground, TextAlignment textAlignment, float rightIndent) {
@@ -1078,7 +1061,7 @@ public class JXLabel extends JLabel {
   }
 
   static class BasicDocument extends DefaultStyledDocument {
-    private static final long serialVersionUID = -3054797576643812692L;
+    @Serial private static final long serialVersionUID = -3054797576643812692L;
 
     BasicDocument(
         Font defaultFont, Color foreground, TextAlignment textAlignment, float rightIndent) {
@@ -1128,7 +1111,7 @@ public class JXLabel extends JLabel {
   /** Root text view that acts as an renderer. */
   static class Renderer extends WrappedPlainView {
 
-    JXLabel host;
+    final JXLabel host;
 
     boolean invalidated = false;
 
@@ -1154,8 +1137,6 @@ public class JXLabel extends JLabel {
       }
       // log.fine("w:" + w);
       // initially layout to the preferred size
-      // setSize(c.getMaxLineSpan() > -1 ? c.getMaxLineSpan() :
-      // view.getPreferredSpan(X_AXIS), view.getPreferredSpan(Y_AXIS));
       setSize(c.getMaxLineSpan() > -1 ? c.getMaxLineSpan() : w, host.getVisibleRect().height);
     }
 
@@ -1197,11 +1178,6 @@ public class JXLabel extends JLabel {
     @Override
     public void paint(Graphics g, Shape allocation) {
       Rectangle alloc = allocation.getBounds();
-      // log.fine("aloc:" + alloc + "::" + host.getVisibleRect() + "::" +
-      // host.getBounds());
-      // view.setSize(alloc.width, alloc.height);
-      // this.width = alloc.width;
-      // this.height = alloc.height;
       if (g.getClipBounds() == null) {
         g.setClip(alloc);
         view.paint(g, allocation);

@@ -207,7 +207,7 @@ public class ValidationErrorsBalloonView
 
   @Override
   public void onItemChanged(ValidationError item, int atIndex) {
-    Preconditions.checkState(false, "This event is not expected on ValidationErrors list");
+    throw new IllegalStateException("This event is not expected on ValidationErrors list");
   }
 
   @Override

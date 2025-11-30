@@ -125,8 +125,6 @@ public class GetKeyPasswordPm
     // NOTE: We're assuming here keys are distinct meaning same key will not
     // appear 2 times
     if (matchedKeys.isEmpty()) {
-      // UiUtils.messageBox(text("error.noMatchingKeysRegistered"),
-      // text("term.attention"), MessageSeverity.WARNING);
       return GetKeyPasswordPmInitResult.NoMatchingKeys;
     }
 

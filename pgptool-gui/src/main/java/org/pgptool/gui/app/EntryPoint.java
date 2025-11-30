@@ -52,7 +52,7 @@ import ru.skarpushin.swingpm.tools.SwingPmSettings;
 import ru.skarpushin.swingpm.tools.edt.Edt;
 
 public class EntryPoint {
-  public static Logger log = Logger.getLogger(EntryPoint.class);
+  public static final Logger log = Logger.getLogger(EntryPoint.class);
   public static EntryPoint INSTANCE;
   public static UsageLogger usageLoggerStatic = new UsageLoggerNoOpImpl();
 
@@ -138,7 +138,6 @@ public class EntryPoint {
           log.error("Failed to prefetch keys", t);
         }
       }
-      ;
     }.start();
   }
 

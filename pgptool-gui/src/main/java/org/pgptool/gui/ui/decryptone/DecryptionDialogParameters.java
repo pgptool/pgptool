@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.decryptone;
 
+import java.io.Serial;
 import java.io.Serializable;
 import org.summerb.utils.DtoBase;
 
@@ -27,7 +28,7 @@ import org.summerb.utils.DtoBase;
  * @author Sergey Karpushin
  */
 public class DecryptionDialogParameters implements Serializable, DtoBase {
-  private static final long serialVersionUID = 1090348970039260219L;
+  @Serial private static final long serialVersionUID = 1090348970039260219L;
 
   private String sourceFile;
 

@@ -1,9 +1,10 @@
 package org.pgptool.gui.usage.dto;
 
+import java.io.Serial;
 import org.summerb.utils.DtoBase;
 
 public class CommandLineArgsUsage implements DtoBase {
-  private static final long serialVersionUID = -6529115848359084226L;
+  @Serial private static final long serialVersionUID = -6529115848359084226L;
 
   private String[] args;
 

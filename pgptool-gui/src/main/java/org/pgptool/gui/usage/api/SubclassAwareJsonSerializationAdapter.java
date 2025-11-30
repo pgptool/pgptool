@@ -12,8 +12,6 @@ import java.lang.reflect.Type;
 
 public class SubclassAwareJsonSerializationAdapter<T>
     implements JsonSerializer<T>, JsonDeserializer<T> {
-  // private static Logger log =
-  // Logger.getLogger(SubclassAwareJsonSerializationAdapter.class);
   private static final String CLASSNAME = "c";
   private static final String INSTANCE = "i";
 

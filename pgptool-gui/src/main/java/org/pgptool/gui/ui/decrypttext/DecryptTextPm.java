@@ -25,6 +25,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -209,7 +210,8 @@ public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void
 
   private Set<String> findKeysForTextDecryption(String textToDecrypt, boolean failSilently) {
     try {
-      ByteArrayInputStream inputStream = new ByteArrayInputStream(textToDecrypt.getBytes("UTF-8"));
+      ByteArrayInputStream inputStream =
+          new ByteArrayInputStream(textToDecrypt.getBytes(StandardCharsets.UTF_8));
       return encryptionService.findKeyIdsForDecryption(inputStream);
     } catch (Throwable t) {
       if (failSilently) {

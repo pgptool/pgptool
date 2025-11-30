@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class ExceptionTranslatorDelegatingImpl implements ExceptionTranslator {
-  protected List<ExceptionTranslator> translators;
+  protected final List<ExceptionTranslator> translators;
   protected ExceptionUnwindingStrategy exceptionUnwindingStrategy =
       new ExceptionUnwindingStrategyImpl();
   protected String joinerString = " -> ";

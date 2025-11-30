@@ -346,8 +346,6 @@ public class HistoryQuickSearchView extends ViewBaseEx<HistoryQuickSearchPm> {
   @Override
   protected void internalRenderTo(Container owner, Object constraints) {
     Preconditions.checkArgument(owner == null);
-    // Preconditions.checkArgument(constraints != null && constraints instanceof
-    // Rectangle);
     Preconditions.checkState(pm != null, "PM is required for this view");
 
     if (window == null) {
@@ -387,13 +385,10 @@ public class HistoryQuickSearchView extends ViewBaseEx<HistoryQuickSearchPm> {
           pm.getActionCancel()
               .actionPerformed(UiUtils.actionEvent(e.getSource(), "windowDeactivated"));
         }
-        ;
       };
 
   private final ComponentListener componentAdapter =
       new ComponentAdapter() {
-        @Override
-        public void componentHidden(ComponentEvent e) {}
 
         @Override
         public void componentShown(ComponentEvent e) {
@@ -436,9 +431,8 @@ public class HistoryQuickSearchView extends ViewBaseEx<HistoryQuickSearchPm> {
     Rectangle bounds = new Rectangle();
 
     // Iterate over the graphics devices.
-    for (int j = 0; j < graphicsDevices.length; j++) {
+    for (GraphicsDevice graphicsDevice : graphicsDevices) {
       // Get the bounds of the device.
-      GraphicsDevice graphicsDevice = graphicsDevices[j];
       bounds.setRect(graphicsDevice.getDefaultConfiguration().getBounds());
 
       // Is the location in this bounds?

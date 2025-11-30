@@ -22,6 +22,7 @@ import static org.pgptool.gui.app.Messages.text;
 import com.google.common.eventbus.EventBus;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -371,7 +372,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
     hintsCoordinator.setHintsHolder(mainFramePm);
   }
 
-  protected Action actionShowTempFolderChooser =
+  protected final Action actionShowTempFolderChooser =
       new LocalizedActionEx("term.changeTempFolderForDecrypted", this) {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -421,7 +422,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
       this.keys = keys;
     }
 
-    protected KeyImporterHost host =
+    protected final KeyImporterHost host =
         new KeyImporterHost() {
           @Override
           public void handleImporterFinished() {
@@ -444,9 +445,10 @@ public class RootPm implements InitializingBean, GlobalAppActions {
 
   private final ImportKeyDialogOpener importKeyWindowHost = new ImportKeyDialogOpener();
 
-  protected EncryptTextDialogOpener encryptTextHost = new EncryptTextDialogOpener(new HashSet<>());
+  protected final EncryptTextDialogOpener encryptTextHost =
+      new EncryptTextDialogOpener(new HashSet<>());
 
-  class EncryptTextDialogOpener
+  protected class EncryptTextDialogOpener
       extends DialogOpener<EncryptTextHost, Set<String>, EncryptTextPm, EncryptTextView> {
     private final Set<String> preselectedKeyIds;
 
@@ -455,7 +457,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
       this.preselectedKeyIds = preselectedKeyIds;
     }
 
-    EncryptTextHost host =
+    final EncryptTextHost host =
         new EncryptTextHost() {
           @Override
           public void handleClose() {
@@ -479,9 +481,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
     protected Set<String> getInitParams() {
       return preselectedKeyIds;
     }
-    ;
   }
-  ;
 
   private class GetKeyPasswordDialogOpener
       extends DialogOpener<
@@ -504,7 +504,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
       this.keyAndPasswordCallback = keyAndPasswordCallback;
     }
 
-    GetKeyPasswordDialogHost host =
+    final GetKeyPasswordDialogHost host =
         new GetKeyPasswordDialogHost() {
           @Override
           public void handleClose() {
@@ -522,16 +522,10 @@ public class RootPm implements InitializingBean, GlobalAppActions {
     }
 
     @Override
-    protected void doRenderView(Window optionalOrigin) {
-      view.renderTo(optionalOrigin);
-    }
-
-    @Override
     protected GetKeyPasswordPo getInitParams() {
       return new GetKeyPasswordPo(keysIds, purpose, keyAndPasswordCallback);
     }
   }
-  ;
 
   private final DialogOpener<DecryptTextHost, Void, DecryptTextPm, DecryptTextView>
       decryptTextHost =
@@ -566,7 +560,6 @@ public class RootPm implements InitializingBean, GlobalAppActions {
                     .actionToOpenWindow.actionPerformed(originEvent);
               }
             }
-            ;
 
             private final DecryptTextHostImpl host = new DecryptTextHostImpl();
 
@@ -579,7 +572,6 @@ public class RootPm implements InitializingBean, GlobalAppActions {
             protected Void getInitParams() {
               return null;
             }
-            ;
           };
 
   private class EncryptBackManyWindowOpener
@@ -592,7 +584,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
       this.decryptedFiles = decryptedFiles;
     }
 
-    EncryptBackMultipleHost host =
+    final EncryptBackMultipleHost host =
         new EncryptBackMultipleHost() {
           @Override
           public void handleClose() {
@@ -616,9 +608,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
     protected Set<String> getInitParams() {
       return decryptedFiles;
     }
-    ;
   }
-  ;
 
   private final EncryptionWindowOpener encryptionWindowHost = new EncryptionWindowOpener(null);
 
@@ -631,7 +621,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
       this.sourceFile = sourceFile;
     }
 
-    EncryptOneHost host =
+    final EncryptOneHost host =
         new EncryptOneHost() {
           @Override
           public void handleClose() {
@@ -655,9 +645,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
     protected String getInitParams() {
       return sourceFile;
     }
-    ;
   }
-  ;
 
   private final DecryptionWindowOpener decryptionWindowHost = new DecryptionWindowOpener(null);
 
@@ -670,7 +658,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
       this.sourceFile = sourceFile;
     }
 
-    DecryptOneDialogHost host =
+    final DecryptOneDialogHost host =
         new DecryptOneDialogHost() {
           @Override
           public void handleClose() {
@@ -694,9 +682,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
     protected String getInitParams() {
       return sourceFile;
     }
-    ;
   }
-  ;
 
   private final DialogOpener<CreateKeyHost, Void, CreateKeyPm, CreateKeyView> createKeyWindowHost =
       new DialogOpener<>(CreateKeyPm.class, CreateKeyView.class, "action.createPgpKey") {
@@ -716,7 +702,6 @@ public class RootPm implements InitializingBean, GlobalAppActions {
         protected Void getInitParams() {
           return null;
         }
-        ;
       };
 
   private class ChangeKeyPasswordDialogOpener
@@ -744,7 +729,6 @@ public class RootPm implements InitializingBean, GlobalAppActions {
     protected Key getInitParams() {
       return key;
     }
-    ;
   }
 
   private final DialogOpener<KeysListHost, Void, KeysListPm, KeysListView> keysListWindowHost =
@@ -787,12 +771,11 @@ public class RootPm implements InitializingBean, GlobalAppActions {
         protected Void getInitParams() {
           return null;
         }
-        ;
       };
 
   private final Action importKeyFromClipboard =
       new LocalizedActionEx("action.importKeyFromText", this) {
-        private static final long serialVersionUID = -3347918300952342578L;
+        @Serial private static final long serialVersionUID = -3347918300952342578L;
 
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -834,7 +817,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
       super(CheckForUpdatesPm.class, CheckForUpdatesView.class, "action.checkForUpdates");
     }
 
-    public CheckForUpdatesHost host =
+    public final CheckForUpdatesHost host =
         new CheckForUpdatesHost() {
           @Override
           public void handleClose() {
@@ -851,7 +834,6 @@ public class RootPm implements InitializingBean, GlobalAppActions {
     protected UpdatesPolicy getInitParams() {
       return null;
     }
-    ;
   }
 
   private final CheckForUpdatesDialog checkForUpdatesDialog = new CheckForUpdatesDialog();
@@ -874,7 +856,6 @@ public class RootPm implements InitializingBean, GlobalAppActions {
         protected Void getInitParams() {
           return null;
         }
-        ;
       };
 
   /**
@@ -903,7 +884,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
 
       actionToOpenWindow =
           new LocalizedActionEx(openActionMessageCode, this) {
-            private static final long serialVersionUID = 2248174164525745404L;
+            @Serial private static final long serialVersionUID = 2248174164525745404L;
 
             @Override
             public void actionPerformed(ActionEvent e) {

@@ -17,7 +17,6 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.historyquicksearch;
 
-import com.google.common.base.Preconditions;
 import java.util.List;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
@@ -42,14 +41,11 @@ public class HistoryQuickSearchTableModel implements TableModel {
 
   @Override
   public String getColumnName(int columnIndex) {
-    switch (columnIndex) {
-      case COLUMN_NAME:
-        return Messages.get("term.name");
-      case COLUMN_PATH:
-        return Messages.get("term.path");
-      default:
-        throw new IllegalArgumentException("Wrong column index: " + columnIndex);
-    }
+    return switch (columnIndex) {
+      case COLUMN_NAME -> Messages.get("term.name");
+      case COLUMN_PATH -> Messages.get("term.path");
+      default -> throw new IllegalArgumentException("Wrong column index: " + columnIndex);
+    };
   }
 
   @Override
@@ -61,16 +57,12 @@ public class HistoryQuickSearchTableModel implements TableModel {
   public Object getValueAt(int rowIndex, int columnIndex) {
     DecryptionDialogParameters s = decryptions.get(rowIndex);
 
-    switch (columnIndex) {
-      case -1:
-        return s;
-      case COLUMN_NAME:
-        return " " + FilenameUtils.getName(s.getSourceFile());
-      case COLUMN_PATH:
-        return " " + FilenameUtils.getFullPath(s.getSourceFile());
-      default:
-        throw new IllegalArgumentException("Wrong column index: " + columnIndex);
-    }
+    return switch (columnIndex) {
+      case -1 -> s;
+      case COLUMN_NAME -> " " + FilenameUtils.getName(s.getSourceFile());
+      case COLUMN_PATH -> " " + FilenameUtils.getFullPath(s.getSourceFile());
+      default -> throw new IllegalArgumentException("Wrong column index: " + columnIndex);
+    };
   }
 
   @Override
@@ -85,7 +77,7 @@ public class HistoryQuickSearchTableModel implements TableModel {
 
   @Override
   public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-    Preconditions.checkState(false, "Operation not supported");
+    throw new IllegalStateException("Operation not supported");
   }
 
   @Override

@@ -17,11 +17,12 @@
  ******************************************************************************/
 package org.pgptool.gui.config.api.exceptions;
 
+import java.io.Serial;
 import org.summerb.i18n.HasMessageArgs;
 import org.summerb.i18n.HasMessageCode;
 
 public class ConfigWriteException extends Exception implements HasMessageCode, HasMessageArgs {
-  private static final long serialVersionUID = 1253040402059386002L;
+  @Serial private static final long serialVersionUID = 1253040402059386002L;
 
   private final String propertyFileLocation;
 

@@ -121,8 +121,7 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         public void propertyChange(PropertyChangeEvent evt) {
           boolean hasSelection = rows.hasValue();
 
-          for (int i = 0; i < contextMenuActions.length; i++) {
-            Action action = contextMenuActions[i];
+          for (Action action : contextMenuActions) {
             if (action == null || !(action instanceof RowContextAction)) {
               continue;
             }
@@ -175,7 +174,7 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
     historyQuickSearchPm.detach();
   }
 
-  protected Action actionOpen =
+  protected final Action actionOpen =
       new RowContextAction("action.openFile") {
         @Override
         public void onActionPerformed(DecryptedFile row, ActionEvent e) {
@@ -187,7 +186,7 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  protected Action actionOpenSourceFolder =
+  protected final Action actionOpenSourceFolder =
       new RowContextAction("action.openSourceFolder") {
         @Override
         public void onActionPerformed(DecryptedFile row, ActionEvent e) {
@@ -199,7 +198,7 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  protected Action actionOpenTargetFolder =
+  protected final Action actionOpenTargetFolder =
       new RowContextAction("action.openTargetFolder") {
         @Override
         public void onActionPerformed(DecryptedFile row, ActionEvent e) {
@@ -211,7 +210,7 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  protected Action actionEncryptBack =
+  protected final Action actionEncryptBack =
       new RowContextAction("action.encryptBack") {
         @Override
         public void onActionPerformed(DecryptedFile row, ActionEvent e) {
@@ -219,7 +218,7 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  protected Action actionDelete =
+  protected final Action actionDelete =
       new RowContextAction("action.deleteUnencryptedFile") {
         @Override
         public void onActionPerformed(DecryptedFile row, ActionEvent e) {
@@ -257,7 +256,7 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  protected Action actionForget =
+  protected final Action actionForget =
       new RowContextAction("action.forgetDecrypted") {
         @Override
         public void onActionPerformed(DecryptedFile row, ActionEvent e) {
@@ -265,7 +264,7 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  protected Action[] contextMenuActions =
+  protected final Action[] contextMenuActions =
       new Action[] {
         actionOpen,
         actionOpenSourceFolder,
@@ -286,7 +285,7 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  protected Action actionEncryptBackAll =
+  protected final Action actionEncryptBackAll =
       new LocalizedActionEx("encrypBackMany.encryptBackAll", this) {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -427,7 +426,7 @@ public class MainFramePm extends PresentationModelBaseEx<MainFrameHost, UpdatesP
         }
       };
 
-  protected Action actionHistoryQuickSearch =
+  protected final Action actionHistoryQuickSearch =
       new LocalizedActionEx("term.history", this) {
         @Override
         public void actionPerformed(ActionEvent e) {

@@ -1,9 +1,10 @@
 package org.pgptool.gui.ui.createkey;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class CreateKeyUsage implements Serializable {
-  private static final long serialVersionUID = -6652489944057680318L;
+  @Serial private static final long serialVersionUID = -6652489944057680318L;
   private String userName;
   private String email;
 

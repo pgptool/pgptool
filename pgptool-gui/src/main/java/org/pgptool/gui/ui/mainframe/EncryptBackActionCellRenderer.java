@@ -21,6 +21,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.io.Serial;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -32,11 +33,11 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.TableCellRenderer;
 
 public class EncryptBackActionCellRenderer extends JPanel implements TableCellRenderer {
-  private static final long serialVersionUID = 1821194884019502554L;
+  @Serial private static final long serialVersionUID = 1821194884019502554L;
 
   private static final Border SAFE_NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
   private static final Border DEFAULT_NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
-  protected static Border noFocusBorder = DEFAULT_NO_FOCUS_BORDER;
+  protected static final Border noFocusBorder = DEFAULT_NO_FOCUS_BORDER;
 
   private final JLabel lbl;
 
@@ -126,10 +127,7 @@ public class EncryptBackActionCellRenderer extends JPanel implements TableCellRe
 
   private Border getNoFocusBorder() {
     Border border = UIManager.getBorder("Table.cellNoFocusBorder");
-    if (System.getSecurityManager() != null) {
-      if (border != null) return border;
-      return SAFE_NO_FOCUS_BORDER;
-    } else if (border != null) {
+    if (border != null) {
       if (noFocusBorder == null || noFocusBorder == DEFAULT_NO_FOCUS_BORDER) {
         return border;
       }

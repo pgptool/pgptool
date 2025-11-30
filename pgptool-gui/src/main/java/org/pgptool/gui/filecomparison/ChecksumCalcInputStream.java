@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilterInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
@@ -76,9 +77,6 @@ public class ChecksumCalcInputStream extends FilterInputStream {
   @Override
   public long skip(long n) throws IOException {
     throw new IOException("Seek is not supported");
-    // long result = in.skip(n);
-    // size += result;
-    // return result;
   }
 
   @Override
@@ -125,7 +123,7 @@ public class ChecksumCalcInputStream extends FilterInputStream {
     Fingerprint fingerprint = new Fingerprint();
     fingerprint.setSize(size);
     byte[] encoded = Base64.getEncoder().encode(messageDigest.digest());
-    fingerprint.setChecksum(new String(encoded, "UTF-8"));
+    fingerprint.setChecksum(new String(encoded, StandardCharsets.UTF_8));
     log.debug("File " + fileName + " fingerprint: " + fingerprint);
     reportTo.complete(fingerprint);
   }

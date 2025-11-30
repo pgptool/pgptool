@@ -34,9 +34,7 @@ public class SourceInfo {
 
   public static SourceInfo fromFile(String filePathName) {
     File file = new File(filePathName);
-    SourceInfo ret =
-        new SourceInfo(FilenameUtils.getName(filePathName), file.length(), file.lastModified());
-    return ret;
+    return new SourceInfo(FilenameUtils.getName(filePathName), file.length(), file.lastModified());
   }
 
   public String getName() {

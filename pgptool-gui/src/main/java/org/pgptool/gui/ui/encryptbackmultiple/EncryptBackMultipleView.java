@@ -98,8 +98,6 @@ public class EncryptBackMultipleView extends DialogViewBaseEx<EncryptBackMultipl
     pnlTemp.add(new JLabel(text("term.recipients")), BorderLayout.NORTH);
     ret.add(pnlTemp, sgl.cs(0, row));
     ret.add(lblRecipientsSummary = new JXLabel(), sgl.cs(1, row));
-    // ret.add(lblRecipientsSummary = new JXLabel(), sgl.cs(1, row, 1, 2));
-    // row++;
     lblRecipientsSummary.setLineWrap(true);
     row++;
     ret.add(chkIgnoreMissingRecipients = new JCheckBox(), sgl.cs(1, row));

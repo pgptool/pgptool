@@ -17,7 +17,7 @@ import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
  * @author sergeyk
  */
 public class UsageLoggerDelegator implements UsageLogger, HasUsageRecordingSetting {
-  public static Logger log = Logger.getLogger(UsageLoggerDelegator.class);
+  public static final Logger log = Logger.getLogger(UsageLoggerDelegator.class);
 
   public static final String IS_USAGE_RECORDING_ENABLED = "IS_USAGE_RECORDING_ENABLED";
 

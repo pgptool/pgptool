@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
@@ -84,7 +85,7 @@ public class ChecksumCalcOutputStream extends FilterOutputStream {
     Fingerprint fingerprint = new Fingerprint();
     fingerprint.setSize(size);
     byte[] encoded = Base64.getEncoder().encode(messageDigest.digest());
-    fingerprint.setChecksum(new String(encoded, "UTF-8"));
+    fingerprint.setChecksum(new String(encoded, StandardCharsets.UTF_8));
     log.debug("File " + fileName + " fingerprint: " + fingerprint);
     result.complete(fingerprint);
   }

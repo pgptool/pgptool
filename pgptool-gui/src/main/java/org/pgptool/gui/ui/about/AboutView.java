@@ -88,10 +88,6 @@ public class AboutView extends DialogViewBaseEx<AboutPm> {
 
     label.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
     label.setForeground(Color.blue);
-    // Font font = lblLinkToSite.getFont();
-    // Map attributes = font.getAttributes();
-    // attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
-    // lblLinkToSite.setFont(font.deriveFont(attributes));
     label.addMouseListener(mouseListener);
   }
 

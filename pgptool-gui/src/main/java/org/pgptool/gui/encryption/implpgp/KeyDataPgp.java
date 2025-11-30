@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serial;
 import java.math.BigInteger;
 import java.util.Iterator;
 import org.bouncycastle.openpgp.PGPException;
@@ -40,7 +41,7 @@ import org.pgptool.gui.encryption.api.dto.KeyData;
  * @author Sergey Karpushin
  */
 public class KeyDataPgp extends KeyData {
-  private static final long serialVersionUID = -8446784970537981225L;
+  @Serial private static final long serialVersionUID = -8446784970537981225L;
 
   private transient PGPSecretKeyRing secretKeyRing;
   private transient PGPPublicKeyRing publicKeyRing;
@@ -89,6 +90,7 @@ public class KeyDataPgp extends KeyData {
     return null;
   }
 
+  @Serial
   private void writeObject(ObjectOutputStream oos) throws IOException {
     oos.defaultWriteObject();
 
@@ -107,6 +109,7 @@ public class KeyDataPgp extends KeyData {
     }
   }
 
+  @Serial
   private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
     ois.defaultReadObject();
 
@@ -129,8 +132,7 @@ public class KeyDataPgp extends KeyData {
   private ByteArrayInputStream initInputStream(ObjectInputStream ois)
       throws IOException, ClassNotFoundException {
     byte[] buf = (byte[]) ois.readObject();
-    ByteArrayInputStream is = new ByteArrayInputStream(buf);
-    return is;
+    return new ByteArrayInputStream(buf);
   }
 
   public PGPSecretKeyRing getSecretKeyRing() {

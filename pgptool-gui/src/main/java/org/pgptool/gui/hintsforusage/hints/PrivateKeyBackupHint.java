@@ -104,12 +104,10 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
     }
 
     long triggerForCreatedBefore = System.currentTimeMillis() - reminderTriggerDelay;
-    PrivateKeyBackupReminderData ret =
-        reminders.stream()
-            .filter(x -> x.timestamp <= triggerForCreatedBefore && presentKeys.contains(x.keyId))
-            .findFirst()
-            .orElse(null);
-    return ret;
+    return reminders.stream()
+        .filter(x -> x.timestamp <= triggerForCreatedBefore && presentKeys.contains(x.keyId))
+        .findFirst()
+        .orElse(null);
   }
 
   @Subscribe
@@ -136,6 +134,7 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
   private void removeHintForKeyIfApplicable(String keyId) {
     hintsProps.put(CONFIG_PREFIX + keyId, null);
 
+    //noinspection PointlessNullCheck
     if (lastHintForKeyId != null && keyId.equals(lastHintForKeyId)) {
       hintsCoordinator.cancelHint(this);
     }
@@ -173,7 +172,6 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
 
     return new Action[] {actionExport, actionClose};
   }
-  ;
 
   public static class PrivateKeyBackupReminderData implements DtoBase {
     private String keyId;
@@ -189,7 +187,7 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
   }
 
   public static class KeyCreatedEvent implements DtoBase {
-    public Key key;
+    public final Key key;
 
     public KeyCreatedEvent(Key key) {
       super();
@@ -198,7 +196,7 @@ public class PrivateKeyBackupHint extends HintPm implements InitializingBean {
   }
 
   public static class PrivateKeyExportedEvent implements DtoBase {
-    public Key key;
+    public final Key key;
 
     public PrivateKeyExportedEvent(Key key) {
       super();

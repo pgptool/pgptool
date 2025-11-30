@@ -10,7 +10,7 @@ import org.springframework.context.NoSuchMessageException;
  * @author sergeyk
  */
 public class ExceptionTranslatorClassNameImpl implements ExceptionTranslator {
-  protected MessageSource messageSource;
+  protected final MessageSource messageSource;
 
   public ExceptionTranslatorClassNameImpl(MessageSource messageSource2) {
     messageSource = messageSource2;

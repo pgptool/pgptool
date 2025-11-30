@@ -128,7 +128,7 @@ public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
     String[] aparts = a.split("[\\.v]");
     String[] bparts = b.split("[\\.v]");
     for (int i = 0; i < Math.min(aparts.length, bparts.length); i++) {
-      if (StringUtils.isEmpty(aparts[i]) || StringUtils.isEmpty(bparts[i])) {
+      if (!StringUtils.hasText(aparts[i]) || !StringUtils.hasText(bparts[i])) {
         continue;
       }
 

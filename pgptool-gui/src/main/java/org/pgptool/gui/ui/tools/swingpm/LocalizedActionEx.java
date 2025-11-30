@@ -1,6 +1,7 @@
 package org.pgptool.gui.ui.tools.swingpm;
 
 import java.awt.event.ActionEvent;
+import java.io.Serial;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import org.pgptool.gui.app.EntryPoint;
@@ -8,7 +9,7 @@ import org.pgptool.gui.usage.dto.ActionUsage;
 import ru.skarpushin.swingpm.tools.SwingPmSettings;
 
 public abstract class LocalizedActionEx extends AbstractAction {
-  private static final long serialVersionUID = 5177364704498790332L;
+  @Serial private static final long serialVersionUID = 5177364704498790332L;
 
   private final String actionNameMessageCode;
   private String context;
@@ -30,7 +31,6 @@ public abstract class LocalizedActionEx extends AbstractAction {
     }
     return super.getValue(key);
   }
-  ;
 
   @Override
   public void actionPerformed(ActionEvent e) {

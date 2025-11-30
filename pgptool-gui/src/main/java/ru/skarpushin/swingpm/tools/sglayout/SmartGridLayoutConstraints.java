@@ -3,10 +3,10 @@ package ru.skarpushin.swingpm.tools.sglayout;
 import com.google.common.base.Preconditions;
 
 public class SmartGridLayoutConstraints {
-  protected int row;
-  protected int col;
-  protected int colspan;
-  protected int rowspan;
+  protected final int row;
+  protected final int col;
+  protected final int colspan;
+  protected final int rowspan;
 
   public SmartGridLayoutConstraints(int col, int row) {
     this(col, row, 1, 1);

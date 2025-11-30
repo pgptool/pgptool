@@ -4,8 +4,8 @@ public abstract class BkgTask<E> {
   public static final int STATUS_PENDING = 0;
   public static final int STATUS_PERFORMED = 2;
 
-  protected AsyncDataLoaderImpl<E> loader;
-  protected Object stateId;
+  protected final AsyncDataLoaderImpl<E> loader;
+  protected final Object stateId;
   protected int status = STATUS_PENDING;
 
   protected volatile BkgTask<E> next;

@@ -7,7 +7,7 @@ import java.util.ListIterator;
 
 public abstract class ListExBase<E> implements ListEx<E> {
   protected int modCount = 1;
-  protected List<ListExEventListener<E>> listeners = new LinkedList<>();
+  protected final List<ListExEventListener<E>> listeners = new LinkedList<>();
   protected ListExEventListener<E> eventDispatcher;
 
   @Override

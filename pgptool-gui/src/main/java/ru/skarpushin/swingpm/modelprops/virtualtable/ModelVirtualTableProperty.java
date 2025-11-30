@@ -32,7 +32,7 @@ public class ModelVirtualTableProperty<E> extends ModelProperty<E> {
   private static final Logger log = LoggerFactory.getLogger(ModelVirtualTableProperty.class);
   protected final long pageSize;
   private final LightweightTableModel<E> lightweightTableModel;
-  protected List<PaginatedList<E>> loadedData = new ArrayList<>();
+  protected final List<PaginatedList<E>> loadedData = new ArrayList<>();
   private RowRetrieverFeedbackHandler rowNotFoundFeedbackHandler;
   private final EventListenerList listenerList = new EventListenerList();
   private int lastRowIdxRequested = -1;
@@ -82,12 +82,10 @@ public class ModelVirtualTableProperty<E> extends ModelProperty<E> {
         private E getCachedOrFindRowByIdx(int rowIndex) {
           // Cache row object, since table will request columns sequentially
           // for same row several times - avoid traversing all pages
-          E row = null;
+          E row;
           if (rowIndex == lastRowIdxRequested) {
             row = lastRowRequested;
           } else {
-            // log.debug(String.format("getValueAt %d, %d", rowIndex,
-            // columnIndex));
             row = findRowByIdx(rowIndex);
             lastRowIdxRequested = rowIndex;
             lastRowRequested = row;
@@ -142,8 +140,7 @@ public class ModelVirtualTableProperty<E> extends ModelProperty<E> {
             for (int i = 0; i < page.getItems().size(); i++) {
               E cur = page.getItems().get(i);
               if (rowEqualityChecker.areEquals(cur, subject)) {
-                int idx = (int) page.getPagerParams().getOffset() + i;
-                return idx;
+                return (int) page.getPagerParams().getOffset() + i;
               }
             }
           }

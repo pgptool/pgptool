@@ -96,7 +96,6 @@ public class SingleDirWatcher {
               }
             }
           }
-          ;
         };
     ret.start();
     return ret;

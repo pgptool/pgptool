@@ -127,8 +127,8 @@
 
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpg-jdk15on</artifactId>
-            <version>1.63</version>
+            <artifactId>bcpg-jdk18on</artifactId>
+            <version>1.83</version>
         </dependency>
 
         <dependency>

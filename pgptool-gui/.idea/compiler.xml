@@ -13,7 +13,6 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/springframework/boot/spring-boot-configuration-processor/3.5.8/spring-boot-configuration-processor-3.5.8.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/springframework/boot/spring-boot-configuration-processor/3.5.8/spring-boot-configuration-processor-3.5.8.jar" />
         </processorPath>
         <module name="gui" />
       </profile>

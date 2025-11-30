@@ -87,7 +87,7 @@ public class GetKeyPasswordOneKeyView extends ViewBaseEx<GetKeyPasswordPm> {
     super.internalBindToPm();
 
     decryptionKey.setText(pm.getSelectedKey().get(0).toString());
-    bindingContext.setupBinding(pm.getPassword(), edPassword);
+    bindingContext.setupBinding(pm.getPassphrase(), edPassword);
     bindingContext.setupBinding(pm.getPurpose(), purpose);
 
     bindingContext.setupBinding(pm.actionChooseKey, btnPerformOperation);

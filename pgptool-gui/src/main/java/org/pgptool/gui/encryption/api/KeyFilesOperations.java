@@ -23,8 +23,6 @@ import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.encryption.api.dto.Key;
 
 public interface KeyFilesOperations {
-  final String FN_PASSWORD = "password";
-
   List<Key> readKeysFromFile(File file);
 
   List<Key> readKeysFromText(String text) throws GenericException;

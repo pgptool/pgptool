@@ -54,6 +54,8 @@ import org.pgptool.gui.encryption.api.dto.KeyInfo;
 import org.pgptool.gui.encryption.api.dto.KeyTypeEnum;
 import org.pgptool.gui.tools.IoStreamUtils;
 import org.springframework.util.StringUtils;
+import org.summerb.methodCapturers.PropertyNameResolver;
+import org.summerb.methodCapturers.PropertyNameResolverFactory;
 import org.summerb.users.api.exceptions.InvalidPasswordException;
 import org.summerb.validation.ValidationError;
 import org.summerb.validation.ValidationException;
@@ -67,6 +69,14 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
    */
   protected static final BcKeyFingerprintCalculator fingerprintCalculator =
       new BcKeyFingerprintCalculator();
+
+  private final String passphraseFieldName;
+
+  public KeyFilesOperationsPgpImpl(PropertyNameResolverFactory propertyNameResolverFactory) {
+    PropertyNameResolver<CreateKeyParams> nameResolver =
+        propertyNameResolverFactory.getResolver(CreateKeyParams.class);
+    passphraseFieldName = nameResolver.resolve(CreateKeyParams::getPassphrase);
+  }
 
   @Override
   public List<Key> readKeysFromFile(File file) {
@@ -329,7 +339,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
     try {
       validatePasswordUnchecked(secretKeyId, key, password);
     } catch (InvalidPasswordException pe) {
-      throw new ValidationException(new ValidationError(pe.getMessageCode(), FN_PASSWORD));
+      throw new ValidationException(new ValidationError(pe.getMessageCode(), passphraseFieldName));
     } catch (Throwable t) {
       throw new RuntimeException("Failed to verify key password", t);
     }
@@ -344,8 +354,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
         KeyFilesOperationsPgpImpl.validatePasswordUnchecked(keyIdStr, key, passphrase);
       }
     } catch (InvalidPasswordException pe) {
-      throw new ValidationException(
-          new ValidationError(pe.getMessageCode(), CreateKeyParams.FN_PASSPHRASE));
+      throw new ValidationException(new ValidationError(pe.getMessageCode(), passphraseFieldName));
     } catch (Throwable t) {
       throw new RuntimeException(
           "Unknown failure during attempt to verify current key password", t);

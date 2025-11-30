@@ -89,7 +89,7 @@ public class GetKeyPasswordManyKeysView extends ViewBaseEx<GetKeyPasswordPm> {
     super.internalBindToPm();
 
     bindingContext.setupBinding(pm.getSelectedKey(), decryptionKey);
-    bindingContext.setupBinding(pm.getPassword(), edPassword);
+    bindingContext.setupBinding(pm.getPassphrase(), edPassword);
     bindingContext.setupBinding(pm.getPurpose(), purpose);
 
     bindingContext.setupBinding(pm.actionChooseKey, btnPerformOperation);

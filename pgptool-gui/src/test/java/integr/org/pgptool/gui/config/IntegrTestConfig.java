@@ -32,6 +32,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
+import org.summerb.methodCapturers.PropertyNameResolverFactory;
 import org.summerb.validation.ValidationContextConfig;
 import org.summerb.validation.ValidationContextFactory;
 
@@ -118,8 +119,9 @@ public class IntegrTestConfig {
   }
 
   @Bean
-  KeyFilesOperationsPgpImpl keyFilesOperations() {
-    return new KeyFilesOperationsPgpImpl();
+  KeyFilesOperationsPgpImpl keyFilesOperations(
+      PropertyNameResolverFactory propertyNameResolverFactory) {
+    return new KeyFilesOperationsPgpImpl(propertyNameResolverFactory);
   }
 
   @Bean

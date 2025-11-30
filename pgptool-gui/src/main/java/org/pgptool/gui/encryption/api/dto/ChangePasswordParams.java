@@ -22,9 +22,6 @@ import java.io.Serializable;
 public class ChangePasswordParams implements Serializable {
   private static final long serialVersionUID = -1722195689488854053L;
 
-  public static final String FN_NEW_PASSPHRASE = "newPassphrase";
-  public static final String FN_NEW_PASSPHRASE_AGAIN = "newPassphraseAgain";
-
   private String passphrase;
   private String newPassphrase;
   private String newPassphraseAgain;

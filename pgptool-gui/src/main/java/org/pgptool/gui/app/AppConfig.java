@@ -94,6 +94,7 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
+import org.summerb.methodCapturers.PropertyNameResolverFactory;
 import org.summerb.validation.ValidationContextConfig;
 import org.summerb.validation.ValidationContextFactory;
 
@@ -216,8 +217,9 @@ public class AppConfig {
 
   // PGP services
   @Bean
-  KeyFilesOperationsPgpImpl keyFilesOperations() {
-    return new KeyFilesOperationsPgpImpl();
+  KeyFilesOperationsPgpImpl keyFilesOperations(
+      PropertyNameResolverFactory propertyNameResolverFactory) {
+    return new KeyFilesOperationsPgpImpl(propertyNameResolverFactory);
   }
 
   @Bean
@@ -521,9 +523,15 @@ public class AppConfig {
       KeyGeneratorService keyGeneratorService,
       ExecutorService executorService,
       EventBus eventBus,
-      UsageLogger usageLogger) {
+      UsageLogger usageLogger,
+      PropertyNameResolverFactory propertyNameResolverFactory) {
     return new CreateKeyPm(
-        keyRingService, keyGeneratorService, executorService, eventBus, usageLogger);
+        keyRingService,
+        keyGeneratorService,
+        executorService,
+        eventBus,
+        usageLogger,
+        propertyNameResolverFactory);
   }
 
   @Bean
@@ -536,8 +544,10 @@ public class AppConfig {
   ChangeKeyPasswordPm changeKeyPasswordPm(
       KeyRingService keyRingService,
       KeyGeneratorService keyGeneratorService,
-      KeyFilesOperations keyFilesOperations) {
-    return new ChangeKeyPasswordPm(keyRingService, keyGeneratorService, keyFilesOperations);
+      KeyFilesOperations keyFilesOperations,
+      PropertyNameResolverFactory propertyNameResolverFactory) {
+    return new ChangeKeyPasswordPm(
+        keyRingService, keyGeneratorService, keyFilesOperations, propertyNameResolverFactory);
   }
 
   @Bean
@@ -578,8 +588,10 @@ public class AppConfig {
       KeyRingService keyRingService,
       KeyFilesOperations keyFilesOperations,
       EventBus eventBus,
-      UsageLogger usageLogger) {
-    return new GetKeyPasswordPm(keyRingService, keyFilesOperations, eventBus, usageLogger);
+      UsageLogger usageLogger,
+      PropertyNameResolverFactory propertyNameResolverFactory) {
+    return new GetKeyPasswordPm(
+        keyRingService, keyFilesOperations, eventBus, usageLogger, propertyNameResolverFactory);
   }
 
   @Bean

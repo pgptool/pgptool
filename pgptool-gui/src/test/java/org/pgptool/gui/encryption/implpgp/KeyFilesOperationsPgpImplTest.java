@@ -30,6 +30,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.pgptool.gui.encryption.api.dto.Key;
+import org.summerb.methodCapturers.MethodCapturerProxyClassFactoryImpl;
+import org.summerb.methodCapturers.PropertyNameResolverFactory;
+import org.summerb.methodCapturers.PropertyNameResolverFactoryImpl;
 
 public class KeyFilesOperationsPgpImplTest {
   private static String tempFolder;
@@ -45,8 +48,10 @@ public class KeyFilesOperationsPgpImplTest {
   }
 
   private KeyFilesOperationsPgpImpl buildFixture() {
-    KeyFilesOperationsPgpImpl ret = new KeyFilesOperationsPgpImpl();
-    return ret;
+    PropertyNameResolverFactory propertyNameResolverFactory =
+        new PropertyNameResolverFactoryImpl(new MethodCapturerProxyClassFactoryImpl());
+
+    return new KeyFilesOperationsPgpImpl(propertyNameResolverFactory);
   }
 
   @Test

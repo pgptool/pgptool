@@ -263,18 +263,16 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
   private void assertParamsValid(CreateKeyParams params, boolean emptyPassphraseConsent) {
     ValidationContext<CreateKeyParams> ctx = validationContextFactory.buildFor(params);
 
-    // TODO: Migrate all validations to new approach using lambdas for property names resulutions
-
-    ctx.hasText(params.getFullName(), CreateKeyParams.FN_FULL_NAME);
-    if (ctx.hasText(params.getEmail(), CreateKeyParams.FN_EMAIL)) {
-      ctx.validEmail(params.getEmail(), CreateKeyParams.FN_EMAIL);
+    ctx.hasText(CreateKeyParams::getFullName);
+    if (ctx.hasText(CreateKeyParams::getEmail)) {
+      ctx.validEmail(CreateKeyParams::getEmail);
     }
 
     if (!emptyPassphraseConsent) {
-      ctx.hasText(params.getPassphrase(), CreateKeyParams.FN_PASSPHRASE);
+      ctx.hasText(CreateKeyParams::getPassphrase);
     }
     if (StringUtils.hasText(params.getPassphrase())
-        && ctx.hasText(params.getPassphraseAgain(), CreateKeyParams.FN_PASSPHRASE_AGAIN)) {
+        && ctx.hasText(CreateKeyParams::getPassphraseAgain)) {
 
       ctx.eq(CreateKeyParams::getPassphraseAgain, params.getPassphrase());
     }
@@ -296,7 +294,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
 
   @Override
   public Key changeKeyPassword(Key key, ChangePasswordParams params, boolean emptyPasswordConsent) {
-    assertParamsValid(key, params, emptyPasswordConsent);
+    assertParamsValid(params, emptyPasswordConsent);
 
     try {
       PGPDigestCalculator digestCalc = buildDigestCalc();
@@ -329,17 +327,14 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
     return encryptorBuilderBC.build(toCharArray(password));
   }
 
-  private void assertParamsValid(
-      Key key, ChangePasswordParams params, boolean emptyPassphraseConsent) {
+  private void assertParamsValid(ChangePasswordParams params, boolean emptyPassphraseConsent) {
     ValidationContext<ChangePasswordParams> ctx = validationContextFactory.buildFor(params);
 
     if (!emptyPassphraseConsent) {
-      ctx.hasText(params.getNewPassphrase(), ChangePasswordParams.FN_NEW_PASSPHRASE);
+      ctx.hasText(ChangePasswordParams::getNewPassphrase);
     }
     if (StringUtils.hasText(params.getNewPassphrase())
-        && ctx.hasText(
-            params.getNewPassphraseAgain(), ChangePasswordParams.FN_NEW_PASSPHRASE_AGAIN)) {
-
+        && ctx.hasText(ChangePasswordParams::getNewPassphraseAgain)) {
       ctx.eq(ChangePasswordParams::getNewPassphraseAgain, params.getPassphrase());
     }
 

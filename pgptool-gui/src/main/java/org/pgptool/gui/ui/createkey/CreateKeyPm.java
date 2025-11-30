@@ -34,6 +34,8 @@ import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.springframework.util.StringUtils;
+import org.summerb.methodCapturers.PropertyNameResolver;
+import org.summerb.methodCapturers.PropertyNameResolverFactory;
 import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 import org.summerb.utils.exceptions.ExceptionUtils;
 import org.summerb.validation.ValidationError;
@@ -51,6 +53,7 @@ public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
   private final ExecutorService executorService;
   private final EventBus eventBus;
   private final UsageLogger usageLogger;
+  private final PropertyNameResolverFactory propertyNameResolverFactory;
 
   private final CreateKeyParams createKeyParams = new CreateKeyParams();
 
@@ -71,12 +74,14 @@ public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
       KeyGeneratorService keyGeneratorService,
       ExecutorService executorService,
       EventBus eventBus,
-      UsageLogger usageLogger) {
+      UsageLogger usageLogger,
+      PropertyNameResolverFactory propertyNameResolverFactory) {
     this.keyRingService = keyRingService;
     this.keyGeneratorService = keyGeneratorService;
     this.executorService = executorService;
     this.eventBus = eventBus;
     this.usageLogger = usageLogger;
+    this.propertyNameResolverFactory = propertyNameResolverFactory;
   }
 
   @Override
@@ -89,10 +94,14 @@ public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
   }
 
   private void initModelProperties() {
-    fullName = initStringModelProp(CreateKeyParams.FN_FULL_NAME);
-    email = initStringModelProp(CreateKeyParams.FN_EMAIL);
-    passphrase = initStringModelProp(CreateKeyParams.FN_PASSPHRASE);
-    passphraseAgain = initStringModelProp(CreateKeyParams.FN_PASSPHRASE_AGAIN);
+    PropertyNameResolver<CreateKeyParams> nameResolver =
+        propertyNameResolverFactory.getResolver(CreateKeyParams.class);
+
+    fullName = initStringModelProp(nameResolver.resolve(CreateKeyParams::getFullName));
+    email = initStringModelProp(nameResolver.resolve(CreateKeyParams::getEmail));
+    passphrase = initStringModelProp(nameResolver.resolve(CreateKeyParams::getPassphrase));
+    passphraseAgain =
+        initStringModelProp(nameResolver.resolve(CreateKeyParams::getPassphraseAgain));
 
     isDisableControls =
         new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "isDisableControls");

@@ -25,13 +25,14 @@ import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.ChangePasswordParams;
-import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.ui.createkey.NullToEmptyStringConverter;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.springframework.util.StringUtils;
+import org.summerb.methodCapturers.PropertyNameResolver;
+import org.summerb.methodCapturers.PropertyNameResolverFactory;
 import org.summerb.validation.ValidationError;
 import org.summerb.validation.ValidationException;
 import ru.skarpushin.swingpm.collections.ListEx;
@@ -45,6 +46,7 @@ public class ChangeKeyPasswordPm extends PresentationModelBaseEx<ChangeKeyPasswo
   private final KeyRingService keyRingService;
   private final KeyGeneratorService keyGeneratorService;
   private final KeyFilesOperations keyFilesOperations;
+  private final PropertyNameResolverFactory propertyNameResolverFactory;
 
   private Key key;
 
@@ -59,10 +61,12 @@ public class ChangeKeyPasswordPm extends PresentationModelBaseEx<ChangeKeyPasswo
   public ChangeKeyPasswordPm(
       KeyRingService keyRingService,
       KeyGeneratorService keyGeneratorService,
-      KeyFilesOperations keyFilesOperations) {
+      KeyFilesOperations keyFilesOperations,
+      PropertyNameResolverFactory propertyNameResolverFactory) {
     this.keyRingService = keyRingService;
     this.keyGeneratorService = keyGeneratorService;
     this.keyFilesOperations = keyFilesOperations;
+    this.propertyNameResolverFactory = propertyNameResolverFactory;
   }
 
   @Override
@@ -76,15 +80,20 @@ public class ChangeKeyPasswordPm extends PresentationModelBaseEx<ChangeKeyPasswo
   }
 
   private void initModelProperties() {
+    PropertyNameResolver<ChangePasswordParams> nameResolver =
+        propertyNameResolverFactory.getResolver(ChangePasswordParams.class);
+
+    // This is just a label
     fullName =
         new ModelProperty<>(
-            this,
-            new ValueAdapterReadonlyImpl<>(key.getKeyInfo().getUser()),
-            CreateKeyParams.FN_FULL_NAME);
+            this, new ValueAdapterReadonlyImpl<>(key.getKeyInfo().getUser()), "fullName");
 
-    passphrase = initStringModelProp(CreateKeyParams.FN_PASSPHRASE);
-    newPassphrase = initStringModelProp(ChangePasswordParams.FN_NEW_PASSPHRASE);
-    newPassphraseAgain = initStringModelProp(ChangePasswordParams.FN_NEW_PASSPHRASE_AGAIN);
+    // These are inputs
+    passphrase = initStringModelProp(nameResolver.resolve(ChangePasswordParams::getPassphrase));
+    newPassphrase =
+        initStringModelProp(nameResolver.resolve(ChangePasswordParams::getNewPassphrase));
+    newPassphraseAgain =
+        initStringModelProp(nameResolver.resolve(ChangePasswordParams::getNewPassphraseAgain));
   }
 
   private ModelProperty<String> initStringModelProp(String fieldName) {

@@ -36,6 +36,7 @@ import javax.swing.Action;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
+import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.MatchedKey;
 import org.pgptool.gui.ui.getkeypassworddialog.GetKeyPasswordDialogPm.GetKeyPasswordPo;
@@ -44,6 +45,8 @@ import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.KeyUsage;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.springframework.util.StringUtils;
+import org.summerb.methodCapturers.PropertyNameResolver;
+import org.summerb.methodCapturers.PropertyNameResolverFactory;
 import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 import org.summerb.utils.easycrud.api.dto.EntityChangedEvent.ChangeType;
 import org.summerb.validation.ValidationError;
@@ -74,7 +77,6 @@ public class GetKeyPasswordPm
     extends PresentationModelBaseEx<GetKeyPasswordHost, GetKeyPasswordPo> {
   private static final Logger log = Logger.getLogger(GetKeyPasswordPm.class);
 
-  private static final String FN_PASSWORD = "password";
   private static final Map<String, PasswordDeterminedForKey> CACHE_KEYID_TO_PASSWORD =
       new HashMap<>();
 
@@ -82,10 +84,11 @@ public class GetKeyPasswordPm
   private final KeyFilesOperations keyFilesOperations;
   private final EventBus eventBus;
   private final UsageLogger usageLogger;
+  private final PropertyNameResolverFactory propertyNameResolverFactory;
 
   private ModelSelInComboBoxProperty<Key> selectedKey;
   private ModelListProperty<Key> decryptionKeys;
-  private ModelProperty<String> password;
+  private ModelProperty<String> passphrase;
   private ModelProperty<String> purpose;
   private final ListEx<ValidationError> validationErrors = new ListExImpl<>();
 
@@ -96,11 +99,13 @@ public class GetKeyPasswordPm
       KeyRingService keyRingService,
       KeyFilesOperations keyFilesOperations,
       EventBus eventBus,
-      UsageLogger usageLogger) {
+      UsageLogger usageLogger,
+      PropertyNameResolverFactory propertyNameResolverFactory) {
     this.keyRingService = keyRingService;
     this.keyFilesOperations = keyFilesOperations;
     this.eventBus = eventBus;
     this.usageLogger = usageLogger;
+    this.propertyNameResolverFactory = propertyNameResolverFactory;
   }
 
   @Override
@@ -176,6 +181,9 @@ public class GetKeyPasswordPm
   }
 
   private void initModelProperties(List<Key> keys) {
+    PropertyNameResolver<CreateKeyParams> nameResolver =
+        propertyNameResolverFactory.getResolver(CreateKeyParams.class);
+
     purpose =
         new ModelProperty<>(
             this,
@@ -187,12 +195,16 @@ public class GetKeyPasswordPm
     selectedKey =
         new ModelSelInComboBoxProperty<>(
             this, new ValueAdapterHolderImpl<>(keys.get(0)), "selectedKey", decryptionKeys);
-    password =
-        new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), FN_PASSWORD, validationErrors);
-    password.getModelPropertyAccessor().addPropertyChangeListener(onPasswordChanged);
+    passphrase =
+        new ModelProperty<>(
+            this,
+            new ValueAdapterHolderImpl<>(),
+            nameResolver.resolve(CreateKeyParams::getPassphrase),
+            validationErrors);
+    passphrase.getModelPropertyAccessor().addPropertyChangeListener(onPassphraseChanged);
   }
 
-  private final PropertyChangeListener onPasswordChanged =
+  private final PropertyChangeListener onPassphraseChanged =
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -200,16 +212,17 @@ public class GetKeyPasswordPm
         }
 
         private void validatePassword() {
-          if (StringUtils.hasText(password.getValue())) {
+          if (StringUtils.hasText(passphrase.getValue())) {
             validationErrors.removeAll(
-                ValidationErrorsUtils.findErrorsForField(FN_PASSWORD, validationErrors));
+                ValidationErrorsUtils.findErrorsForField(
+                    passphrase.getPropertyName(), validationErrors));
             // NOTE: We also can try to check password while user is
             // typing... Should we do that? It might be annoying to see red
             // border before user completes writing password. And once hes
             // done he just press enter and finf out whether password was
             // correct
           } else {
-            validationErrors.add(new MustNotBeNull(FN_PASSWORD));
+            validationErrors.add(new MustNotBeNull(passphrase.getPropertyName()));
           }
         }
       };
@@ -229,7 +242,7 @@ public class GetKeyPasswordPm
         public void actionPerformed(ActionEvent e) {
           super.actionPerformed(e);
           Key key = selectedKey.getValue();
-          String passwordStr = password.getValue();
+          String passwordStr = passphrase.getValue();
 
           Optional<MatchedKey> matchedKey =
               matchedKeys.stream().filter(x -> x.getMatchedKey() == key).findFirst();
@@ -239,9 +252,10 @@ public class GetKeyPasswordPm
 
           try {
             validationErrors.removeAll(
-                ValidationErrorsUtils.findErrorsForField(FN_PASSWORD, validationErrors));
-            if (!StringUtils.hasText(password.getValue())) {
-              validationErrors.add(new MustNotBeNull(FN_PASSWORD));
+                ValidationErrorsUtils.findErrorsForField(
+                    passphrase.getPropertyName(), validationErrors));
+            if (!StringUtils.hasText(passphrase.getValue())) {
+              validationErrors.add(new MustNotBeNull(passphrase.getPropertyName()));
               return;
             }
 
@@ -292,8 +306,8 @@ public class GetKeyPasswordPm
     return selectedKey.getModelSelInComboBoxPropertyAccessor();
   }
 
-  public ModelPropertyAccessor<String> getPassword() {
-    return password.getModelPropertyAccessor();
+  public ModelPropertyAccessor<String> getPassphrase() {
+    return passphrase.getModelPropertyAccessor();
   }
 
   public List<MatchedKey> getMatchedKeys() {

@@ -344,7 +344,6 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 
     Preconditions.checkArgument(StringUtils.hasText(encryptedText), "encryptedText required");
     Preconditions.checkArgument(decryptionKey != null, "decryption key must be provided");
-    Preconditions.checkArgument(StringUtils.hasText(passphrase), "Passphrase must be provided");
 
     InputStream in = null;
     try {

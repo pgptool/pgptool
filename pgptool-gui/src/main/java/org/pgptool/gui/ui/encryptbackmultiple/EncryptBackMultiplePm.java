@@ -34,11 +34,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import javax.swing.Action;
-import javax.swing.JOptionPane;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.app.MessageSeverity;
-import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.bkgoperation.Progress;
 import org.pgptool.gui.bkgoperation.ProgressHandler;
 import org.pgptool.gui.bkgoperation.UserRequestedCancellationException;
@@ -66,6 +64,7 @@ import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.EncryptBackAllIterationUsage;
 import org.pgptool.gui.usage.dto.EncryptBackAllUsage;
+import org.springframework.context.ApplicationContext;
 import org.summerb.utils.objectcopy.DeepCopy;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
@@ -82,6 +81,7 @@ public class EncryptBackMultiplePm
   private final MonitoringDecryptedFilesService monitoringDecryptedFilesService;
   private final MessageDigestFactory messageDigestFactory;
   private final UsageLogger usageLogger;
+  private final ApplicationContext applicationContext;
 
   private final Map<String, EncryptionDialogParameters> mapFileToEncryptionParams = new HashMap<>();
 
@@ -104,7 +104,8 @@ public class EncryptBackMultiplePm
       EncryptionService encryptionService,
       MonitoringDecryptedFilesService monitoringDecryptedFilesService,
       MessageDigestFactory messageDigestFactory,
-      UsageLogger usageLogger) {
+      UsageLogger usageLogger,
+      ApplicationContext applicationContext) {
     this.encryptionParamsStorage = encryptionParamsStorage;
     this.appProps = appProps;
     this.keyRingService = keyRingService;
@@ -112,6 +113,7 @@ public class EncryptBackMultiplePm
     this.monitoringDecryptedFilesService = monitoringDecryptedFilesService;
     this.messageDigestFactory = messageDigestFactory;
     this.usageLogger = usageLogger;
+    this.applicationContext = applicationContext;
   }
 
   @Override
@@ -258,9 +260,7 @@ public class EncryptBackMultiplePm
             ret = encryptFiles();
           } catch (Throwable t) {
             log.error("Encrypt all failed", t);
-            if (ret == null) {
-              ret = new BatchEncryptionResult();
-            }
+            ret = new BatchEncryptionResult();
             ret.errors.put("OPERATION", t);
           } finally {
             isDisableControls.setValueByOwner(false);
@@ -268,20 +268,10 @@ public class EncryptBackMultiplePm
               ret = new BatchEncryptionResult();
             }
 
-            // summary
-            String msg = buildSummaryMessage(ret);
-            int severity =
-                ret.errors.size() + ret.warnings.size() == 0
-                    ? JOptionPane.INFORMATION_MESSAGE
-                    : JOptionPane.WARNING_MESSAGE;
-            UiUtils.messageBox(
-                UiUtils.actionEvent(findRegisteredWindowIfAny(), "BkgOpEncryptBackAll"),
-                msg,
-                Messages.get("encrypBackMany.action"),
-                severity);
-
             // close window
             host.handleClose();
+
+            showResultsDialog(ret);
           }
         }
 
@@ -346,12 +336,12 @@ public class EncryptBackMultiplePm
               }
             }
           }
-          usageLogger.write(new EncryptBackAllCompletedUsage(ret));
+          usageLogger.write(new EncryptBackAllCompletedUsage());
           return ret;
         }
 
         private EncryptBackResult encryptBackOne(
-            boolean isShouldSkipIfissingRecipients,
+            boolean isShouldSkipIfMissingRecipients,
             String decryptedFile,
             File file,
             BatchEncryptionResult ret)
@@ -399,7 +389,7 @@ public class EncryptBackMultiplePm
 
             boolean isMissingRecipients =
                 recipients.size() < encryptionParams.getRecipientsKeysIds().size();
-            if (isMissingRecipients && isShouldSkipIfissingRecipients) {
+            if (isMissingRecipients && isShouldSkipIfMissingRecipients) {
               ret.warnings.put(decryptedFile, new GenericException("error.someKeysAreMissing"));
               return EncryptBackResult.MissingRecipients;
             }
@@ -511,6 +501,19 @@ public class EncryptBackMultiplePm
           }
         }
       };
+
+  private void showResultsDialog(BatchEncryptionResult ret) {
+    EncryptMultipleResultsDialogPm pm =
+        applicationContext.getBean(EncryptMultipleResultsDialogPm.class);
+    EncryptMultipleResultsDialogView view =
+        applicationContext.getBean(EncryptMultipleResultsDialogView.class);
+    pm.init(
+        UiUtils.actionEvent(findRegisteredWindowIfAny(), "ShowResultsOfEncryptMultiple"),
+        null,
+        ret);
+    view.setPm(pm);
+    view.renderTo(findRegisteredWindowIfAny());
+  }
 
   public ModelPropertyAccessor<Boolean> getIsDeleteSourceAfter() {
     return isDeleteSourceAfter.getModelPropertyAccessor();

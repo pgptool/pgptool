@@ -9,6 +9,7 @@ import javax.swing.JToggleButton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
+import ru.skarpushin.swingpm.tools.SwingPmSettings;
 
 public class ToggleButtonBinding implements Binding {
   private static final Logger log = LoggerFactory.getLogger(ToggleButtonBinding.class);
@@ -41,9 +42,34 @@ public class ToggleButtonBinding implements Binding {
     this.toggleButton = toggleButton;
 
     toggleButton.setSelected(booleanProperty.getValue());
-    toggleButton.setAction(action);
+    if (action == null) {
+      toggleButton.setText(SwingPmSettings.getMessages().get(getActionMessageCode()));
+    } else {
+      toggleButton.setAction(action);
+    }
     toggleButton.getModel().addItemListener(toggleButtonChangeListener);
     booleanProperty.addPropertyChangeListener(propertyChangeListener);
+  }
+
+  private String getActionMessageCode() {
+    // NOTE: Not sure that this is clean solution. Probably we should
+    // have separate ModelProperty which will explicitly provide check
+    // box title
+    String propName = booleanProperty.getPropertyName();
+
+    String alternatePropName = "term." + propName;
+    String actionTitle = SwingPmSettings.getMessages().get(alternatePropName);
+    if (!actionTitle.equals(alternatePropName)) {
+      return alternatePropName;
+    }
+
+    actionTitle = SwingPmSettings.getMessages().get(propName);
+    if (!actionTitle.equals(propName)) {
+      return propName;
+    }
+
+    log.error("No message code defined for property name: " + propName);
+    return propName;
   }
 
   @Override

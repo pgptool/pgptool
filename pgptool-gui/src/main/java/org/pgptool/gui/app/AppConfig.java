@@ -56,6 +56,8 @@ import org.pgptool.gui.ui.decrypttext.DecryptTextPm;
 import org.pgptool.gui.ui.decrypttext.DecryptTextView;
 import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultiplePm;
 import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleView;
+import org.pgptool.gui.ui.encryptbackmultiple.EncryptMultipleResultsDialogPm;
+import org.pgptool.gui.ui.encryptbackmultiple.EncryptMultipleResultsDialogView;
 import org.pgptool.gui.ui.encryptone.EncryptOnePm;
 import org.pgptool.gui.ui.encryptone.EncryptOneView;
 import org.pgptool.gui.ui.encrypttext.EncryptTextPm;
@@ -559,7 +561,8 @@ public class AppConfig {
       EncryptionService encryptionService,
       MonitoringDecryptedFilesService monitoringDecryptedFilesService,
       MessageDigestFactory messageDigestFactory,
-      UsageLogger usageLogger) {
+      UsageLogger usageLogger,
+      ApplicationContext applicationContext) {
     return new EncryptBackMultiplePm(
         encryptionParamsStorage,
         appProps,
@@ -567,7 +570,19 @@ public class AppConfig {
         encryptionService,
         monitoringDecryptedFilesService,
         messageDigestFactory,
-        usageLogger);
+        usageLogger,
+        applicationContext);
+  }
+
+  @Bean
+  @Scope(SCOPE_PROTOTYPE)
+  EncryptMultipleResultsDialogPm encryptMultipleResultsDialogPm() {
+    return new EncryptMultipleResultsDialogPm();
+  }
+
+  @Bean
+  EncryptMultipleResultsDialogView encryptMultipleResultsDialogView() {
+    return new EncryptMultipleResultsDialogView();
   }
 
   @Bean

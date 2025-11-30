@@ -86,33 +86,23 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
 import org.summerb.methodCapturers.PropertyNameResolverFactory;
 import org.summerb.validation.ValidationContextConfig;
 import org.summerb.validation.ValidationContextFactory;
 
 @Configuration
 @Import({ValidationContextConfig.class})
+@PropertySource("classpath:default.properties")
+@PropertySource(value = "file:pgptool-gui-devmode.properties", ignoreResourceNotFound = true)
+@ComponentScan(basePackages = "org.pgptool.gui")
 public class AppConfig {
-
-  // Properties and MessageSource
-  @Bean
-  static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
-    PropertySourcesPlaceholderConfigurer cfg = new PropertySourcesPlaceholderConfigurer();
-    cfg.setLocations(
-        new ClassPathResource("default.properties"),
-        new FileSystemResource("pgptool-gui-devmode.properties"));
-    // In Spring 6, use ignoreUnresolvablePlaceholders to allow missing props
-    cfg.setIgnoreUnresolvablePlaceholders(true);
-    return cfg;
-  }
 
   @Bean
   MessageSource messageSource() {
@@ -154,7 +144,7 @@ public class AppConfig {
   }
 
   @Bean
-  ConfigsBasePathResolverUserHomeImpl configsBasePathResolver(
+  ConfigsBasePathResolver configsBasePathResolver(
       @Value("${configuration.configFolderName}") String configFolderName) {
     ConfigsBasePathResolverUserHomeImpl r = new ConfigsBasePathResolverUserHomeImpl();
     r.setConfigFolderName(configFolderName);
@@ -162,68 +152,67 @@ public class AppConfig {
   }
 
   @Bean
-  ConfigRepositoryImpl configRepository(
+  ConfigRepository configRepository(
       ConfigsBasePathResolver configsBasePathResolver, EventBus eventBus) {
     return new ConfigRepositoryImpl(configsBasePathResolver, eventBus);
   }
 
   @Bean
-  ConfigPairsImpl appProps(ConfigRepository configRepository, EventBus eventBus) {
+  ConfigPairs appProps(ConfigRepository configRepository, EventBus eventBus) {
     return new ConfigPairsImpl(configRepository, eventBus, "app-props");
   }
 
   @Bean
-  ConfigPairsImpl encryptionParams(ConfigRepository configRepository, EventBus eventBus) {
+  ConfigPairs encryptionParams(ConfigRepository configRepository, EventBus eventBus) {
     return new ConfigPairsImpl(configRepository, eventBus, "encr-params");
   }
 
   @Bean
-  ConfigPairsImpl decryptionParams(ConfigRepository configRepository, EventBus eventBus) {
+  ConfigPairs decryptionParams(ConfigRepository configRepository, EventBus eventBus) {
     return new ConfigPairsImpl(configRepository, eventBus, "decr-params");
   }
 
   @Bean
-  ConfigPairsImpl monitoredDecrypted(ConfigRepository configRepository, EventBus eventBus) {
+  ConfigPairs monitoredDecrypted(ConfigRepository configRepository, EventBus eventBus) {
     return new ConfigPairsImpl(configRepository, eventBus, "mon-decr");
   }
 
   @Bean
-  ConfigPairsImpl hintsProps(ConfigRepository configRepository, EventBus eventBus) {
+  ConfigPairs hintsProps(ConfigRepository configRepository, EventBus eventBus) {
     return new ConfigPairsImpl(configRepository, eventBus, "hints");
   }
 
   @Bean
-  ConfigPairsMonitorsDependentImpl uiGeom(ConfigRepository configRepository, EventBus eventBus) {
+  ConfigPairs uiGeom(ConfigRepository configRepository, EventBus eventBus) {
     return new ConfigPairsMonitorsDependentImpl(
         new ConfigPairsImpl(configRepository, eventBus, "uipos"));
   }
 
   // Misc services
   @Bean
-  MessageDigestFactoryImpl messageDigestFactory() {
+  MessageDigestFactory messageDigestFactory() {
     return new MessageDigestFactoryImpl();
   }
 
   @Bean
-  DecryptedTempFolderImpl decryptedTempFolder(
+  DecryptedTempFolder decryptedTempFolder(
       ConfigsBasePathResolver configsBasePathResolver, ConfigPairs appProps, RootPm rootPm) {
     return new DecryptedTempFolderImpl(configsBasePathResolver, appProps, rootPm);
   }
 
   @Bean
-  EncryptionParamsStorageImpl encryptionParamsStorage(ConfigPairs encryptionParams) {
+  EncryptionParamsStorage encryptionParamsStorage(ConfigPairs encryptionParams) {
     return new EncryptionParamsStorageImpl(encryptionParams);
   }
 
   // PGP services
   @Bean
-  KeyFilesOperationsPgpImpl keyFilesOperations(
-      PropertyNameResolverFactory propertyNameResolverFactory) {
+  KeyFilesOperations keyFilesOperations(PropertyNameResolverFactory propertyNameResolverFactory) {
     return new KeyFilesOperationsPgpImpl(propertyNameResolverFactory);
   }
 
   @Bean
-  KeyRingServicePgpImpl keyRingService(
+  KeyRingService keyRingService(
       ConfigRepository configRepository,
       EventBus eventBus,
       KeyGeneratorService keyGeneratorService,
@@ -232,12 +221,12 @@ public class AppConfig {
   }
 
   @Bean
-  EncryptionServicePgpImpl encryptionService() {
+  EncryptionService encryptionService() {
     return new EncryptionServicePgpImpl();
   }
 
   @Bean
-  KeyGeneratorServicePgpImpl keyGeneratorService(
+  KeyGeneratorService keyGeneratorService(
       ExecutorService executorService,
       ValidationContextFactory validationContextFactory,
       @Value("${keygen.masterKey.algorithm}") String masterKeyAlgorithm,
@@ -271,8 +260,7 @@ public class AppConfig {
   }
 
   @Bean
-  MonitoringDecryptedFilesServiceImpl monitoringDecryptedFilesService(
-      ConfigPairs monitoredDecrypted) {
+  MonitoringDecryptedFilesService monitoringDecryptedFilesService(ConfigPairs monitoredDecrypted) {
     return new MonitoringDecryptedFilesServiceImpl(monitoredDecrypted);
   }
 
@@ -324,7 +312,7 @@ public class AppConfig {
   }
 
   @Bean
-  HintsCoordinatorImpl hintsCoordinator(EventBus eventBus) {
+  HintsCoordinator hintsCoordinator(EventBus eventBus) {
     return new HintsCoordinatorImpl(eventBus);
   }
 
@@ -431,7 +419,7 @@ public class AppConfig {
   }
 
   @Bean
-  KeysExporterUiImpl keysExporterUi(
+  KeysExporterUi keysExporterUi(
       KeyFilesOperations keyFilesOperations,
       EventBus eventBus,
       ConfigPairs appProps,
@@ -669,7 +657,7 @@ public class AppConfig {
   }
 
   @Bean
-  NewVersionCheckerGitHubImpl newVersionCheckerGitHub(
+  NewVersionChecker newVersionCheckerGitHub(
       @Value("${configuredVersion}") String configuredVersion) {
     NewVersionCheckerGitHubImpl b = new NewVersionCheckerGitHubImpl();
     b.setConfiguredVersion(configuredVersion);

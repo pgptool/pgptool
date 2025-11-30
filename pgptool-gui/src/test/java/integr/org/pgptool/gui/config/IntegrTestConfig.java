@@ -36,7 +36,6 @@ import org.summerb.methodCapturers.PropertyNameResolverFactory;
 import org.summerb.validation.ValidationContextConfig;
 import org.summerb.validation.ValidationContextFactory;
 
-// @TestConfiguration
 @Configuration
 @Import({ValidationContextConfig.class})
 public class IntegrTestConfig {
@@ -100,15 +99,12 @@ public class IntegrTestConfig {
   @Bean
   ConfigsBasePathResolver configsBasePathResolver(@Value("#{tempDirPath}") String tempDir) {
     // For tests use temp directory directly as configs base path
-    return new ConfigsBasePathResolver() {
-      @Override
-      public String getConfigsBasePath() {
-        java.io.File f = new java.io.File(tempDir);
-        if (!f.exists()) {
-          f.mkdirs();
-        }
-        return tempDir;
+    return () -> {
+      java.io.File f = new java.io.File(tempDir);
+      if (!f.exists()) {
+        f.mkdirs();
       }
+      return tempDir;
     };
   }
 

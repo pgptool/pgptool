@@ -77,7 +77,7 @@ public class EntryPoint {
       SwingPmSettings.setBindingContextFactory(new BindingContextFactoryImpl());
 
       // Startup application context
-      currentApplicationContext = new AnnotationConfigApplicationContext("org.pgptool.gui");
+      currentApplicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
       log.debug("App context loaded");
       LocaleContextHolder.setLocale(new Locale(System.getProperty("user.language")));
       currentApplicationContext.registerShutdownHook();

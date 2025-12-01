@@ -441,11 +441,8 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
     menuBar = new JMenuBar();
 
     JMenu menuFile = new JMenu(Messages.get("term.appTitle"));
-    menuFile.add(miChangeTempFolderForDecrypted = new JMenuItem());
-    menuFile.addSeparator();
     menuFile.add(miAbout = new JMenuItem());
     menuFile.add(miCheckForUpdates = new JMenuItem());
-    menuFile.add(miAutoCheckForUpdates = new JCheckBoxMenuItem());
     menuFile.addSeparator();
     menuFile.add(miFaq = new JMenuItem());
     menuFile.add(miHelp = new JMenuItem());
@@ -471,9 +468,14 @@ public class MainFrameView extends ViewBaseEx<MainFramePm> implements HasWindow 
     menuActions.addSeparator();
     menuActions.add(miEncryptBackAll = new JMenuItem());
 
+    JMenu menuSettings = new JMenu(Messages.get("term.settings"));
+    menuSettings.add(miChangeTempFolderForDecrypted = new JMenuItem());
+    menuSettings.add(miAutoCheckForUpdates = new JCheckBoxMenuItem());
+
     menuBar.add(menuFile);
     menuBar.add(menuKeyring);
     menuBar.add(menuActions);
+    menuBar.add(menuSettings);
   }
 
   @Override

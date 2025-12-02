@@ -89,7 +89,6 @@ public class CreateKeyPm extends PresentationModelBaseEx<CreateKeyHost, Void> {
     super.init(originAction, host, initParams);
     Preconditions.checkArgument(host != null);
     initModelProperties();
-    keyGeneratorService.expectNewKeyCreation();
     return true;
   }
 

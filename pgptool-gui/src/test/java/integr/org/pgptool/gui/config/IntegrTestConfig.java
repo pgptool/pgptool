@@ -2,7 +2,6 @@ package integr.org.pgptool.gui.config;
 
 import com.google.common.eventbus.EventBus;
 import integr.org.pgptool.gui.TestTools;
-import java.math.BigInteger;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.mockito.Mockito;
@@ -12,7 +11,6 @@ import org.pgptool.gui.config.api.ConfigsBasePathResolver;
 import org.pgptool.gui.config.impl.ConfigRepositoryImpl;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.configpairs.impl.ConfigPairsImpl;
-import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.implpgp.EncryptionServicePgpImpl;
 import org.pgptool.gui.encryption.implpgp.KeyFilesOperationsPgpImpl;
 import org.pgptool.gui.encryption.implpgp.KeyGeneratorServicePgpImpl;
@@ -122,11 +120,8 @@ public class IntegrTestConfig {
 
   @Bean
   KeyRingServicePgpImpl keyRingService(
-      ConfigRepository configRepository,
-      EventBus eventBus,
-      KeyGeneratorService keyGeneratorService,
-      UsageLogger usageLogger) {
-    return new KeyRingServicePgpImpl(configRepository, eventBus, keyGeneratorService, usageLogger);
+      ConfigRepository configRepository, EventBus eventBus, UsageLogger usageLogger) {
+    return new KeyRingServicePgpImpl(configRepository, eventBus, usageLogger);
   }
 
   @Bean
@@ -136,38 +131,9 @@ public class IntegrTestConfig {
 
   @Bean
   KeyGeneratorServicePgpImpl keyGeneratorService(
-      ExecutorService executorService,
-      ValidationContextFactory validationContextFactory,
-      @Value("${keygen.masterKey.algorithm}") String masterKeyAlgorithm,
-      @Value("${keygen.masterKey.purpose}") String masterKeyPurpose,
-      @Value("${keygen.masterKey.size}") int masterKeySize,
-      @Value("${keygen.masterKey.signer.signerAlgorithm}") String masterKeySignerAlgorithm,
-      @Value("${keygen.masterKey.signer.hashingAlgorithm}") String masterKeySignerHashingAlgorithm,
-      @Value("${keygen.secretKey.hashingAlgorithm}") String secretKeyHashingAlgorithm,
-      @Value("${keygen.secretKey.symmetricEncryptionAlgorithm}")
-          String secretKeyEncryptionAlgorithm,
-      @Value("${keygen.encryptionSubKey.algorithm}") String encryptionKeyAlgorithm,
-      @Value("${keygen.encryptionSubKey.purpose}") String encryptionKeyPurpose,
-      @Value("${keygen.encryptionSubKey.dhparams.primeModulus}") String primeModulusHex,
-      @Value("${keygen.encryptionSubKey.dhparams.baseGenerator}") String baseGeneratorStr) {
+      ValidationContextFactory validationContextFactory) {
 
-    BigInteger dhPrime = new BigInteger(primeModulusHex, 16);
-    BigInteger dhBase = new BigInteger(baseGeneratorStr, 16);
-
-    return new KeyGeneratorServicePgpImpl(
-        executorService,
-        validationContextFactory,
-        masterKeyAlgorithm,
-        masterKeyPurpose,
-        masterKeySize,
-        masterKeySignerAlgorithm,
-        masterKeySignerHashingAlgorithm,
-        secretKeyHashingAlgorithm,
-        secretKeyEncryptionAlgorithm,
-        encryptionKeyAlgorithm,
-        encryptionKeyPurpose,
-        dhPrime,
-        dhBase);
+    return new KeyGeneratorServicePgpImpl(validationContextFactory);
   }
 
   @Bean

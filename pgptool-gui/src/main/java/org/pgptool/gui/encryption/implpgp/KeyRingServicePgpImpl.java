@@ -26,8 +26,9 @@ import java.util.List;
 import java.util.Set;
 import org.apache.log4j.Logger;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.pgptool.gui.config.api.ConfigRepository;
-import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.MatchedKey;
@@ -44,7 +45,6 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 
   private final ConfigRepository configRepository;
   private final EventBus eventBus;
-  private final KeyGeneratorService keyGeneratorService;
   private final UsageLogger usageLogger;
 
   private PgpKeysRing pgpKeysRing;
@@ -57,13 +57,9 @@ public class KeyRingServicePgpImpl implements KeyRingService {
   public static synchronized void touch() {}
 
   public KeyRingServicePgpImpl(
-      ConfigRepository configRepository,
-      EventBus eventBus,
-      KeyGeneratorService keyGeneratorService,
-      UsageLogger usageLogger) {
+      ConfigRepository configRepository, EventBus eventBus, UsageLogger usageLogger) {
     this.configRepository = configRepository;
     this.eventBus = eventBus;
-    this.keyGeneratorService = keyGeneratorService;
     this.usageLogger = usageLogger;
   }
 
@@ -85,13 +81,6 @@ public class KeyRingServicePgpImpl implements KeyRingService {
       }
       pgpKeysRing = configRepository.readOrConstruct(PgpKeysRing.class);
 
-      // dumpKeys();
-      if (pgpKeysRing.isEmpty()) {
-        log.info(
-            "User doesn't seem to have private key pair. Proactively generating one so that key creation will happen faster");
-        keyGeneratorService.expectNewKeyCreation();
-      }
-
       if (!pgpKeysRing.isEmpty()) {
         usageLogger.write(new KeyRingUsage(pgpKeysRing));
       }
@@ -106,19 +95,105 @@ public class KeyRingServicePgpImpl implements KeyRingService {
 
     Key existingKey = findKeyById(key.getKeyInfo().getKeyId());
     if (existingKey != null) {
-      if (!existingKey.getKeyData().isCanBeUsedForDecryption()
-          && key.getKeyData().isCanBeUsedForDecryption()) {
+      boolean existingHasSecret = existingKey.getKeyData().isCanBeUsedForDecryption();
+      boolean newHasSecret = key.getKeyData().isCanBeUsedForDecryption();
+
+      if (!existingHasSecret && newHasSecret) {
+        // Prefer replacing a public-only entry with a full secret+public entry
         replaceKey(existingKey, key);
         return;
-      } else {
-        throw new RuntimeException("This key was already added");
       }
+
+      if (existingHasSecret && !newHasSecret) {
+        // Merge incoming public material (subkeys/sigs) into existing entry
+        if (tryMergePublicIntoExisting(existingKey, key)) {
+          configRepository.persist(pgpKeysRing);
+          eventBus.post(EntityChangedEvent.updated(existingKey));
+          return;
+        }
+        // If merge failed for some reason, fall through to duplicate error
+      }
+
+      throw new RuntimeException("This key was already added");
     }
 
     pgpKeysRing.add(key);
     configRepository.persist(pgpKeysRing);
     eventBus.post(EntityChangedEvent.added(key));
     usageLogger.write(new KeyAddedUsage(key.getKeyInfo().getKeyId()));
+  }
+
+  /**
+   * Merge public subkeys and signatures from a public-only key into an existing key that already
+   * holds secret material. This keeps secret keyring intact and updates/augments the public keyring
+   * so that encryption subkeys and certifications are up to date.
+   *
+   * @return true if merge was performed, false if nothing to merge or incompatible input
+   */
+  private boolean tryMergePublicIntoExisting(Key existingWithSecret, Key incomingPublicOnly) {
+    try {
+      KeyDataPgp existingKd = KeyDataPgp.get(existingWithSecret);
+      KeyDataPgp incomingKd = KeyDataPgp.get(incomingPublicOnly);
+      if (incomingKd == null || incomingKd.getPublicKeyRing() == null) {
+        return false;
+      }
+
+      // Ensure existing has a public ring to merge into. If missing, build it from the secret
+      // ring's public keys.
+      PGPPublicKeyRing currentPub = existingKd.getPublicKeyRing();
+      if (currentPub == null) {
+        if (existingKd.getSecretKeyRing() == null) {
+          return false; // should not happen for secret-holding entry
+        }
+        List<PGPPublicKey> pubs = new ArrayList<>();
+        for (Iterator<PGPPublicKey> it = existingKd.getSecretKeyRing().getPublicKeys();
+            it.hasNext(); ) {
+          pubs.add(it.next());
+        }
+        currentPub = new PGPPublicKeyRing(pubs);
+      }
+
+      PGPPublicKeyRing newPub = incomingKd.getPublicKeyRing();
+
+      // Merge policy: for each public key in new ring, if it does not exist in current ring,
+      // insert it; if it exists, replace it when incoming has more signatures or is newer.
+      for (Iterator<PGPPublicKey> it = newPub.getPublicKeys(); it.hasNext(); ) {
+        PGPPublicKey incomingPk = it.next();
+        PGPPublicKey curPk = currentPub.getPublicKey(incomingPk.getKeyID());
+        if (curPk == null) {
+          currentPub = PGPPublicKeyRing.insertPublicKey(currentPub, incomingPk);
+          continue;
+        }
+
+        int inSigCount = countSignaturesSafe(incomingPk);
+        int curSigCount = countSignaturesSafe(curPk);
+        boolean incomingIsNewer = incomingPk.getCreationTime().after(curPk.getCreationTime());
+        if (inSigCount > curSigCount || incomingIsNewer) {
+          currentPub = PGPPublicKeyRing.removePublicKey(currentPub, curPk);
+          currentPub = PGPPublicKeyRing.insertPublicKey(currentPub, incomingPk);
+        }
+      }
+
+      existingKd.setPublicKeyRing(currentPub);
+      return true;
+    } catch (Throwable t) {
+      log.warn("Failed to merge public-only key into existing secret key entry", t);
+      return false;
+    }
+  }
+
+  private static int countSignaturesSafe(PGPPublicKey k) {
+    try {
+      int c = 0;
+      for (Iterator<?> it = k.getSignatures(); it != null && it.hasNext(); ) {
+        it.next();
+        c++;
+      }
+      return c;
+    } catch (Throwable ex) {
+      log.warn("Failed to count signatures for key " + k.getKeyID(), ex);
+      return 0;
+    }
   }
 
   @Override

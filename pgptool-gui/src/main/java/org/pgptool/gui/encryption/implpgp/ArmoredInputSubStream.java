@@ -21,10 +21,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import org.pgptool.gui.app.GenericException;
 
 public class ArmoredInputSubStream extends InputStream {
-  private static final String CHARSET = "UTF-8";
   private static final String BLOCK_BEGIN = "-----BEGIN";
   private static final String BLOCK_END = "-----END";
 
@@ -46,7 +46,7 @@ public class ArmoredInputSubStream extends InputStream {
 
     try {
       if (reader == null) {
-        reader = new BufferedReader(new InputStreamReader(inputStream));
+        reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
       }
 
       while (true) {
@@ -56,7 +56,7 @@ public class ArmoredInputSubStream extends InputStream {
           return false;
         }
         pending += "\n";
-        pendingBytes = pending.getBytes(CHARSET);
+        pendingBytes = pending.getBytes(StandardCharsets.UTF_8);
         pendingPos = 0;
         lastLine = false;
         if (pending.startsWith(BLOCK_BEGIN)) {
@@ -86,7 +86,7 @@ public class ArmoredInputSubStream extends InputStream {
         return -1;
       }
       pending += "\n";
-      pendingBytes = pending.getBytes(CHARSET);
+      pendingBytes = pending.getBytes(StandardCharsets.UTF_8);
       pendingPos = 0;
       if (pending.startsWith(BLOCK_END)) {
         lastLine = true;

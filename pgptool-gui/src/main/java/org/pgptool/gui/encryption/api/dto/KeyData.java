@@ -29,5 +29,9 @@ public abstract class KeyData implements Serializable {
 
   public abstract boolean isHasAlternativeId(String alternativeId);
 
+  // IMPORTANT: Although this method is not used, I cannot delete it because I forgot to define
+  // serialVersionUID for KeyData itself, therefore java Serialization code will calculate
+  // KeyData::serialVersionUID on the fly and existing data will deemed invalid. So basically this
+  // class cannot be changed without proper data migration logic
   public abstract boolean isCanBeUsedForEncryption();
 }

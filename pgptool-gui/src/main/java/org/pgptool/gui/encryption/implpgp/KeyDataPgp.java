@@ -25,14 +25,19 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.math.BigInteger;
+import java.util.Date;
 import java.util.Iterator;
+import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Impl of key data which stores pgp key. For one key pair there will be "ring" of secret info and
@@ -42,6 +47,7 @@ import org.pgptool.gui.encryption.api.dto.KeyData;
  */
 public class KeyDataPgp extends KeyData {
   @Serial private static final long serialVersionUID = -8446784970537981225L;
+  private static final Logger log = LoggerFactory.getLogger(KeyDataPgp.class);
 
   private transient PGPSecretKeyRing secretKeyRing;
   private transient PGPPublicKeyRing publicKeyRing;
@@ -67,7 +73,8 @@ public class KeyDataPgp extends KeyData {
 
   @Override
   public boolean isCanBeUsedForEncryption() {
-    return findKeyForEncryption() != null;
+    throw new IllegalStateException(
+        "This method is not used. It is only kept to avoid data loss issues related to Java objects (de)serialization logic. See KeyData javadoc");
   }
 
   public PGPPublicKey findKeyForEncryption() {
@@ -81,13 +88,87 @@ public class KeyDataPgp extends KeyData {
   }
 
   private static PGPPublicKey findKeyForEncryption(Iterator<PGPPublicKey> publicKeys) {
-    for (Iterator<PGPPublicKey> iter = publicKeys; iter.hasNext(); ) {
-      PGPPublicKey pk = iter.next();
-      if (pk.isEncryptionKey()) {
-        return pk;
+    // Prefer the most recent non-expired encryption-capable subkey that explicitly advertises
+    // encryption flags (ENCRYPT_COMMS or ENCRYPT_STORAGE). If none found, fall back to the first
+    // encryption-capable key (original behavior).
+
+    PGPPublicKey firstEncryptionCapable = null;
+
+    PGPPublicKey bestFlaggedNonExpired = null;
+    long bestFlaggedNonExpiredExpiresAt = 0;
+
+    long now = System.currentTimeMillis();
+    while (publicKeys.hasNext()) {
+      PGPPublicKey pk = publicKeys.next();
+      if (!pk.isEncryptionKey()) {
+        continue;
+      }
+      // Skip expired keys when selecting the preferred candidate
+      long expiresAt = getExpiresAt(pk);
+      if (expiresAt < now) {
+        continue;
+      }
+
+      // Remember the first encryption-capable key to preserve legacy fallback behavior
+      if (firstEncryptionCapable == null) {
+        firstEncryptionCapable = pk;
+      }
+
+      // Consider only keys that explicitly advertise encryption usage
+      if (!hasEncryptionKeyFlags(pk)) {
+        continue;
+      }
+
+      if (bestFlaggedNonExpired == null || bestFlaggedNonExpiredExpiresAt < expiresAt) {
+        bestFlaggedNonExpired = pk;
+        bestFlaggedNonExpiredExpiresAt = expiresAt;
       }
     }
-    return null;
+
+    if (bestFlaggedNonExpired != null) {
+      return bestFlaggedNonExpired;
+    }
+    // Fallback: any encryption-capable key (original behavior)
+    return firstEncryptionCapable;
+  }
+
+  private static boolean hasEncryptionKeyFlags(PGPPublicKey pk) {
+    try {
+      Iterator<PGPSignature> sigs = pk.getSignatures();
+      while (sigs.hasNext()) {
+        PGPSignature sig = sigs.next();
+        // Look into hashed subpackets for KeyFlags; if not present, continue
+        if (sig.getHashedSubPackets() == null) {
+          continue;
+        }
+        int flags = sig.getHashedSubPackets().getKeyFlags();
+        if (flags == 0) {
+          continue;
+        }
+        if ((flags & (KeyFlags.ENCRYPT_COMMS | KeyFlags.ENCRYPT_STORAGE)) != 0) {
+          return true;
+        }
+      }
+    } catch (Throwable ignore) {
+      // Be conservative: if we cannot read flags, treat as not explicitly flagged
+    }
+    return false;
+  }
+
+  private static long getExpiresAt(PGPPublicKey key) {
+    try {
+      long validSeconds = key.getValidSeconds();
+      if (validSeconds <= 0) {
+        return Long.MAX_VALUE; // no expiration set
+      }
+      Date created = key.getCreationTime();
+      return created.getTime() + (validSeconds * 1000L);
+    } catch (Throwable exc) {
+      log.warn("Failed to determine expiry for key {}", key.getKeyID(), exc);
+      // If anything goes wrong determining expiry, be conservative and treat as not expired to
+      // avoid rejecting usable keys.
+      return Long.MAX_VALUE;
+    }
   }
 
   @Serial

@@ -202,7 +202,7 @@ public class EntryPoint {
   }
 
   private static void reportAppInitFailureMessageToUser(Window window, Throwable t) {
-    String versionInfo = NewVersionCheckerGitHubImpl.getVerisonsInfo();
+    String versionInfo = NewVersionCheckerGitHubImpl.getVersionInfo();
     String msg = ConsoleExceptionUtils.getAllMessages(t);
     msg += "\r\n" + versionInfo;
     UiUtils.messageBox(
@@ -216,7 +216,7 @@ public class EntryPoint {
       ActionEvent originAction, String errorMessageCode, Throwable cause, Object... messageArgs) {
     log.error(errorMessageCode, cause);
     GenericException exc = new GenericException(errorMessageCode, cause, messageArgs);
-    String versionInfo = NewVersionCheckerGitHubImpl.getVerisonsInfo();
+    String versionInfo = NewVersionCheckerGitHubImpl.getVersionInfo();
     String msgs = ConsoleExceptionUtils.getAllMessages(exc);
     msgs += "\r\n" + versionInfo;
     UiUtils.messageBox(

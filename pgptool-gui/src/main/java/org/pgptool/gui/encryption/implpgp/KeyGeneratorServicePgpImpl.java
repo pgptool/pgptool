@@ -19,26 +19,27 @@ package org.pgptool.gui.encryption.implpgp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import java.math.BigInteger;
+import java.lang.reflect.Field;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.spec.RSAKeyGenParameterSpec;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import javax.crypto.spec.DHParameterSpec;
 import org.apache.log4j.Logger;
+import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
+import org.bouncycastle.bcpg.PublicKeyPacket;
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
+import org.bouncycastle.bcpg.sig.Features;
+import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
@@ -60,57 +61,10 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
   private static final Logger log = Logger.getLogger(KeyGeneratorServicePgpImpl.class);
   private static final String PROVIDER = "BC";
 
-  private final ExecutorService executorService;
   private final ValidationContextFactory validationContextFactory;
 
-  // Master key params
-  private final String masterKeyAlgorithm;
-  private final String masterKeyPurpose;
-  private final int masterKeySize;
-  private final String masterKeySignerAlgorithm;
-  private final String masterKeySignerHashingAlgorithm;
-
-  // Secret Key encryption
-  private final String secretKeyHashingAlgorithm;
-  private final String secretKeyEncryptionAlgorithm;
-
-  // Encryption key params
-  private final String encryptionKeyAlgorithm;
-  private final String encryptionKeyPurpose;
-  private final BigInteger dhParamsPrimeModulus;
-  private final BigInteger dhParamsBaseGenerator;
-
-  private KeyPairParams masterKeyParameters;
-  private final Map<KeyPairParams, Future<KeyPair>> pregeneratedKeyPairs =
-      new ConcurrentHashMap<>();
-
-  public KeyGeneratorServicePgpImpl(
-      ExecutorService executorService,
-      ValidationContextFactory validationContextFactory,
-      String masterKeyAlgorithm,
-      String masterKeyPurpose,
-      int masterKeySize,
-      String masterKeySignerAlgorithm,
-      String masterKeySignerHashingAlgorithm,
-      String secretKeyHashingAlgorithm,
-      String secretKeyEncryptionAlgorithm,
-      String encryptionKeyAlgorithm,
-      String encryptionKeyPurpose,
-      BigInteger dhParamsPrimeModulus,
-      BigInteger dhParamsBaseGenerator) {
-    this.executorService = executorService;
+  public KeyGeneratorServicePgpImpl(ValidationContextFactory validationContextFactory) {
     this.validationContextFactory = validationContextFactory;
-    this.masterKeyAlgorithm = masterKeyAlgorithm;
-    this.masterKeyPurpose = masterKeyPurpose;
-    this.masterKeySize = masterKeySize;
-    this.masterKeySignerAlgorithm = masterKeySignerAlgorithm;
-    this.masterKeySignerHashingAlgorithm = masterKeySignerHashingAlgorithm;
-    this.secretKeyHashingAlgorithm = secretKeyHashingAlgorithm;
-    this.secretKeyEncryptionAlgorithm = secretKeyEncryptionAlgorithm;
-    this.encryptionKeyAlgorithm = encryptionKeyAlgorithm;
-    this.encryptionKeyPurpose = encryptionKeyPurpose;
-    this.dhParamsPrimeModulus = dhParamsPrimeModulus;
-    this.dhParamsBaseGenerator = dhParamsBaseGenerator;
     KeyRingServicePgpImpl.touch();
   }
 
@@ -120,94 +74,148 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
       Preconditions.checkArgument(params != null, "params must not be null");
       assertParamsValid(params, emptyPassphraseConsent);
 
-      // Create Master key
-      KeyPair masterKey = getOrGenerateKeyPair(getMasterKeyParameters());
-      PGPKeyPair masterKeyBc =
-          new JcaPGPKeyPair(algorithmNameToTag(masterKeyPurpose), masterKey, new Date());
-      BcPGPContentSignerBuilder keySignerBuilderBc =
-          new BcPGPContentSignerBuilder(
-              algorithmNameToTag(masterKeyPurpose),
-              hashAlgorithmNameToTag(masterKeySignerHashingAlgorithm));
+      // 1) Create JCA keypairs
+      KeyPairGenerator kpgEd = KeyPairGenerator.getInstance("Ed25519", PROVIDER);
+      KeyPairGenerator kpgX = KeyPairGenerator.getInstance("X25519", PROVIDER);
 
-      // Setup seret key encryption
-      PGPDigestCalculator digestCalc = buildDigestCalc();
-      PBESecretKeyEncryptor keyEncryptorBc =
-          buildKeyEncryptor(digestCalc, params.getPassphrase(), emptyPassphraseConsent);
+      log.debug("Generating master keypair");
+      KeyPair kpPrimary = kpgEd.generateKeyPair(); // primary (certify)
+      log.debug("Generating signing subkeypair");
+      KeyPair kpSign = kpgEd.generateKeyPair(); // signing subkey
+      log.debug("Generating encryption subkeypair");
+      KeyPair kpEnc = kpgX.generateKeyPair(); // encryption subkey (ECDH)
 
-      // Key pair generator
-      String userName = params.getFullName() + " <" + params.getEmail() + ">";
-      PGPKeyRingGenerator keyPairGeneratorBc =
+      Date now = new Date();
+
+      // 2) Wrap as PGPKeyPair with algorithm tags
+      log.debug("Wrapping primary keypair as PGPKeyPair");
+      // NOTE: I'm using deprecated PublicKeyAlgorithmTags.EDDSA instead of
+      // PublicKeyAlgorithmTags.Ed25519 because i.e. GPG would not recognize algorithmId 27
+      PGPKeyPair pkpPrimary =
+          new JcaPGPKeyPair(
+              PublicKeyPacket.VERSION_4, PublicKeyAlgorithmTags.EDDSA, kpPrimary, now);
+      log.debug("Wrapping signing subkeypair as PGPKeyPair");
+      PGPKeyPair pkpSign =
+          new JcaPGPKeyPair(PublicKeyPacket.VERSION_4, PublicKeyAlgorithmTags.EDDSA, kpSign, now);
+      log.debug("Wrapping encryption subkeypair as PGPKeyPair");
+      PGPKeyPair pkpEnc =
+          new JcaPGPKeyPair(PublicKeyPacket.VERSION_4, PublicKeyAlgorithmTags.ECDH, kpEnc, now);
+
+      // 3) Digest calculators
+      PGPDigestCalculator sha256 = buildDigestCalculatorForSecretKeyEncryption();
+
+      // 4) Protect secret keys with AES-256 + strong S2K
+      PBESecretKeyEncryptor secKeyEncryptor =
+          buildKeyEncryptor(params.getPassphrase(), emptyPassphraseConsent, sha256);
+
+      // 5) Content signer for self-sigs (use primary’s algorithm + hash)
+      BcPGPContentSignerBuilder signerBuilder =
+          new BcPGPContentSignerBuilder(PublicKeyAlgorithmTags.EDDSA, HashAlgorithmTags.SHA256);
+
+      // 6) Primary UID self-signature subpackets (preferences)
+      log.debug("Building primary self-signature subpackets");
+      PGPSignatureSubpacketGenerator primaryHashed = new PGPSignatureSubpacketGenerator();
+      primaryHashed.setKeyFlags(false, KeyFlags.CERTIFY_OTHER);
+      primaryHashed.setPreferredSymmetricAlgorithms(
+          false,
+          new int[] {
+            SymmetricKeyAlgorithmTags.AES_256,
+            SymmetricKeyAlgorithmTags.AES_192,
+            SymmetricKeyAlgorithmTags.AES_128
+          });
+      primaryHashed.setPreferredHashAlgorithms(
+          false,
+          new int[] {
+            HashAlgorithmTags.SHA256,
+            HashAlgorithmTags.SHA512,
+            HashAlgorithmTags.SHA384,
+            HashAlgorithmTags.SHA224
+          });
+      primaryHashed.setPreferredCompressionAlgorithms(
+          false,
+          new int[] {
+            CompressionAlgorithmTags.ZLIB,
+            CompressionAlgorithmTags.BZIP2,
+            CompressionAlgorithmTags.ZIP
+          });
+      // Features (MDC; AEAD if you know peers support it)
+      primaryHashed.setFeature(false, Features.FEATURE_MODIFICATION_DETECTION);
+
+      log.debug("Generating PGPSignatureSubpacketVector");
+      PGPSignatureSubpacketVector primaryHashedV = primaryHashed.generate();
+
+      // 7) Create key ring generator
+      log.debug("Building PGPKeyRingGenerator");
+      PGPKeyRingGenerator krg =
           new PGPKeyRingGenerator(
               PGPSignature.POSITIVE_CERTIFICATION,
-              masterKeyBc,
-              userName,
-              digestCalc,
-              null,
-              null,
-              keySignerBuilderBc,
-              keyEncryptorBc);
+              pkpPrimary,
+              buildUserId(params),
+              new BcPGPDigestCalculatorProvider().get(HashAlgorithmTags.SHA1),
+              primaryHashedV,
+              null, // unhashed subpackets
+              signerBuilder,
+              secKeyEncryptor);
 
-      // Add Sub-key for encryption
-      KeyPairGenerator keyPairGenerator =
-          KeyPairGenerator.getInstance(encryptionKeyAlgorithm, PROVIDER);
-      if ("ELGAMAL".equals(encryptionKeyAlgorithm)) {
-        keyPairGenerator.initialize(
-            new DHParameterSpec(dhParamsPrimeModulus, dhParamsBaseGenerator));
-      } else if ("RSA".equals(encryptionKeyAlgorithm)) {
-        // Re-using master key size.
-        keyPairGenerator.initialize(
-            new RSAKeyGenParameterSpec(masterKeySize, RSAKeyGenParameterSpec.F4));
-      } else {
-        throw new IllegalArgumentException(
-            "Hanlding of parameter creation for " + encryptionKeyAlgorithm + " is not implemented");
-      }
-      KeyPair encryptionSubKey = keyPairGenerator.generateKeyPair();
-      PGPKeyPair encryptionSubKeyBc =
-          new JcaPGPKeyPair(algorithmNameToTag(encryptionKeyPurpose), encryptionSubKey, new Date());
-      keyPairGeneratorBc.addSubKey(encryptionSubKeyBc);
+      // 8) Add signing subkey with flags
+      log.debug("Adding signing subkey");
+      PGPSignatureSubpacketGenerator signHashed = new PGPSignatureSubpacketGenerator();
+      signHashed.setKeyFlags(false, KeyFlags.SIGN_DATA);
+      // Optional: set subkey expiration, e.g., 1 year (in seconds)
+      // signHashed.setKeyExpirationTime(false, 365L * 24 * 60 * 60);
+      krg.addSubKey(pkpSign, signHashed.generate(), null);
 
-      // TBD-191: Also add a sub-key for signing
-      // KeyPair signatureSubKey = keyPairGenerator.generateKeyPair();
-      // PGPKeyPair signatureSubKeyBc = new
-      // TBD-191: RSA_SIGN must not be hardcoded
-      // JcaPGPKeyPair(algorithmNameToTag("RSA_SIGN"), signatureSubKey,
-      // new Date());
-      // keyPairGeneratorBc.addSubKey(signatureSubKeyBc);
+      // 9) Add encryption subkey with flags
+      log.debug("Adding encryption subkey");
+      PGPSignatureSubpacketGenerator encHashed = new PGPSignatureSubpacketGenerator();
+      encHashed.setKeyFlags(false, KeyFlags.ENCRYPT_COMMS | KeyFlags.ENCRYPT_STORAGE);
+      // Optional expiration here too
+      krg.addSubKey(pkpEnc, encHashed.generate(), null);
 
-      // building ret
-      return buildKey(keyPairGeneratorBc);
+      // 10) Produce rings
+      log.debug("Generating key ring");
+      return buildKey(krg);
     } catch (Throwable t) {
       Throwables.throwIfInstanceOf(t, ValidationException.class);
       throw new RuntimeException("Failed to generate key", t);
     }
   }
 
-  protected PGPDigestCalculator buildDigestCalc() throws PGPException {
-    return new BcPGPDigestCalculatorProvider()
-        .get(hashAlgorithmNameToTag(secretKeyHashingAlgorithm));
-  }
-
-  private char[] toCharArray(String optionalPasshprase) {
-    if (optionalPasshprase == null) {
-      return new char[0];
+  private static PBESecretKeyEncryptor buildKeyEncryptor(
+      String passphrase, boolean emptyPassphraseConsent, PGPDigestCalculator sha256) {
+    PBESecretKeyEncryptor secKeyEncryptor;
+    if (StringUtils.hasText(passphrase)) {
+      log.debug("Building secret key encryptor");
+      int s2kCount =
+          0xE0; // BouncyCastle encodes this as an exponent; higher is harder. Tune for ~100ms.
+      BcPBESecretKeyEncryptorBuilder secKeyEncBuilder =
+          new BcPBESecretKeyEncryptorBuilder(SymmetricKeyAlgorithmTags.AES_256, sha256, s2kCount);
+      secKeyEncryptor = secKeyEncBuilder.build(passphrase.toCharArray());
+    } else if (emptyPassphraseConsent) {
+      // Build an explicit NULL-algorithm encryptor with empty passphrase to keep
+      // secret key material format complete and compatible with GnuPG import.
+      log.debug("Building NULL secret key encryptor for empty passphrase");
+      BcPBESecretKeyEncryptorBuilder secKeyEncBuilder =
+          new BcPBESecretKeyEncryptorBuilder(SymmetricKeyAlgorithmTags.NULL, sha256);
+      secKeyEncryptor = secKeyEncBuilder.build(new char[0]);
+    } else {
+      throw new IllegalStateException(
+          "Illegal state. Either passphrase or emptyPassphraseConsent must be set. Both are null.");
     }
-    return optionalPasshprase.toCharArray();
+    return secKeyEncryptor;
   }
 
-  private String getSecretKeyEncryptionAlgorithmForOptionalPassphrase(
-      boolean emptyPassphraseConsent) {
-    if (emptyPassphraseConsent) {
-      return /* SymmetricKeyAlgorithmTags. */ "NULL";
+  private static PGPDigestCalculator buildDigestCalculatorForSecretKeyEncryption()
+      throws PGPException {
+    return new BcPGPDigestCalculatorProvider().get(HashAlgorithmTags.SHA256);
+  }
+
+  private static String buildUserId(CreateKeyParams params) {
+    if (StringUtils.hasText(params.getEmail())) {
+      return params.getFullName() + " <" + params.getEmail() + ">";
+    } else {
+      return params.getFullName();
     }
-    return secretKeyEncryptionAlgorithm;
-  }
-
-  protected static int symmetricKeyAlgorithmNameToTag(String algorithmName) {
-    return getStaticFieldValue(algorithmName, SymmetricKeyAlgorithmTags.class);
-  }
-
-  protected static int hashAlgorithmNameToTag(String algorithmName) {
-    return getStaticFieldValue(algorithmName, HashAlgorithmTags.class);
   }
 
   protected static int algorithmNameToTag(String algorithmName) {
@@ -226,37 +234,30 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
     }
   }
 
+  public static String findStaticFieldNameByIntValue(int value, Class<?> clazz) {
+    return Arrays.stream(clazz.getFields())
+        .filter(x -> x.getType() == int.class)
+        .filter(
+            x -> {
+              try {
+                return x.getInt(null) == value;
+              } catch (IllegalAccessException e) {
+                return false;
+              }
+            })
+        .map(Field::getName)
+        .findFirst()
+        .orElse(null);
+  }
+
   @SuppressWarnings("deprecation")
   private Key buildKey(PGPKeyRingGenerator keyRingGen) throws PGPException {
     Key ret = new Key();
     KeyDataPgp keyData = new KeyDataPgp();
-    keyData.setPublicKeyRing(keyRingGen.generatePublicKeyRing());
     keyData.setSecretKeyRing(keyRingGen.generateSecretKeyRing());
+    keyData.setPublicKeyRing(keyRingGen.generatePublicKeyRing());
     ret.setKeyData(keyData);
     ret.setKeyInfo(KeyFilesOperationsPgpImpl.buildKeyInfoFromSecret(keyData.getSecretKeyRing()));
-    return ret;
-  }
-
-  /**
-   * NOTE: It feels like a little over-engineered thing since generation takes like 1 second not
-   * that long as it was advertised. So perhaps we might decide to get rid of it and run it on
-   * demand
-   *
-   * @param params
-   * @return
-   * @throws Exception
-   */
-  private KeyPair getOrGenerateKeyPair(KeyPairParams params) throws Exception {
-    log.debug("Checking if we have pregenerated master KeyPair");
-    Future<KeyPair> future = pregeneratedKeyPairs.remove(params);
-    if (future == null) {
-      log.debug(
-          "Creating master KeyPair via directly calling ProactivelyGenerateMasterKeyPair.generateKeyPair");
-      return ProactivelyGenerateMasterKeyPair.generateKeyPair(params);
-    }
-    log.debug("Obtaining master KeyPair via pregenerated future");
-    KeyPair ret = future.get();
-    log.debug("master KeyPair obtained");
     return ret;
   }
 
@@ -281,27 +282,15 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
   }
 
   @Override
-  public void expectNewKeyCreation() {
-    KeyPairParams params = getMasterKeyParameters();
-    if (pregeneratedKeyPairs.containsKey(params)) {
-      // there is already a pre-generated key params
-      return;
-    }
-    log.info("Proactively generating master key in a background to improve user experience");
-    Future<KeyPair> future = executorService.submit(new ProactivelyGenerateMasterKeyPair(params));
-    pregeneratedKeyPairs.put(params, future);
-  }
-
-  @Override
   public Key changeKeyPassword(Key key, ChangePasswordParams params, boolean emptyPasswordConsent) {
     assertParamsValid(params, emptyPasswordConsent);
 
     try {
-      PGPDigestCalculator digestCalc = buildDigestCalc();
+      PGPDigestCalculator digestCalc = buildDigestCalculatorForSecretKeyEncryption();
       PBESecretKeyDecryptor decryptor =
           EncryptionServicePgpImpl.buildKeyDecryptor(params.getPassphrase());
       PBESecretKeyEncryptor encryptor =
-          buildKeyEncryptor(digestCalc, params.getNewPassphrase(), emptyPasswordConsent);
+          buildKeyEncryptor(params.getNewPassphrase(), emptyPasswordConsent, digestCalc);
 
       Key ret = DeepCopy.copyOrPopagateExcIfAny(key);
       KeyDataPgp keyData = (KeyDataPgp) ret.getKeyData();
@@ -317,16 +306,6 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
     }
   }
 
-  protected PBESecretKeyEncryptor buildKeyEncryptor(
-      PGPDigestCalculator digestCalc, String password, boolean emptyPasswordConsent) {
-    BcPBESecretKeyEncryptorBuilder encryptorBuilderBC =
-        new BcPBESecretKeyEncryptorBuilder(
-            symmetricKeyAlgorithmNameToTag(
-                getSecretKeyEncryptionAlgorithmForOptionalPassphrase(emptyPasswordConsent)),
-            digestCalc);
-    return encryptorBuilderBC.build(toCharArray(password));
-  }
-
   private void assertParamsValid(ChangePasswordParams params, boolean emptyPassphraseConsent) {
     ValidationContext<ChangePasswordParams> ctx = validationContextFactory.buildFor(params);
 
@@ -335,81 +314,9 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
     }
     if (StringUtils.hasText(params.getNewPassphrase())
         && ctx.hasText(ChangePasswordParams::getNewPassphraseAgain)) {
-      ctx.eq(ChangePasswordParams::getNewPassphraseAgain, params.getPassphrase());
+      ctx.eq(ChangePasswordParams::getNewPassphraseAgain, params.getNewPassphrase());
     }
 
     ctx.throwIfHasErrors();
-  }
-
-  public KeyPairParams getMasterKeyParameters() {
-    if (masterKeyParameters == null) {
-      masterKeyParameters = new KeyPairParams(masterKeyAlgorithm, PROVIDER, masterKeySize);
-    }
-    return masterKeyParameters;
-  }
-
-  public static class KeyPairParams {
-    final String algorithm;
-    final String provider;
-    final int keysize;
-
-    public KeyPairParams(String algorithm, String provider, int keysize) {
-      this.algorithm = algorithm;
-      this.provider = provider;
-      this.keysize = keysize;
-    }
-
-    @Override
-    public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + ((algorithm == null) ? 0 : algorithm.hashCode());
-      result = prime * result + keysize;
-      result = prime * result + ((provider == null) ? 0 : provider.hashCode());
-      return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null) {
-        return false;
-      }
-      if (getClass() != obj.getClass()) {
-        return false;
-      }
-      KeyPairParams other = (KeyPairParams) obj;
-      if (algorithm == null) {
-        if (other.algorithm != null) {
-          return false;
-        }
-      } else if (!algorithm.equals(other.algorithm)) {
-        return false;
-      }
-      if (keysize != other.keysize) {
-        return false;
-      }
-      if (provider == null) {
-        if (other.provider != null) {
-          return false;
-        }
-      } else if (!provider.equals(other.provider)) {
-        return false;
-      }
-      return true;
-    }
-
-    @Override
-    public String toString() {
-      return "KeyPairParams [algorithm="
-          + algorithm
-          + ", PROVIDER="
-          + provider
-          + ", keysize="
-          + keysize
-          + "]";
-    }
   }
 }

@@ -17,7 +17,6 @@
  ******************************************************************************/
 package org.pgptool.gui.ui.tools.browsefs;
 
-import com.google.common.base.Preconditions;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import javax.swing.JFileChooser;
@@ -70,7 +69,8 @@ public class SaveFileChooserDialog {
       }
 
       File retFileWithExt = new File(enforceExtension(retFile.getAbsolutePath(), ofd));
-      if (retFileWithExt.exists()) {
+      //noinspection AssignmentUsedAsCondition: This is intentional!
+      if (userWantsToSelectOtherFile = retFileWithExt.exists()) {
         if (UiUtils.confirmRegular(
             originEvent,
             "confirm.overWriteExistingFile",
@@ -80,8 +80,6 @@ public class SaveFileChooserDialog {
       }
     }
 
-    Preconditions.checkState(
-        retFile != null, "Useless check but it makes Eclipse NPE checker happier");
     String ret = retFile.getAbsolutePath();
     ret = onDialogClosed(ret, ofd);
     return ret;

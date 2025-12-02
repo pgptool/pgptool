@@ -72,7 +72,7 @@ public class EncryptTextView extends DialogViewBaseEx<EncryptTextPm> {
 
   private Component buildControllsPanel() {
     SgLayout sgl = new SgLayout(3, 3, spacing(1), 2);
-    sgl.setColSize(0, spacing(20), SgLayout.SIZE_TYPE_CONSTANT);
+    sgl.setColSize(0, spacing(30), SgLayout.SIZE_TYPE_CONSTANT);
     sgl.setColSize(1, spacing(50), SgLayout.SIZE_TYPE_WEIGHTED);
     sgl.setColSize(2, spacing(50), SgLayout.SIZE_TYPE_WEIGHTED);
     sgl.setRowSize(1, 100, SgLayout.SIZE_TYPE_WEIGHTED);

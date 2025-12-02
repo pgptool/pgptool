@@ -23,9 +23,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -33,15 +33,21 @@ import java.util.List;
 import java.util.Stack;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.apache.log4j.Logger;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
+import org.bouncycastle.bcpg.ECDHPublicBCPGKey;
+import org.bouncycastle.bcpg.ECDSAPublicBCPGKey;
+import org.bouncycastle.bcpg.EdDSAPublicBCPGKey;
+import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
+import org.bouncycastle.bcpg.PublicKeyPacket;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
@@ -53,6 +59,8 @@ import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.encryption.api.dto.KeyInfo;
 import org.pgptool.gui.encryption.api.dto.KeyTypeEnum;
 import org.pgptool.gui.tools.IoStreamUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.summerb.methodCapturers.PropertyNameResolver;
 import org.summerb.methodCapturers.PropertyNameResolverFactory;
@@ -61,7 +69,7 @@ import org.summerb.validation.ValidationError;
 import org.summerb.validation.ValidationException;
 
 public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
-  private static final Logger log = Logger.getLogger(KeyFilesOperationsPgpImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(KeyFilesOperationsPgpImpl.class);
 
   /**
    * Considering this as not a violation to DI since I don't see scenarios when we'll need to change
@@ -85,17 +93,75 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
       if (file.getName().endsWith(".asc")) {
         ArmoredInputSubStream subStream = new ArmoredInputSubStream(fis);
         while (subStream.hasNextSubStream()) {
-          ret.add(readFromStream(subStream));
+          // A single armored block may contain a ring or a collection; parse all within it
+          ret.addAll(readAllKeysFromStream(subStream));
         }
         Preconditions.checkArgument(!ret.isEmpty(), "No keys found");
         ret = combinePrivateAndPublicIfAny(ret);
       } else {
-        ret.add(readFromStream(fis));
+        // Parse entire stream and return all key rings found (public and/or secret),
+        // then combine matching public/secret rings by key id.
+        ret = readAllKeysFromStream(fis);
+        Preconditions.checkArgument(!ret.isEmpty(), "No keys found");
+        ret = combinePrivateAndPublicIfAny(ret);
       }
       return ret;
     } catch (Throwable t) {
       throw new RuntimeException("Can't read key file", t);
     }
+  }
+
+  /**
+   * Read all key rings contained in the provided stream (binary or armored-decoded) and return a
+   * list of Key objects, one per ring encountered. Unknown sections are skipped.
+   */
+  private List<Key> readAllKeysFromStream(InputStream stream) {
+    List<Key> ret = new ArrayList<>();
+    try {
+      PGPObjectFactory factory =
+          new PGPObjectFactory(PGPUtil.getDecoderStream(stream), fingerprintCalculator);
+      for (Object section : factory) {
+        if (section instanceof PGPSecretKeyRing) {
+          ret.add(readPGPSecretKeyRing((PGPSecretKeyRing) section));
+        } else if (section instanceof PGPSecretKeyRingCollection coll) {
+          for (Iterator<PGPSecretKeyRing> it = coll.getKeyRings(); it.hasNext(); ) {
+            ret.add(readPGPSecretKeyRing(it.next()));
+          }
+        } else if (section instanceof PGPPublicKeyRing) {
+          ret.add(readPGPPublicKeyRing((PGPPublicKeyRing) section));
+        } else if (section instanceof PGPPublicKeyRingCollection coll) {
+          for (Iterator<PGPPublicKeyRing> it = coll.getKeyRings(); it.hasNext(); ) {
+            ret.add(readPGPPublicKeyRing(it.next()));
+          }
+        } else {
+          // Ignore other packet types during import
+          log.debug("Skipping non-key section during import: " + section);
+        }
+      }
+    } catch (Throwable t) {
+      throw new RuntimeException("Error happened while parsing keys", t);
+    }
+    return ret;
+  }
+
+  private Key readPGPPublicKeyRing(PGPPublicKeyRing section) throws PGPException {
+    KeyDataPgp data = new KeyDataPgp();
+    data.setPublicKeyRing(section);
+    Key key = new Key();
+    key.setKeyData(data);
+    //noinspection deprecation
+    key.setKeyInfo(buildKeyInfoFromPublic(section));
+    return key;
+  }
+
+  private static Key readPGPSecretKeyRing(PGPSecretKeyRing section) throws PGPException {
+    KeyDataPgp data = new KeyDataPgp();
+    data.setSecretKeyRing(section);
+    Key key = new Key();
+    key.setKeyData(data);
+    //noinspection deprecation
+    key.setKeyInfo(buildKeyInfoFromSecret(section));
+    return key;
   }
 
   private List<Key> combinePrivateAndPublicIfAny(List<Key> keys) {
@@ -123,7 +189,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
           ret.remove(existingKey);
           ret.add(key);
         } else {
-          // looks like a duplciate, ignore it
+          // looks like a duplicate, ignore it
         }
       }
     }
@@ -139,7 +205,8 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
       List<Key> ret = new ArrayList<>();
       while (subStream.hasNextSubStream()) {
         try {
-          ret.add(readFromStream(subStream));
+          // Parse all keys within each armored block
+          ret.addAll(readAllKeysFromStream(subStream));
         } catch (Throwable t) {
           throw new GenericException("warning.keyIsDamaged", t);
         }
@@ -154,37 +221,19 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
     }
   }
 
-  @SuppressWarnings("deprecation")
-  private Key readFromStream(InputStream stream) throws PGPException {
-    KeyDataPgp data = new KeyDataPgp();
-    try {
-      readKeyFromStream(data, stream);
-    } catch (Throwable t) {
-      throw new RuntimeException("Error happened while parsing key", t);
-    }
-    if (data.getPublicKeyRing() == null && data.getSecretKeyRing() == null) {
-      throw new RuntimeException("Neither Secret nor Public keys were found in the input text");
-    }
-
-    Key key = new Key();
-    key.setKeyData(data);
-    if (data.getSecretKeyRing() != null) {
-      key.setKeyInfo(buildKeyInfoFromSecret(data.getSecretKeyRing()));
-    } else {
-      key.setKeyInfo(buildKeyInfoFromPublic(data.getPublicKeyRing()));
-    }
-    return key;
-  }
-
   private KeyInfo buildKeyInfoFromPublic(PGPPublicKeyRing publicKeyRing) throws PGPException {
     KeyInfo ret = new KeyInfo();
     ret.setKeyType(KeyTypeEnum.Public);
     PGPPublicKey key = publicKeyRing.getPublicKey();
-    ret.setUser(buildUser(key.getUserIDs()));
+    return fillKeyInfoFromPublicKey(ret, key);
+  }
 
+  private static KeyInfo fillKeyInfoFromPublicKey(KeyInfo ret, PGPPublicKey key)
+      throws PGPException {
+    ret.setUser(buildUser(key.getUserIDs()));
     ret.setKeyId(KeyDataPgp.buildKeyIdStr(key.getKeyID()));
     fillDates(ret, key);
-    fillAlgorithmName(ret, key);
+    ret.setKeyAlgorithm(getAlgorithmName(key));
     return ret;
   }
 
@@ -197,24 +246,110 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
     }
   }
 
-  private static void fillAlgorithmName(KeyInfo ret, PGPPublicKey key) throws PGPException {
-    String alg = resolveAlgorithm(key);
-    if (alg == null) {
-      ret.setKeyAlgorithm("unresolved");
-    } else {
-      ret.setKeyAlgorithm(alg + " " + key.getBitStrength() + "bit");
+  private static String getAlgorithmName(PGPPublicKey key) {
+    // Build a descriptive, reliable algorithm name based on the public key packet itself
+    try {
+      int algo = key.getAlgorithm();
+      String base =
+          switch (algo) {
+            case PublicKeyAlgorithmTags.RSA_GENERAL,
+                    PublicKeyAlgorithmTags.RSA_ENCRYPT,
+                    PublicKeyAlgorithmTags.RSA_SIGN ->
+                "RSA";
+            case PublicKeyAlgorithmTags.ELGAMAL_ENCRYPT, PublicKeyAlgorithmTags.ELGAMAL_GENERAL ->
+                "ELGAMAL";
+            case PublicKeyAlgorithmTags.ECDSA -> "ECDSA " + resolveCurveName(key);
+            case PublicKeyAlgorithmTags.ECDH ->
+                // Might be classic NIST curve or modern X25519/X448 represented via ECDH
+                resolveEcdhName(key);
+            default -> {
+              String algoName =
+                  KeyGeneratorServicePgpImpl.findStaticFieldNameByIntValue(
+                      algo, PublicKeyAlgorithmTags.class);
+              yield algoName == null ? "algorithm-" + algo : algoName;
+            }
+          };
+
+      int bits = key.getBitStrength();
+      if (bits > 0) {
+        return base + " " + bits + "bit";
+      }
+      return base;
+    } catch (Throwable t) {
+      log.warn(
+          "Failed to build algorithm name for key {} algo {}",
+          key.getKeyID(),
+          key.getAlgorithm(),
+          t);
+      // As a last resort, keep previous fallback behavior to avoid UI breakage
+      try {
+        PGPSignature sig = key.getSignatures().next();
+        return PGPUtil.getSignatureName(sig.getKeyAlgorithm(), sig.getHashAlgorithm());
+      } catch (Exception e) {
+        log.warn("... PGPUtil.getSignatureName failed as well", t);
+        return "unresolved";
+      }
     }
   }
 
-  @SuppressWarnings("rawtypes")
-  private static String resolveAlgorithm(PGPPublicKey key) throws PGPException {
-    // This code is effectively just picks the first one
-    // Although this is not 100% accurate... This is used only for rendering purposes
-    for (Iterator<PGPSignature> iter = key.getSignatures(); iter.hasNext(); ) {
-      PGPSignature sig = iter.next();
-      return PGPUtil.getSignatureName(sig.getKeyAlgorithm(), sig.getHashAlgorithm());
+  private static String resolveEcdhName(PGPPublicKey key) {
+    String curve = resolveCurveName(key);
+    // Recognize RFC 8410 curves commonly used for ECDH
+    if ("1.3.101.110".equals(curve)) {
+      return "X25519";
     }
-    return null;
+    if ("1.3.101.111".equals(curve)) {
+      return "X448";
+    }
+    return "ECDH " + mapCurveOidToName(curve);
+  }
+
+  private static String resolveCurveName(PGPPublicKey key) {
+    try {
+      PublicKeyPacket pk = key.getPublicKeyPacket();
+      int algo = key.getAlgorithm();
+      if (algo == PublicKeyAlgorithmTags.ECDH) {
+        ECDHPublicBCPGKey ecdh = (ECDHPublicBCPGKey) pk.getKey();
+        return ecdh.getCurveOID().getId();
+      } else if (algo == PublicKeyAlgorithmTags.ECDSA) {
+        ECDSAPublicBCPGKey ecdsa = (ECDSAPublicBCPGKey) pk.getKey();
+        return ecdsa.getCurveOID().getId();
+      } else if (algo == PublicKeyAlgorithmTags.Ed25519 || algo == PublicKeyAlgorithmTags.Ed448) {
+        // EdDSA keys are on fixed curves, but some BC versions expose an EdDSA key object
+        // If curve OID is available, return it; otherwise return known RFC 8410 OIDs
+        try {
+          EdDSAPublicBCPGKey ed = (EdDSAPublicBCPGKey) pk.getKey();
+          if (ed.getCurveOID() != null) {
+            return ed.getCurveOID().getId();
+          }
+        } catch (Throwable ex) {
+          log.warn("Failed to resolve curve name for key " + key.getKeyID(), ex);
+          // fall-through to constants
+        }
+        return algo == PublicKeyAlgorithmTags.Ed25519 ? "1.3.101.112" : "1.3.101.113";
+      }
+    } catch (Throwable ex) {
+      log.warn("Failed to resolve curve name for key " + key.getKeyID(), ex);
+      // ignore and fall back
+    }
+    return "unresolved";
+  }
+
+  private static String mapCurveOidToName(String oid) {
+    if (oid == null || oid.isEmpty()) {
+      return "unknown-curve";
+    }
+    return switch (oid) {
+      case "1.3.101.112" -> "Ed25519";
+      case "1.3.101.113" -> "Ed448";
+      case "1.3.101.110" -> "X25519";
+      case "1.3.101.111" -> "X448";
+      case "1.2.840.10045.3.1.7" -> "P-256";
+      case "1.3.132.0.34" -> "P-384";
+      case "1.3.132.0.35" -> "P-521";
+      case "1.3.132.0.10" -> "secp256k1";
+      default -> oid; // show raw OID if unknown
+    };
   }
 
   protected static KeyInfo buildKeyInfoFromSecret(PGPSecretKeyRing secretKeyRing)
@@ -222,35 +357,21 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
     KeyInfo ret = new KeyInfo();
     ret.setKeyType(KeyTypeEnum.KeyPair);
     PGPPublicKey key = secretKeyRing.getPublicKey();
-    ret.setUser(buildUser(key.getUserIDs()));
-
-    ret.setKeyId(KeyDataPgp.buildKeyIdStr(key.getKeyID()));
-    fillDates(ret, key);
-    fillAlgorithmName(ret, key);
-    return ret;
+    return fillKeyInfoFromPublicKey(ret, key);
   }
 
-  @SuppressWarnings("rawtypes")
-  private static String buildUser(Iterator userIDs) {
-    Object ret = userIDs.next();
-    return (String) ret;
-  }
-
-  @SuppressWarnings("rawtypes")
-  private static void readKeyFromStream(KeyDataPgp data, InputStream stream) throws IOException {
-    PGPObjectFactory factory =
-        new PGPObjectFactory(PGPUtil.getDecoderStream(stream), fingerprintCalculator);
-    for (Object section : factory) {
-      log.debug("Section found: " + section);
-
-      if (section instanceof PGPSecretKeyRing) {
-        data.setSecretKeyRing((PGPSecretKeyRing) section);
-      } else if (section instanceof PGPPublicKeyRing) {
-        data.setPublicKeyRing((PGPPublicKeyRing) section);
-      } else {
-        log.error("Unknown section enountered in a key file: " + section);
-      }
+  private static String buildUser(Iterator<String> userIDs) {
+    if (userIDs == null) {
+      return "(no user id)";
     }
+    try {
+      if (userIDs.hasNext()) {
+        return userIDs.next();
+      }
+    } catch (Throwable exc) {
+      log.warn("Failed to read user id from secret key", exc);
+    }
+    return "(no user id)";
   }
 
   @Override
@@ -280,11 +401,19 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
         os.push(new ArmoredOutputStream(os.peek()));
       }
       KeyDataPgp keyDataPgp = KeyDataPgp.get(key);
-      if (keyDataPgp.getPublicKeyRing() != null) {
-        keyDataPgp.getPublicKeyRing().encode(os.peek());
-      } else {
-        keyDataPgp.getSecretKeyRing().getPublicKey().encode(os.peek());
+      PGPPublicKeyRing pubRing = keyDataPgp.getPublicKeyRing();
+      if (pubRing == null) {
+        // Rebuild a complete public ring from the secret ring's public keys (primary + subkeys)
+        Preconditions.checkArgument(
+            keyDataPgp.getSecretKeyRing() != null, "No public or secret key ring available");
+        List<PGPPublicKey> allPubs = new ArrayList<>();
+        Iterator<PGPPublicKey> it = keyDataPgp.getSecretKeyRing().getPublicKeys();
+        while (it.hasNext()) {
+          allPubs.add(it.next());
+        }
+        pubRing = new PGPPublicKeyRing(allPubs);
       }
+      pubRing.encode(os.peek());
     } catch (Throwable t) {
       throw new RuntimeException("Failed to save public key " + key.getKeyInfo().getUser(), t);
     } finally {
@@ -298,14 +427,14 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
   public String getPublicKeyArmoredRepresentation(Key key) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     savePublicKey(key, baos, true);
-    return baos.toString();
+      return baos.toString(StandardCharsets.UTF_8);
   }
 
   @Override
   public void exportPrivateKey(Key key, String targetFilePathname) {
     Preconditions.checkArgument(
         key != null && key.getKeyData() != null && key.getKeyInfo() != null,
-        "Key must be providedand fully described");
+        "Key must be provided and fully described");
     KeyDataPgp keyDataPgp = KeyDataPgp.get(key);
     Preconditions.checkArgument(
         keyDataPgp.getSecretKeyRing() != null, "KeyPair key wasn't provided");
@@ -318,9 +447,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
         os.push(new ArmoredOutputStream(os.peek()));
       }
       keyDataPgp.getSecretKeyRing().encode(os.peek());
-      if (keyDataPgp.getPublicKeyRing() != null) {
-        keyDataPgp.getPublicKeyRing().encode(os.peek());
-      }
+      // Do NOT also encode the public key ring here; secret ring already contains necessary public packets
     } catch (Throwable t) {
       throw new RuntimeException(
           "Failed to export private key "

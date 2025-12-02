@@ -17,7 +17,6 @@
  ******************************************************************************/
 package org.pgptool.gui.autoupdate.impl;
 
-import com.google.common.base.Preconditions;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -150,17 +149,14 @@ public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
       }
 
       String ret = NewVersionCheckerGitHubImpl.class.getPackage().getImplementationVersion();
-      Preconditions.checkState(
-          StringUtils.hasText(ret),
-          "ImplementationVersion cannot be resolved. Perhaps we're in the DEV mode");
-      return ret;
+      return StringUtils.hasText(ret) ? ret : "unresolved";
     } catch (Throwable t) {
       log.warn("Failed to resolve current application version", t);
       return VERSION_UNRESOLVED;
     }
   }
 
-  public static String getVerisonsInfo() {
+  public static String getVersionInfo() {
     NewVersionChecker newVersionChecker = new NewVersionCheckerGitHubImpl();
     String pgpVersion = newVersionChecker.getCurrentVersion();
     if (NewVersionChecker.VERSION_UNRESOLVED.equals(pgpVersion)) {

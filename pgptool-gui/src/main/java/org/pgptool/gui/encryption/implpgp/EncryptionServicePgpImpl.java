@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,9 +41,9 @@ import java.util.Iterator;
 import java.util.Set;
 import org.apache.log4j.Logger;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
+import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
-import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
 import org.bouncycastle.openpgp.PGPEncryptedDataList;
 import org.bouncycastle.openpgp.PGPException;
@@ -58,8 +57,10 @@ import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.api.exception.KeyPassphraseException;
 import org.bouncycastle.openpgp.bc.BcPGPObjectFactory;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
@@ -166,13 +167,10 @@ public class EncryptionServicePgpImpl implements EncryptionService {
       PGPEncryptedDataGenerator encDataGen,
       Updater progress,
       char outputType)
-      throws IOException,
-          NoSuchProviderException,
-          PGPException,
-          UserRequestedCancellationException {
+      throws IOException, PGPException, UserRequestedCancellationException {
     OutputStream encryptedStream = encDataGen.open(out, new byte[BUFFER_SIZE]);
     PGPCompressedDataGenerator compressedDataGen =
-        new PGPCompressedDataGenerator(PGPCompressedData.ZIP);
+        new PGPCompressedDataGenerator(PGPCompressedData.ZLIB);
     OutputStream compressedStream = compressedDataGen.open(encryptedStream);
     estimateFullOperationSize(encryptionSourceInfo, progress);
     writeFileToLiteralData(
@@ -255,7 +253,8 @@ public class EncryptionServicePgpImpl implements EncryptionService {
       PGPPublicKey encryptionKey = KeyDataPgp.get(key).findKeyForEncryption();
       Preconditions.checkState(
           encryptionKey != null,
-          "Wasn't able to find encryption key for recipient " + key.getKeyInfo().getUser());
+          "Wasn't able to find non-expired encryption subkey for recipient "
+              + key.getKeyInfo().getUser());
       ret.add(encryptionKey);
     }
     return ret;
@@ -263,8 +262,11 @@ public class EncryptionServicePgpImpl implements EncryptionService {
 
   private static PGPEncryptedDataGenerator buildEncryptedDataGenerator(
       Collection<PGPPublicKey> encKeys) {
+    // Inspect recipients’ preference lists and pick the strongest mutually supported
+    // symmetric algorithm (AES256→AES128). Keep AES‑256 as a safe default.
+    int selectedAlg = chooseSymmetricAlgorithm(encKeys);
     BcPGPDataEncryptorBuilder builder =
-        new BcPGPDataEncryptorBuilder(PGPEncryptedData.CAST5)
+        new BcPGPDataEncryptorBuilder(selectedAlg)
             .setSecureRandom(new SecureRandom())
             .setWithIntegrityPacket(true);
     PGPEncryptedDataGenerator encryptedDataGenerator = new PGPEncryptedDataGenerator(builder);
@@ -273,6 +275,119 @@ public class EncryptionServicePgpImpl implements EncryptionService {
       encryptedDataGenerator.addMethod(new BcPublicKeyKeyEncryptionMethodGenerator(encKey));
     }
     return encryptedDataGenerator;
+  }
+
+  /**
+   * Choose the strongest mutually supported symmetric algorithm across all recipients. Strategy: -
+   * Consider only AES-256, AES-192, AES-128 (modern, widely supported) - For each recipient, if it
+   * advertises preferred symmetric algorithms, intersect with our set - Pick the first available in
+   * the order AES-256 → AES-192 → AES-128 - If no preferences are available (or intersection is
+   * empty), default to AES-256
+   */
+  private static int chooseSymmetricAlgorithm(Collection<PGPPublicKey> encKeys) {
+    // Start with our supported set for intersection across keys that DO advertise prefs
+    boolean want256 = true, want192 = true, want128 = true;
+    boolean sawAnyPrefs = false;
+
+    for (PGPPublicKey k : encKeys) {
+      Prefs prefs = extractPreferredSymmetricAlgorithms(k);
+      if (!prefs.present) {
+        // No preferences found on this key (likely a subkey). Skip it for intersection.
+        continue;
+      }
+      sawAnyPrefs = true;
+      want256 &= prefs.aes256;
+      want192 &= prefs.aes192;
+      want128 &= prefs.aes128;
+    }
+
+    // If at least one recipient advertised prefs, try mutual intersection in order
+    if (sawAnyPrefs) {
+      if (want256) {
+        return SymmetricKeyAlgorithmTags.AES_256;
+      }
+      if (want192) {
+        return SymmetricKeyAlgorithmTags.AES_192;
+      }
+      if (want128) {
+        return SymmetricKeyAlgorithmTags.AES_128;
+      }
+      // Intersection empty (disjoint prefs) – fall back
+    }
+
+    // Fallback/safe default used by modern tools and aligned with our advertised preferences
+    return SymmetricKeyAlgorithmTags.AES_256;
+  }
+
+  private static class Prefs {
+    final boolean present;
+    final boolean aes256;
+    final boolean aes192;
+    final boolean aes128;
+
+    Prefs(boolean present, boolean aes256, boolean aes192, boolean aes128) {
+      this.present = present;
+      this.aes256 = aes256;
+      this.aes192 = aes192;
+      this.aes128 = aes128;
+    }
+  }
+
+  /**
+   * Try to extract preferred symmetric algorithms from signatures available on this public key.
+   * Typically, preferences are present on the primary key's UID self-signature. If this key is a
+   * subkey, such preferences are usually not present; in that case returns present=false.
+   */
+  private static Prefs extractPreferredSymmetricAlgorithms(PGPPublicKey key) {
+    try {
+      // First, try preferences embedded in UID self-signatures (primary key case)
+      for (Iterator<String> uids = key.getUserIDs(); uids != null && uids.hasNext(); ) {
+        String uid = uids.next();
+        Iterator<PGPSignature> sigs = key.getSignaturesForID(uid);
+        if (sigs == null) {
+          continue;
+        }
+        while (sigs.hasNext()) {
+          Prefs ret = getPrefs(sigs);
+          if (ret != null) {
+            return ret;
+          }
+        }
+      }
+
+      // As a best-effort fallback, scan any signatures present directly on the key
+      for (Iterator<PGPSignature> sigs = key.getSignatures(); sigs != null && sigs.hasNext(); ) {
+        Prefs ret = getPrefs(sigs);
+        if (ret != null) {
+          return ret;
+        }
+      }
+    } catch (Throwable ignore) {
+      // Ignore parsing issues and indicate prefs are not present
+    }
+    return new Prefs(false, false, false, false);
+  }
+
+  private static Prefs getPrefs(Iterator<PGPSignature> sigs) {
+    PGPSignature sig = sigs.next();
+    if (sig.getHashedSubPackets() == null) {
+      return null;
+    }
+    int[] prefs = sig.getHashedSubPackets().getPreferredSymmetricAlgorithms();
+    if (prefs == null || prefs.length == 0) {
+      return null;
+    }
+    boolean p256 = false, p192 = false, p128 = false;
+    for (int p : prefs) {
+      if (p == SymmetricKeyAlgorithmTags.AES_256) {
+        p256 = true;
+      } else if (p == SymmetricKeyAlgorithmTags.AES_192) {
+        p192 = true;
+      } else if (p == SymmetricKeyAlgorithmTags.AES_128) {
+        p128 = true;
+      }
+    }
+    return new Prefs(true, p256, p192, p128);
   }
 
   @Override
@@ -551,11 +666,13 @@ public class EncryptionServicePgpImpl implements EncryptionService {
     try {
       PBESecretKeyDecryptor decryptorFactory = buildKeyDecryptor(passphrase);
       return secretKey.extractPrivateKey(decryptorFactory);
-    } catch (Throwable t) {
+    } catch (KeyPassphraseException t) {
       log.warn(
           "Failed to extract private key. Most likely it because of incorrect passphrase provided",
           t);
       throw new InvalidPasswordException();
+    } catch (Throwable t) {
+      throw new RuntimeException("Failed to extract private key", t);
     }
   }
 

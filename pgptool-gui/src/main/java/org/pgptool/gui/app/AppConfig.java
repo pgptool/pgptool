@@ -3,7 +3,6 @@ package org.pgptool.gui.app;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 import com.google.common.eventbus.EventBus;
-import java.math.BigInteger;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -111,6 +110,7 @@ public class AppConfig {
     ReloadableResourceBundleMessageSource ms = new ReloadableResourceBundleMessageSource();
     ms.setBasenames(
         "classpath:pgptool-gui-messages",
+        "classpath:summerb-validation-messages",
         "classpath:summerb-messages",
         "classpath:service-users-messages",
         "classpath:security-messages");
@@ -215,11 +215,8 @@ public class AppConfig {
 
   @Bean
   KeyRingService keyRingService(
-      ConfigRepository configRepository,
-      EventBus eventBus,
-      KeyGeneratorService keyGeneratorService,
-      UsageLogger usageLogger) {
-    return new KeyRingServicePgpImpl(configRepository, eventBus, keyGeneratorService, usageLogger);
+      ConfigRepository configRepository, EventBus eventBus, UsageLogger usageLogger) {
+    return new KeyRingServicePgpImpl(configRepository, eventBus, usageLogger);
   }
 
   @Bean
@@ -228,37 +225,8 @@ public class AppConfig {
   }
 
   @Bean
-  KeyGeneratorService keyGeneratorService(
-      ExecutorService executorService,
-      ValidationContextFactory validationContextFactory,
-      @Value("${keygen.masterKey.algorithm}") String masterKeyAlgorithm,
-      @Value("${keygen.masterKey.purpose}") String masterKeyPurpose,
-      @Value("${keygen.masterKey.size}") int masterKeySize,
-      @Value("${keygen.masterKey.signer.signerAlgorithm}") String masterKeySignerAlgorithm,
-      @Value("${keygen.masterKey.signer.hashingAlgorithm}") String masterKeySignerHashingAlgorithm,
-      @Value("${keygen.secretKey.hashingAlgorithm}") String secretKeyHashingAlgorithm,
-      @Value("${keygen.secretKey.symmetricEncryptionAlgorithm}")
-          String secretKeyEncryptionAlgorithm,
-      @Value("${keygen.encryptionSubKey.algorithm}") String encryptionKeyAlgorithm,
-      @Value("${keygen.encryptionSubKey.purpose}") String encryptionKeyPurpose,
-      @Value("${keygen.encryptionSubKey.dhparams.primeModulus}") String primeModulusHex,
-      @Value("${keygen.encryptionSubKey.dhparams.baseGenerator}") String baseGeneratorStr) {
-    BigInteger dhPrime = new BigInteger(primeModulusHex, 16);
-    BigInteger dhBase = new BigInteger(baseGeneratorStr, 16);
-    return new KeyGeneratorServicePgpImpl(
-        executorService,
-        validationContextFactory,
-        masterKeyAlgorithm,
-        masterKeyPurpose,
-        masterKeySize,
-        masterKeySignerAlgorithm,
-        masterKeySignerHashingAlgorithm,
-        secretKeyHashingAlgorithm,
-        secretKeyEncryptionAlgorithm,
-        encryptionKeyAlgorithm,
-        encryptionKeyPurpose,
-        dhPrime,
-        dhBase);
+  KeyGeneratorService keyGeneratorService(ValidationContextFactory validationContextFactory) {
+    return new KeyGeneratorServicePgpImpl(validationContextFactory);
   }
 
   @Bean

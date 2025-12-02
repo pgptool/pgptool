@@ -23,12 +23,6 @@ import org.pgptool.gui.encryption.api.dto.Key;
 
 public interface KeyGeneratorService {
   /**
-   * Call this method if it's anticipated that user will request key creation. Service will perform
-   * heavy mathematics in advance hopefully finishing by the time user will request key creation
-   */
-  void expectNewKeyCreation();
-
-  /**
    * Create key
    *
    * @param emptyPassphraseConsent must be explicitly specified if user agreed to use empty

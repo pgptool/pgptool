@@ -72,7 +72,7 @@ public class KeyRingServiceTest {
   }
 
   private KeyRingService buildAnotherKeyRingService() {
-    return new KeyRingServicePgpImpl(configRepository, eventBus, keyGeneratorService, usageLogger);
+    return new KeyRingServicePgpImpl(configRepository, eventBus, usageLogger);
   }
 
   @Test

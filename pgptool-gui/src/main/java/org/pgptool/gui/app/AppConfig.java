@@ -102,6 +102,7 @@ import org.summerb.validation.ValidationContextFactory;
 @Import({ValidationContextConfig.class})
 @PropertySource("classpath:default.properties")
 @PropertySource(value = "file:pgptool-gui-devmode.properties", ignoreResourceNotFound = true)
+@PropertySource(value = "file:custom.properties", ignoreResourceNotFound = true)
 @ComponentScan(basePackages = "org.pgptool.gui")
 public class AppConfig {
 
@@ -147,10 +148,9 @@ public class AppConfig {
 
   @Bean
   ConfigsBasePathResolver configsBasePathResolver(
-      @Value("${configuration.configFolderName}") String configFolderName) {
-    ConfigsBasePathResolverUserHomeImpl r = new ConfigsBasePathResolverUserHomeImpl();
-    r.setConfigFolderName(configFolderName);
-    return r;
+      @Value("${configs.folder-name}") String configFolderName,
+      @Value("${configs.custom-base-path}") String customConfigBasePath) {
+    return new ConfigsBasePathResolverUserHomeImpl(configFolderName, customConfigBasePath);
   }
 
   @Bean
@@ -640,10 +640,9 @@ public class AppConfig {
   }
 
   @Bean
-  NewVersionChecker newVersionCheckerGitHub(
-      @Value("${configuredVersion}") String configuredVersion) {
+  NewVersionChecker newVersionCheckerGitHub(@Value("${app-version}") String appVersion) {
     NewVersionCheckerGitHubImpl b = new NewVersionCheckerGitHubImpl();
-    b.setConfiguredVersion(configuredVersion);
+    b.setAppVersion(appVersion);
     return b;
   }
 

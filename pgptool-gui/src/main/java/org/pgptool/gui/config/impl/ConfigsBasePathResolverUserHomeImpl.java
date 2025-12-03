@@ -18,7 +18,8 @@
 package org.pgptool.gui.config.impl;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.config.api.ConfigsBasePathResolver;
@@ -28,18 +29,26 @@ import org.springframework.util.StringUtils;
 public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResolver {
   private static final Logger log = Logger.getLogger(ConfigsBasePathResolverUserHomeImpl.class);
   private String chosenLocation;
-  private String configFolderName = ".pgptool";
+  private final String configFolderName;
+  private final String customConfigBasePath;
 
-  public ConfigsBasePathResolverUserHomeImpl() {}
+  public ConfigsBasePathResolverUserHomeImpl(String configFolderName, String customConfigBasePath) {
+    this.configFolderName = configFolderName;
+    this.customConfigBasePath = customConfigBasePath;
+  }
 
   @Override
   public String getConfigsBasePath() {
     if (chosenLocation == null) {
-      String[] options =
-          new String[] {
-            System.getenv("USERPROFILE"), SystemUtils.getUserHome().getAbsolutePath(), "~"
-          };
-      log.debug("Base path options: " + Arrays.toString(options));
+      List<String> options = new LinkedList<>();
+      if (StringUtils.hasText(customConfigBasePath)) {
+        addOption(options, customConfigBasePath);
+      }
+      addOption(options, System.getenv("USERPROFILE"));
+      addOption(options, SystemUtils.getUserHome().getAbsolutePath());
+      addOption(options, "~");
+
+      log.debug("Base path options: " + options);
 
       for (String option : options) {
         if (tryAccept(option)) {
@@ -54,53 +63,41 @@ public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResol
     return chosenLocation;
   }
 
-  private boolean tryAccept(String path) {
-    log.debug("Testing path: " + path);
-    if (!StringUtils.hasText(path)) {
+  private void addOption(List<String> options, String option) {
+    if (!options.contains(option)) {
+      options.add(option);
+    }
+  }
+
+  private boolean tryAccept(String basePathStr) {
+    log.info("Testing basePath: " + basePathStr);
+    if (!StringUtils.hasText(basePathStr)) {
       return false;
     }
 
-    if (path.endsWith(File.separator)) {
-      path = path.substring(0, path.length() - 2);
-    }
-
-    if (!new File(path).exists()) {
-      return false;
-    }
-
-    path += File.separator + configFolderName;
+    File basePath = new File(basePathStr);
+    File configsFolder = new File(basePath, configFolderName);
 
     try {
-      File tsDir = new File(path);
-      if (!tsDir.exists()) {
-        if (!tsDir.mkdirs()) {
-          throw new RuntimeException(
-              "Failed to create configs dir " + tsDir + ", path is not reliable");
+      if (!configsFolder.exists()) {
+        if (!configsFolder.mkdirs()) {
+          log.info("Failed to create configs dir " + configsFolder + ", basePath is not reliable");
+          return false;
         }
-        File testFile = new File(path + File.separator + "test.test");
+        File testFile = new File(configsFolder, "test.test");
         TextFile.write(testFile.getAbsolutePath(), "test");
         if (!testFile.delete()) {
-          throw new RuntimeException(
-              "Failed to delete test file "
-                  + testFile
-                  + ", this might break app logic, path is not reliable");
+          log.info("Failed to delete test file " + testFile + ", basePath is not reliable");
+          return false;
         }
       }
     } catch (Throwable t) {
-      log.warn("Path is not acceptable, write test failed", t);
+      log.info("Path is not acceptable, write test failed", t);
       return false;
     }
 
-    chosenLocation = path;
-    log.info("Path was chosen as a basepath for config files: " + path);
+    chosenLocation = configsFolder.getAbsolutePath();
+    log.info("Path was chosen as a basepath for config files: " + chosenLocation);
     return true;
-  }
-
-  public String getConfigFolderName() {
-    return configFolderName;
-  }
-
-  public void setConfigFolderName(String configFolderName) {
-    this.configFolderName = configFolderName;
   }
 }

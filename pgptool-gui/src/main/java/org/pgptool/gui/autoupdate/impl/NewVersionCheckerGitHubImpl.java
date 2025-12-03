@@ -39,7 +39,7 @@ public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
 
   private static final Logger log = Logger.getLogger(NewVersionCheckerGitHubImpl.class);
 
-  private String configuredVersion = null;
+  private String appVersion = null;
 
   private final String latestVersionUrl =
       "https://api.github.com/repos/pgptool/pgptool/releases/latest";
@@ -144,8 +144,8 @@ public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
   @Override
   public String getCurrentVersion() {
     try {
-      if (configuredVersion != null) {
-        return configuredVersion;
+      if (appVersion != null) {
+        return appVersion;
       }
 
       String ret = NewVersionCheckerGitHubImpl.class.getPackage().getImplementationVersion();
@@ -171,11 +171,11 @@ public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
     return String.format(" [ PGP Tool v" + pgpVersion + ", Java v" + javaVersion + " ]");
   }
 
-  public String getConfiguredVersion() {
-    return configuredVersion;
+  public String getAppVersion() {
+    return appVersion;
   }
 
-  public void setConfiguredVersion(String version) {
-    this.configuredVersion = !StringUtils.hasText(version) ? null : version;
+  public void setAppVersion(String version) {
+    this.appVersion = !StringUtils.hasText(version) ? null : version;
   }
 }

@@ -427,7 +427,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
   public String getPublicKeyArmoredRepresentation(Key key) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     savePublicKey(key, baos, true);
-      return baos.toString(StandardCharsets.UTF_8);
+    return baos.toString(StandardCharsets.UTF_8);
   }
 
   @Override
@@ -447,7 +447,8 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
         os.push(new ArmoredOutputStream(os.peek()));
       }
       keyDataPgp.getSecretKeyRing().encode(os.peek());
-      // Do NOT also encode the public key ring here; secret ring already contains necessary public packets
+      // Do NOT also encode the public key ring here; secret ring already contains necessary public
+      // packets
     } catch (Throwable t) {
       throw new RuntimeException(
           "Failed to export private key "

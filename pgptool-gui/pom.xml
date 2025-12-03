@@ -91,6 +91,10 @@
                     <groupId>com.github.skarpushin</groupId>
                     <artifactId>summerb-security</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.github.skarpushin</groupId>
+                    <artifactId>summerb-easycrud</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -118,6 +122,12 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context-support</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.micrometer</groupId>
+                    <artifactId>micrometer-observation</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

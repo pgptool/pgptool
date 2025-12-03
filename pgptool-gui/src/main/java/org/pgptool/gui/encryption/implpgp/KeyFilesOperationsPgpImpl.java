@@ -468,7 +468,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
     try {
       validatePasswordUnchecked(secretKeyId, key, password);
     } catch (InvalidPasswordException pe) {
-      throw new ValidationException(new ValidationError(pe.getMessageCode(), passphraseFieldName));
+      throw new ValidationException(new ValidationError(passphraseFieldName, pe.getMessageCode()));
     } catch (Throwable t) {
       throw new RuntimeException("Failed to verify key password", t);
     }

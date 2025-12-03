@@ -501,7 +501,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
       super(
           GetKeyPasswordDialogPm.class,
           GetKeyPasswordDialogView.class,
-          "action.providePasswordForTheKey");
+          "action.providePassphraseForTheKey");
       this.keysIds = keysIds;
       this.purpose = purpose;
       this.keyAndPasswordCallback = keyAndPasswordCallback;

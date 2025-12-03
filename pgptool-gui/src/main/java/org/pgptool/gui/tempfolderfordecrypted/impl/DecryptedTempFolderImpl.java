@@ -125,8 +125,8 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
           "Exception during validation of target folder for temp decrypted files " + newValue, t);
       throw new ValidationException(
           new ValidationError(
-              "error.temporaryFolderCannotbeUsed",
               CONFIG_DECRYPTED_TEMP_FOLDER,
+              "error.temporaryFolderCannotbeUsed",
               ConsoleExceptionUtils.getAllMessages(t)));
     }
   }

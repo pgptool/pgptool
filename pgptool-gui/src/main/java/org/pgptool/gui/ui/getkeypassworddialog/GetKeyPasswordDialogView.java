@@ -99,7 +99,7 @@ public class GetKeyPasswordDialogView extends DialogViewBaseEx<GetKeyPasswordDia
     ret.setLayout(new BorderLayout());
     ret.setResizable(false);
     ret.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-    ret.setTitle(Messages.get("action.providePasswordForAKey"));
+    ret.setTitle(Messages.get("action.providePassphraseForTheKey"));
     ret.add(pnl, BorderLayout.CENTER);
     ret.pack();
     UiUtils.centerWindow(ret, owner);

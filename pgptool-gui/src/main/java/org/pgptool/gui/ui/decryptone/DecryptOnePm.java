@@ -384,7 +384,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
                   DecryptOnePm.this.keyAndPassword = keyAndPassword;
                   if (keyAndPassword == null) {
                     validationErrors.add(
-                        new ValidationError("error.noMatchingKeysRegistered", FN_SOURCE_FILE));
+                        new ValidationError(FN_SOURCE_FILE, "error.noMatchingKeysRegistered"));
                     return;
                   }
 
@@ -404,7 +404,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
                   log.error("Failed to find decryption keys", t);
                   validationErrors.add(
                       new ValidationError(
-                          "error.failedToDetermineDecryptionMetodsForGivenFile", FN_SOURCE_FILE));
+                          FN_SOURCE_FILE, "error.failedToDetermineDecryptionMetodsForGivenFile"));
                 } finally {
                   updatePrimaryOperationAvailability();
                 }

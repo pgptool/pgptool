@@ -86,6 +86,14 @@ public class ChangeKeyUserIdPm extends PresentationModelBaseEx<ChangeKeyUserIdHo
     currentUser =
         new ModelProperty<>(
             this, new ValueAdapterReadonlyImpl<>(key.getKeyInfo().getUser()), "currentUser");
+    passphrase =
+        new ModelProperty<>(
+            this,
+            new NullToEmptyStringConverter(
+                new ValueAdapterReflectionImpl<>(
+                    params, nameResolver.resolve(ChangeUserIdParams::getPassphrase))),
+            "passphrase",
+            validationErrors);
     fullName =
         new ModelProperty<>(
             this,
@@ -101,14 +109,6 @@ public class ChangeKeyUserIdPm extends PresentationModelBaseEx<ChangeKeyUserIdHo
                 new ValueAdapterReflectionImpl<>(
                     params, nameResolver.resolve(ChangeUserIdParams::getEmail))),
             "email",
-            validationErrors);
-    passphrase =
-        new ModelProperty<>(
-            this,
-            new NullToEmptyStringConverter(
-                new ValueAdapterReflectionImpl<>(
-                    params, nameResolver.resolve(ChangeUserIdParams::getPassphrase))),
-            "passphrase",
             validationErrors);
   }
 

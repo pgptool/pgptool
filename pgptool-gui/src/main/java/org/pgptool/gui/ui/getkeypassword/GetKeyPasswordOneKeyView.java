@@ -67,7 +67,7 @@ public class GetKeyPasswordOneKeyView extends ViewBaseEx<GetKeyPasswordPm> {
     ret.add(new JLabel(text("term.key")), sgl.cs(0, row));
     ret.add(decryptionKey = new JLabel(), sgl.cs(1, row));
     row++;
-    ret.add(new JLabel(text("term.password")), sgl.cs(0, row));
+    ret.add(new JLabel(text("term.passphrase")), sgl.cs(0, row));
     ret.add(edPassword = new JPasswordField(), sgl.cs(1, row));
 
     // x. ret

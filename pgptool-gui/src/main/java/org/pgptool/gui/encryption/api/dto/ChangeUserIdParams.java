@@ -15,22 +15,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  ******************************************************************************/
-package org.pgptool.gui.ui.keyslist;
+package org.pgptool.gui.encryption.api.dto;
 
-import java.awt.event.ActionEvent;
-import javax.swing.Action;
-import org.pgptool.gui.encryption.api.dto.Key;
+import java.io.Serial;
+import java.io.Serializable;
 
-public interface KeysListHost {
-  void handleClose();
+public class ChangeUserIdParams implements Serializable {
+  @Serial private static final long serialVersionUID = 8703412341234123412L;
 
-  Action getActionImportKey();
+  private String fullName;
+  private String email;
+  private String passphrase;
 
-  Action getActionImportKeyFromText();
+  public String getFullName() {
+    return fullName;
+  }
 
-  Action getActionCreateKey();
+  public void setFullName(String fullName) {
+    this.fullName = fullName;
+  }
 
-  void changeKeyPassphrase(Key key, ActionEvent originalEvent);
+  public String getEmail() {
+    return email;
+  }
 
-  void changeKeyUserId(Key key, ActionEvent originalEvent);
+  public void setEmail(String email) {
+    this.email = email;
+  }
+
+  public String getPassphrase() {
+    return passphrase;
+  }
+
+  public void setPassphrase(String passphrase) {
+    this.passphrase = passphrase;
+  }
 }

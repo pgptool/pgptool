@@ -42,6 +42,8 @@ import org.pgptool.gui.ui.about.AboutPm;
 import org.pgptool.gui.ui.about.AboutView;
 import org.pgptool.gui.ui.changekeypassword.ChangeKeyPasswordPm;
 import org.pgptool.gui.ui.changekeypassword.ChangeKeyPasswordView;
+import org.pgptool.gui.ui.changekeyuserid.ChangeKeyUserIdPm;
+import org.pgptool.gui.ui.changekeyuserid.ChangeKeyUserIdView;
 import org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesPm;
 import org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesView;
 import org.pgptool.gui.ui.checkForUpdates.UpdatesPolicy;
@@ -113,7 +115,7 @@ public class AppConfig {
         "classpath:pgptool-gui-messages",
         "classpath:summerb-validation-messages",
         "classpath:summerb-messages",
-        "classpath:service-users-messages",
+        "classpath:summerb-users-messages",
         "classpath:security-messages");
     ms.setCacheSeconds(60);
     ms.setDefaultEncoding("UTF-8");
@@ -505,6 +507,22 @@ public class AppConfig {
       KeyFilesOperations keyFilesOperations,
       PropertyNameResolverFactory propertyNameResolverFactory) {
     return new ChangeKeyPasswordPm(
+        keyRingService, keyGeneratorService, keyFilesOperations, propertyNameResolverFactory);
+  }
+
+  @Bean
+  ChangeKeyUserIdView changeKeyUserIdView() {
+    return new ChangeKeyUserIdView();
+  }
+
+  @Bean
+  @Scope(SCOPE_PROTOTYPE)
+  ChangeKeyUserIdPm changeKeyUserIdPm(
+      KeyRingService keyRingService,
+      KeyGeneratorService keyGeneratorService,
+      KeyFilesOperations keyFilesOperations,
+      PropertyNameResolverFactory propertyNameResolverFactory) {
+    return new ChangeKeyUserIdPm(
         keyRingService, keyGeneratorService, keyFilesOperations, propertyNameResolverFactory);
   }
 

@@ -483,7 +483,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
         KeyFilesOperationsPgpImpl.validatePasswordUnchecked(keyIdStr, key, passphrase);
       }
     } catch (InvalidPasswordException pe) {
-      throw new ValidationException(new ValidationError(pe.getMessageCode(), passphraseFieldName));
+      throw new ValidationException(new ValidationError(passphraseFieldName, pe.getMessageCode()));
     } catch (Throwable t) {
       throw new RuntimeException(
           "Unknown failure during attempt to verify current key password", t);

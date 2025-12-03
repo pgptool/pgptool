@@ -18,6 +18,7 @@
 package org.pgptool.gui.encryption.api;
 
 import org.pgptool.gui.encryption.api.dto.ChangePasswordParams;
+import org.pgptool.gui.encryption.api.dto.ChangeUserIdParams;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 
@@ -31,4 +32,10 @@ public interface KeyGeneratorService {
   Key createNewKey(CreateKeyParams params, boolean emptyPassphraseConsent);
 
   Key changeKeyPassword(Key key, ChangePasswordParams params, boolean emptyPasswordConsent);
+
+  /**
+   * Add a new primary User ID (Full name and Email) to the key, re-certifying it with the key's
+   * master secret key. Existing UIDs are kept, but marked as non-primary.
+   */
+  Key replacePrimaryUserId(Key key, ChangeUserIdParams params);
 }

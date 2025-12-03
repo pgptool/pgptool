@@ -341,7 +341,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
 
             if (!new File(sourceFileStr).exists()) {
               validationErrors.add(
-                  new ValidationError("error.thisFileDoesntExist", FN_SOURCE_FILE));
+                  new ValidationError(FN_SOURCE_FILE, "error.thisFileDoesntExist"));
               return;
             }
 
@@ -365,12 +365,12 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
             }
           } catch (SymmetricEncryptionIsNotSupportedException sense) {
             log.warn("Got SymmetricEncryptionIsNotSupportedException", sense);
-            validationErrors.add(new ValidationError(sense.getMessageCode(), FN_SOURCE_FILE));
+            validationErrors.add(new ValidationError(FN_SOURCE_FILE, sense.getMessageCode()));
           } catch (Throwable t) {
             log.error("Failed to find decryption keys", t);
             validationErrors.add(
                 new ValidationError(
-                    "error.failedToDetermineDecryptionMetodsForGivenFile", FN_SOURCE_FILE));
+                    FN_SOURCE_FILE, "error.failedToDetermineDecryptionMetodsForGivenFile"));
           } finally {
             updatePrimaryOperationAvailability();
           }

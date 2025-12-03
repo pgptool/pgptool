@@ -22,8 +22,11 @@ import com.google.common.base.Throwables;
 import java.lang.reflect.Field;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import org.apache.log4j.Logger;
 import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
@@ -35,9 +38,13 @@ import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
+import org.bouncycastle.openpgp.PGPPrivateKey;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
@@ -49,6 +56,7 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.pgptool.gui.encryption.api.KeyGeneratorService;
 import org.pgptool.gui.encryption.api.dto.ChangePasswordParams;
+import org.pgptool.gui.encryption.api.dto.ChangeUserIdParams;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.springframework.util.StringUtils;
@@ -116,28 +124,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
       log.debug("Building primary self-signature subpackets");
       PGPSignatureSubpacketGenerator primaryHashed = new PGPSignatureSubpacketGenerator();
       primaryHashed.setKeyFlags(false, KeyFlags.CERTIFY_OTHER);
-      primaryHashed.setPreferredSymmetricAlgorithms(
-          false,
-          new int[] {
-            SymmetricKeyAlgorithmTags.AES_256,
-            SymmetricKeyAlgorithmTags.AES_192,
-            SymmetricKeyAlgorithmTags.AES_128
-          });
-      primaryHashed.setPreferredHashAlgorithms(
-          false,
-          new int[] {
-            HashAlgorithmTags.SHA256,
-            HashAlgorithmTags.SHA512,
-            HashAlgorithmTags.SHA384,
-            HashAlgorithmTags.SHA224
-          });
-      primaryHashed.setPreferredCompressionAlgorithms(
-          false,
-          new int[] {
-            CompressionAlgorithmTags.ZLIB,
-            CompressionAlgorithmTags.BZIP2,
-            CompressionAlgorithmTags.ZIP
-          });
+      setPreferences(primaryHashed);
       // Features (MDC; AEAD if you know peers support it)
       primaryHashed.setFeature(false, Features.FEATURE_MODIFICATION_DETECTION);
 
@@ -150,7 +137,7 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
           new PGPKeyRingGenerator(
               PGPSignature.POSITIVE_CERTIFICATION,
               pkpPrimary,
-              buildUserId(params),
+              buildUserId(params.getFullName(), params.getEmail()),
               new BcPGPDigestCalculatorProvider().get(HashAlgorithmTags.SHA1),
               primaryHashedV,
               null, // unhashed subpackets
@@ -208,14 +195,6 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
   private static PGPDigestCalculator buildDigestCalculatorForSecretKeyEncryption()
       throws PGPException {
     return new BcPGPDigestCalculatorProvider().get(HashAlgorithmTags.SHA256);
-  }
-
-  private static String buildUserId(CreateKeyParams params) {
-    if (StringUtils.hasText(params.getEmail())) {
-      return params.getFullName() + " <" + params.getEmail() + ">";
-    } else {
-      return params.getFullName();
-    }
   }
 
   protected static int algorithmNameToTag(String algorithmName) {
@@ -303,6 +282,198 @@ public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
       return ret;
     } catch (Throwable t) {
       throw new RuntimeException("Change password failed", t);
+    }
+  }
+
+  @Override
+  public Key replacePrimaryUserId(Key key, ChangeUserIdParams params) {
+    Preconditions.checkArgument(key != null, "key required");
+    Preconditions.checkArgument(params != null, "params required");
+
+    // 0) Validate user input first
+    validateChangeUserIdParams(params);
+
+    try {
+      // 1) Derive new textual User ID from inputs
+      String newUserId = buildUserId(params.getFullName(), params.getEmail());
+
+      // 2) Work on a deep copy of the key (to keep original immutable)
+      Key ret = DeepCopy.copyOrPopagateExcIfAny(key);
+      KeyDataPgp keyData = (KeyDataPgp) ret.getKeyData();
+
+      // 3) Find and unlock master secret key
+      PGPSecretKeyRing secRing = keyData.getSecretKeyRing();
+      Preconditions.checkArgument(secRing != null, "Secret key ring required to change User ID");
+      PGPSecretKey masterSec = findMasterSecretKey(secRing);
+      PGPPublicKey masterPub = masterSec.getPublicKey();
+      PBESecretKeyDecryptor decryptor =
+          EncryptionServicePgpImpl.buildKeyDecryptor(params.getPassphrase());
+      PGPPrivateKey masterPriv = masterSec.extractPrivateKey(decryptor);
+
+      // 4) Build a signer suitable for self-certifications
+      BcPGPContentSignerBuilder signerBuilder = buildSignerFor(masterPub);
+
+      // 5) Demote existing UIDs (primary=false), then add the new one as primary
+      PGPPublicKey updatedMasterPub = demoteExistingUids(masterPub, signerBuilder, masterPriv);
+      updatedMasterPub = addPrimaryUid(updatedMasterPub, newUserId, signerBuilder, masterPriv);
+
+      // 6) Rebuild public ring with updated master first to satisfy BC invariants
+      PGPPublicKeyRing currentPubRing = rebuildPublicRingFromSecretIfMissing(keyData);
+      PGPPublicKeyRing newPubRing =
+          rebuildPublicKeyRingWithUpdatedMaster(currentPubRing, masterPub, updatedMasterPub);
+      keyData.setPublicKeyRing(newPubRing);
+
+      // 7) Mirror updated public section into the secret ring
+      PGPSecretKeyRing newSecRing =
+          mirrorUpdatedMasterToSecretRing(secRing, masterSec, updatedMasterPub);
+      keyData.setSecretKeyRing(newSecRing);
+
+      // 8) Update KeyInfo for UI and return
+      ret.getKeyInfo().setUser(newUserId);
+      return ret;
+    } catch (Throwable t) {
+      throw new RuntimeException("Failed to change key User ID", t);
+    }
+  }
+
+  private static PGPSecretKey findMasterSecretKey(PGPSecretKeyRing secRing) {
+    PGPSecretKey masterSec = secRing.getSecretKey();
+    if (masterSec != null && masterSec.isMasterKey()) {
+      return masterSec;
+    }
+    for (PGPSecretKey sk : secRing) {
+      if (sk.isMasterKey()) {
+        return sk;
+      }
+    }
+    throw new IllegalStateException("Master secret key not found");
+  }
+
+  private static BcPGPContentSignerBuilder buildSignerFor(PGPPublicKey masterPub) {
+    return new BcPGPContentSignerBuilder(masterPub.getAlgorithm(), HashAlgorithmTags.SHA256);
+  }
+
+  private static PGPPublicKey demoteExistingUids(
+      PGPPublicKey baseMasterPub, BcPGPContentSignerBuilder signerBuilder, PGPPrivateKey masterPriv)
+      throws PGPException {
+    PGPPublicKey updated = baseMasterPub;
+    for (Iterator<String> it = baseMasterPub.getUserIDs(); it.hasNext(); ) {
+      String uid = it.next();
+      if (uid == null) {
+        continue;
+      }
+      //noinspection deprecation -- fine for v4
+      PGPSignatureGenerator sigGen = new PGPSignatureGenerator(signerBuilder);
+      sigGen.init(PGPSignature.POSITIVE_CERTIFICATION, masterPriv);
+      PGPSignatureSubpacketGenerator spg = new PGPSignatureSubpacketGenerator();
+      spg.setPrimaryUserID(true, false); // explicitly not primary
+      sigGen.setHashedSubpackets(spg.generate());
+      PGPSignature sig = sigGen.generateCertification(uid, updated);
+      updated = PGPPublicKey.addCertification(updated, uid, sig);
+    }
+    return updated;
+  }
+
+  private PGPPublicKey addPrimaryUid(
+      PGPPublicKey updatedMasterPub,
+      String newUserId,
+      BcPGPContentSignerBuilder signerBuilder,
+      PGPPrivateKey masterPriv)
+      throws PGPException {
+    //noinspection deprecation -- fine for v4
+    PGPSignatureGenerator sigGen = new PGPSignatureGenerator(signerBuilder);
+    sigGen.init(PGPSignature.POSITIVE_CERTIFICATION, masterPriv);
+    PGPSignatureSubpacketGenerator spg = new PGPSignatureSubpacketGenerator();
+    spg.setPrimaryUserID(true, true);
+    setPreferences(spg); // include sane preferences on the new primary UID
+    sigGen.setHashedSubpackets(spg.generate());
+    PGPSignature cert = sigGen.generateCertification(newUserId, updatedMasterPub);
+    return PGPPublicKey.addCertification(updatedMasterPub, newUserId, cert);
+  }
+
+  private static PGPPublicKeyRing rebuildPublicRingFromSecretIfMissing(KeyDataPgp keyData) {
+    PGPPublicKeyRing pubRing = keyData.getPublicKeyRing();
+    if (pubRing != null) {
+      return pubRing;
+    }
+    PGPSecretKeyRing secRing = keyData.getSecretKeyRing();
+    Preconditions.checkArgument(secRing != null, "No public ring; secret ring is required");
+    List<PGPPublicKey> pubs = new ArrayList<>();
+    for (Iterator<PGPPublicKey> it = secRing.getPublicKeys(); it.hasNext(); ) {
+      pubs.add(it.next());
+    }
+    return new PGPPublicKeyRing(pubs);
+  }
+
+  private static PGPPublicKeyRing rebuildPublicKeyRingWithUpdatedMaster(
+      PGPPublicKeyRing currentPubRing, PGPPublicKey oldMaster, PGPPublicKey updatedMaster) {
+    // Keep master first; then add all other public keys in the original order
+    List<PGPPublicKey> rebuilt = new ArrayList<>();
+    rebuilt.add(updatedMaster);
+    for (Iterator<PGPPublicKey> it = currentPubRing.getPublicKeys(); it.hasNext(); ) {
+      PGPPublicKey pk = it.next();
+      if (pk.getKeyID() == oldMaster.getKeyID()) {
+        continue; // skip old master instance
+      }
+      rebuilt.add(pk);
+    }
+    return new PGPPublicKeyRing(rebuilt);
+  }
+
+  private static PGPSecretKeyRing mirrorUpdatedMasterToSecretRing(
+      PGPSecretKeyRing secRing, PGPSecretKey oldMasterSec, PGPPublicKey updatedMasterPub) {
+    PGPSecretKey newMasterSec = PGPSecretKey.replacePublicKey(oldMasterSec, updatedMasterPub);
+    List<PGPSecretKey> secRebuilt = new ArrayList<>();
+    secRebuilt.add(newMasterSec);
+    for (Iterator<PGPSecretKey> it = secRing.getSecretKeys(); it.hasNext(); ) {
+      PGPSecretKey sk = it.next();
+      if (sk.getKeyID() == oldMasterSec.getKeyID()) {
+        continue; // skip old master instance
+      }
+      secRebuilt.add(sk);
+    }
+    return new PGPSecretKeyRing(secRebuilt);
+  }
+
+  private static void setPreferences(PGPSignatureSubpacketGenerator target) {
+    target.setPreferredSymmetricAlgorithms(
+        false,
+        new int[] {
+          SymmetricKeyAlgorithmTags.AES_256,
+          SymmetricKeyAlgorithmTags.AES_192,
+          SymmetricKeyAlgorithmTags.AES_128
+        });
+    target.setPreferredHashAlgorithms(
+        false,
+        new int[] {
+          HashAlgorithmTags.SHA256,
+          HashAlgorithmTags.SHA512,
+          HashAlgorithmTags.SHA384,
+          HashAlgorithmTags.SHA224
+        });
+    target.setPreferredCompressionAlgorithms(
+        false,
+        new int[] {
+          CompressionAlgorithmTags.ZLIB,
+          CompressionAlgorithmTags.BZIP2,
+          CompressionAlgorithmTags.ZIP
+        });
+  }
+
+  private void validateChangeUserIdParams(ChangeUserIdParams params) {
+    ValidationContext<ChangeUserIdParams> ctx = validationContextFactory.buildFor(params);
+    ctx.hasText(ChangeUserIdParams::getFullName);
+    if (ctx.hasText(ChangeUserIdParams::getEmail)) {
+      ctx.validEmail(ChangeUserIdParams::getEmail);
+    }
+    ctx.throwIfHasErrors();
+  }
+
+  private static String buildUserId(String fullName, String email) {
+    if (StringUtils.hasText(email)) {
+      return fullName + " <" + email + ">";
+    } else {
+      return fullName;
     }
   }
 

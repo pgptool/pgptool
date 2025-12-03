@@ -47,6 +47,9 @@ import org.pgptool.gui.ui.about.AboutView;
 import org.pgptool.gui.ui.changekeypassword.ChangeKeyPasswordHost;
 import org.pgptool.gui.ui.changekeypassword.ChangeKeyPasswordPm;
 import org.pgptool.gui.ui.changekeypassword.ChangeKeyPasswordView;
+import org.pgptool.gui.ui.changekeyuserid.ChangeKeyUserIdHost;
+import org.pgptool.gui.ui.changekeyuserid.ChangeKeyUserIdPm;
+import org.pgptool.gui.ui.changekeyuserid.ChangeKeyUserIdView;
 import org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesHost;
 import org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesPm;
 import org.pgptool.gui.ui.checkForUpdates.CheckForUpdatesView;
@@ -731,6 +734,33 @@ public class RootPm implements InitializingBean, GlobalAppActions {
     }
   }
 
+  private class ChangeKeyUserIdDialogOpener
+      extends DialogOpener<ChangeKeyUserIdHost, Key, ChangeKeyUserIdPm, ChangeKeyUserIdView> {
+    private final Key key;
+
+    public ChangeKeyUserIdDialogOpener(Key key) {
+      super(ChangeKeyUserIdPm.class, ChangeKeyUserIdView.class, "action.changeUserId");
+      this.key = key;
+    }
+
+    @Override
+    protected ChangeKeyUserIdHost getHost() {
+      return new ChangeKeyUserIdHost() {
+        @Override
+        public void handleClose() {
+          view.unrender();
+          pm.detach();
+          pm = null;
+        }
+      };
+    }
+
+    @Override
+    protected Key getInitParams() {
+      return key;
+    }
+  }
+
   private final DialogOpener<KeysListHost, Void, KeysListPm, KeysListView> keysListWindowHost =
       new DialogOpener<>(KeysListPm.class, KeysListView.class, "action.showKeysList") {
 
@@ -762,6 +792,12 @@ public class RootPm implements InitializingBean, GlobalAppActions {
             @Override
             public void changeKeyPassphrase(Key key, ActionEvent originalEvent) {
               new ChangeKeyPasswordDialogOpener(key)
+                  .actionToOpenWindow.actionPerformed(originalEvent);
+            }
+
+            @Override
+            public void changeKeyUserId(Key key, ActionEvent originalEvent) {
+              new ChangeKeyUserIdDialogOpener(key)
                   .actionToOpenWindow.actionPerformed(originalEvent);
             }
           };

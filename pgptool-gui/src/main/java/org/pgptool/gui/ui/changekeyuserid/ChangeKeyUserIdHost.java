@@ -15,22 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  ******************************************************************************/
-package org.pgptool.gui.ui.keyslist;
+package org.pgptool.gui.ui.changekeyuserid;
 
-import java.awt.event.ActionEvent;
-import javax.swing.Action;
-import org.pgptool.gui.encryption.api.dto.Key;
-
-public interface KeysListHost {
+public interface ChangeKeyUserIdHost {
   void handleClose();
-
-  Action getActionImportKey();
-
-  Action getActionImportKeyFromText();
-
-  Action getActionCreateKey();
-
-  void changeKeyPassphrase(Key key, ActionEvent originalEvent);
-
-  void changeKeyUserId(Key key, ActionEvent originalEvent);
 }

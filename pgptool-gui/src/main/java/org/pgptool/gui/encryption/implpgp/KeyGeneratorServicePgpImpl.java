@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.log4j.Logger;
 import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
@@ -59,6 +58,8 @@ import org.pgptool.gui.encryption.api.dto.ChangePasswordParams;
 import org.pgptool.gui.encryption.api.dto.ChangeUserIdParams;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
 import org.pgptool.gui.encryption.api.dto.Key;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.summerb.utils.objectcopy.DeepCopy;
 import org.summerb.validation.ValidationContext;
@@ -66,7 +67,7 @@ import org.summerb.validation.ValidationContextFactory;
 import org.summerb.validation.ValidationException;
 
 public class KeyGeneratorServicePgpImpl implements KeyGeneratorService {
-  private static final Logger log = Logger.getLogger(KeyGeneratorServicePgpImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(KeyGeneratorServicePgpImpl.class);
   private static final String PROVIDER = "BC";
 
   private final ValidationContextFactory validationContextFactory;

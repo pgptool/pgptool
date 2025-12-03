@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Set;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.app.Message;
@@ -97,6 +96,8 @@ import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.ApplicationExitUsage;
 import org.pgptool.gui.usage.dto.ApplicationStartUsage;
 import org.pgptool.gui.usage.dto.CommandLineArgsUsage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.StringUtils;
@@ -110,7 +111,7 @@ import ru.skarpushin.swingpm.tools.edt.Edt;
  * @author Sergey Karpushin
  */
 public class RootPm implements InitializingBean, GlobalAppActions {
-  private static final Logger log = Logger.getLogger(RootPm.class);
+  private static final Logger log = LoggerFactory.getLogger(RootPm.class);
 
   public static RootPm INSTANCE;
 
@@ -939,7 +940,7 @@ public class RootPm implements InitializingBean, GlobalAppActions {
       Window optionalOrigin = UiUtils.findWindow(originAction);
 
       if (pm != null && view != null && view instanceof HasWindow) {
-        log.debug("Window is already opened -- just bring it to top " + view);
+        log.debug("Window is already opened -- just bring it to top {}", view);
         Window window = ((HasWindow) view).getWindow();
         // TBD: Move this code to same place where we do center window
         UiUtils.centerWindow(window, optionalOrigin);

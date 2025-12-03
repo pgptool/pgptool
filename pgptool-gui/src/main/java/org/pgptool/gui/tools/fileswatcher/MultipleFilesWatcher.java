@@ -34,14 +34,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.summerb.utils.threads.RecurringBackgroundTask;
 
 // NOTE: Consider migrating to org.apache.commons.io.monitor.FileAlterationObserver, it appears we
 // introduced bycle here
 
 public class MultipleFilesWatcher {
-  private static final Logger log = Logger.getLogger(MultipleFilesWatcher.class);
+  private static final Logger log = LoggerFactory.getLogger(MultipleFilesWatcher.class);
 
   private final FilesWatcherHandler dirWatcherHandler;
   private final String watcherName;
@@ -103,10 +104,9 @@ public class MultipleFilesWatcher {
         BaseFolder baseFolder = baseFolders.get(baseFolderStr);
         if (baseFolder != null) {
           log.debug(
-              "Parent directory is already being watched "
-                  + baseFolderStr
-                  + ", will just add file to watch "
-                  + relativeFilename);
+              "Parent directory is already being watched {}, will just add file to watch {}",
+              baseFolderStr,
+              relativeFilename);
           baseFolder.interestedFiles.add(relativeFilename);
           return;
         }
@@ -119,13 +119,12 @@ public class MultipleFilesWatcher {
         baseFolders.put(baseFolderStr, baseFolder);
 
         log.debug(
-            "New watch key created for folder "
-                + baseFolderStr
-                + ", add first file "
-                + relativeFilename);
+            "New watch key created for folder {}, add first file {}",
+            baseFolderStr,
+            relativeFilename);
       }
     } catch (Throwable t) {
-      log.error("Failed to watch file " + filePathName, t);
+      log.error("Failed to watch file {}", filePathName, t);
       // not goinf to ruin app workflow
     }
   }
@@ -138,13 +137,13 @@ public class MultipleFilesWatcher {
       synchronized (watcherName) {
         BaseFolder baseFolder = baseFolders.get(baseFolderStr);
         if (baseFolder == null) {
-          log.debug("No associated watchers found for " + baseFolderStr);
+          log.debug("No associated watchers found for {}", baseFolderStr);
           return;
         }
 
         baseFolder.interestedFiles.remove(relativeFilename);
         log.debug(
-            "File is no longer watched in folder " + baseFolderStr + " file " + relativeFilename);
+            "File is no longer watched in folder {} file {}", baseFolderStr, relativeFilename);
         if (!baseFolder.interestedFiles.isEmpty()) {
           return;
         }
@@ -153,7 +152,7 @@ public class MultipleFilesWatcher {
         // re-created it. See #91, #75
       }
     } catch (Throwable t) {
-      log.error("Failed to watch file " + filePathName, t);
+      log.error("Failed to watch file {}", filePathName, t);
       // not goinf to ruin app workflow
     }
   }
@@ -163,7 +162,7 @@ public class MultipleFilesWatcher {
         new Thread("FilesWatcher-" + watcherName) {
           @Override
           public void run() {
-            log.debug("FileWatcher thread started " + watcherName);
+            log.debug("FileWatcher thread started {}", watcherName);
             while (true) {
               WatchKey key;
               try {
@@ -204,7 +203,7 @@ public class MultipleFilesWatcher {
                 }
 
                 // print out event
-                log.debug("Watcher event: " + event.kind().name() + ", file " + child);
+                log.debug("Watcher event: {}, file {}", event.kind().name(), child);
                 dirWatcherHandler.handleFileChanged(event.kind(), child.toString());
               }
 

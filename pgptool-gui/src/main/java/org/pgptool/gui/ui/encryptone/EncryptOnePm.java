@@ -40,7 +40,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
@@ -71,6 +70,8 @@ import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.summerb.utils.objectcopy.DeepCopy;
@@ -82,7 +83,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
 public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String> {
-  private static final Logger log = Logger.getLogger(EncryptOnePm.class);
+  private static final Logger log = LoggerFactory.getLogger(EncryptOnePm.class);
 
   private static final String ENCRYPTED_FILE_EXTENSION = "pgp";
   private static final String SOURCE_FOLDER = "EncryptOnePm.SOURCE_FOLDER";
@@ -324,7 +325,7 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-          log.debug("Source changed to : " + sourceFile.getValue());
+          log.debug("Source changed to : {}", sourceFile.getValue());
 
           refreshPrimaryOperationAvailability();
 
@@ -515,7 +516,7 @@ public class EncryptOnePm extends PresentationModelBaseEx<EncryptOneHost, String
         source = inputStreamSupervisor.getFingerprint();
         target = outputStreamSupervisor.getFingerprint();
 
-        log.debug("Encryption completed: " + targetFileName);
+        log.debug("Encryption completed: {}", targetFileName);
       } catch (UserRequestedCancellationException ce) {
         if (ce.isSoftCancel()) {
           reEnableDialog();

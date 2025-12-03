@@ -23,13 +23,14 @@ import com.sun.jna.WString;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.win32.StdCallLibrary;
 import java.util.Arrays;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Sergey Karpushin
  */
 public class OsNativeApiWindowsImpl implements OsNativeApi {
-  private static final Logger log = Logger.getLogger(OsNativeApiWindowsImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(OsNativeApiWindowsImpl.class);
 
   private Kernel32 kernel32;
   private Shell32 shell32;
@@ -45,18 +46,18 @@ public class OsNativeApiWindowsImpl implements OsNativeApi {
         return fallBackTo;
       }
 
-      log.debug("In case we fail fallback would happen to: " + Arrays.toString(fallBackTo));
+      log.debug("In case we fail fallback would happen to: {}", Arrays.toString(fallBackTo));
       String[] nativeCommandLine = getFullCommandLine();
       log.debug(
-          "According to Windows API, program was started with arguments: "
-              + Arrays.toString(nativeCommandLine));
+          "According to Windows API, program was started with arguments: {}",
+          Arrays.toString(nativeCommandLine));
 
       String[] ret = new String[fallBackTo.length];
 
       System.arraycopy(
           nativeCommandLine, nativeCommandLine.length - fallBackTo.length, ret, 0, ret.length);
 
-      log.debug("These arguments will be used: " + Arrays.toString(nativeCommandLine));
+      log.debug("These arguments will be used: {}", Arrays.toString(nativeCommandLine));
       return ret;
     } catch (Throwable t) {
       log.error("Failed to use JNA to get current program command line arguments", t);

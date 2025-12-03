@@ -23,11 +23,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.tools.IoStreamUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FileBasedLock implements Closeable {
-  private static final Logger log = Logger.getLogger(FileBasedLock.class);
+  private static final Logger log = LoggerFactory.getLogger(FileBasedLock.class);
 
   private final File file;
   private RandomAccessFile randomAccessFile;
@@ -41,16 +42,16 @@ public class FileBasedLock implements Closeable {
   public synchronized boolean tryLock() {
     try {
       if (log.isDebugEnabled()) {
-        log.debug("trylock " + file);
+        log.debug("trylock {}", file);
       }
       fileLock = randomAccessFile.getChannel().tryLock();
       boolean result = fileLock != null;
       if (log.isDebugEnabled()) {
-        log.debug("trylock " + file + " result " + result);
+        log.debug("trylock {} result {}", file, result);
       }
       return result;
     } catch (Throwable e) {
-      log.warn("Failed to acquire lock for " + file, e);
+      log.warn("Failed to acquire lock for {}", file, e);
       return false;
     }
   }
@@ -75,20 +76,18 @@ public class FileBasedLock implements Closeable {
     try {
       if (fileLock != null) {
         if (log.isDebugEnabled()) {
-          log.debug("Lock " + file + " released");
+          log.debug("Lock {} released", file);
         }
         fileLock.release();
         fileLock = null;
       } else {
         if (log.isDebugEnabled()) {
           log.debug(
-              "Lock "
-                  + file
-                  + " cannot be released, because nothing to release, lock wasn't acquired");
+              "Lock {} cannot be released, because nothing to release, lock wasn't acquired", file);
         }
       }
     } catch (Exception e) {
-      log.warn("Unable to release lock for file: " + file.getAbsolutePath(), e);
+      log.warn("Unable to release lock for file: {}", file.getAbsolutePath(), e);
       fileLock = null;
     }
   }

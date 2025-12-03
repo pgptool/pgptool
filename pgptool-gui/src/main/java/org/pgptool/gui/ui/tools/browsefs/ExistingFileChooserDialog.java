@@ -22,15 +22,16 @@ import java.io.File;
 import javax.swing.JFileChooser;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 public class ExistingFileChooserDialog {
-  private static final Logger log = Logger.getLogger(ExistingFileChooserDialog.class);
+  private static final Logger log = LoggerFactory.getLogger(ExistingFileChooserDialog.class);
 
   private final ConfigPairs configPairs;
   private final String configPairNameToRemember;
@@ -102,7 +103,7 @@ public class ExistingFileChooserDialog {
               : SystemUtils.getUserHome().getAbsolutePath();
       ofd.setCurrentDirectory(new File(pathname));
     } catch (Throwable t) {
-      log.warn("Failed to set suggested location by key " + configPairNameToRemember, t);
+      log.warn("Failed to set suggested location by key {}", configPairNameToRemember, t);
     }
   }
 }

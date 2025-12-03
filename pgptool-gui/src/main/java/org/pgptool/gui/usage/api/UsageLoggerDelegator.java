@@ -3,11 +3,12 @@ package org.pgptool.gui.usage.api;
 import java.awt.event.ActionEvent;
 import java.io.Serializable;
 import javax.swing.Action;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 
@@ -17,7 +18,7 @@ import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
  * @author sergeyk
  */
 public class UsageLoggerDelegator implements UsageLogger, HasUsageRecordingSetting {
-  public static final Logger log = Logger.getLogger(UsageLoggerDelegator.class);
+  public static final Logger log = LoggerFactory.getLogger(UsageLoggerDelegator.class);
 
   public static final String IS_USAGE_RECORDING_ENABLED = "IS_USAGE_RECORDING_ENABLED";
 
@@ -40,7 +41,7 @@ public class UsageLoggerDelegator implements UsageLogger, HasUsageRecordingSetti
       isUsageRecordingEnabled.setValueByOwner(
           UiUtils.confirmRegular(null, "prompt.doUsageRecording", null));
     }
-    log.info("Current value of isUsageRecordingEnabled = " + isUsageRecordingEnabled.getValue());
+    log.info("Current value of isUsageRecordingEnabled = {}", isUsageRecordingEnabled.getValue());
   }
 
   @Override

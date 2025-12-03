@@ -21,13 +21,14 @@ import static org.pgptool.gui.app.Messages.text;
 
 import java.awt.event.ActionEvent;
 import javax.swing.Action;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.autoupdate.api.NewVersionChecker;
 import org.pgptool.gui.autoupdate.api.UpdatePackageInfo;
 import org.pgptool.gui.ui.tools.UrlOpener;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
@@ -36,7 +37,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
 
 public class AboutPm extends PresentationModelBaseEx<AboutHost, Void> implements InitializingBean {
-  private static final Logger log = Logger.getLogger(AboutPm.class);
+  private static final Logger log = LoggerFactory.getLogger(AboutPm.class);
 
   @Value("${net.ts.baseUrl}")
   private String urlToSite;

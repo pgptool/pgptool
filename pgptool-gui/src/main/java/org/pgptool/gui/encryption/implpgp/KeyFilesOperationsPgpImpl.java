@@ -135,7 +135,7 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
           }
         } else {
           // Ignore other packet types during import
-          log.debug("Skipping non-key section during import: " + section);
+          log.debug("Skipping non-key section during import: {}", section);
         }
       }
     } catch (Throwable t) {
@@ -323,13 +323,13 @@ public class KeyFilesOperationsPgpImpl implements KeyFilesOperations {
             return ed.getCurveOID().getId();
           }
         } catch (Throwable ex) {
-          log.warn("Failed to resolve curve name for key " + key.getKeyID(), ex);
+          log.warn("Failed to resolve curve name for key {}", key.getKeyID(), ex);
           // fall-through to constants
         }
         return algo == PublicKeyAlgorithmTags.Ed25519 ? "1.3.101.112" : "1.3.101.113";
       }
     } catch (Throwable ex) {
-      log.warn("Failed to resolve curve name for key " + key.getKeyID(), ex);
+      log.warn("Failed to resolve curve name for key {}", key.getKeyID(), ex);
       // ignore and fall back
     }
     return "unresolved";

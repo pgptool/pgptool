@@ -23,14 +23,15 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.config.api.ConfigsBasePathResolver;
 import org.pgptool.gui.encryption.implpgp.PgpKeysRing;
 import org.pgptool.gui.tools.TextFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 public class ConfigsBasePathResolverImpl implements ConfigsBasePathResolver {
-  private static final Logger log = Logger.getLogger(ConfigsBasePathResolverImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(ConfigsBasePathResolverImpl.class);
   private String chosenLocation;
   private final String configFolderName;
   private final String customConfigBasePath;
@@ -45,7 +46,7 @@ public class ConfigsBasePathResolverImpl implements ConfigsBasePathResolver {
     if (chosenLocation == null) {
       List<String> options = buildOptions();
 
-      log.debug("Base path options: " + options);
+      log.debug("Base path options: {}", options);
       for (String option : options) {
         if (tryAccept(option)) {
           return chosenLocation;
@@ -106,7 +107,7 @@ public class ConfigsBasePathResolverImpl implements ConfigsBasePathResolver {
               PgpKeysRing.class.getSimpleName());
       boolean exists = legacyFile.exists();
       if (exists) {
-        log.debug("Detected legacy configs file: " + legacyFile.getAbsolutePath());
+        log.debug("Detected legacy configs file: {}", legacyFile.getAbsolutePath());
       }
       return exists;
     } catch (Throwable t) {
@@ -123,14 +124,14 @@ public class ConfigsBasePathResolverImpl implements ConfigsBasePathResolver {
   }
 
   private boolean tryAccept(String basePathStr) {
-    log.info("Testing basePath: " + basePathStr);
+    log.info("Testing basePath: {}", basePathStr);
     if (!StringUtils.hasText(basePathStr)) {
       return false;
     }
 
     File basePath = new File(basePathStr);
     if (!basePath.exists() || !basePath.isDirectory()) {
-      log.info("Path is not acceptable, it does not exist or is not a directory: " + basePathStr);
+      log.info("Path is not acceptable, it does not exist or is not a directory: {}", basePathStr);
       return false;
     }
 
@@ -139,13 +140,13 @@ public class ConfigsBasePathResolverImpl implements ConfigsBasePathResolver {
     try {
       if (!configsFolder.exists()) {
         if (!configsFolder.mkdirs()) {
-          log.info("Failed to create configs dir " + configsFolder + ", basePath is not reliable");
+          log.info("Failed to create configs dir {}, basePath is not reliable", configsFolder);
           return false;
         }
         File testFile = new File(configsFolder, "test.test");
         TextFile.write(testFile.getAbsolutePath(), "test");
         if (!testFile.delete()) {
-          log.info("Failed to delete test file " + testFile + ", basePath is not reliable");
+          log.info("Failed to delete test file {}, basePath is not reliable", testFile);
           return false;
         }
       }
@@ -155,7 +156,7 @@ public class ConfigsBasePathResolverImpl implements ConfigsBasePathResolver {
     }
 
     chosenLocation = configsFolder.getAbsolutePath();
-    log.info("Path was chosen as a basepath for config files: " + chosenLocation);
+    log.info("Path was chosen as a basepath for config files: {}", chosenLocation);
     return true;
   }
 }

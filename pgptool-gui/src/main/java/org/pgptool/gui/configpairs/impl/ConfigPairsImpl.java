@@ -24,9 +24,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.summerb.utils.DtoBase;
 import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 
@@ -37,7 +38,7 @@ import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
  * @author Sergey Karpushin
  */
 public class ConfigPairsImpl implements ConfigPairs {
-  private static final Logger log = Logger.getLogger(ConfigPairsImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(ConfigPairsImpl.class);
 
   private final ConfigRepository configRepository;
   private final EventBus eventBus;
@@ -57,8 +58,7 @@ public class ConfigPairsImpl implements ConfigPairs {
   public synchronized void put(String key, Object value) {
     if (log.isDebugEnabled()) {
       String valueStr = value == null ? "(null)" : gson.toJson(value);
-      log.debug(
-          String.format("Saving \"%s\" property \"%s\" value: %s", clarification, key, valueStr));
+      log.debug("Saving \"{}\" property \"{}\" value: {}", clarification, key, valueStr);
     }
 
     if (value == null) {

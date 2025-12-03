@@ -33,7 +33,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.swing.Action;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
 import org.pgptool.gui.encryption.api.KeyRingService;
 import org.pgptool.gui.encryption.api.dto.CreateKeyParams;
@@ -44,6 +43,8 @@ import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.KeyUsage;
 import org.pgptool.gui.usage.api.UsageLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.summerb.methodCapturers.PropertyNameResolver;
 import org.summerb.methodCapturers.PropertyNameResolverFactory;
@@ -75,7 +76,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterReadonlyImpl;
  */
 public class GetKeyPasswordPm
     extends PresentationModelBaseEx<GetKeyPasswordHost, GetKeyPasswordPo> {
-  private static final Logger log = Logger.getLogger(GetKeyPasswordPm.class);
+  private static final Logger log = LoggerFactory.getLogger(GetKeyPasswordPm.class);
 
   private static final Map<String, PasswordDeterminedForKey> CACHE_KEYID_TO_PASSWORD =
       new HashMap<>();
@@ -295,7 +296,7 @@ public class GetKeyPasswordPm
       if (e.getValue().getKeyData().isHasAlternativeId(iter.next().getKey())) {
         iter.remove();
         log.debug(
-            "Removed cached password for changed key " + e.getValue().getKeyInfo().getKeyId());
+            "Removed cached password for changed key {}", e.getValue().getKeyInfo().getKeyId());
       }
     }
   }

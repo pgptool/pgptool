@@ -38,13 +38,14 @@ import java.util.stream.Collectors;
 import javax.swing.Action;
 import javax.swing.table.TableModel;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.ui.decryptone.DecryptionDialogParameters;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -55,7 +56,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSearchHost, Void>
     implements InitializingBean {
-  private static final Logger log = Logger.getLogger(HistoryQuickSearchPm.class);
+  private static final Logger log = LoggerFactory.getLogger(HistoryQuickSearchPm.class);
 
   private final EventBus eventBus;
   private final ExecutorService executorService;
@@ -140,7 +141,7 @@ public class HistoryQuickSearchPm extends PresentationModelBaseEx<HistoryQuickSe
         public TableModel call() {
           try {
             String query = quickSearch.getValue();
-            log.debug("Quick search for record subject: " + query);
+            log.debug("Quick search for record subject: {}", query);
             tableLabel.setValueByOwner(Messages.get("term.searching", query));
 
             Set<Entry<String, Object>> all = decryptionParams.getAll();

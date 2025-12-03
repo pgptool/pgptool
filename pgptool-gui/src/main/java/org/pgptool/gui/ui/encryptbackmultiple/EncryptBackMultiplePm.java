@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.swing.Action;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.bkgoperation.Progress;
@@ -63,6 +62,8 @@ import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.EncryptBackAllIterationUsage;
 import org.pgptool.gui.usage.dto.EncryptBackAllUsage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.summerb.utils.objectcopy.DeepCopy;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
@@ -71,7 +72,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class EncryptBackMultiplePm
     extends PresentationModelBaseEx<EncryptBackMultipleHost, Set<String>> {
-  private static final Logger log = Logger.getLogger(EncryptBackMultiplePm.class);
+  private static final Logger log = LoggerFactory.getLogger(EncryptBackMultiplePm.class);
 
   private final EncryptionParamsStorage encryptionParamsStorage;
   private final ConfigPairs appProps;
@@ -196,7 +197,7 @@ public class EncryptBackMultiplePm
     Set<String> allRecipients = enumerateAllRecipientsIds();
     List<Key> keys = keyRingService.findMatchingKeys(allRecipients);
     boolean result = allRecipients.size() > keys.size();
-    log.debug("Discovering missing recipients finished. HasMissingRecipients = " + result);
+    log.debug("Discovering missing recipients finished. HasMissingRecipients = {}", result);
     return result;
   }
 
@@ -420,7 +421,7 @@ public class EncryptBackMultiplePm
 
             return EncryptBackResult.Encrypted;
           } catch (Throwable t) {
-            log.error("Encryption failed: " + decryptedFile, t);
+            log.error("Encryption failed: {}", decryptedFile, t);
 
             Throwables.throwIfInstanceOf(t, UserRequestedCancellationException.class);
             ret.errors.put(decryptedFile, t);

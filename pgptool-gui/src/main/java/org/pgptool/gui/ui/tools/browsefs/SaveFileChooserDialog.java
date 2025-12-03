@@ -24,14 +24,15 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 public class SaveFileChooserDialog {
-  private static final Logger log = Logger.getLogger(SaveFileChooserDialog.class);
+  private static final Logger log = LoggerFactory.getLogger(SaveFileChooserDialog.class);
 
   private final String dialogTitleCode;
   private final String approvalButtonTextCode;
@@ -111,7 +112,7 @@ public class SaveFileChooserDialog {
               : SystemUtils.getUserHome().getAbsolutePath();
       ofd.setCurrentDirectory(new File(pathname));
     } catch (Throwable t) {
-      log.warn("Failed to set suggested location for dialog " + dialogTitleCode, t);
+      log.warn("Failed to set suggested location for dialog {}", dialogTitleCode, t);
     }
   }
 

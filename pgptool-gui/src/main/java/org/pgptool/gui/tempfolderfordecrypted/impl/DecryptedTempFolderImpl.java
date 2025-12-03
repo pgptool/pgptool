@@ -22,7 +22,6 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.Random;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.config.api.ConfigsBasePathResolver;
@@ -32,6 +31,8 @@ import org.pgptool.gui.tools.ConsoleExceptionUtils;
 import org.pgptool.gui.tools.TextFile;
 import org.pgptool.gui.ui.root.RootPm;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.StringUtils;
 import org.summerb.validation.ValidationError;
@@ -40,7 +41,7 @@ import org.summerb.validation.errors.MustNotBeNull;
 
 public class DecryptedTempFolderImpl implements DecryptedTempFolder, InitializingBean {
   public static final String CONFIG_DECRYPTED_TEMP_FOLDER = "tempFolderForDecrypted";
-  private static final Logger log = Logger.getLogger(DecryptedTempFolderImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(DecryptedTempFolderImpl.class);
 
   private final ConfigsBasePathResolver configsBasePathResolver;
   private final ConfigPairs appProps;
@@ -122,7 +123,7 @@ public class DecryptedTempFolderImpl implements DecryptedTempFolder, Initializin
     } catch (Throwable t) {
       Throwables.throwIfInstanceOf(t, ValidationException.class);
       log.error(
-          "Exception during validation of target folder for temp decrypted files " + newValue, t);
+          "Exception during validation of target folder for temp decrypted files {}", newValue, t);
       throw new ValidationException(
           new ValidationError(
               CONFIG_DECRYPTED_TEMP_FOLDER,

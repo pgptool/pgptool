@@ -55,16 +55,17 @@ import javax.swing.UIManager;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
-import org.apache.log4j.Logger;
 import org.jdesktop.swingx.imported.JXLabel;
 import org.pgptool.gui.app.MessageSeverity;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.ui.root.RootPm;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.skarpushin.swingpm.tools.edt.Edt;
 
 public class UiUtils {
-  public static final Logger log = Logger.getLogger(UiUtils.class);
+  public static final Logger log = LoggerFactory.getLogger(UiUtils.class);
 
   /**
    * By default window will be placed at 0x0 coordinates, which is not pretty. We have to position
@@ -87,18 +88,17 @@ public class UiUtils {
 
     // Multi-monitor configuration -- not a rocket science too
     log.debug(
-        "Positioning window according to multi-monitor configuration: "
-            + formatMonitorSizes(graphicsDevices));
+        "Positioning window according to multi-monitor configuration: {}",
+        formatMonitorSizes(graphicsDevices));
     Pair<GraphicsDevice, GraphicsConfiguration> device = null;
     if (optionalOrigin != null) {
       device = determineGraphicsDeviceByWindow(ge, graphicsDevices, optionalOrigin);
       if (device != null && log.isDebugEnabled()) {
         int index = graphicsDevices.indexOf(device.getLeft());
         log.debug(
-            "Parent window "
-                + format(optionalOrigin.getBounds())
-                + " belongs to screen "
-                + format(index, device.getLeft(), device.getRight()));
+            "Parent window {} belongs to screen {}",
+            format(optionalOrigin.getBounds()),
+            format(index, device.getLeft(), device.getRight()));
       }
     }
 
@@ -107,7 +107,7 @@ public class UiUtils {
           Pair.of(
               ge.getDefaultScreenDevice(), ge.getDefaultScreenDevice().getDefaultConfiguration());
       int index = graphicsDevices.indexOf(device.getLeft());
-      log.debug("Selecting default screen: " + format(index, device.getLeft(), device.getRight()));
+      log.debug("Selecting default screen: {}", format(index, device.getLeft(), device.getRight()));
     }
 
     Rectangle bounds = device.getRight().getBounds();
@@ -125,7 +125,7 @@ public class UiUtils {
       GraphicsEnvironment graphicsEnvironment,
       List<GraphicsDevice> graphicsDevices,
       Window window) {
-    log.debug("determineGraphicsDeviceByWindow " + format(window.getBounds()));
+    log.debug("determineGraphicsDeviceByWindow {}", format(window.getBounds()));
 
     Rectangle windowBounds = window.getBounds();
     int lastArea = 0;
@@ -133,8 +133,8 @@ public class UiUtils {
     for (int i = 0; i < graphicsDevices.size(); ++i) {
       GraphicsDevice graphicsDevice = graphicsDevices.get(i);
       log.debug(
-          "- Checking GraphicsDevice: "
-              + format(i, graphicsDevice, graphicsDevice.getDefaultConfiguration()));
+          "- Checking GraphicsDevice: {}",
+          format(i, graphicsDevice, graphicsDevice.getDefaultConfiguration()));
       GraphicsConfiguration[] graphicsConfigurations = graphicsDevice.getConfigurations();
       Set<Rectangle> seen = new HashSet<>();
       for (GraphicsConfiguration graphicsConfiguration : graphicsConfigurations) {
@@ -143,7 +143,7 @@ public class UiUtils {
           continue;
         }
 
-        log.debug("  - Checking GraphicsConfiguration: " + format(graphicsBounds));
+        log.debug("  - Checking GraphicsConfiguration: {}", format(graphicsBounds));
         Rectangle intersection = windowBounds.intersection(graphicsBounds);
         int area = intersection.width * intersection.height;
         if (area != 0 && area > lastArea) {
@@ -303,13 +303,13 @@ public class UiUtils {
                 Font font = UIManager.getDefaults().getFont("TextField.font");
                 String current = font != null ? Integer.toString(font.getSize()) : "unknown";
                 log.debug(
-                    "Screen dpi seem to be 96. Not going to change font size. Btw current size seem to be "
-                        + current);
+                    "Screen dpi seem to be 96. Not going to change font size. Btw current size seem to be {}",
+                    current);
               }
               return;
             }
             int targetFontSize = 12 * dpi / 96;
-            log.debug("Screen dpi = " + dpi + ", decided to change font size to " + targetFontSize);
+            log.debug("Screen dpi = {}, decided to change font size to {}", dpi, targetFontSize);
             setDefaultSize(targetFontSize);
           }
 
@@ -327,8 +327,8 @@ public class UiUtils {
               return false;
             } catch (Throwable t) {
               log.warn(
-                  "Failed to see oif JRE can handle font scaling. Will assume it does. JRE version: "
-                      + System.getProperty("java.version"),
+                  "Failed to see oif JRE can handle font scaling. Will assume it does. JRE version: {}",
+                  System.getProperty("java.version"),
                   t);
               return true;
             }
@@ -348,12 +348,10 @@ public class UiUtils {
               UIManager.put(key, changedFont);
               Font doubleCheck = UIManager.getDefaults().getFont(key);
               log.debug(
-                  "Font size changed for "
-                      + key
-                      + ". From "
-                      + font.getSize()
-                      + " to "
-                      + doubleCheck.getSize());
+                  "Font size changed for {}. From {} to {}",
+                  key,
+                  font.getSize(),
+                  doubleCheck.getSize());
             }
           }
         });
@@ -442,7 +440,7 @@ public class UiUtils {
     try {
       FileUtils.write(file, msg, StandardCharsets.UTF_8, false);
     } catch (IOException e) {
-      log.error("Failed to save error message to file: " + file, e);
+      log.error("Failed to save error message to file: {}", file, e);
       JOptionPane.showMessageDialog(
           parent, "Failed to save message to file", "Error", JOptionPane.ERROR_MESSAGE);
       // come on !!!

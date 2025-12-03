@@ -25,19 +25,20 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.GenericException;
 import org.pgptool.gui.autoupdate.api.NewVersionChecker;
 import org.pgptool.gui.autoupdate.api.UpdatePackageInfo;
 import org.pgptool.gui.autoupdate.impl.dto.LatestRelease;
 import org.pgptool.gui.tools.HttpTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
   public static final String DEV_VERSION = "0.0.0.0";
 
-  private static final Logger log = Logger.getLogger(NewVersionCheckerGitHubImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(NewVersionCheckerGitHubImpl.class);
 
   private String appVersion = null;
 
@@ -63,13 +64,13 @@ public class NewVersionCheckerGitHubImpl implements NewVersionChecker {
       String json = HttpTools.httpGet(latestVersionUrl, headers);
       LatestRelease latestRelease = gson.fromJson(json, LatestRelease.class);
       if (latestRelease.isDraft() || latestRelease.isPrerelease()) {
-        log.info("Ignoring draft or prerelease release " + latestRelease.getTagName());
+        log.info("Ignoring draft or prerelease release {}", latestRelease.getTagName());
         return null;
       }
 
       if (CollectionUtils.isEmpty(latestRelease.getAssets())) {
         log.info(
-            "GitHub API returned empty array of assets for release " + latestRelease.getTagName());
+            "GitHub API returned empty array of assets for release {}", latestRelease.getTagName());
         return null;
       }
 

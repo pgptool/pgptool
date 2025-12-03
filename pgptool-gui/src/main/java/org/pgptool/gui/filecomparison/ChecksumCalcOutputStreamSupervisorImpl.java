@@ -21,11 +21,8 @@ import com.google.common.base.Preconditions;
 import java.io.FileNotFoundException;
 import java.io.OutputStream;
 import java.util.concurrent.CompletableFuture;
-import org.apache.log4j.Logger;
 
 public class ChecksumCalcOutputStreamSupervisorImpl implements ChecksumCalcOutputStreamSupervisor {
-  static Logger log = Logger.getLogger(ChecksumCalcOutputStreamSupervisorImpl.class);
-
   private final MessageDigestFactory messageDigestFactory;
   private Fingerprint fingerprint;
   private CompletableFuture<Fingerprint> fingerprintFuture;

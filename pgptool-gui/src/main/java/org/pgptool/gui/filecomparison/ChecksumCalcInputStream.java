@@ -25,10 +25,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ChecksumCalcInputStream extends FilterInputStream {
-  private static final Logger log = Logger.getLogger(ChecksumCalcInputStream.class);
+  private static final Logger log = LoggerFactory.getLogger(ChecksumCalcInputStream.class);
 
   private long size;
   private long mark = -1;
@@ -46,7 +47,7 @@ public class ChecksumCalcInputStream extends FilterInputStream {
     this.messageDigest = messageDigest;
     this.fileName = fileName;
     this.reportTo = reportTo;
-    log.debug("Opened for " + fileName);
+    log.debug("Opened for {}", fileName);
   }
 
   /** Returns the number of bytes written. */
@@ -118,13 +119,13 @@ public class ChecksumCalcInputStream extends FilterInputStream {
     }
     closed = true;
 
-    log.debug("Closed for " + fileName);
+    log.debug("Closed for {}", fileName);
 
     Fingerprint fingerprint = new Fingerprint();
     fingerprint.setSize(size);
     byte[] encoded = Base64.getEncoder().encode(messageDigest.digest());
     fingerprint.setChecksum(new String(encoded, StandardCharsets.UTF_8));
-    log.debug("File " + fileName + " fingerprint: " + fingerprint);
+    log.debug("File {} fingerprint: {}", fileName, fingerprint);
     reportTo.complete(fingerprint);
   }
 }

@@ -24,16 +24,17 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.config.api.ConfigsBasePathResolver;
 import org.pgptool.gui.tools.FileUtilsEx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.summerb.utils.DtoBase;
 import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 
 public class ConfigRepositoryImpl implements ConfigRepository {
-  private static final Logger log = Logger.getLogger(ConfigRepositoryImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(ConfigRepositoryImpl.class);
   public static final String FOLDER_NAME_CONFIGS = "configs";
 
   private final EventBus eventBus;
@@ -64,7 +65,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
       filename = addClarification(filename, clarification);
       FileUtilsEx.baitAndSwitch(filename, x -> writeObject(object, x));
       eventBus.post(EntityChangedEvent.updated(object));
-      log.debug("Updating config file: " + filename);
+      log.debug("Updating config file: {}", filename);
     } catch (Throwable t) {
       throw new RuntimeException("Failed to persist object " + object, t);
     }
@@ -135,7 +136,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
       ois.close();
       return ret;
     } catch (Throwable t) {
-      log.warn("Failed to read " + sourceFile, t);
+      log.warn("Failed to read {}", sourceFile, t);
       return null;
     } finally {
       safeClose(ois);

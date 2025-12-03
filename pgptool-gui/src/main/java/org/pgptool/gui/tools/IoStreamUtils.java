@@ -19,10 +19,11 @@ package org.pgptool.gui.tools;
 
 import java.io.Closeable;
 import java.io.IOException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IoStreamUtils {
-  private static final Logger log = Logger.getLogger(IoStreamUtils.class);
+  private static final Logger log = LoggerFactory.getLogger(IoStreamUtils.class);
 
   public static void safeClose(Closeable stream) {
     if (stream == null) {

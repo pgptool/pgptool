@@ -29,7 +29,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.encryption.api.KeyFilesOperations;
@@ -40,10 +39,12 @@ import org.pgptool.gui.ui.tools.browsefs.FolderChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.ValueAdapterPersistentPropertyImpl;
 import org.pgptool.gui.usage.api.UsageLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 
 public class KeysExporterUiImpl implements KeysExporterUi {
-  private static final Logger log = Logger.getLogger(KeysExporterUiImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(KeysExporterUiImpl.class);
 
   private final KeyFilesOperations keyFilesOperations;
   private final EventBus eventBus;

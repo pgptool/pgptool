@@ -17,14 +17,15 @@
  ******************************************************************************/
 package org.pgptool.gui.app;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.i18n.LocaleContextHolder;
 import ru.skarpushin.swingpm.tools.SwingPmSettings;
 import ru.skarpushin.swingpm.tools.i18n.MessagesProvider;
 
 public class Messages {
-  private static final Logger log = Logger.getLogger(Messages.class);
+  private static final Logger log = LoggerFactory.getLogger(Messages.class);
 
   private final ApplicationContext applicationContext;
 
@@ -70,7 +71,7 @@ public class Messages {
       return INSTANCE.applicationContext.getMessage(
           messageCode, args, LocaleContextHolder.getLocale());
     } catch (Throwable t) {
-      log.warn("Failed to get message: " + messageCode);
+      log.warn("Failed to get message: {}", messageCode);
       return messageCode;
     }
   }

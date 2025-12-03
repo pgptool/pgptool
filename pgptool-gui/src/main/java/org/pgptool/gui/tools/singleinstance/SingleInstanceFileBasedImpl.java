@@ -23,12 +23,13 @@ import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.config.impl.ConfigRepositoryImpl;
 import org.pgptool.gui.tools.IoStreamUtils;
 import org.pgptool.gui.tools.dirwatcher.DirWatcherHandler;
 import org.pgptool.gui.tools.dirwatcher.SingleDirWatcher;
 import org.pgptool.gui.ui.tools.FileBasedLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This impl will create temp dir and will monitor files in this dir. Each secondary instance will
@@ -39,7 +40,7 @@ import org.pgptool.gui.ui.tools.FileBasedLock;
  * @author Sergey Karpushin
  */
 public class SingleInstanceFileBasedImpl implements SingleInstance {
-  private static final Logger log = Logger.getLogger(SingleInstanceFileBasedImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(SingleInstanceFileBasedImpl.class);
 
   private static final int LOCK_ARGS_SUBMISSION_TIMEOUT = 3000;
   private static final String ROLE_LOCK_FILE_EXTENSION = ".role-lock";
@@ -204,12 +205,12 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
       Thread.sleep(50);
       if (System.currentTimeMillis() >= timeoutAt) {
         log.warn(
-            "As a secondary instance we can't see confirmation that our args were received "
-                + targetFile);
+            "As a secondary instance we can't see confirmation that our args were received {}",
+            targetFile);
         return false;
       }
     }
-    log.info("As a secondary we see args were processed by primary instance " + targetFile);
+    log.info("As a secondary we see args were processed by primary instance {}", targetFile);
     return true;
   }
 
@@ -217,13 +218,13 @@ public class SingleInstanceFileBasedImpl implements SingleInstance {
     String fileName =
         basePathForCommands + File.separator + getProcessId() + "_" + System.currentTimeMillis();
     String tempFileName = fileName + "." + PARAMS_FILE_EXTENSION_TEMP;
-    log.debug("Creating temp args file: " + tempFileName);
+    log.debug("Creating temp args file: {}", tempFileName);
     ConfigRepositoryImpl.writeObject(new InvokePrimaryInstanceArgs(args), tempFileName);
-    log.debug("Done creating temp args file: " + tempFileName);
+    log.debug("Done creating temp args file: {}", tempFileName);
     File targetFile = new File(fileName + "." + PARAMS_FILE_EXTENSION);
-    log.debug("Renaming temp args file: " + tempFileName);
+    log.debug("Renaming temp args file: {}", tempFileName);
     new File(tempFileName).renameTo(targetFile);
-    log.debug("Done renaming temp args file: " + tempFileName);
+    log.debug("Done renaming temp args file: {}", tempFileName);
     return targetFile;
   }
 

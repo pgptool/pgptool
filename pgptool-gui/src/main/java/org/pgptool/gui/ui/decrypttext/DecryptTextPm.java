@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Set;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
@@ -50,6 +49,8 @@ import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.DecryptTextRecipientsIdentifiedUsage;
 import org.pgptool.gui.usage.dto.DecryptedTextUsage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import ru.skarpushin.swingpm.modelprops.ModelProperty;
@@ -57,7 +58,7 @@ import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class DecryptTextPm extends PresentationModelBaseEx<DecryptTextHost, Void> {
-  private static final Logger log = Logger.getLogger(DecryptTextPm.class);
+  private static final Logger log = LoggerFactory.getLogger(DecryptTextPm.class);
 
   private final KeyRingService keyRingService;
   private final EncryptionService encryptionService;

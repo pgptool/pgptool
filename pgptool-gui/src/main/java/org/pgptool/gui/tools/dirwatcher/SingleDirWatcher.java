@@ -25,10 +25,11 @@ import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SingleDirWatcher {
-  private static final Logger log = Logger.getLogger(SingleDirWatcher.class);
+  private static final Logger log = LoggerFactory.getLogger(SingleDirWatcher.class);
 
   private final String dirToWatch;
   private final DirWatcherHandler dirWatcherHandler;
@@ -58,7 +59,7 @@ public class SingleDirWatcher {
         new Thread("SingleDirWatcher:" + dirToWatch) {
           @Override
           public void run() {
-            log.debug("Now watching " + dirToWatch);
+            log.debug("Now watching {}", dirToWatch);
             while (true) {
               WatchKey key;
               try {
@@ -80,7 +81,7 @@ public class SingleDirWatcher {
                 Path child = path.resolve(name);
 
                 // print out event
-                log.debug("Watcher event: " + event.kind().name() + ", file " + child);
+                log.debug("Watcher event: {}, file {}", event.kind().name(), child);
                 dirWatcherHandler.handleEvent(event, child);
               }
 
@@ -89,8 +90,7 @@ public class SingleDirWatcher {
               boolean valid = key.reset();
               if (!valid) {
                 dirWatcherHandler.watcherHasToStop();
-                log.warn(
-                    "WatchKey for " + dirToWatch + " folder is no longer valid, have to close");
+                log.warn("WatchKey for {} folder is no longer valid, have to close", dirToWatch);
                 stopWatcher();
                 break;
               }

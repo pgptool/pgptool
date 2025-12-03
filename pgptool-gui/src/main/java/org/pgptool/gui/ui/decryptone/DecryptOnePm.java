@@ -34,7 +34,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Message;
 import org.pgptool.gui.app.MessageSeverity;
@@ -63,6 +62,8 @@ import org.pgptool.gui.ui.tools.browsefs.ExistingFileChooserDialog;
 import org.pgptool.gui.ui.tools.browsefs.SaveFileChooserDialog;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.summerb.validation.ValidationError;
 import org.summerb.validation.ValidationErrorsUtils;
@@ -77,7 +78,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
   private static final String FN_SOURCE_FILE = "sourceFile";
   private static final String FN_TARGET_FILE = "targetFile";
 
-  private static final Logger log = Logger.getLogger(DecryptOnePm.class);
+  private static final Logger log = LoggerFactory.getLogger(DecryptOnePm.class);
 
   private static final String SOURCE_FOLDER = "DecryptOnePm.SOURCE_FOLDER";
   public static final String CONFIG_PAIR_BASE = "Decrypt:";
@@ -327,7 +328,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
       new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-          log.debug("Source changed to : " + sourceFile.getValue());
+          log.debug("Source changed to : {}", sourceFile.getValue());
 
           validationErrors.removeAll(
               ValidationErrorsUtils.findErrorsForField(FN_SOURCE_FILE, validationErrors));
@@ -423,10 +424,9 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
           if (!StringUtils.hasText(targetFilename)) {
             targetFilename = FilenameUtils.getBaseName(sourceFileStr);
             log.warn(
-                "Wasn't able to find initial file name from "
-                    + sourceFileStr
-                    + ". Will use this name: "
-                    + targetFilename);
+                "Wasn't able to find initial file name from {}. Will use this name: {}",
+                sourceFileStr,
+                targetFilename);
           }
           return targetFilename;
         }
@@ -554,7 +554,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
             x ->
                 encryptionService.decrypt(
                     sourceFileStr, x, keyAndPassword, progressHandler, outputStreamSupervisor));
-        log.debug("Decryption completed: " + targetFileName);
+        log.debug("Decryption completed: {}", targetFileName);
 
         // NOTE: We can calculate checksum for target file because we write it in full,
         // but input file is not really being read in full so we'll have to calculate

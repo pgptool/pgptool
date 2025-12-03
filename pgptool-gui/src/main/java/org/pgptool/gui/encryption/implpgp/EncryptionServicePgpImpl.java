@@ -39,7 +39,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import org.apache.log4j.Logger;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.openpgp.PGPCompressedData;
@@ -80,6 +79,8 @@ import org.pgptool.gui.encryption.api.OutputStreamSupervisorImpl;
 import org.pgptool.gui.encryption.api.dto.Key;
 import org.pgptool.gui.tools.IoStreamUtils;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.summerb.users.api.exceptions.InvalidPasswordException;
 
@@ -90,7 +91,7 @@ import org.summerb.users.api.exceptions.InvalidPasswordException;
  * @author Sergey Karpushin
  */
 public class EncryptionServicePgpImpl implements EncryptionService {
-  private static final Logger log = Logger.getLogger(EncryptionServicePgpImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(EncryptionServicePgpImpl.class);
   private static final int BUFFER_SIZE = 1 << 16;
 
   @Override
@@ -153,7 +154,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
     } catch (Throwable t) {
       File fileToDelete = new File(targetFile);
       if (fileToDelete.exists() && !fileToDelete.delete()) {
-        log.warn("Failed to delete file after failed encryption: " + targetFile);
+        log.warn("Failed to delete file after failed encryption: {}", targetFile);
       }
       Throwables.throwIfInstanceOf(t, UserRequestedCancellationException.class);
       throw new RuntimeException("Encryption failed", t);
@@ -396,7 +397,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
     Preconditions.checkArgument(
         StringUtils.hasText(filePathName) && new File(filePathName).exists(),
         "filePathName has to point to existing file");
-    log.debug("Looking for decryption keys for file " + filePathName);
+    log.debug("Looking for decryption keys for file {}", filePathName);
 
     FileInputStream stream;
     try {
@@ -425,7 +426,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
               KeyFilesOperationsPgpImpl.fingerprintCalculator);
 
       for (Object section : factory) {
-        log.debug(section);
+        log.debug("Section: {}", section);
 
         if (section instanceof PGPEncryptedDataList d) {
           HashSet<String> ret = new HashSet<>();
@@ -438,7 +439,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
             PGPPublicKeyEncryptedData data = (PGPPublicKeyEncryptedData) next;
             ret.add(KeyDataPgp.buildKeyIdStr(data.getKeyID()));
           }
-          log.debug("Possible decryption with IDS: " + Arrays.toString(ret.toArray()));
+          log.debug("Possible decryption with IDS: {}", Arrays.toString(ret.toArray()));
           return ret;
         }
       }
@@ -496,7 +497,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
             ? optionalOutputStreamSupervisor
             : new OutputStreamSupervisorImpl();
 
-    log.debug("Decrypting " + sourceFile);
+    log.debug("Decrypting {}", sourceFile);
 
     Updater progress = null;
     BigInteger sourceSize = BigInteger.valueOf(new File(sourceFile).length());
@@ -539,7 +540,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
     } catch (Throwable t) {
       File fileToDelete = new File(targetFile);
       if (fileToDelete.exists() && !fileToDelete.delete()) {
-        log.warn("Failed to delete file after failed decryption: " + targetFile);
+        log.warn("Failed to delete file after failed decryption: {}", targetFile);
       }
 
       Throwables.throwIfInstanceOf(t, InvalidPasswordException.class);
@@ -685,7 +686,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
   public String getNameOfFileEncrypted(
       String encryptedFile, PasswordDeterminedForKey keyAndPassword)
       throws InvalidPasswordException {
-    log.debug("Pre-Decrypting to get initial file name from " + encryptedFile);
+    log.debug("Pre-Decrypting to get initial file name from {}", encryptedFile);
 
     Key decryptionKey = keyAndPassword.getMatchedKey();
     String passphrase = keyAndPassword.getPassword();

@@ -24,10 +24,11 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ClipboardUtil {
-  private static final Logger log = Logger.getLogger(ClipboardUtil.class);
+  private static final Logger log = LoggerFactory.getLogger(ClipboardUtil.class);
 
   public static String tryGetClipboardText() {
     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();

@@ -28,18 +28,20 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.decryptedlist.api.DecryptedFile;
 import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
 import org.pgptool.gui.tools.fileswatcher.FilesWatcherHandler;
 import org.pgptool.gui.tools.fileswatcher.MultipleFilesWatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
 public class MonitoringDecryptedFilesServiceImpl
     implements MonitoringDecryptedFilesService, InitializingBean, DisposableBean {
-  private static final Logger log = Logger.getLogger(MonitoringDecryptedFilesServiceImpl.class);
+  private static final Logger log =
+      LoggerFactory.getLogger(MonitoringDecryptedFilesServiceImpl.class);
 
   protected static final long TIME_TO_ENSURE_FILE_WAS_DELETED_MS = 2000;
 
@@ -72,8 +74,8 @@ public class MonitoringDecryptedFilesServiceImpl
       String decryptedFile = entry.getDecryptedFile();
       if (!new File(decryptedFile).exists()) {
         log.debug(
-            "Previously registered file is no longer exists, remove =ing it from the tracking "
-                + decryptedFile);
+            "Previously registered file is no longer exists, remove =ing it from the tracking {}",
+            decryptedFile);
         remove(decryptedFile);
         continue;
       }

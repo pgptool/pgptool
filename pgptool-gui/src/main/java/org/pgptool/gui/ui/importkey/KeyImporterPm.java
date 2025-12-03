@@ -33,7 +33,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Messages;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
@@ -48,6 +47,8 @@ import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.browsefs.MultipleFilesChooserDialog;
 import org.pgptool.gui.ui.tools.swingpm.LocalizedActionEx;
 import org.pgptool.gui.ui.tools.swingpm.PresentationModelBaseEx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import ru.skarpushin.swingpm.base.View;
@@ -55,7 +56,7 @@ import ru.skarpushin.swingpm.modelprops.table.ModelTableProperty;
 import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
 
 public class KeyImporterPm extends PresentationModelBaseEx<KeyImporterHost, List<Key>> {
-  private static final Logger log = Logger.getLogger(KeyImporterPm.class);
+  private static final Logger log = LoggerFactory.getLogger(KeyImporterPm.class);
   private static final String BROWSE_FOLDER = "KeyImporterPm.BROWSE_FOLDER";
   private static final String[] EXTENSIONS = new String[] {"asc", "bpg"};
 
@@ -290,7 +291,7 @@ public class KeyImporterPm extends PresentationModelBaseEx<KeyImporterHost, List
               keyRingService.addKey(key);
               loadedCount++;
             } catch (Throwable t) {
-              log.warn("Failed to import key " + key.getKeyInfo().getUser(), t);
+              log.warn("Failed to import key {}", key.getKeyInfo().getUser(), t);
               exceptions.put(key.getKeyInfo().getUser(), t);
             }
           }

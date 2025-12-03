@@ -23,10 +23,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.ImageIcon;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WindowIcon {
-  protected static final Logger log = Logger.getLogger(WindowIcon.class);
+  protected static final Logger log = LoggerFactory.getLogger(WindowIcon.class);
 
   private static List<Image> windowIcon;
 
@@ -37,7 +38,7 @@ public class WindowIcon {
         window.setIconImages(icons);
       }
     } catch (Throwable t) {
-      log.error("Failed to set icon for: " + window, t);
+      log.error("Failed to set icon for: {}", window, t);
     }
   }
 
@@ -62,7 +63,7 @@ public class WindowIcon {
   public static Image loadImage(String fileName) {
     URL resource = WindowIcon.class.getResource(fileName);
     if (resource == null) {
-      log.error("Image not found: " + fileName);
+      log.error("Image not found: {}", fileName);
       return null;
     }
     return new ImageIcon(resource).getImage();

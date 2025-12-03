@@ -42,8 +42,6 @@ import ru.skarpushin.swingpm.modelprops.table.ModelTablePropertyAccessor;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 public class KeysListPm extends PresentationModelBaseEx<KeysListHost, Void> {
-  // private static Logger log = Logger.getLogger(KeysListPm.class);
-
   private final EventBus eventBus;
   private final KeyRingService keyRingService;
   private final KeysExporterUi keysExporterUi;

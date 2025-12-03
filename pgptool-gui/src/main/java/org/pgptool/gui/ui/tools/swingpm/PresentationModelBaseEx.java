@@ -4,9 +4,10 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.ui.root.RootPm;
 import org.pgptool.gui.ui.tools.UiUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.skarpushin.swingpm.base.PresentationModelBase;
 
 /**
@@ -15,7 +16,7 @@ import ru.skarpushin.swingpm.base.PresentationModelBase;
  *     #init(ActionEvent, Object, Object)}
  */
 public class PresentationModelBaseEx<H, P> extends PresentationModelBase<H, P> {
-  private final Logger log = Logger.getLogger(getClass());
+  private final Logger log = LoggerFactory.getLogger(getClass());
 
   /** Action that resulted in invocation of this PresentationModelBase */
   protected ActionEvent originAction;
@@ -27,7 +28,7 @@ public class PresentationModelBaseEx<H, P> extends PresentationModelBase<H, P> {
   public Window findRegisteredWindowIfAny() {
     Window ret = super.findRegisteredWindowIfAny();
     if (ret != null) {
-      log.debug("findRegisteredWindowIfAny returning own window: " + getWindowName(ret));
+      log.debug("findRegisteredWindowIfAny returning own window: {}", getWindowName(ret));
       return ret;
     }
 
@@ -35,14 +36,14 @@ public class PresentationModelBaseEx<H, P> extends PresentationModelBase<H, P> {
       ret = UiUtils.findWindow(originAction);
       if (ret != null && ret.isVisible()) {
         log.debug(
-            "findRegisteredWindowIfAny returning window from originAction: " + getWindowName(ret));
+            "findRegisteredWindowIfAny returning window from originAction: {}", getWindowName(ret));
         return ret;
       }
     }
 
     ret = RootPm.INSTANCE.findMainFrameWindow();
     if (ret != null && ret.isVisible()) {
-      log.debug("findRegisteredWindowIfAny returning window from rootPm: " + getWindowName(ret));
+      log.debug("findRegisteredWindowIfAny returning window from rootPm: {}", getWindowName(ret));
       return ret;
     }
 

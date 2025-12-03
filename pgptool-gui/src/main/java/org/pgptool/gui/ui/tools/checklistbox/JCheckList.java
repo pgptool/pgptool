@@ -46,8 +46,6 @@ import ru.skarpushin.swingpm.modelprops.lists.ModelListProperty;
  * @author sergeyk
  */
 public class JCheckList<E> extends JList<E> {
-  // private static Logger log = Logger.getLogger(JCheckList.class);
-
   @Serial private static final long serialVersionUID = 5763129241133814837L;
   protected ListEx<E> checkState;
   protected boolean skipEventsFromListEx;

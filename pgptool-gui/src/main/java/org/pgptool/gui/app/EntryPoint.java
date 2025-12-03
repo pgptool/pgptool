@@ -28,7 +28,6 @@ import java.util.Queue;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
-import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.pgptool.gui.autoupdate.impl.NewVersionCheckerGitHubImpl;
 import org.pgptool.gui.encryption.api.KeyRingService;
@@ -44,6 +43,8 @@ import org.pgptool.gui.ui.tools.BindingContextFactoryImpl;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.api.UsageLoggerNoOpImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -52,7 +53,7 @@ import ru.skarpushin.swingpm.tools.SwingPmSettings;
 import ru.skarpushin.swingpm.tools.edt.Edt;
 
 public class EntryPoint {
-  public static final Logger log = Logger.getLogger(EntryPoint.class);
+  public static final Logger log = LoggerFactory.getLogger(EntryPoint.class);
   public static EntryPoint INSTANCE;
   public static UsageLogger usageLoggerStatic = new UsageLoggerNoOpImpl();
 
@@ -120,7 +121,7 @@ public class EntryPoint {
   private static void processPendingArgsIfAny(RootPm rootPm) {
     while (!postponedArgsFromSecondaryInstances.isEmpty()) {
       String[] args = postponedArgsFromSecondaryInstances.poll();
-      log.debug("Processing postponed args from secondary instance: " + Arrays.toString(args));
+      log.debug("Processing postponed args from secondary instance: {}", Arrays.toString(args));
       rootPm.processCommandLine(args);
     }
   }
@@ -133,7 +134,7 @@ public class EntryPoint {
           KeyRingService keyRingService =
               (KeyRingService) currentApplicationContext.getBean("keyRingService");
           List<Key> keys = keyRingService.readKeys();
-          log.info("Keys prefetched. Count " + keys.size());
+          log.info("Keys prefetched. Count {}", keys.size());
         } catch (Throwable t) {
           log.error("Failed to prefetch keys", t);
         }
@@ -165,7 +166,7 @@ public class EntryPoint {
         @Override
         public void handleArgsFromOtherInstance(String[] args) {
           if (RootPm.INSTANCE != null) {
-            log.debug("Processing arguments from secondary instance: " + Arrays.toString(args));
+            log.debug("Processing arguments from secondary instance: {}", Arrays.toString(args));
             Edt.invokeOnEdtAsync(
                 new Runnable() {
                   @Override
@@ -175,7 +176,7 @@ public class EntryPoint {
                 });
           } else {
             log.debug(
-                "Postponing args processing from secondary instance: " + Arrays.toString(args));
+                "Postponing args processing from secondary instance: {}", Arrays.toString(args));
             postponedArgsFromSecondaryInstances.offer(args);
           }
         }
@@ -230,7 +231,7 @@ public class EntryPoint {
   public static Icon loadImage(String fileName) {
     URL resource = MainFrameView.class.getResource(fileName);
     if (resource == null) {
-      log.error("Image not found: " + fileName);
+      log.error("Image not found: {}", fileName);
       return null;
     }
     return new ImageIcon(resource);

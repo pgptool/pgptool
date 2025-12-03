@@ -21,12 +21,13 @@ import com.google.common.base.Preconditions;
 import java.io.File;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 import org.pgptool.gui.app.GenericException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 public class FileUtilsEx {
-  private static final Logger log = Logger.getLogger(FileUtilsEx.class);
+  private static final Logger log = LoggerFactory.getLogger(FileUtilsEx.class);
 
   /** bruteforce filename adding index to base filename until vacant filename found. */
   public static String ensureFileNameVacant(String requestedTargetFile) {
@@ -64,7 +65,7 @@ public class FileUtilsEx {
     if (!targetFolder.exists()) {
       Preconditions.checkState(
           targetFolder.mkdirs(), "Failed to ensure parent directories for %s", targetFile);
-      log.debug("Had to create parent directory for " + targetFile);
+      log.debug("Had to create parent directory for {}", targetFile);
     }
 
     boolean needBaitAndSwitch = targetFileFile.exists();

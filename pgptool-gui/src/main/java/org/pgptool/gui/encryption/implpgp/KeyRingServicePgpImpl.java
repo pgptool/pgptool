@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import org.apache.log4j.Logger;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -36,12 +35,14 @@ import org.pgptool.gui.usage.api.UsageLogger;
 import org.pgptool.gui.usage.dto.KeyAddedUsage;
 import org.pgptool.gui.usage.dto.KeyRemovedUsage;
 import org.pgptool.gui.usage.dto.KeyRingUsage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 
 public class KeyRingServicePgpImpl implements KeyRingService {
-  private static final Logger log = Logger.getLogger(KeyRingServicePgpImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(KeyRingServicePgpImpl.class);
 
   private final ConfigRepository configRepository;
   private final EventBus eventBus;
@@ -191,7 +192,7 @@ public class KeyRingServicePgpImpl implements KeyRingService {
       }
       return c;
     } catch (Throwable ex) {
-      log.warn("Failed to count signatures for key " + k.getKeyID(), ex);
+      log.warn("Failed to count signatures for key {}", k.getKeyID(), ex);
       return 0;
     }
   }
@@ -265,11 +266,11 @@ public class KeyRingServicePgpImpl implements KeyRingService {
         allKeys.stream().filter(x -> x.getKeyData().isCanBeUsedForDecryption()).toList();
 
     for (String neededKeyId : keysIds) {
-      log.debug("Trying to find decryption key by id: " + neededKeyId);
+      log.debug("Trying to find decryption key by id: {}", neededKeyId);
       for (Key existingKey : decryptionKeys) {
         String user = existingKey.getKeyInfo().getUser();
         if (existingKey.getKeyData().isHasAlternativeId(neededKeyId)) {
-          log.debug("Found matching key: " + user);
+          log.debug("Found matching key: {}", user);
           ret.add(new MatchedKey(neededKeyId, existingKey));
           break;
         }
@@ -286,11 +287,11 @@ public class KeyRingServicePgpImpl implements KeyRingService {
     List<Key> allKeys = readKeys();
 
     for (String neededKeyId : keysIds) {
-      log.debug("Trying to find key by id: " + neededKeyId);
+      log.debug("Trying to find key by id: {}", neededKeyId);
       for (Key existingKey : allKeys) {
         String user = existingKey.getKeyInfo().getUser();
         if (existingKey.getKeyData().isHasAlternativeId(neededKeyId)) {
-          log.debug("Found matching key: " + user);
+          log.debug("Found matching key: {}", user);
           ret.add(existingKey);
           break;
         }

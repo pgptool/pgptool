@@ -28,30 +28,24 @@ import org.apache.log4j.Logger;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.config.api.ConfigsBasePathResolver;
 import org.pgptool.gui.tools.FileUtilsEx;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.StringUtils;
 import org.summerb.utils.DtoBase;
 import org.summerb.utils.easycrud.api.dto.EntityChangedEvent;
 
-public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean {
+public class ConfigRepositoryImpl implements ConfigRepository {
   private static final Logger log = Logger.getLogger(ConfigRepositoryImpl.class);
-  private final String configsBasepath = File.separator + "configs";
+  public static final String FOLDER_NAME_CONFIGS = "configs";
 
-  private final ConfigsBasePathResolver configsBasePathResolver;
   private final EventBus eventBus;
+  private final File configsFolder;
 
   public ConfigRepositoryImpl(ConfigsBasePathResolver configsBasePathResolver, EventBus eventBus) {
-    this.configsBasePathResolver = configsBasePathResolver;
     this.eventBus = eventBus;
-  }
-
-  @Override
-  public void afterPropertiesSet() {
+    configsFolder = new File(configsBasePathResolver.getConfigsBasePath(), FOLDER_NAME_CONFIGS);
     ensureAllDirsCreated();
   }
 
   private void ensureAllDirsCreated() {
-    File configsFolder = new File(configsBasePathResolver.getConfigsBasePath() + configsBasepath);
     if (!configsFolder.exists() && !configsFolder.mkdirs()) {
       throw new RuntimeException("Failed to ensure all dirs for config files: " + configsFolder);
     }
@@ -84,10 +78,7 @@ public class ConfigRepositoryImpl implements ConfigRepository, InitializingBean 
   }
 
   private String buildFilenameForClass(Class<?> clazz) {
-    return configsBasePathResolver.getConfigsBasePath()
-        + configsBasepath
-        + File.separator
-        + clazz.getSimpleName();
+    return new File(configsFolder, clazz.getSimpleName()).getAbsolutePath();
   }
 
   @Override

@@ -11,7 +11,7 @@ import org.pgptool.gui.autoupdate.impl.NewVersionCheckerGitHubImpl;
 import org.pgptool.gui.config.api.ConfigRepository;
 import org.pgptool.gui.config.api.ConfigsBasePathResolver;
 import org.pgptool.gui.config.impl.ConfigRepositoryImpl;
-import org.pgptool.gui.config.impl.ConfigsBasePathResolverUserHomeImpl;
+import org.pgptool.gui.config.impl.ConfigsBasePathResolverImpl;
 import org.pgptool.gui.configpairs.api.ConfigPairs;
 import org.pgptool.gui.configpairs.impl.ConfigPairsImpl;
 import org.pgptool.gui.decryptedlist.api.MonitoringDecryptedFilesService;
@@ -150,7 +150,7 @@ public class AppConfig {
   ConfigsBasePathResolver configsBasePathResolver(
       @Value("${configs.folder-name}") String configFolderName,
       @Value("${configs.custom-base-path}") String customConfigBasePath) {
-    return new ConfigsBasePathResolverUserHomeImpl(configFolderName, customConfigBasePath);
+    return new ConfigsBasePathResolverImpl(configFolderName, customConfigBasePath);
   }
 
   @Bean

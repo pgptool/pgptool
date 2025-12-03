@@ -17,22 +17,25 @@
  ******************************************************************************/
 package org.pgptool.gui.config.impl;
 
+import static org.pgptool.gui.config.impl.ConfigRepositoryImpl.FOLDER_NAME_CONFIGS;
+
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.pgptool.gui.config.api.ConfigsBasePathResolver;
+import org.pgptool.gui.encryption.implpgp.PgpKeysRing;
 import org.pgptool.gui.tools.TextFile;
 import org.springframework.util.StringUtils;
 
-public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResolver {
-  private static final Logger log = Logger.getLogger(ConfigsBasePathResolverUserHomeImpl.class);
+public class ConfigsBasePathResolverImpl implements ConfigsBasePathResolver {
+  private static final Logger log = Logger.getLogger(ConfigsBasePathResolverImpl.class);
   private String chosenLocation;
   private final String configFolderName;
   private final String customConfigBasePath;
 
-  public ConfigsBasePathResolverUserHomeImpl(String configFolderName, String customConfigBasePath) {
+  public ConfigsBasePathResolverImpl(String configFolderName, String customConfigBasePath) {
     this.configFolderName = configFolderName;
     this.customConfigBasePath = customConfigBasePath;
   }
@@ -40,16 +43,9 @@ public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResol
   @Override
   public String getConfigsBasePath() {
     if (chosenLocation == null) {
-      List<String> options = new LinkedList<>();
-      if (StringUtils.hasText(customConfigBasePath)) {
-        addOption(options, customConfigBasePath);
-      }
-      addOption(options, System.getenv("USERPROFILE"));
-      addOption(options, SystemUtils.getUserHome().getAbsolutePath());
-      addOption(options, "~");
+      List<String> options = buildOptions();
 
       log.debug("Base path options: " + options);
-
       for (String option : options) {
         if (tryAccept(option)) {
           return chosenLocation;
@@ -61,6 +57,63 @@ public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResol
     }
 
     return chosenLocation;
+  }
+
+  private List<String> buildOptions() {
+    List<String> options = new LinkedList<>();
+    if (StringUtils.hasText(customConfigBasePath)) {
+      addOption(options, customConfigBasePath);
+    }
+    String userHome = SystemUtils.getUserHome().getAbsolutePath();
+    String userProfile = System.getenv("USERPROFILE");
+
+    if (SystemUtils.IS_OS_WINDOWS) {
+      // Backward compatibility: if legacy configs already exist in user home, keep using it
+      if (hasLegacyConfigsInUserHome(userHome)) {
+        log.debug(
+            "Legacy configs detected under user home, keeping user home as primary base path");
+        addOption(options, userHome);
+      } else {
+        // Prefer Documents folder on Windows
+        if (StringUtils.hasText(userProfile)) {
+          addOption(options, new File(userProfile, "Documents").getAbsolutePath());
+          addOption(options, new File(userProfile, "My Documents").getAbsolutePath());
+        }
+        // Then fallback to user home
+        addOption(options, userHome);
+      }
+
+      // Additional fallbacks same as before
+      addOption(options, userProfile);
+      addOption(options, "~");
+      return options;
+    } else {
+      addOption(options, userProfile);
+      addOption(options, userHome);
+      addOption(options, "~");
+      return options;
+    }
+  }
+
+  private boolean hasLegacyConfigsInUserHome(String userHomePath) {
+    try {
+      if (!StringUtils.hasText(userHomePath)) {
+        return false;
+      }
+      File legacyFile =
+          new File(
+              new File(new File(userHomePath, configFolderName), FOLDER_NAME_CONFIGS),
+              PgpKeysRing.class.getSimpleName());
+      boolean exists = legacyFile.exists();
+      if (exists) {
+        log.debug("Detected legacy configs file: " + legacyFile.getAbsolutePath());
+      }
+      return exists;
+    } catch (Throwable t) {
+      // Any error in detection should not break resolver, treat as not found
+      log.debug("Error while detecting legacy configs in user home", t);
+      return false;
+    }
   }
 
   private void addOption(List<String> options, String option) {
@@ -76,6 +129,11 @@ public class ConfigsBasePathResolverUserHomeImpl implements ConfigsBasePathResol
     }
 
     File basePath = new File(basePathStr);
+    if (!basePath.exists() || !basePath.isDirectory()) {
+      log.info("Path is not acceptable, it does not exist or is not a directory: " + basePathStr);
+      return false;
+    }
+
     File configsFolder = new File(basePath, configFolderName);
 
     try {

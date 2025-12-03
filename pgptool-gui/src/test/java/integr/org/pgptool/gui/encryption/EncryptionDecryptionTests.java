@@ -102,7 +102,8 @@ public class EncryptionDecryptionTests {
   public void testWeCanDecryptTheProductOfEncryption() throws Exception {
     String targetFilename =
         tempDirPath + File.separator + FilenameUtils.getBaseName(testSubjectFilename) + ".pgp";
-    encryptionService.encrypt(testSubjectFilename, targetFilename, keys.values(), null, null, null);
+    encryptionService.encrypt(
+        testSubjectFilename, targetFilename, List.of(keys.get("Alice.asc")), null, null, null);
 
     PasswordDeterminedForKey keyAndPassword =
         buildPasswordDeterminedForKey(targetFilename, "Alice.asc", "pass");

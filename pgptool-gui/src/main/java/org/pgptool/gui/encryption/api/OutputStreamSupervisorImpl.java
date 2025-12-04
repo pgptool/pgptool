@@ -23,12 +23,17 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 public class OutputStreamSupervisorImpl implements OutputStreamSupervisor {
-  private FileOutputStream ret;
+  private OutputStream ret;
 
   @Override
   public OutputStream get(String fileName) throws FileNotFoundException {
+    return get(new FileOutputStream(fileName, false));
+  }
+
+  @Override
+  public OutputStream get(OutputStream target) {
     Preconditions.checkState(ret == null, "Stream was already returned");
-    ret = new FileOutputStream(fileName, false);
+    ret = target;
     return ret;
   }
 }

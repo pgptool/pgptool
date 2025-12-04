@@ -3,6 +3,7 @@ package org.pgptool.gui.app;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 import com.google.common.eventbus.EventBus;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -55,6 +56,11 @@ import org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogPm;
 import org.pgptool.gui.ui.decryptonedialog.DecryptOneDialogView;
 import org.pgptool.gui.ui.decrypttext.DecryptTextPm;
 import org.pgptool.gui.ui.decrypttext.DecryptTextView;
+import org.pgptool.gui.ui.embedded_viewer.EmbeddedViewerFactory;
+import org.pgptool.gui.ui.embedded_viewer.EmbeddedViewerFactoryDelegatingImpl;
+import org.pgptool.gui.ui.embedded_viewer.EmbeddedViewerFactoryImageImpl;
+import org.pgptool.gui.ui.embedded_viewer.EmbeddedViewerFactoryPdfImpl;
+import org.pgptool.gui.ui.embedded_viewer.EmbeddedViewerFactoryTextImpl;
 import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultiplePm;
 import org.pgptool.gui.ui.encryptbackmultiple.EncryptBackMultipleView;
 import org.pgptool.gui.ui.encryptbackmultiple.EncryptMultipleResultsDialogPm;
@@ -434,7 +440,8 @@ public class AppConfig {
       KeyRingService keyRingService,
       EncryptionService encryptionService,
       MonitoringDecryptedFilesService monitoringDecryptedFilesService,
-      MessageDigestFactory messageDigestFactory) {
+      MessageDigestFactory messageDigestFactory,
+      EmbeddedViewerFactory embeddedViewerFactory) {
     return new DecryptOnePm(
         appProps,
         decryptionParams,
@@ -444,13 +451,38 @@ public class AppConfig {
         keyRingService,
         encryptionService,
         monitoringDecryptedFilesService,
-        messageDigestFactory);
+        messageDigestFactory,
+        embeddedViewerFactory);
+  }
+
+  @Bean
+  EmbeddedViewerFactory embeddedViewerFactoryText() {
+    return new EmbeddedViewerFactoryTextImpl();
+  }
+
+  @Bean
+  EmbeddedViewerFactory embeddedViewerFactoryImage() {
+    return new EmbeddedViewerFactoryImageImpl();
+  }
+
+  @Bean
+  EmbeddedViewerFactory embeddedViewerFactoryPdf() {
+    return new EmbeddedViewerFactoryPdfImpl();
+  }
+
+  @Bean
+  EmbeddedViewerFactory embeddedViewerFactory(
+      EmbeddedViewerFactory embeddedViewerFactoryText,
+      EmbeddedViewerFactory embeddedViewerFactoryImage,
+      EmbeddedViewerFactory embeddedViewerFactoryPdf) {
+    return new EmbeddedViewerFactoryDelegatingImpl(
+        List.of(embeddedViewerFactoryText, embeddedViewerFactoryImage, embeddedViewerFactoryPdf));
   }
 
   @Bean
   @Scope(SCOPE_PROTOTYPE)
-  DecryptOneView decryptOneView() {
-    return new DecryptOneView();
+  DecryptOneView decryptOneView(EmbeddedViewerFactory embeddedViewerFactory) {
+    return new DecryptOneView(embeddedViewerFactory);
   }
 
   @Bean

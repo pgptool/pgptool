@@ -19,6 +19,7 @@ package org.pgptool.gui.filecomparison;
 
 import com.google.common.base.Preconditions;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.concurrent.CompletableFuture;
 
@@ -26,7 +27,6 @@ public class ChecksumCalcOutputStreamSupervisorImpl implements ChecksumCalcOutpu
   private final MessageDigestFactory messageDigestFactory;
   private Fingerprint fingerprint;
   private CompletableFuture<Fingerprint> fingerprintFuture;
-  private String fileName;
 
   public ChecksumCalcOutputStreamSupervisorImpl(MessageDigestFactory messageDigestFactory) {
     this.messageDigestFactory = messageDigestFactory;
@@ -34,21 +34,24 @@ public class ChecksumCalcOutputStreamSupervisorImpl implements ChecksumCalcOutpu
 
   @Override
   public OutputStream get(String fileName) throws FileNotFoundException {
+    return get(new FileOutputStream(fileName));
+  }
+
+  @Override
+  public OutputStream get(OutputStream target) {
     Preconditions.checkState(
         fingerprintFuture == null,
         "This wrapper is done, you can't use it anymore. CLone it if you need another one");
-    this.fileName = fileName;
     fingerprintFuture = new CompletableFuture<>();
     ChecksumCalcOutputStream ret =
-        new ChecksumCalcOutputStream(messageDigestFactory.createNew(), fileName, fingerprintFuture);
+        new ChecksumCalcOutputStream(messageDigestFactory.createNew(), target, fingerprintFuture);
     fingerprintFuture.thenAccept(x -> fingerprint = x);
     return ret;
   }
 
   @Override
   public Fingerprint getFingerprint() {
-    Preconditions.checkArgument(
-        fingerprint != null, "Fingerprint wasn't calculated yet: %s", fileName);
+    Preconditions.checkArgument(fingerprint != null, "Fingerprint wasn't calculated yet");
     return fingerprint;
   }
 

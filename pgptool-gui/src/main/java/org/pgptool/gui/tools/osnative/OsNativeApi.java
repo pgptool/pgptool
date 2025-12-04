@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.pgptool.gui.tools.osnative;
 
+import java.nio.charset.Charset;
+
 public interface OsNativeApi {
   /**
    * Resolve command line args using OS native API.
@@ -26,4 +28,6 @@ public interface OsNativeApi {
    * @return command lines args array
    */
   String[] getCommandLineArguments(String[] fallBackTo);
+
+  Charset findDefaultCharset();
 }

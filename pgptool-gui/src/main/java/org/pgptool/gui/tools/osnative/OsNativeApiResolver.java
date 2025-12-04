@@ -37,9 +37,13 @@ public class OsNativeApiResolver {
   }
 
   private static OsNativeApi buildInstanceForCurrentOs() {
-    if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+    if (isWindows()) {
       return new OsNativeApiWindowsImpl();
     }
     return new OsNativeApiDefaultImpl();
+  }
+
+  public static boolean isWindows() {
+    return System.getProperty("os.name").toLowerCase().contains("windows");
   }
 }

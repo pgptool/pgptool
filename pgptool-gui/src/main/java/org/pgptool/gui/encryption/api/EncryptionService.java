@@ -18,6 +18,7 @@
 package org.pgptool.gui.encryption.api;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Set;
 import org.pgptool.gui.bkgoperation.ProgressHandler;
@@ -41,7 +42,7 @@ public interface EncryptionService {
 
   void decrypt(
       String sourceFile,
-      String targetFile,
+      OutputStream outputStream,
       PasswordDeterminedForKey keyAndPassword,
       ProgressHandler optionalProgressHandler,
       OutputStreamSupervisor optionalOutputStreamSupervisor)

@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
@@ -33,7 +34,6 @@ public class ChecksumCalcOutputStream extends FilterOutputStream {
 
   private long size;
   private final MessageDigest messageDigest;
-  private final String fileName;
   private boolean closed = false;
   private final CompletableFuture<Fingerprint> result;
 
@@ -42,10 +42,18 @@ public class ChecksumCalcOutputStream extends FilterOutputStream {
       throws FileNotFoundException {
     super(new FileOutputStream(fileName));
     this.messageDigest = messageDigest;
-    this.fileName = fileName;
     this.result = result;
 
-    log.debug("Opened for {}", fileName);
+    log.debug("Opened for file {}", fileName);
+  }
+
+  public ChecksumCalcOutputStream(
+      MessageDigest messageDigest, OutputStream target, CompletableFuture<Fingerprint> result) {
+    super(target);
+    this.messageDigest = messageDigest;
+    this.result = result;
+
+    log.debug("Opened for OutputStream");
   }
 
   /** Returns the number of bytes written. */
@@ -81,13 +89,11 @@ public class ChecksumCalcOutputStream extends FilterOutputStream {
     }
     closed = true;
 
-    log.debug("Closed for {}", fileName);
-
     Fingerprint fingerprint = new Fingerprint();
     fingerprint.setSize(size);
     byte[] encoded = Base64.getEncoder().encode(messageDigest.digest());
     fingerprint.setChecksum(new String(encoded, StandardCharsets.UTF_8));
-    log.debug("File {} fingerprint: {}", fileName, fingerprint);
+    log.debug("Calculated fingerprint: {}", fingerprint);
     result.complete(fingerprint);
   }
 }

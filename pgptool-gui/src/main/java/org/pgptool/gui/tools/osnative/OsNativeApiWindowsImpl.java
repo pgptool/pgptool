@@ -22,6 +22,10 @@ import com.sun.jna.Pointer;
 import com.sun.jna.WString;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.win32.StdCallLibrary;
+import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +38,8 @@ public class OsNativeApiWindowsImpl implements OsNativeApi {
 
   private Kernel32 kernel32;
   private Shell32 shell32;
+
+  public OsNativeApiWindowsImpl() {}
 
   /**
    * This method will try to solve issue when java executable cannot transfer argument in utf
@@ -90,6 +96,71 @@ public class OsNativeApiWindowsImpl implements OsNativeApi {
     }
     return shell32;
   }
+
+  @Override
+  public Charset findDefaultCharset() {
+    int cp = getKernel32().GetACP();
+    return charsetForWindowsCodePage(cp);
+  }
+
+  private static Charset charsetForWindowsCodePage(int cp) {
+    try {
+      // Special/common cases first
+      if (cp == 65001) {
+        return StandardCharsets.UTF_8; // UTF-8 ACP
+      }
+      if (cp == 1251) {
+        return Charset.forName("windows-1251");
+      }
+      if (cp == 1252) {
+        return Charset.forName("windows-1252");
+      }
+      if (cp == 1250) {
+        return Charset.forName("windows-1250");
+      }
+      if (cp == 1254) {
+        return Charset.forName("windows-1254");
+      }
+      if (cp == 1257) {
+        return Charset.forName("windows-1257");
+      }
+      if (cp == 932) {
+        // Japanese. Java's canonical name is windows-31j
+        return Charset.forName("windows-31j");
+      }
+      if (cp == 936) {
+        return Charset.forName("GBK");
+      }
+      if (cp == 949) {
+        return Charset.forName("ms949");
+      }
+      if (cp == 950) {
+        return Charset.forName("Big5");
+      }
+
+      // Generic attempts
+      Charset cs = forNameOrNull("windows-" + cp);
+      if (cs != null) {
+        return cs;
+      }
+      cs = forNameOrNull("cp" + cp);
+      if (cs != null) {
+        return cs;
+      }
+      cs = forNameOrNull("ms" + cp);
+      return cs;
+    } catch (Throwable ignored) {
+      return null;
+    }
+  }
+
+  private static Charset forNameOrNull(String name) {
+    try {
+      return Charset.forName(name);
+    } catch (IllegalCharsetNameException | UnsupportedCharsetException ex) {
+      return null;
+    }
+  }
 }
 
 interface Kernel32 extends StdCallLibrary {
@@ -98,6 +169,8 @@ interface Kernel32 extends StdCallLibrary {
   WString GetCommandLineW();
 
   Pointer LocalFree(Pointer pointer);
+
+  int GetACP();
 }
 
 interface Shell32 extends StdCallLibrary {

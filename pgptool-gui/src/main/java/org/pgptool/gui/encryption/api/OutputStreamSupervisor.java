@@ -29,4 +29,6 @@ import java.io.OutputStream;
 public interface OutputStreamSupervisor {
 
   OutputStream get(String fileName) throws FileNotFoundException;
+
+  OutputStream get(OutputStream target);
 }

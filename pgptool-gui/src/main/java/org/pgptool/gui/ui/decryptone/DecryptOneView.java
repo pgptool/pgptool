@@ -34,6 +34,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import org.pgptool.gui.ui.embedded_viewer.EmbeddedViewerFactory;
 import org.pgptool.gui.ui.tools.ControlsDisabler;
 import org.pgptool.gui.ui.tools.UiUtils;
 import org.pgptool.gui.ui.tools.swingpm.ViewBaseEx;
@@ -42,6 +43,9 @@ import ru.skarpushin.swingpm.bindings.TypedPropertyChangeListener;
 import ru.skarpushin.swingpm.tools.sglayout.SgLayout;
 
 public class DecryptOneView extends ViewBaseEx<DecryptOnePm> implements HasWindow {
+
+  private final EmbeddedViewerFactory embeddedViewerFactory;
+
   private JPanel pnl;
 
   private JPanel controlsPanel;
@@ -55,6 +59,7 @@ public class DecryptOneView extends ViewBaseEx<DecryptOnePm> implements HasWindo
   private JRadioButton chkUseSameFolder;
   private JRadioButton chkUseTempFolder;
   private JRadioButton chkUseBrowseFolder;
+  private JRadioButton chkInMemory;
   private JTextField edTargetFile;
   private JButton btnBrowseTarget;
 
@@ -65,20 +70,24 @@ public class DecryptOneView extends ViewBaseEx<DecryptOnePm> implements HasWindo
   public JButton btnPerformOperation;
   public JButton btnCancel;
 
+  public DecryptOneView(EmbeddedViewerFactory embeddedViewerFactory) {
+    this.embeddedViewerFactory = embeddedViewerFactory;
+  }
+
   @Override
   protected void internalInitComponents() {
     pnl = new JPanel(new BorderLayout());
 
-    pnl.add(controlsPanel = buildControllsPanel(), BorderLayout.CENTER);
+    pnl.add(controlsPanel = buildControlsPanel(), BorderLayout.CENTER);
     isDisableControlsChanged = new ControlsDisabler(controlsPanel);
 
     pnl.add(buildPanelButtons(), BorderLayout.SOUTH);
   }
 
-  private JPanel buildControllsPanel() {
+  private JPanel buildControlsPanel() {
     SgLayout sgl = new SgLayout(2, 8, spacing(1), 2);
     sgl.setColSize(0, 1, SgLayout.SIZE_TYPE_ASKCOMPONENT);
-    sgl.setColSize(1, spacing(40), SgLayout.SIZE_TYPE_CONSTANT);
+    sgl.setColSize(1, spacing(50), SgLayout.SIZE_TYPE_CONSTANT);
 
     JPanel ret = new JPanel(sgl);
     ret.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -98,16 +107,21 @@ public class DecryptOneView extends ViewBaseEx<DecryptOnePm> implements HasWindo
 
     // target file
     row++;
-    ret.add(new JLabel(text("term.targetFile")), sgl.cs(0, row));
+    ret.add(new JLabel(text("term.target")), sgl.cs(0, row));
     JPanel targetRadios = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
     targetRadios.add(chkUseTempFolder = new JRadioButton());
     targetRadios.add(new JLabel("   "));
     targetRadios.add(chkUseSameFolder = new JRadioButton());
     targetRadios.add(new JLabel("   "));
     targetRadios.add(chkUseBrowseFolder = new JRadioButton());
+    targetRadios.add(new JLabel("   "));
+    targetRadios.add(chkInMemory = new JRadioButton());
     btnGroupTargetFolder.add(chkUseTempFolder);
     btnGroupTargetFolder.add(chkUseSameFolder);
     btnGroupTargetFolder.add(chkUseBrowseFolder);
+    btnGroupTargetFolder.add(chkInMemory);
+    chkInMemory.setToolTipText(
+        text("term.targetInMemory.tooltip", embeddedViewerFactory.getSupportedExtensions()));
     ret.add(targetRadios, sgl.cs(1, row));
     row++;
     JPanel pnlTargetFile = new JPanel(new BorderLayout());
@@ -164,6 +178,9 @@ public class DecryptOneView extends ViewBaseEx<DecryptOnePm> implements HasWindo
     bindingContext.setupBinding(null, pm.getIsUseSameFolder(), chkUseSameFolder);
     bindingContext.setupBinding(null, pm.getIsUseTempFolder(), chkUseTempFolder);
     bindingContext.setupBinding(null, pm.getIsUseBrowseFolder(), chkUseBrowseFolder);
+    bindingContext.setupBinding(null, pm.getIsInMemory(), chkInMemory);
+    bindingContext.registerPropertyValuePropagation(
+        pm.getIsInMemoryEnabled(), chkInMemory, "enabled");
 
     bindingContext.setupBinding(pm.getTargetFile(), edTargetFile);
     bindingContext.registerPropertyValuePropagation(
@@ -171,9 +188,17 @@ public class DecryptOneView extends ViewBaseEx<DecryptOnePm> implements HasWindo
     bindingContext.setupBinding(pm.actionBrowseTarget, btnBrowseTarget);
 
     bindingContext.setupBinding(null, pm.getIsDeleteSourceAfter(), chkDeleteSourceAfter);
+    bindingContext.registerPropertyValuePropagation(
+        pm.getIsDeleteSourceAfterEnabled(), chkDeleteSourceAfter, "enabled");
+
     bindingContext.setupBinding(null, pm.getIsOpenTargetFolderAfter(), chkOpenTargetFolderAfter);
+    bindingContext.registerPropertyValuePropagation(
+        pm.getIsOpenTargetFolderAfterEnabled(), chkOpenTargetFolderAfter, "enabled");
+
     bindingContext.setupBinding(
         null, pm.getIsOpenAssociatedApplication(), chkOpenAssociatedApplication);
+    bindingContext.registerPropertyValuePropagation(
+        pm.getIsOpenAssociatedApplicationEnabled(), chkOpenAssociatedApplication, "enabled");
 
     bindingContext.setupBinding(pm.actionDoOperation, btnPerformOperation);
     bindingContext.setupBinding(pm.actionCancel, btnCancel);

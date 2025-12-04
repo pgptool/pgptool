@@ -17,9 +17,16 @@
  ******************************************************************************/
 package org.pgptool.gui.tools.osnative;
 
+import java.nio.charset.Charset;
+
 public class OsNativeApiDefaultImpl implements OsNativeApi {
   @Override
   public String[] getCommandLineArguments(String[] fallBackTo) {
     return fallBackTo;
+  }
+
+  @Override
+  public Charset findDefaultCharset() {
+    return Charset.defaultCharset();
   }
 }

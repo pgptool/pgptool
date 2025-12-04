@@ -486,7 +486,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
   @Override
   public void decrypt(
       String sourceFile,
-      String targetFile,
+      OutputStream targetOutputStream,
       PasswordDeterminedForKey keyAndPassword,
       ProgressHandler optionalProgressHandler,
       OutputStreamSupervisor optionalOutputStreamSupervisor)
@@ -513,8 +513,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
     Preconditions.checkArgument(
         StringUtils.hasText(sourceFile) && new File(sourceFile).exists(),
         "Source file name must be correct");
-    Preconditions.checkArgument(
-        StringUtils.hasText(targetFile), "Target file name must be provided");
+    Preconditions.checkArgument(targetOutputStream != null, "Target must be provided");
     Preconditions.checkArgument(decryptionKey != null, "decryption key must be provided");
 
     InputStream in = null;
@@ -527,7 +526,7 @@ public class EncryptionServicePgpImpl implements EncryptionService {
       in = new BufferedInputStream(countingStream);
       PGPPublicKeyEncryptedData publicKeyEncryptedData =
           getPublicKeyEncryptedDataByKeyId(in, secretKey);
-      OutputStream outputStream = outputStreamSupervisor.get(targetFile);
+      OutputStream outputStream = outputStreamSupervisor.get(targetOutputStream);
       decryptStream(publicKeyEncryptedData, privateKey, outputStream, progress, countingStream);
 
       if (optionalProgressHandler != null) {
@@ -538,11 +537,6 @@ public class EncryptionServicePgpImpl implements EncryptionService {
         progress.updateTotalSteps(sourceSize);
       }
     } catch (Throwable t) {
-      File fileToDelete = new File(targetFile);
-      if (fileToDelete.exists() && !fileToDelete.delete()) {
-        log.warn("Failed to delete file after failed decryption: {}", targetFile);
-      }
-
       Throwables.throwIfInstanceOf(t, InvalidPasswordException.class);
       Throwables.throwIfInstanceOf(t, UserRequestedCancellationException.class);
       log.error("Decryption failed", t);

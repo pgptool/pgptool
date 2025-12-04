@@ -24,7 +24,9 @@ import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -33,6 +35,7 @@ import javax.swing.Action;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.pgptool.gui.app.EntryPoint;
 import org.pgptool.gui.app.Message;
@@ -53,6 +56,7 @@ import org.pgptool.gui.filecomparison.MessageDigestFactory;
 import org.pgptool.gui.tempfolderfordecrypted.api.DecryptedTempFolder;
 import org.pgptool.gui.tools.FileUtilsEx;
 import org.pgptool.gui.ui.decryptonedialog.KeyAndPasswordCallback;
+import org.pgptool.gui.ui.embedded_viewer.EmbeddedViewerFactory;
 import org.pgptool.gui.ui.encryptone.EncryptOnePm;
 import org.pgptool.gui.ui.encryptone.EncryptionDialogParameters;
 import org.pgptool.gui.ui.getkeypassword.PasswordDeterminedForKey;
@@ -94,16 +98,22 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
   private final EncryptionService encryptionService;
   private final MonitoringDecryptedFilesService monitoringDecryptedFilesService;
   private final MessageDigestFactory messageDigestFactory;
+  private final EmbeddedViewerFactory embeddedViewerFactory;
 
   private ModelProperty<String> sourceFile;
   private ModelProperty<Boolean> isUseSameFolder;
   private ModelProperty<Boolean> isUseTempFolder;
   private ModelProperty<Boolean> isUseBrowseFolder;
+  private ModelProperty<Boolean> isInMemory;
+  private ModelProperty<Boolean> isInMemoryEnabled;
   private ModelProperty<String> targetFile;
   private ModelProperty<Boolean> targetFileEnabled;
   private ModelProperty<Boolean> isDeleteSourceAfter;
+  private ModelProperty<Boolean> isDeleteSourceAfterEnabled;
   private ModelProperty<Boolean> isOpenTargetFolderAfter;
+  private ModelProperty<Boolean> isOpenTargetFolderAfterEnabled;
   private ModelProperty<Boolean> isOpenAssociatedApplication;
+  private ModelProperty<Boolean> isOpenAssociatedApplicationEnabled;
   private final ListEx<ValidationError> validationErrors = new ListExImpl<>();
 
   private ExistingFileChooserDialog sourceFileChooser;
@@ -130,7 +140,8 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
       KeyRingService keyRingService,
       EncryptionService encryptionService,
       MonitoringDecryptedFilesService monitoringDecryptedFilesService,
-      MessageDigestFactory messageDigestFactory) {
+      MessageDigestFactory messageDigestFactory,
+      EmbeddedViewerFactory embeddedViewerFactory) {
     this.appProps = appProps;
     this.decryptionParams = decryptionParams;
     this.executorService = executorService;
@@ -140,6 +151,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
     this.encryptionService = encryptionService;
     this.monitoringDecryptedFilesService = monitoringDecryptedFilesService;
     this.messageDigestFactory = messageDigestFactory;
+    this.embeddedViewerFactory = embeddedViewerFactory;
   }
 
   @Override
@@ -175,6 +187,11 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
         new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "saveToSameFolder");
     isUseBrowseFolder =
         new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "saveToBrowseFolder");
+    isInMemory = new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "inMemory");
+    isInMemory.getModelPropertyAccessor().addPropertyChangeListener(onInMemoryChanged);
+    isInMemoryEnabled =
+        new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "isInMemoryEnabled");
+
     targetFile =
         new ModelProperty<>(this, new ValueAdapterHolderImpl<>(), FN_TARGET_FILE, validationErrors);
     targetFile.getModelPropertyAccessor().addPropertyChangeListener(onTargetFileModified);
@@ -187,10 +204,17 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
 
     isDeleteSourceAfter =
         new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "deleteSourceAfter");
+    isDeleteSourceAfterEnabled =
+        new ModelProperty<>(this, new ValueAdapterHolderImpl<>(true), "deleteSourceAfterEnabled");
     isOpenTargetFolderAfter =
         new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "openTargetFolder");
+    isOpenTargetFolderAfterEnabled =
+        new ModelProperty<>(this, new ValueAdapterHolderImpl<>(true), "openTargetFolderEnabled");
     isOpenAssociatedApplication =
         new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "openAssociatedApplication");
+    isOpenAssociatedApplicationEnabled =
+        new ModelProperty<>(
+            this, new ValueAdapterHolderImpl<>(true), "isOpenAssociatedApplicationEnabled");
 
     isDisableControls =
         new ModelProperty<>(this, new ValueAdapterHolderImpl<>(false), "isDisableControls");
@@ -395,11 +419,12 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
                       encryptionService.getNameOfFileEncrypted(sourceFileStr, keyAndPassword);
                   anticipatedTargetFileName =
                       patchTargetFilenameIfNeeded(sourceFileStr, targetFileName);
+                  enableInMemoryOptionForAnticipatedTargetFileName(anticipatedTargetFileName);
 
                   // Continue with source file change handling
                   decryptionDialogParameters = findParamsBasedOnSourceFile(sourceFile.getValue());
                   if (decryptionDialogParameters != null) {
-                    useSugestedParameters(decryptionDialogParameters);
+                    useSuggestedParameters(decryptionDialogParameters);
                   }
                 } catch (Throwable t) {
                   log.error("Failed to find decryption keys", t);
@@ -440,7 +465,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
           return params;
         }
 
-        private void useSugestedParameters(DecryptionDialogParameters params) {
+        private void useSuggestedParameters(DecryptionDialogParameters params) {
           if (params.isUseSameFolder() || params.isUseTempFolder()) {
             targetFile.setValueByOwner("");
           } else {
@@ -464,6 +489,11 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
             isUseBrowseFolder.setValueByOwner(false);
             isUseSameFolder.setValueByOwner(false);
             isUseTempFolder.setValueByOwner(true);
+          } else if (params.isInMemory()) {
+            isInMemory.setValueByOwner(true);
+            isUseSameFolder.setValueByOwner(false);
+            isUseTempFolder.setValueByOwner(false);
+            isUseBrowseFolder.setValueByOwner(false);
           } else {
             isUseSameFolder.setValueByOwner(false);
             isUseTempFolder.setValueByOwner(false);
@@ -475,6 +505,19 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
           isOpenAssociatedApplication.setValueByOwner(params.isOpenAssociatedApplication());
         }
       };
+
+  private void enableInMemoryOptionForAnticipatedTargetFileName(String anticipatedTargetFileName) {
+    isInMemoryEnabled.setValueByOwner(
+        embeddedViewerFactory.isExtensionSupported(getAnticipatedExtension()));
+    if (!isInMemoryEnabled.getValue() && isInMemory.getValue()) {
+      isInMemory.setValueByOwner(false);
+      isUseTempFolder.setValueByOwner(true);
+    }
+  }
+
+  private String getAnticipatedExtension() {
+    return FilenameUtils.getExtension(anticipatedTargetFileName);
+  }
 
   private final PropertyChangeListener onUseBrowseFolderChanged =
       new PropertyChangeListener() {
@@ -496,6 +539,16 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
         }
       };
 
+  private final PropertyChangeListener onInMemoryChanged =
+      new PropertyChangeListener() {
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+          isDeleteSourceAfterEnabled.setValueByOwner(!isInMemory.getValue());
+          isOpenTargetFolderAfterEnabled.setValueByOwner(!isInMemory.getValue());
+          isOpenAssociatedApplicationEnabled.setValueByOwner(!isInMemory.getValue());
+        }
+      };
+
   protected void updatePrimaryOperationAvailability() {
     boolean result = true;
     result &=
@@ -512,15 +565,40 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
           super.actionPerformed(e);
           actionDoOperation.setEnabled(false);
           isDisableControls.setValueByOwner(true);
-          operationThread = new Thread(new OperationWorker(e));
+          Runnable worker =
+              isInMemory.getValue() ? new DecryptToInMemory(e) : new DecryptToFileWorker(e);
+          operationThread = new Thread(worker);
           operationThread.start();
         }
       };
 
-  private class OperationWorker implements Runnable {
+  private void persistDecryptionDialogParametersForCurrentInputs(String targetFile) {
+    DecryptionDialogParameters dialogParameters = buildDecryptionDialogParameters(targetFile);
+    decryptionParams.put(dialogParameters.getSourceFile(), dialogParameters);
+    decryptionParams.put(
+        FilenameUtils.getFullPathNoEndSeparator(dialogParameters.getSourceFile()),
+        dialogParameters);
+  }
+
+  private DecryptionDialogParameters buildDecryptionDialogParameters(String targetFile) {
+    DecryptionDialogParameters ret = new DecryptionDialogParameters();
+    ret.setSourceFile(sourceFile.getValue());
+    ret.setUseSameFolder(isUseSameFolder.getValue());
+    ret.setUseTempFolder(isUseTempFolder.getValue());
+    ret.setInMemory(isInMemory.getValue());
+    ret.setTargetFile(targetFile);
+    ret.setDecryptionKeyId(keyAndPassword.getDecryptionKeyId());
+    ret.setDeleteSourceFile(isDeleteSourceAfter.getValue());
+    ret.setOpenTargetFolder(isOpenTargetFolderAfter.getValue());
+    ret.setOpenAssociatedApplication(isOpenAssociatedApplication.getValue());
+    ret.setCreatedAt(System.currentTimeMillis());
+    return ret;
+  }
+
+  private class DecryptToFileWorker implements Runnable {
     private final ActionEvent workerOriginEvent;
 
-    public OperationWorker(ActionEvent workerOriginEvent) {
+    public DecryptToFileWorker(ActionEvent workerOriginEvent) {
       this.workerOriginEvent = workerOriginEvent;
     }
 
@@ -550,10 +628,7 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
         ChecksumCalcOutputStreamSupervisor outputStreamSupervisor =
             new ChecksumCalcOutputStreamSupervisorImpl(messageDigestFactory);
         FileUtilsEx.baitAndSwitch(
-            targetFileName,
-            x ->
-                encryptionService.decrypt(
-                    sourceFileStr, x, keyAndPassword, progressHandler, outputStreamSupervisor));
+            targetFileName, x -> decrypt(sourceFileStr, targetFileName, outputStreamSupervisor));
         log.debug("Decryption completed: {}", targetFileName);
 
         // NOTE: We can calculate checksum for target file because we write it in full,
@@ -563,8 +638,8 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
 
         // Calculate source file CRC
         sourceFileFingerprint = sourceFileFingerprintFuture.get();
-
       } catch (UserRequestedCancellationException ce) {
+        //noinspection ConstantValue False-positive, it actually might be null
         if (sourceFileFingerprintFuture != null) {
           sourceFileFingerprintFuture.cancel(true);
         }
@@ -620,6 +695,23 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
 
       // close window
       host.handleClose();
+    }
+
+    private void decrypt(
+        String sourceFileStr,
+        String targetFileName,
+        ChecksumCalcOutputStreamSupervisor outputStreamSupervisor) {
+      File targetFile = new File(targetFileName);
+      try (FileOutputStream fos = new FileOutputStream(targetFile, false)) {
+        encryptionService.decrypt(
+            sourceFileStr, fos, keyAndPassword, progressHandler, outputStreamSupervisor);
+      } catch (Throwable e) {
+        log.warn("Failed to decrypt file: {}", sourceFileStr, e);
+        if (targetFile.exists() && !targetFile.delete()) {
+          log.warn(
+              "Failed to delete file after failed decryption: {}", targetFile.getAbsolutePath());
+        }
+      }
     }
 
     private void addToMonitoredDecrypted(
@@ -713,14 +805,6 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
       }
     }
 
-    private void persistDecryptionDialogParametersForCurrentInputs(String targetFile) {
-      DecryptionDialogParameters dialogParameters = buildDecryptionDialogParameters(targetFile);
-      decryptionParams.put(dialogParameters.getSourceFile(), dialogParameters);
-      decryptionParams.put(
-          FilenameUtils.getFullPathNoEndSeparator(dialogParameters.getSourceFile()),
-          dialogParameters);
-    }
-
     /**
      * We use this method to store parameters that program will suggest to use when user will desire
      * to encrypt back file that was just decrypted
@@ -745,19 +829,79 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
       ret.setRecipientsKeysIds(new ArrayList<>(sourceFileRecipientsKeysIds));
       return ret;
     }
+  }
 
-    private DecryptionDialogParameters buildDecryptionDialogParameters(String targetFile) {
-      DecryptionDialogParameters ret = new DecryptionDialogParameters();
-      ret.setSourceFile(sourceFile.getValue());
-      ret.setUseSameFolder(isUseSameFolder.getValue());
-      ret.setUseTempFolder(isUseTempFolder.getValue());
-      ret.setTargetFile(targetFile);
-      ret.setDecryptionKeyId(keyAndPassword.getDecryptionKeyId());
-      ret.setDeleteSourceFile(isDeleteSourceAfter.getValue());
-      ret.setOpenTargetFolder(isOpenTargetFolderAfter.getValue());
-      ret.setOpenAssociatedApplication(isOpenAssociatedApplication.getValue());
-      ret.setCreatedAt(System.currentTimeMillis());
-      return ret;
+  private class DecryptToInMemory implements Runnable {
+    private final ActionEvent workerOriginEvent;
+
+    public DecryptToInMemory(ActionEvent workerOriginEvent) {
+      this.workerOriginEvent = workerOriginEvent;
+    }
+
+    @Override
+    public void run() {
+      String sourceFileStr = sourceFile.getValue();
+
+      Fingerprint sourceFileFingerprint;
+      Fingerprint targetFingerprint;
+      Future<Fingerprint> sourceFileFingerprintFuture = null;
+      try {
+        // NOTE: In parallel we'll calculate checksum of the source. I hope IO caching
+        // layer will handle 2 reading process for same file nicely and we won't have to
+        // report progress on source checksum separately
+        sourceFileFingerprintFuture =
+            executorService.submit(
+                new ChecksumCalculationTask(sourceFileStr, messageDigestFactory.createNew()));
+
+        // and here is an actual decryption process
+        ChecksumCalcOutputStreamSupervisor outputStreamSupervisor =
+            new ChecksumCalcOutputStreamSupervisorImpl(messageDigestFactory);
+
+        ByteArrayOutputStream outputStream =
+            new ByteArrayOutputStream((int) (FileUtils.sizeOf(new File(sourceFileStr)) * 1.5));
+
+        encryptionService.decrypt(
+            sourceFileStr, outputStream, keyAndPassword, progressHandler, outputStreamSupervisor);
+
+        log.debug("Decryption completed: {}", sourceFileStr);
+
+        // NOTE: We can calculate checksum for target file because we write it in full,
+        // but input file is not really being read in full so we'll have to calculate
+        // checksum of source file separately
+        targetFingerprint = outputStreamSupervisor.getFingerprint();
+
+        // Calculate source file CRC
+        sourceFileFingerprint = sourceFileFingerprintFuture.get();
+
+        // Remember parameters
+        persistDecryptionDialogParametersForCurrentInputs(null);
+
+        // close window
+        host.handleClose();
+
+        // Open embedded viewer
+        embeddedViewerFactory
+            .build(
+                getAnticipatedExtension(),
+                outputStream.toByteArray(),
+                anticipatedTargetFileName,
+                sourceFileFingerprint,
+                targetFingerprint)
+            .present();
+      } catch (UserRequestedCancellationException ce) {
+        //noinspection ConstantValue False-positive, it actually might be null
+        if (sourceFileFingerprintFuture != null) {
+          sourceFileFingerprintFuture.cancel(true);
+        }
+        host.handleClose();
+      } catch (Throwable t) {
+        if (sourceFileFingerprintFuture != null) {
+          sourceFileFingerprintFuture.cancel(true);
+        }
+        EntryPoint.reportExceptionToUser(workerOriginEvent, "error.failedToDecryptFile", t);
+        actionDoOperation.setEnabled(true);
+        isDisableControls.setValueByOwner(false);
+      }
     }
   }
 
@@ -800,8 +944,24 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
     return isDeleteSourceAfter.getModelPropertyAccessor();
   }
 
+  public ModelPropertyAccessor<Boolean> getIsDeleteSourceAfterEnabled() {
+    return isDeleteSourceAfterEnabled.getModelPropertyAccessor();
+  }
+
   public ModelPropertyAccessor<Boolean> getIsOpenTargetFolderAfter() {
     return isOpenTargetFolderAfter.getModelPropertyAccessor();
+  }
+
+  public ModelPropertyAccessor<Boolean> getIsOpenTargetFolderAfterEnabled() {
+    return isOpenTargetFolderAfterEnabled.getModelPropertyAccessor();
+  }
+
+  public ModelPropertyAccessor<Boolean> getIsOpenAssociatedApplication() {
+    return isOpenAssociatedApplication.getModelPropertyAccessor();
+  }
+
+  public ModelPropertyAccessor<Boolean> getIsOpenAssociatedApplicationEnabled() {
+    return isOpenAssociatedApplicationEnabled.getModelPropertyAccessor();
   }
 
   public ModelPropertyAccessor<Boolean> getIsUseSameFolder() {
@@ -826,10 +986,6 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
 
   public ModelPropertyAccessor<Boolean> getTargetFileEnabled() {
     return targetFileEnabled.getModelPropertyAccessor();
-  }
-
-  public ModelPropertyAccessor<Boolean> getIsOpenAssociatedApplication() {
-    return isOpenAssociatedApplication.getModelPropertyAccessor();
   }
 
   public static boolean isItLooksLikeYourSourceFile(String file) {
@@ -860,5 +1016,13 @@ public class DecryptOnePm extends PresentationModelBaseEx<DecryptOneHost, String
 
   public ModelPropertyAccessor<Boolean> getIsDisableControls() {
     return isDisableControls.getModelPropertyAccessor();
+  }
+
+  public ModelPropertyAccessor<Boolean> getIsInMemory() {
+    return isInMemory.getModelPropertyAccessor();
+  }
+
+  public ModelPropertyAccessor<Boolean> getIsInMemoryEnabled() {
+    return isInMemoryEnabled.getModelPropertyAccessor();
   }
 }

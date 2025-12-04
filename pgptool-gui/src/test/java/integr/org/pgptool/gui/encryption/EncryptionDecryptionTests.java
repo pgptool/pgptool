@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import integr.org.pgptool.gui.TestTools;
 import integr.org.pgptool.gui.config.IntegrTestConfig;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -108,7 +109,8 @@ public class EncryptionDecryptionTests {
     PasswordDeterminedForKey keyAndPassword =
         buildPasswordDeterminedForKey(targetFilename, "Alice.asc", "pass");
 
-    encryptionService.decrypt(targetFilename, targetFilename + ".test", keyAndPassword, null, null);
+    encryptionService.decrypt(
+        targetFilename, new FileOutputStream(targetFilename + ".test"), keyAndPassword, null, null);
     String result = TextFile.read(targetFilename + ".test");
     assertEquals(testSubjectContents, result);
   }
@@ -138,7 +140,8 @@ public class EncryptionDecryptionTests {
     PasswordDeterminedForKey keyAndPassword =
         new PasswordDeterminedForKey(decryptionKeyId, key, "pass");
 
-    encryptionService.decrypt(targetFilename, targetFilename + ".test", keyAndPassword, null, null);
+    encryptionService.decrypt(
+        targetFilename, new FileOutputStream(targetFilename + ".test"), keyAndPassword, null, null);
     String result = TextFile.read(targetFilename + ".test");
     assertEquals(testSubjectContents, result);
   }
@@ -174,7 +177,8 @@ public class EncryptionDecryptionTests {
     String encryptedFile = TestTools.getFileNameForResource("encrypted/" + sourceFile);
     PasswordDeterminedForKey keyAndPassword =
         buildPasswordDeterminedForKey(encryptedFile, "Alice.asc", "pass");
-    encryptionService.decrypt(encryptedFile, targetFilename, keyAndPassword, null, null);
+    encryptionService.decrypt(
+        encryptedFile, new FileOutputStream(targetFilename), keyAndPassword, null, null);
     assertTrue(new File(targetFilename).exists());
   }
 }

@@ -22,7 +22,7 @@
         <maxVersion></maxVersion>
         <jdkPreference>preferJre</jdkPreference>
         <runtimeBits>64/32</runtimeBits>
-        <maxHeapSize>100</maxHeapSize>
+        <maxHeapSize>256</maxHeapSize>
     </jre>
     <versionInfo>
         <fileVersion>0.1.0.0</fileVersion>

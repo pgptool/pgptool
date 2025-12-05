@@ -35,7 +35,8 @@ class EmbeddedViewerTextImpl implements EmbeddedViewer {
     String text = decodeBestEffort(bytes);
 
     JTextArea textArea = new JTextArea(text);
-    // NOTE: Later on we might want to add a text editor which will allow modifying text in memory and
+    // NOTE: Later on we might want to add a text editor which will allow modifying text in memory
+    // and
     // encrypt back. But this is going to be a separate feature as it requires significant work due
     // to implicit user expectations, like all hot keys and even find feature
     textArea.setEditable(false);
